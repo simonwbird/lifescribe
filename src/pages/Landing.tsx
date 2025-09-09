@@ -19,6 +19,12 @@ import {
   Quote
 } from 'lucide-react'
 
+// Import family photos
+import heroFamilyStories from '@/assets/hero-family-stories.jpg'
+import familyTechnology from '@/assets/family-technology.jpg'
+import grandfatherGranddaughter from '@/assets/grandfather-granddaughter.jpg'
+import familySelfie from '@/assets/family-selfie.jpg'
+
 const Hero = () => (
   <section className="relative bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60 py-20 lg:py-32">
     <div className="container mx-auto px-4">
@@ -43,10 +49,11 @@ const Hero = () => (
         <div className="relative">
           <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-rose-100 to-amber-100 aspect-[4/3]">
             <img 
-              src="/placeholder.svg" 
-              alt="Multi-generational family sharing stories together"
-              className="w-full h-full object-cover opacity-80"
+              src={heroFamilyStories} 
+              alt="Multi-generational family sharing stories and memories together"
+              className="w-full h-full object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         </div>
       </div>
@@ -102,6 +109,31 @@ const FeaturesSection = () => (
             description="Bring children, parents, and grandparents together in one shared space where everyone can contribute to your family's story."
             icon={Heart}
           />
+        </div>
+        
+        {/* Photo showcase section */}
+        <div className="mt-20 grid md:grid-cols-3 gap-8">
+          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
+            <img 
+              src={familyTechnology} 
+              alt="Family using technology together to share memories"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
+            <img 
+              src={grandfatherGranddaughter} 
+              alt="Grandfather and granddaughter looking through photo albums"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
+            <img 
+              src={familySelfie} 
+              alt="Multi-generational family taking a happy selfie together"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
         </div>
       </div>
     </div>
