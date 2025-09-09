@@ -163,6 +163,170 @@ export type Database = {
           },
         ]
       }
+      gedcom_people_stage: {
+        Row: {
+          birth_date: string | null
+          created_at: string | null
+          death_date: string | null
+          family_id: string
+          full_name: string | null
+          gender: string | null
+          given_name: string | null
+          id: string
+          matched_person_id: string | null
+          notes: string | null
+          surname: string | null
+          tag: string | null
+          upload_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string | null
+          death_date?: string | null
+          family_id: string
+          full_name?: string | null
+          gender?: string | null
+          given_name?: string | null
+          id?: string
+          matched_person_id?: string | null
+          notes?: string | null
+          surname?: string | null
+          tag?: string | null
+          upload_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string | null
+          death_date?: string | null
+          family_id?: string
+          full_name?: string | null
+          gender?: string | null
+          given_name?: string | null
+          id?: string
+          matched_person_id?: string | null
+          notes?: string | null
+          surname?: string | null
+          tag?: string | null
+          upload_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gedcom_people_stage_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gedcom_people_stage_matched_person_id_fkey"
+            columns: ["matched_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gedcom_people_stage_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "gedcom_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gedcom_relationships_stage: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          from_stage_id: string
+          id: string
+          rel_type: Database["public"]["Enums"]["relationship_type"]
+          to_stage_id: string
+          upload_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          from_stage_id: string
+          id?: string
+          rel_type: Database["public"]["Enums"]["relationship_type"]
+          to_stage_id: string
+          upload_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          from_stage_id?: string
+          id?: string
+          rel_type?: Database["public"]["Enums"]["relationship_type"]
+          to_stage_id?: string
+          upload_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gedcom_relationships_stage_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gedcom_relationships_stage_from_stage_id_fkey"
+            columns: ["from_stage_id"]
+            isOneToOne: false
+            referencedRelation: "gedcom_people_stage"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gedcom_relationships_stage_to_stage_id_fkey"
+            columns: ["to_stage_id"]
+            isOneToOne: false
+            referencedRelation: "gedcom_people_stage"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gedcom_relationships_stage_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "gedcom_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gedcom_uploads: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          file_path: string
+          id: string
+          status: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          file_path: string
+          id?: string
+          status?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          file_path?: string
+          id?: string
+          status?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gedcom_uploads_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -321,6 +485,202 @@ export type Database = {
           },
         ]
       }
+      people: {
+        Row: {
+          avatar_url: string | null
+          birth_date: string | null
+          birth_year: number | null
+          created_at: string | null
+          created_by: string | null
+          death_date: string | null
+          death_year: number | null
+          family_id: string
+          full_name: string
+          gender: string | null
+          given_name: string | null
+          id: string
+          middle_name: string | null
+          notes: string | null
+          surname: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          birth_year?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          death_date?: string | null
+          death_year?: number | null
+          family_id: string
+          full_name: string
+          gender?: string | null
+          given_name?: string | null
+          id?: string
+          middle_name?: string | null
+          notes?: string | null
+          surname?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          birth_year?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          death_date?: string | null
+          death_year?: number | null
+          family_id?: string
+          full_name?: string
+          gender?: string | null
+          given_name?: string | null
+          id?: string
+          middle_name?: string | null
+          notes?: string | null
+          surname?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "people_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_answer_links: {
+        Row: {
+          answer_id: string
+          created_at: string | null
+          family_id: string
+          id: string
+          person_id: string
+        }
+        Insert: {
+          answer_id: string
+          created_at?: string | null
+          family_id: string
+          id?: string
+          person_id: string
+        }
+        Update: {
+          answer_id?: string
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_answer_links_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_answer_links_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_answer_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_story_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          person_id: string
+          story_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          person_id: string
+          story_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_story_links_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_story_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_story_links_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_user_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          person_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          person_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_user_links_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_user_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -441,6 +801,58 @@ export type Database = {
           },
         ]
       }
+      relationships: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          family_id: string
+          from_person_id: string
+          id: string
+          relationship_type: Database["public"]["Enums"]["relationship_type"]
+          to_person_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          family_id: string
+          from_person_id: string
+          id?: string
+          relationship_type: Database["public"]["Enums"]["relationship_type"]
+          to_person_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          family_id?: string
+          from_person_id?: string
+          id?: string
+          relationship_type?: Database["public"]["Enums"]["relationship_type"]
+          to_person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relationships_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_from_person_id_fkey"
+            columns: ["from_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_to_person_id_fkey"
+            columns: ["to_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stories: {
         Row: {
           content: string
@@ -489,6 +901,42 @@ export type Database = {
           },
         ]
       }
+      tree_preferences: {
+        Row: {
+          family_id: string
+          root_person_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          family_id: string
+          root_person_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          family_id?: string
+          root_person_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tree_preferences_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tree_preferences_root_person_id_fkey"
+            columns: ["root_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -501,6 +949,7 @@ export type Database = {
     }
     Enums: {
       invite_status: "pending" | "accepted" | "expired"
+      relationship_type: "parent" | "spouse"
       role_type: "admin" | "member" | "guest"
     }
     CompositeTypes: {
@@ -630,6 +1079,7 @@ export const Constants = {
   public: {
     Enums: {
       invite_status: ["pending", "accepted", "expired"],
+      relationship_type: ["parent", "spouse"],
       role_type: ["admin", "member", "guest"],
     },
   },
