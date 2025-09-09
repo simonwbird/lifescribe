@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import FamilyTreeNode from '@/components/FamilyTreeNode'
+import FamilyTreeConnections from '@/components/FamilyTreeConnections'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -523,9 +524,16 @@ export default function FamilyTree() {
             <div className="absolute inset-0 p-8">
               {treeGraph.nodes.length > 0 || people.length > 0 ? (
                 <div className="relative w-full h-full">
+                  {/* Connection lines */}
+                  <FamilyTreeConnections
+                    nodes={treeGraph.nodes}
+                    relationships={relationships}
+                    nodePositions={nodePositions}
+                  />
+                  
                   {/* Main connected tree */}
                   {treeGraph.nodes.length > 0 && (
-                    <div className="mb-16">
+                    <div className="mb-16 relative z-10">
                       <h3 className="text-lg font-semibold mb-8 text-center">Family Tree</h3>
                       <div className="relative">
                         {treeGraph.nodes.map((node) => (
@@ -546,7 +554,7 @@ export default function FamilyTree() {
                   
                   {/* Unconnected people */}
                   {people.filter(person => !treeGraph.nodes.some(node => node.person.id === person.id)).length > 0 && (
-                    <div>
+                    <div className="relative z-10">
                       <h3 className="text-lg font-semibold mb-8 text-center">Unconnected Family Members</h3>
                       <div className="relative">
                         {people

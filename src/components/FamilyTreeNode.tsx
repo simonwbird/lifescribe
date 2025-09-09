@@ -55,6 +55,12 @@ export default function FamilyTreeNode({
     y: node.y || 0 
   })
 
+  const GRID_SIZE = 50 // Snap to 50px grid
+
+  const snapToGrid = (value: number) => {
+    return Math.round(value / GRID_SIZE) * GRID_SIZE
+  }
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.dropdown-trigger')) {
       return // Don't drag if clicking dropdown
@@ -72,8 +78,11 @@ export default function FamilyTreeNode({
   useEffect(() => {
     if (isDragging) {
       const handleGlobalMouseMove = (e: MouseEvent) => {
-        const newX = e.clientX - dragStart.x
-        const newY = e.clientY - dragStart.y
+        const rawX = e.clientX - dragStart.x
+        const rawY = e.clientY - dragStart.y
+        const newX = snapToGrid(rawX)
+        const newY = snapToGrid(rawY)
+        
         setPosition({ x: newX, y: newY })
         
         if (onPositionChange) {
