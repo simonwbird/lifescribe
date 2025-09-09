@@ -1,6 +1,12 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { supabase } from '@/lib/supabase'
 import { 
   BookHeart, 
   Lock, 
@@ -155,10 +161,6 @@ const Footer = () => (
             <Button asChild variant="ghost" size="sm" className="justify-start p-0">
               <Link to="/onboarding">Create Family Account</Link>
             </Button>
-            <br />
-            <Button asChild variant="ghost" size="sm" className="justify-start p-0">
-              <Link to="/login">Sign In</Link>
-            </Button>
           </div>
         </div>
       </div>
@@ -169,6 +171,99 @@ const Footer = () => (
   </footer>
 )
 
+const LoginForm = () => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
+  const navigate = useNavigate()
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      if (isSignUp) {
+        const redirectUrl = `${window.location.origin}/`
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl
+          }
+        })
+        if (error) throw error
+        setError('Check your email for the confirmation link!')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+        navigate('/feed')
+      }
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">LifeScribe</CardTitle>
+        <CardDescription>
+          {isSignUp ? 'Create your account' : 'Sign in to your account'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+          </Button>
+        </form>
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 const LandingHeader = () => (
   <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
     <div className="container mx-auto px-4">
@@ -177,9 +272,14 @@ const LandingHeader = () => (
           <BookHeart className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold">LifeScribe</span>
         </Link>
-        <Button asChild variant="outline">
-          <Link to="/login">Login</Link>
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Login</Button>
+          </DialogTrigger>
+          <DialogContent className="p-0 border-0 bg-transparent shadow-none">
+            <LoginForm />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   </header>
