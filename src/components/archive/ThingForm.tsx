@@ -20,7 +20,7 @@ interface ThingFormProps {
 
 const objectTypes = [
   'artwork', 'jewelry', 'instrument', 'document', 'keepsake', 
-  'furniture', 'book', 'clothing', 'tool', 'photograph', 'other'
+  'furniture', 'book', 'clothing', 'tool', 'photograph', 'car', 'other'
 ];
 
 export function ThingForm({ onSuccess }: ThingFormProps) {
