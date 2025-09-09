@@ -48,6 +48,13 @@ export default function FamilyTree() {
   const [searchQuery, setSearchQuery] = useState('')
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isAddPersonOpen, setIsAddPersonOpen] = useState(false)
+  const [newPersonForm, setNewPersonForm] = useState({
+    given_name: '',
+    surname: '',
+    birth_year: '',
+    gender: ''
+  })
   const [isGedcomModalOpen, setIsGedcomModalOpen] = useState(false)
   
   const containerRef = useRef<HTMLDivElement>(null)
@@ -257,6 +264,62 @@ export default function FamilyTree() {
     }
   }
 
+  const handleAddPerson = async () => {
+    if (!familyId || !newPersonForm.given_name.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide at least a first name",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const full_name = `${newPersonForm.given_name} ${newPersonForm.surname}`.trim()
+      
+      const { data: newPerson, error } = await supabase
+        .from('people')
+        .insert({
+          family_id: familyId,
+          given_name: newPersonForm.given_name,
+          surname: newPersonForm.surname,
+          full_name,
+          birth_year: newPersonForm.birth_year ? parseInt(newPersonForm.birth_year) : null,
+          gender: newPersonForm.gender || null,
+          created_by: user.id
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      // Reset form and close dialog
+      setNewPersonForm({ given_name: '', surname: '', birth_year: '', gender: '' })
+      setIsAddPersonOpen(false)
+      
+      // Reload data
+      await loadFamilyData()
+      
+      toast({
+        title: "Person Added",
+        description: `${full_name} has been added to your family tree`
+      })
+
+    } catch (error) {
+      console.error('Error adding person:', error)
+      toast({
+        title: "Error",
+        description: "Failed to add person. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const filteredPeople = people.filter(person =>
     getPersonDisplayName(person).toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -360,10 +423,79 @@ export default function FamilyTree() {
                     Export
                   </Button>
                   
-                  <Button size="sm">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Person
-                  </Button>
+                  <Dialog open={isAddPersonOpen} onOpenChange={setIsAddPersonOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Person
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Person</DialogTitle>
+                        <DialogDescription>
+                          Add a new person to your family tree.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="given_name">First Name *</Label>
+                            <Input
+                              id="given_name"
+                              value={newPersonForm.given_name}
+                              onChange={(e) => setNewPersonForm(prev => ({ ...prev, given_name: e.target.value }))}
+                              placeholder="John"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="surname">Last Name</Label>
+                            <Input
+                              id="surname"
+                              value={newPersonForm.surname}
+                              onChange={(e) => setNewPersonForm(prev => ({ ...prev, surname: e.target.value }))}
+                              placeholder="Smith"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="birth_year">Birth Year</Label>
+                            <Input
+                              id="birth_year"
+                              type="number"
+                              value={newPersonForm.birth_year}
+                              onChange={(e) => setNewPersonForm(prev => ({ ...prev, birth_year: e.target.value }))}
+                              placeholder="1990"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="gender">Gender</Label>
+                            <Select value={newPersonForm.gender} onValueChange={(value) => setNewPersonForm(prev => ({ ...prev, gender: value }))}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                          <Button variant="outline" onClick={() => setIsAddPersonOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleAddPerson}>
+                            Add Person
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>
