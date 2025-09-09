@@ -6,7 +6,9 @@ import StoryCard from '@/components/StoryCard'
 import AnswerCard from '@/components/AnswerCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
+import { Sparkles, ArrowRight } from 'lucide-react'
 import type { Story, Answer, Profile, Question } from '@/lib/types'
 
 type FeedItem = {
@@ -19,6 +21,7 @@ export default function Feed() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [familyId, setFamilyId] = useState<string | null>(null)
+  const [featuredQuestion, setFeaturedQuestion] = useState<Question | null>(null)
 
   useEffect(() => {
     const getFamilyAndFeed = async () => {
@@ -35,6 +38,38 @@ export default function Feed() {
 
         if (!member) return
         setFamilyId(member.family_id)
+
+        // Get a featured question for the prompt card
+        const { data: answeredQuestions } = await supabase
+          .from('answers')
+          .select('question_id')
+          .eq('profile_id', user.id)
+          .eq('family_id', member.family_id)
+
+        const answeredIds = answeredQuestions?.map(a => a.question_id) || []
+        
+        let questionQuery = supabase
+          .from('questions')
+          .select('*')
+          .eq('is_active', true)
+          .limit(1)
+
+        if (answeredIds.length > 0) {
+          questionQuery = questionQuery.not('id', 'in', `(${answeredIds.join(',')})`)
+        }
+
+        const { data: questions } = await questionQuery
+        if (questions && questions.length > 0) {
+          setFeaturedQuestion(questions[0])
+        } else {
+          // Fallback to any question if all are answered
+          const { data: fallbackQuestions } = await supabase
+            .from('questions')
+            .select('*')
+            .eq('is_active', true)
+            .limit(1)
+          setFeaturedQuestion(fallbackQuestions?.[0] || null)
+        }
 
         // Get stories
         const { data: stories } = await supabase
@@ -135,6 +170,34 @@ export default function Feed() {
               </Card>
             ) : (
               <div className="space-y-6">
+                {/* Featured Prompt Card */}
+                {featuredQuestion && (
+                  <Card className="bg-gradient-to-br from-rose-50/80 to-amber-50/60 border-rose-200/50 shadow-lg">
+                    <CardHeader>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Sparkles className="w-5 h-5 text-rose-500" />
+                        <Badge variant="secondary" className="bg-rose-100 text-rose-700 border-rose-200">
+                          Daily Prompt
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-xl leading-relaxed">
+                        {featuredQuestion.question_text}
+                      </CardTitle>
+                      <CardDescription>
+                        Share your memories with your family • {featuredQuestion.category}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button asChild className="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600">
+                        <Link to="/prompts">
+                          Answer This Prompt <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Feed Items */}
                 {feedItems.map((item, index) => (
                   <div key={`${item.type}-${item.data.id}-${index}`}>
                     {item.type === 'story' ? (

@@ -9,6 +9,7 @@ import Feed from "./pages/Feed";
 import NewStory from "./pages/NewStory";
 import StoryDetail from "./pages/StoryDetail";
 import Prompts from "./pages/Prompts";
+import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/stories/new" element={<NewStory />} />
           <Route path="/stories/:id" element={<StoryDetail />} />
           <Route path="/prompts" element={<Prompts />} />
+          <Route path="/prompts/browse" element={<PromptsBrowse />} />
           <Route path="/family/members" element={<FamilyMembers />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

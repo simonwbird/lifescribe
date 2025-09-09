@@ -116,18 +116,21 @@ export type Database = {
           id: string
           category: string
           question_text: string
+          is_active: boolean
           created_at: string
         }
         Insert: {
           id?: string
           category: string
           question_text: string
+          is_active?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           category?: string
           question_text?: string
+          is_active?: boolean
           created_at?: string
         }
       }

@@ -353,18 +353,21 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          is_active: boolean
           question_text: string
         }
         Insert: {
           category: string
           created_at?: string
           id?: string
+          is_active?: boolean
           question_text: string
         }
         Update: {
           category?: string
           created_at?: string
           id?: string
+          is_active?: boolean
           question_text?: string
         }
         Relationships: []
