@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import FamilyTreeNode from '@/components/FamilyTreeNode'
 import FamilyTreeConnections from '@/components/FamilyTreeConnections'
+import FamilyGroupContainer from '@/components/FamilyGroupContainer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -152,8 +153,10 @@ export default function FamilyTree() {
       nodeWidth: 200,
       nodeHeight: 120,
       horizontalSpacing: 80,
-      verticalSpacing: 100,
-      levelHeight: 220
+      verticalSpacing: 50,
+      levelHeight: 180,
+      branchSpacing: 120,
+      generationSpacing: 200
     })
     
     setLayoutNodes(spacedLayout)
@@ -690,27 +693,79 @@ export default function FamilyTree() {
                           {layoutMode === 'auto' ? '📐 Auto Layout Active' : '✋ Manual Layout'} • {treeGraph.nodes.length} connected member{treeGraph.nodes.length !== 1 ? 's' : ''}
                         </p>
                       </div>
+                      
+                      {/* Render family groups with containers */}
                       <div className="relative">
-                        {(layoutMode === 'auto' ? layoutNodes.filter(n => treeGraph.nodes.some(tn => tn.id === n.id)) : treeGraph.nodes).map((node) => (
-                          <FamilyTreeNode
-                            key={node.id}
-                            node={{
-                              ...node,
-                              x: layoutMode === 'auto' ? (node as LayoutNode).x : nodePositions[node.id]?.x,
-                              y: layoutMode === 'auto' ? (node as LayoutNode).y : nodePositions[node.id]?.y
-                            }}
-                            onViewPerson={handleViewPerson}
-                            onAddParent={handleAddParent}
-                            onAddChild={handleAddChild}
-                            onAddSpouse={handleAddSpouse}
-                            onEditPerson={handleEditPerson}
-                            onPositionChange={handleNodePositionChange}
-                            onConnectPeople={handleConnectPeople}
-                            onRemoveRelationship={handleRemoveRelationship}
-                            allPeople={people}
-                            relationships={relationships}
-                          />
-                        ))}
+                        {layoutMode === 'auto' ? (
+                          <>
+                            {/* Group nodes by generation for visual containers */}
+                            {Array.from(new Set(layoutNodes.map(n => n.level))).map(generation => {
+                              const generationNodes = layoutNodes.filter(n => n.level === generation && treeGraph.nodes.some(tn => tn.id === n.id))
+                              if (generationNodes.length === 0) return null
+                              
+                              const minX = Math.min(...generationNodes.map(n => n.x))
+                              const maxX = Math.max(...generationNodes.map(n => n.x + n.width))
+                              const minY = Math.min(...generationNodes.map(n => n.y))
+                              const maxY = Math.max(...generationNodes.map(n => n.y + n.height))
+                              
+                              return (
+                                <React.Fragment key={`generation-${generation}`}>
+                                  <FamilyGroupContainer
+                                    title={`Generation ${generation + 1}`}
+                                    subtitle={generation === 0 ? "Oldest Generation" : generation === 1 ? "Parents" : "Children & Descendants"}
+                                    memberCount={generationNodes.length}
+                                    generation={generation}
+                                    x={minX}
+                                    y={minY}
+                                    width={maxX - minX}
+                                    height={maxY - minY}
+                                  >
+                                    <></>
+                                  </FamilyGroupContainer>
+                                  {generationNodes.map((node) => (
+                                    <FamilyTreeNode
+                                      key={node.id}
+                                      node={node}
+                                      onViewPerson={handleViewPerson}
+                                      onAddParent={handleAddParent}
+                                      onAddChild={handleAddChild}
+                                      onAddSpouse={handleAddSpouse}
+                                      onEditPerson={handleEditPerson}
+                                      onPositionChange={handleNodePositionChange}
+                                      onConnectPeople={handleConnectPeople}
+                                      onRemoveRelationship={handleRemoveRelationship}
+                                      allPeople={people}
+                                      relationships={relationships}
+                                    />
+                                  ))}
+                                </React.Fragment>
+                              )
+                            })}
+                          </>
+                        ) : (
+                          <>
+                            {treeGraph.nodes.map((node) => (
+                              <FamilyTreeNode
+                                key={node.id}
+                                node={{
+                                  ...node,
+                                  x: nodePositions[node.id]?.x,
+                                  y: nodePositions[node.id]?.y
+                                }}
+                                onViewPerson={handleViewPerson}
+                                onAddParent={handleAddParent}
+                                onAddChild={handleAddChild}
+                                onAddSpouse={handleAddSpouse}
+                                onEditPerson={handleEditPerson}
+                                onPositionChange={handleNodePositionChange}
+                                onConnectPeople={handleConnectPeople}
+                                onRemoveRelationship={handleRemoveRelationship}
+                                allPeople={people}
+                                relationships={relationships}
+                              />
+                            ))}
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
@@ -726,35 +781,103 @@ export default function FamilyTree() {
                           🔗 Hover borders to create connections
                         </p>
                       </div>
+                      
+                      {/* Group unconnected people by birth decade */}
                       <div className="relative">
-                        {people
-                          .filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
-                          .map((person, index) => {
-                            const layoutNode = layoutNodes.find(n => n.person.id === person.id)
-                            return (
-                              <FamilyTreeNode
-                                key={person.id}
-                                node={{
-                                  id: person.id,
-                                  person: person,
-                                  children: [],
-                                  spouses: [],
-                                  x: layoutMode === 'auto' && layoutNode ? layoutNode.x : (nodePositions[person.id]?.x || index * 300 + 100),
-                                  y: layoutMode === 'auto' && layoutNode ? layoutNode.y : (nodePositions[person.id]?.y || 100)
-                                }}
-                                onViewPerson={handleViewPerson}
-                                onAddParent={handleAddParent}
-                                onAddChild={handleAddChild}
-                                onAddSpouse={handleAddSpouse}
-                                onEditPerson={handleEditPerson}
-                                onPositionChange={handleNodePositionChange}
-                                onConnectPeople={handleConnectPeople}
-                                onRemoveRelationship={handleRemoveRelationship}
-                                allPeople={people}
-                                relationships={relationships}
-                              />
-                            )
-                          })}
+                        {layoutMode === 'auto' ? (
+                          <>
+                            {/* Group by decade for auto layout */}
+                            {(() => {
+                              const unconnectedPeople = people.filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
+                              const groups = new Map<string, typeof unconnectedPeople>()
+                              
+                              unconnectedPeople.forEach(person => {
+                                const decade = person.birth_year 
+                                  ? `${Math.floor(person.birth_year / 10) * 10}s` 
+                                  : 'Unknown Era'
+                                
+                                if (!groups.has(decade)) {
+                                  groups.set(decade, [])
+                                }
+                                groups.get(decade)!.push(person)
+                              })
+                              
+                              return Array.from(groups.entries()).map(([decade, groupPeople]) => {
+                                const groupNodes = groupPeople.map(person => layoutNodes.find(n => n.person.id === person.id)).filter(Boolean)
+                                if (groupNodes.length === 0) return null
+                                
+                                const minX = Math.min(...groupNodes.map(n => n.x))
+                                const maxX = Math.max(...groupNodes.map(n => n.x + n.width))
+                                const minY = Math.min(...groupNodes.map(n => n.y))
+                                const maxY = Math.max(...groupNodes.map(n => n.y + n.height))
+                                
+                                return (
+                                  <React.Fragment key={decade}>
+                                    <FamilyGroupContainer
+                                      title={decade}
+                                      subtitle={decade === 'Unknown Era' ? 'No birth year specified' : `Born in the ${decade}`}
+                                      memberCount={groupPeople.length}
+                                      x={minX}
+                                      y={minY}
+                                      width={maxX - minX}
+                                      height={maxY - minY}
+                                    >
+                                      <></>
+                                    </FamilyGroupContainer>
+                                    {groupPeople.map((person) => {
+                                      const layoutNode = layoutNodes.find(n => n.person.id === person.id)
+                                      if (!layoutNode) return null
+                                      return (
+                                        <FamilyTreeNode
+                                          key={person.id}
+                                          node={layoutNode}
+                                          onViewPerson={handleViewPerson}
+                                          onAddParent={handleAddParent}
+                                          onAddChild={handleAddChild}
+                                          onAddSpouse={handleAddSpouse}
+                                          onEditPerson={handleEditPerson}
+                                          onPositionChange={handleNodePositionChange}
+                                          onConnectPeople={handleConnectPeople}
+                                          onRemoveRelationship={handleRemoveRelationship}
+                                          allPeople={people}
+                                          relationships={relationships}
+                                        />
+                                      )
+                                    })}
+                                  </React.Fragment>
+                                )
+                              })
+                            })()}
+                          </>
+                        ) : (
+                          <>
+                            {people
+                              .filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
+                              .map((person, index) => (
+                                <FamilyTreeNode
+                                  key={person.id}
+                                  node={{
+                                    id: person.id,
+                                    person: person,
+                                    children: [],
+                                    spouses: [],
+                                    x: nodePositions[person.id]?.x || index * 300 + 100,
+                                    y: nodePositions[person.id]?.y || 100
+                                  }}
+                                  onViewPerson={handleViewPerson}
+                                  onAddParent={handleAddParent}
+                                  onAddChild={handleAddChild}
+                                  onAddSpouse={handleAddSpouse}
+                                  onEditPerson={handleEditPerson}
+                                  onPositionChange={handleNodePositionChange}
+                                  onConnectPeople={handleConnectPeople}
+                                  onRemoveRelationship={handleRemoveRelationship}
+                                  allPeople={people}
+                                  relationships={relationships}
+                                />
+                              ))}
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
