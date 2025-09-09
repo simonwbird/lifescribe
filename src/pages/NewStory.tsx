@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import MediaUploader from '@/components/MediaUploader'
@@ -10,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { X } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 
 export default function NewStory() {
   const [title, setTitle] = useState('')
@@ -20,9 +21,22 @@ export default function NewStory() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
+  const [linkedPersonId, setLinkedPersonId] = useState<string | null>(null)
+  const [linkedPersonName, setLinkedPersonName] = useState<string | null>(null)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   useEffect(() => {
+    // Check if we have person context from URL params
+    const personId = searchParams.get('person')
+    const personName = searchParams.get('personName')
+    
+    if (personId && personName) {
+      setLinkedPersonId(personId)
+      setLinkedPersonName(decodeURIComponent(personName))
+      setTitle(`Story about ${decodeURIComponent(personName)}`)
+    }
+    
     const getFamilyId = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -79,6 +93,17 @@ export default function NewStory() {
 
       if (storyError) throw storyError
 
+      // If this story is about a specific person, link it
+      if (linkedPersonId && story) {
+        await supabase
+          .from('person_story_links')
+          .insert({
+            person_id: linkedPersonId,
+            story_id: story.id,
+            family_id: familyId
+          })
+      }
+
       // Upload media files if any
       if (uploadedFiles.length > 0) {
         for (const file of uploadedFiles) {
@@ -123,9 +148,14 @@ export default function NewStory() {
           <div className="max-w-2xl mx-auto">
             <Card>
               <CardHeader>
-                <CardTitle>Share Your Story</CardTitle>
+                <CardTitle>
+                  {linkedPersonName ? `Share a Story About ${linkedPersonName}` : 'Share Your Story'}
+                </CardTitle>
                 <CardDescription>
-                  Create a new family memory to share with everyone
+                  {linkedPersonName 
+                    ? `Tell a story or memory about ${linkedPersonName} to preserve for the family`
+                    : 'Create a new family memory to share with everyone'
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -136,7 +166,10 @@ export default function NewStory() {
                       id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Give your story a title..."
+                      placeholder={linkedPersonName 
+                        ? `Share a memory about ${linkedPersonName}...`
+                        : "Give your story a title..."
+                      }
                       required
                     />
                   </div>
@@ -147,7 +180,10 @@ export default function NewStory() {
                       id="content"
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
-                      placeholder="Tell your story..."
+                      placeholder={linkedPersonName
+                        ? `Tell us about ${linkedPersonName}. What are your favorite memories? What was special about them?`
+                        : "Tell your story..."
+                      }
                       rows={8}
                       required
                     />

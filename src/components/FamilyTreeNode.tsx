@@ -15,10 +15,12 @@ import {
   UserPlus, 
   Heart,
   Edit,
-  MoreVertical
+  MoreVertical,
+  PenTool
 } from 'lucide-react'
 import type { TreeNode } from '@/lib/familyTreeTypes'
 import { formatPersonYears, getPersonDisplayName } from '@/utils/familyTreeUtils'
+import { useNavigate } from 'react-router-dom'
 
 interface FamilyTreeNodeProps {
   node: TreeNode
@@ -41,6 +43,7 @@ export default function FamilyTreeNode({
   const displayName = getPersonDisplayName(person)
   const years = formatPersonYears(person)
   const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const navigate = useNavigate()
 
   return (
     <div className="family-tree-node flex flex-col items-center space-y-2">
@@ -87,6 +90,10 @@ export default function FamilyTreeNode({
                 <DropdownMenuItem onClick={() => onEditPerson(person.id)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/stories/new?person=${person.id}&personName=${encodeURIComponent(displayName)}`)}>
+                  <PenTool className="mr-2 h-4 w-4" />
+                  Add Story About {displayName}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAddParent(person.id)}>
                   <UserPlus className="mr-2 h-4 w-4" />
