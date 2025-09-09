@@ -389,7 +389,10 @@ export type Database = {
           id: string
           mime_type: string
           profile_id: string
+          property_id: string | null
+          recipe_id: string | null
           story_id: string | null
+          thing_id: string | null
         }
         Insert: {
           answer_id?: string | null
@@ -401,7 +404,10 @@ export type Database = {
           id?: string
           mime_type: string
           profile_id: string
+          property_id?: string | null
+          recipe_id?: string | null
           story_id?: string | null
+          thing_id?: string | null
         }
         Update: {
           answer_id?: string | null
@@ -413,7 +419,10 @@ export type Database = {
           id?: string
           mime_type?: string
           profile_id?: string
+          property_id?: string | null
+          recipe_id?: string | null
           story_id?: string | null
+          thing_id?: string | null
         }
         Relationships: [
           {
@@ -438,10 +447,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "media_property_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_recipe_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "media_story_id_fkey"
             columns: ["story_id"]
             isOneToOne: false
             referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_thing_fkey"
+            columns: ["thing_id"]
+            isOneToOne: false
+            referencedRelation: "things"
             referencedColumns: ["id"]
           },
         ]
@@ -708,6 +738,75 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          acquired_year: number | null
+          address: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          family_id: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          sold_year: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          acquired_year?: number | null
+          address?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          family_id: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          sold_year?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          acquired_year?: number | null
+          address?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          family_id?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          sold_year?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      property_story_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          property_id: string
+          story_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          property_id: string
+          story_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          property_id?: string
+          story_id?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           category: string
@@ -800,6 +899,105 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recipe_person_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          person_id: string
+          recipe_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          person_id: string
+          recipe_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          recipe_id?: string
+        }
+        Relationships: []
+      }
+      recipe_story_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          recipe_id: string
+          story_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          recipe_id: string
+          story_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          recipe_id?: string
+          story_id?: string
+        }
+        Relationships: []
+      }
+      recipes: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          dietary_tags: string[] | null
+          family_id: string
+          id: string
+          ingredients: Json | null
+          notes: string | null
+          serves: string | null
+          source: string | null
+          steps: Json | null
+          time_cook_minutes: number | null
+          time_prep_minutes: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          dietary_tags?: string[] | null
+          family_id: string
+          id?: string
+          ingredients?: Json | null
+          notes?: string | null
+          serves?: string | null
+          source?: string | null
+          steps?: Json | null
+          time_cook_minutes?: number | null
+          time_prep_minutes?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          dietary_tags?: string[] | null
+          family_id?: string
+          id?: string
+          ingredients?: Json | null
+          notes?: string | null
+          serves?: string | null
+          source?: string | null
+          steps?: Json | null
+          time_cook_minutes?: number | null
+          time_prep_minutes?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       relationships: {
         Row: {
@@ -897,6 +1095,119 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thing_person_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          person_id: string
+          thing_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          person_id: string
+          thing_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          thing_id?: string
+        }
+        Relationships: []
+      }
+      thing_story_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          story_id: string
+          thing_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          story_id: string
+          thing_id: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          story_id?: string
+          thing_id?: string
+        }
+        Relationships: []
+      }
+      things: {
+        Row: {
+          condition: string | null
+          created_at: string | null
+          created_by: string
+          current_property_id: string | null
+          description: string | null
+          family_id: string
+          id: string
+          maker: string | null
+          object_type: string | null
+          provenance: string | null
+          room_hint: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          value_estimate: string | null
+          year_estimated: number | null
+        }
+        Insert: {
+          condition?: string | null
+          created_at?: string | null
+          created_by: string
+          current_property_id?: string | null
+          description?: string | null
+          family_id: string
+          id?: string
+          maker?: string | null
+          object_type?: string | null
+          provenance?: string | null
+          room_hint?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          value_estimate?: string | null
+          year_estimated?: number | null
+        }
+        Update: {
+          condition?: string | null
+          created_at?: string | null
+          created_by?: string
+          current_property_id?: string | null
+          description?: string | null
+          family_id?: string
+          id?: string
+          maker?: string | null
+          object_type?: string | null
+          provenance?: string | null
+          room_hint?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          value_estimate?: string | null
+          year_estimated?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "things_current_property_fkey"
+            columns: ["current_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
