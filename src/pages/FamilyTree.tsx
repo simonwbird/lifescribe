@@ -33,10 +33,13 @@ import {
   Upload,
   UserPlus,
   Maximize2,
-  RotateCcw
+  RotateCcw,
+  Grid3x3,
+  Shuffle
 } from 'lucide-react'
 import type { Person, Relationship, TreePreference, TreeGraph } from '@/lib/familyTreeTypes'
 import { buildFamilyTree, getPersonDisplayName } from '@/utils/familyTreeUtils'
+import { calculateFamilyTreeLayout, centerLayout, autoSpace, type LayoutNode } from '@/utils/familyTreeLayout'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FamilyTree() {
@@ -58,6 +61,8 @@ export default function FamilyTree() {
   })
   const [isGedcomModalOpen, setIsGedcomModalOpen] = useState(false)
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
+  const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('auto')
+  const [layoutNodes, setLayoutNodes] = useState<LayoutNode[]>([])
   
   const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
@@ -71,8 +76,13 @@ export default function FamilyTree() {
     if (people.length > 0) {
       const graph = buildFamilyTree(people, relationships, rootPersonId || undefined)
       setTreeGraph(graph)
+      
+      // Auto-layout when in auto mode
+      if (layoutMode === 'auto') {
+        calculateAutoLayout(graph, people, relationships)
+      }
     }
-  }, [people, relationships, rootPersonId])
+  }, [people, relationships, rootPersonId, layoutMode])
 
   const loadFamilyData = async () => {
     try {
@@ -133,6 +143,27 @@ export default function FamilyTree() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const calculateAutoLayout = (graph: TreeGraph, allPeople: Person[], allRelationships: Relationship[]) => {
+    const layoutResult = calculateFamilyTreeLayout(graph.nodes, allPeople, allRelationships)
+    const centeredLayout = centerLayout(layoutResult)
+    const spacedLayout = autoSpace(centeredLayout, {
+      nodeWidth: 200,
+      nodeHeight: 120,
+      horizontalSpacing: 80,
+      verticalSpacing: 100,
+      levelHeight: 220
+    })
+    
+    setLayoutNodes(spacedLayout)
+    
+    // Update node positions for consistency
+    const positions: Record<string, { x: number; y: number }> = {}
+    spacedLayout.forEach(node => {
+      positions[node.id] = { x: node.x, y: node.y }
+    })
+    setNodePositions(positions)
   }
 
   const createInitialPeople = async (familyId: string) => {
@@ -323,10 +354,38 @@ export default function FamilyTree() {
   }
 
   const handleNodePositionChange = (nodeId: string, x: number, y: number) => {
+    // Switch to manual mode when user drags
+    if (layoutMode === 'auto') {
+      setLayoutMode('manual')
+    }
+    
     setNodePositions(prev => ({
       ...prev,
       [nodeId]: { x, y }
     }))
+  }
+
+  const handleAutoLayout = () => {
+    setLayoutMode('auto')
+    if (treeGraph) {
+      calculateAutoLayout(treeGraph, people, relationships)
+    }
+    toast({
+      title: "Auto Layout Applied",
+      description: "Family tree has been automatically organized"
+    })
+  }
+
+  const handleResetPositions = () => {
+    setNodePositions({})
+    setLayoutNodes([])
+    if (layoutMode === 'auto' && treeGraph) {
+      calculateAutoLayout(treeGraph, people, relationships)
+    }
+    toast({
+      title: "Positions Reset",
+      description: "All node positions have been reset"
+    })
   }
 
   const handleConnectPeople = async (fromPersonId: string, toPersonId: string, relationshipType: 'parent' | 'spouse') => {
@@ -467,6 +526,21 @@ export default function FamilyTree() {
                   </Button>
                 </div>
 
+                {/* Layout Controls */}
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant={layoutMode === 'auto' ? 'default' : 'outline'} 
+                    size="sm" 
+                    onClick={handleAutoLayout}
+                  >
+                    <Grid3x3 className="h-4 w-4 mr-2" />
+                    Auto Layout
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleResetPositions}>
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
+
                 {/* Actions */}
                 <div className="flex items-center space-x-2">
                   <Dialog open={isGedcomModalOpen} onOpenChange={setIsGedcomModalOpen}>
@@ -596,12 +670,21 @@ export default function FamilyTree() {
                   {/* Main connected tree */}
                   {treeGraph.nodes.length > 0 && (
                     <div className="mb-16 relative z-10">
-                      <h3 className="text-lg font-semibold mb-8 text-center">Family Tree</h3>
+                      <h3 className="text-lg font-semibold mb-8 text-center">
+                        Family Tree 
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                          ({layoutMode === 'auto' ? 'Auto Layout' : 'Manual Layout'})
+                        </span>
+                      </h3>
                       <div className="relative">
-                        {treeGraph.nodes.map((node) => (
+                        {(layoutMode === 'auto' ? layoutNodes.filter(n => treeGraph.nodes.some(tn => tn.id === n.id)) : treeGraph.nodes).map((node) => (
                           <FamilyTreeNode
                             key={node.id}
-                            node={node}
+                            node={{
+                              ...node,
+                              x: layoutMode === 'auto' ? (node as LayoutNode).x : nodePositions[node.id]?.x,
+                              y: layoutMode === 'auto' ? (node as LayoutNode).y : nodePositions[node.id]?.y
+                            }}
                             onViewPerson={handleViewPerson}
                             onAddParent={handleAddParent}
                             onAddChild={handleAddChild}
@@ -625,29 +708,32 @@ export default function FamilyTree() {
                       <div className="relative">
                         {people
                           .filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
-                          .map((person, index) => (
-                            <FamilyTreeNode
-                              key={person.id}
-                              node={{
-                                id: person.id,
-                                person: person,
-                                children: [],
-                                spouses: [],
-                                x: nodePositions[person.id]?.x || index * 300 + 100,
-                                y: nodePositions[person.id]?.y || 100
-                              }}
-                              onViewPerson={handleViewPerson}
-                              onAddParent={handleAddParent}
-                              onAddChild={handleAddChild}
-                              onAddSpouse={handleAddSpouse}
-                              onEditPerson={handleEditPerson}
-                              onPositionChange={handleNodePositionChange}
-                              onConnectPeople={handleConnectPeople}
-                              onRemoveRelationship={handleRemoveRelationship}
-                              allPeople={people}
-                              relationships={relationships}
-                            />
-                          ))}
+                          .map((person, index) => {
+                            const layoutNode = layoutNodes.find(n => n.person.id === person.id)
+                            return (
+                              <FamilyTreeNode
+                                key={person.id}
+                                node={{
+                                  id: person.id,
+                                  person: person,
+                                  children: [],
+                                  spouses: [],
+                                  x: layoutMode === 'auto' && layoutNode ? layoutNode.x : (nodePositions[person.id]?.x || index * 300 + 100),
+                                  y: layoutMode === 'auto' && layoutNode ? layoutNode.y : (nodePositions[person.id]?.y || 100)
+                                }}
+                                onViewPerson={handleViewPerson}
+                                onAddParent={handleAddParent}
+                                onAddChild={handleAddChild}
+                                onAddSpouse={handleAddSpouse}
+                                onEditPerson={handleEditPerson}
+                                onPositionChange={handleNodePositionChange}
+                                onConnectPeople={handleConnectPeople}
+                                onRemoveRelationship={handleRemoveRelationship}
+                                allPeople={people}
+                                relationships={relationships}
+                              />
+                            )
+                          })}
                       </div>
                     </div>
                   )}
