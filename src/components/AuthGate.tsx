@@ -19,7 +19,7 @@ export default function AuthGate({ children }: AuthGateProps) {
       setLoading(false)
       
       if (!session?.user) {
-        navigate('/login')
+        navigate('/')
       }
     })
 
@@ -31,7 +31,7 @@ export default function AuthGate({ children }: AuthGateProps) {
       setLoading(false)
       
       if (!session?.user) {
-        navigate('/login')
+        navigate('/')
       }
     })
 
