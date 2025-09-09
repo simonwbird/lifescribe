@@ -358,6 +358,13 @@ export default function PersonProfile() {
                   </DialogContent>
                 </Dialog>
 
+                <Link to={`/people/${person.id}/timeline`}>
+                  <Button variant="outline">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Timeline
+                  </Button>
+                </Link>
+
                 <Button onClick={handlePhotoUpload}>
                   <Camera className="h-4 w-4 mr-2" />
                   Add Photos

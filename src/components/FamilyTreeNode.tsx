@@ -16,7 +16,8 @@ import {
   Heart,
   Edit,
   MoreVertical,
-  PenTool
+  PenTool,
+  Calendar
 } from 'lucide-react'
 import type { TreeNode } from '@/lib/familyTreeTypes'
 import { formatPersonYears, getPersonDisplayName } from '@/utils/familyTreeUtils'
@@ -86,6 +87,10 @@ export default function FamilyTreeNode({
                 <DropdownMenuItem onClick={() => onViewPerson(person.id)}>
                   <Eye className="mr-2 h-4 w-4" />
                   View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/people/${person.id}/timeline`)}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  View Timeline
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEditPerson(person.id)}>
                   <Edit className="mr-2 h-4 w-4" />

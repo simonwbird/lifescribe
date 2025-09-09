@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import FamilyTree from "./pages/FamilyTree";
 import PersonProfile from "./pages/PersonProfile";
 import Archive from "./pages/Archive";
+import { PersonTimeline } from "./pages/PersonTimeline";
 import RecipeDetail from "./pages/RecipeDetail";
 import ThingDetail from "./pages/ThingDetail";
 import PropertyDetail from "./pages/PropertyDetail";
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/family/members" element={<FamilyMembers />} />
           <Route path="/family/tree" element={<FamilyTree />} />
           <Route path="/people/:id" element={<PersonProfile />} />
+          <Route path="/people/:id/timeline" element={<PersonTimeline />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
