@@ -55,6 +55,9 @@ export default function Header() {
             <Link to="/family/members" className="text-sm font-medium hover:text-primary">
               Family
             </Link>
+            <Link to="/family/tree" className="text-sm font-medium hover:text-primary">
+              Tree
+            </Link>
           </nav>
         </div>
 
