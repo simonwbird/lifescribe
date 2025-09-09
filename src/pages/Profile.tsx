@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
+import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { Profile } from '@/lib/types'
 
 export default function Profile() {
@@ -56,6 +56,10 @@ export default function Profile() {
     }
   }
 
+  const handlePhotoUploaded = (newPhotoUrl: string) => {
+    setProfile(prev => prev ? { ...prev, avatar_url: newPhotoUrl } : null)
+  }
+
   return (
     <AuthGate>
       <div className="min-h-screen bg-background">
@@ -64,12 +68,13 @@ export default function Profile() {
           <div className="max-w-2xl mx-auto">
             <Card>
               <CardHeader className="text-center">
-                <Avatar className="h-20 w-20 mx-auto mb-4">
-                  <AvatarImage src={profile?.avatar_url || ''} />
-                  <AvatarFallback className="text-2xl">
-                    {profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <ProfilePhotoUploader
+                  currentPhotoUrl={profile?.avatar_url || ''}
+                  fallbackText={profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
+                  onPhotoUploaded={handlePhotoUploaded}
+                  isUserProfile={true}
+                  size="lg"
+                />
                 <CardTitle>Your Profile</CardTitle>
                 <CardDescription>Manage your account information</CardDescription>
               </CardHeader>

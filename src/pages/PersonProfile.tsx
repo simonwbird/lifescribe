@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
+import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
 import StoryCard from '@/components/StoryCard'
 import AnswerCard from '@/components/AnswerCard'
 import { Button } from '@/components/ui/button'
@@ -215,11 +216,15 @@ export default function PersonProfile() {
     }
   }
 
+  const handlePhotoUploaded = (newPhotoUrl: string) => {
+    setPerson(prev => prev ? { ...prev, avatar_url: newPhotoUrl } : null)
+  }
+
   const handlePhotoUpload = async () => {
-    // Photo upload functionality will be implemented
+    // This function is now handled by the ProfilePhotoUploader component
     toast({
-      title: "Coming Soon",
-      description: "Photo upload functionality will be implemented next"
+      title: "Photo Upload",
+      description: "Click on the avatar to upload a new photo"
     })
   }
 
@@ -286,12 +291,14 @@ export default function PersonProfile() {
                   </Button>
                 </Link>
                 <div className="flex items-center space-x-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={person.avatar_url} alt={displayName} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ProfilePhotoUploader
+                    currentPhotoUrl={person.avatar_url || ''}
+                    fallbackText={initials}
+                    onPhotoUploaded={handlePhotoUploaded}
+                    personId={person.id}
+                    isUserProfile={false}
+                    size="md"
+                  />
                   <div>
                     <h1 className="text-3xl font-bold">{displayName}</h1>
                     <div className="flex items-center space-x-4 mt-1">
