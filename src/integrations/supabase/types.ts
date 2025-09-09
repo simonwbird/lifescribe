@@ -20,6 +20,11 @@ export type Database = {
           created_at: string
           family_id: string
           id: string
+          is_approx: boolean | null
+          occurred_on: string | null
+          occurred_precision:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
           profile_id: string
           question_id: string
           updated_at: string
@@ -29,6 +34,11 @@ export type Database = {
           created_at?: string
           family_id: string
           id?: string
+          is_approx?: boolean | null
+          occurred_on?: string | null
+          occurred_precision?:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
           profile_id: string
           question_id: string
           updated_at?: string
@@ -38,6 +48,11 @@ export type Database = {
           created_at?: string
           family_id?: string
           id?: string
+          is_approx?: boolean | null
+          occurred_on?: string | null
+          occurred_precision?:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
           profile_id?: string
           question_id?: string
           updated_at?: string
@@ -1057,6 +1072,11 @@ export type Database = {
           created_at: string
           family_id: string
           id: string
+          is_approx: boolean | null
+          occurred_on: string | null
+          occurred_precision:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
           profile_id: string
           tags: string[] | null
           title: string
@@ -1067,6 +1087,11 @@ export type Database = {
           created_at?: string
           family_id: string
           id?: string
+          is_approx?: boolean | null
+          occurred_on?: string | null
+          occurred_precision?:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
           profile_id: string
           tags?: string[] | null
           title: string
@@ -1077,6 +1102,11 @@ export type Database = {
           created_at?: string
           family_id?: string
           id?: string
+          is_approx?: boolean | null
+          occurred_on?: string | null
+          occurred_precision?:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
           profile_id?: string
           tags?: string[] | null
           title?: string
@@ -1250,7 +1280,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      person_timeline_items: {
+        Row: {
+          excerpt: string | null
+          family_id: string | null
+          happened_on: string | null
+          is_approx: boolean | null
+          item_id: string | null
+          item_type: string | null
+          occurred_precision:
+            | Database["public"]["Enums"]["date_precision"]
+            | null
+          person_id: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_family_ids: {
@@ -1259,6 +1304,7 @@ export type Database = {
       }
     }
     Enums: {
+      date_precision: "day" | "month" | "year"
       invite_status: "pending" | "accepted" | "expired"
       relationship_type: "parent" | "spouse"
       role_type: "admin" | "member" | "guest"
@@ -1389,6 +1435,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      date_precision: ["day", "month", "year"],
       invite_status: ["pending", "accepted", "expired"],
       relationship_type: ["parent", "spouse"],
       role_type: ["admin", "member", "guest"],
