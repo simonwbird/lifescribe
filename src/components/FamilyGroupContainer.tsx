@@ -30,43 +30,16 @@ export default function FamilyGroupContainer({
     <div
       className="absolute pointer-events-none z-0"
       style={{
-        left: x - 20,
-        top: y - 60,
-        width: width + 40,
-        height: height + 80
+        left: x,
+        top: y,
+        width: width,
+        height: height
       }}
     >
-      {/* Background container */}
-      <Card className="w-full h-full bg-background/30 border-2 border-dashed border-muted-foreground/20 backdrop-blur-sm">
-        <div className="p-4">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h4 className="font-semibold text-sm text-foreground">{title}</h4>
-              {subtitle && (
-                <p className="text-xs text-muted-foreground">{subtitle}</p>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {generation !== undefined && (
-                <Badge variant="outline" className="text-xs">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  Gen {generation + 1}
-                </Badge>
-              )}
-              <Badge variant="secondary" className="text-xs">
-                <Users className="w-3 h-3 mr-1" />
-                {memberCount}
-              </Badge>
-            </div>
-          </div>
-          
-          {/* Content area for nodes */}
-          <div className="relative pointer-events-auto">
-            {children}
-          </div>
-        </div>
-      </Card>
+      {/* Invisible container - just for logical grouping */}
+      <div className="relative pointer-events-auto w-full h-full">
+        {children}
+      </div>
     </div>
   )
 }

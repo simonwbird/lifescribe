@@ -654,34 +654,15 @@ export default function FamilyTree() {
         <div className="flex-1 overflow-hidden">
           <div 
             ref={containerRef}
-            className="w-full h-[calc(100vh-140px)] overflow-auto bg-gradient-to-br from-background via-muted/30 to-background relative"
+            className="w-full h-[calc(100vh-140px)] overflow-auto bg-background relative"
             style={{
               transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
               transformOrigin: 'center center'
             }}
           >
-            {/* Subtle grid pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <pattern id="grid-pattern" width="50" height="50" patternUnits="userSpaceOnUse">
-                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="0.5"/>
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-              </svg>
-            </div>
-            
             <div className="absolute inset-0 p-8 relative z-10">
               {treeGraph.nodes.length > 0 || people.length > 0 ? (
                 <div className="relative w-full h-full min-h-[800px]">
-                  {/* Connection lines */}
-                  <FamilyTreeConnections
-                    nodes={treeGraph.nodes}
-                    relationships={relationships}
-                    nodePositions={nodePositions}
-                  />
-                  
                   {/* Main connected tree */}
                   {treeGraph.nodes.length > 0 && (
                     <div className="mb-16 relative z-10">
