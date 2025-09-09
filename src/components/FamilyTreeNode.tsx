@@ -19,7 +19,9 @@ import {
   Edit,
   MoreVertical,
   PenTool,
-  Calendar
+  Calendar,
+  Link2,
+  Unlink
 } from 'lucide-react'
 import { TreeNode } from '@/lib/familyTreeTypes'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
@@ -32,6 +34,10 @@ interface FamilyTreeNodeProps {
   onAddSpouse: (personId: string) => void
   onEditPerson: (personId: string) => void
   onPositionChange?: (nodeId: string, x: number, y: number) => void
+  onConnectPeople?: (fromPersonId: string, toPersonId: string, relationshipType: 'parent' | 'spouse') => void
+  onRemoveRelationship?: (relationshipId: string) => void
+  allPeople?: any[]
+  relationships?: any[]
 }
 
 export default function FamilyTreeNode({
@@ -41,12 +47,23 @@ export default function FamilyTreeNode({
   onAddChild,
   onAddSpouse,
   onEditPerson,
-  onPositionChange
+  onPositionChange,
+  onConnectPeople,
+  onRemoveRelationship,
+  allPeople = [],
+  relationships = []
 }: FamilyTreeNodeProps) {
   const navigate = useNavigate()
   const { person, children, spouses } = node
   const displayName = getPersonDisplayName(person)
   const years = formatPersonYears(person)
+  
+  const [showConnectionPanel, setShowConnectionPanel] = useState(false)
+  
+  // Get existing relationships for this person
+  const personRelationships = relationships.filter(rel => 
+    rel.from_person_id === person.id || rel.to_person_id === person.id
+  )
   
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -144,47 +161,144 @@ export default function FamilyTreeNode({
                 )}
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 dropdown-trigger">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => onViewPerson(person.id)}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  View Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/people/${person.id}/timeline`)}>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  View Timeline
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEditPerson(person.id)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/stories/new?person=${person.id}&personName=${encodeURIComponent(displayName)}`)}>
-                  <PenTool className="mr-2 h-4 w-4" />
-                  Add Story About {displayName}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onAddParent(person.id)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add Parent
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onAddChild(person.id)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add Child
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onAddSpouse(person.id)}>
-                  <Heart className="mr-2 h-4 w-4" />
-                  Add Spouse
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center space-x-1">
+              {/* Connection Controls */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 dropdown-trigger"
+                onClick={() => setShowConnectionPanel(!showConnectionPanel)}
+                title="Manage Connections"
+              >
+                <Link2 className="h-4 w-4" />
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 dropdown-trigger">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => onViewPerson(person.id)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    View Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(`/people/${person.id}/timeline`)}>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    View Timeline
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEditPerson(person.id)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(`/stories/new?person=${person.id}&personName=${encodeURIComponent(displayName)}`)}>
+                    <PenTool className="mr-2 h-4 w-4" />
+                    Add Story About {displayName}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onAddParent(person.id)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Parent
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onAddChild(person.id)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Child
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onAddSpouse(person.id)}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    Add Spouse
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Connection Panel */}
+      {showConnectionPanel && (
+        <Card className="w-64 mt-2 z-50 bg-white border-2 border-primary shadow-lg">
+          <CardContent className="p-3">
+            <h4 className="font-medium text-sm mb-3 flex items-center">
+              <Link2 className="h-4 w-4 mr-2" />
+              Manage Connections
+            </h4>
+            
+            {/* Add New Connection */}
+            <div className="space-y-2 mb-4">
+              <p className="text-xs text-muted-foreground">Connect to:</p>
+              {allPeople
+                .filter(p => p.id !== person.id && 
+                  !relationships.some(rel => 
+                    (rel.from_person_id === person.id && rel.to_person_id === p.id) ||
+                    (rel.to_person_id === person.id && rel.from_person_id === p.id)
+                  )
+                )
+                .slice(0, 3)
+                .map(otherPerson => (
+                  <div key={otherPerson.id} className="flex items-center justify-between text-xs">
+                    <span className="truncate flex-1 mr-2">{getPersonDisplayName(otherPerson)}</span>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => onConnectPeople?.(person.id, otherPerson.id, 'parent')}
+                      >
+                        Parent
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => onConnectPeople?.(person.id, otherPerson.id, 'spouse')}
+                      >
+                        Spouse
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+
+            {/* Remove Existing Connections */}
+            {personRelationships.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Remove connections:</p>
+                {personRelationships.slice(0, 3).map(rel => {
+                  const connectedPersonId = rel.from_person_id === person.id ? rel.to_person_id : rel.from_person_id
+                  const connectedPerson = allPeople.find(p => p.id === connectedPersonId)
+                  return (
+                    <div key={rel.id} className="flex items-center justify-between text-xs">
+                      <span className="truncate flex-1 mr-2">
+                        {connectedPerson ? getPersonDisplayName(connectedPerson) : 'Unknown'} ({rel.relationship_type})
+                      </span>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => onRemoveRelationship?.(rel.id)}
+                      >
+                        <Unlink className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mt-3 text-xs"
+              onClick={() => setShowConnectionPanel(false)}
+            >
+              Close
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Spouses */}
       {spouses.map((spouse) => (
@@ -221,6 +335,10 @@ export default function FamilyTreeNode({
               onAddSpouse={onAddSpouse}
               onEditPerson={onEditPerson}
               onPositionChange={onPositionChange}
+              onConnectPeople={onConnectPeople}
+              onRemoveRelationship={onRemoveRelationship}
+              allPeople={allPeople}
+              relationships={relationships}
             />
           ))}
         </div>

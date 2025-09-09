@@ -329,6 +329,68 @@ export default function FamilyTree() {
     }))
   }
 
+  const handleConnectPeople = async (fromPersonId: string, toPersonId: string, relationshipType: 'parent' | 'spouse') => {
+    if (!familyId) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('relationships')
+        .insert({
+          family_id: familyId,
+          from_person_id: fromPersonId,
+          to_person_id: toPersonId,
+          relationship_type: relationshipType,
+          created_by: user.id
+        })
+
+      if (error) throw error
+
+      // Reload data
+      await loadFamilyData()
+      
+      toast({
+        title: "Connection Added",
+        description: `${relationshipType} relationship created successfully`
+      })
+    } catch (error) {
+      console.error('Error connecting people:', error)
+      toast({
+        title: "Error",
+        description: "Failed to create relationship",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleRemoveRelationship = async (relationshipId: string) => {
+    try {
+      const { error } = await supabase
+        .from('relationships')
+        .delete()
+        .eq('id', relationshipId)
+
+      if (error) throw error
+
+      // Reload data
+      await loadFamilyData()
+      
+      toast({
+        title: "Connection Removed",
+        description: "Relationship deleted successfully"
+      })
+    } catch (error) {
+      console.error('Error removing relationship:', error)
+      toast({
+        title: "Error", 
+        description: "Failed to remove relationship",
+        variant: "destructive"
+      })
+    }
+  }
+
   const filteredPeople = people.filter(person =>
     getPersonDisplayName(person).toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -546,6 +608,10 @@ export default function FamilyTree() {
                             onAddSpouse={handleAddSpouse}
                             onEditPerson={handleEditPerson}
                             onPositionChange={handleNodePositionChange}
+                            onConnectPeople={handleConnectPeople}
+                            onRemoveRelationship={handleRemoveRelationship}
+                            allPeople={people}
+                            relationships={relationships}
                           />
                         ))}
                       </div>
@@ -576,6 +642,10 @@ export default function FamilyTree() {
                               onAddSpouse={handleAddSpouse}
                               onEditPerson={handleEditPerson}
                               onPositionChange={handleNodePositionChange}
+                              onConnectPeople={handleConnectPeople}
+                              onRemoveRelationship={handleRemoveRelationship}
+                              allPeople={people}
+                              relationships={relationships}
                             />
                           ))}
                       </div>
