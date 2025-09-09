@@ -491,7 +491,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_family_ids: {
+        Args: { user_id: string }
+        Returns: string[]
+      }
     }
     Enums: {
       invite_status: "pending" | "accepted" | "expired"
