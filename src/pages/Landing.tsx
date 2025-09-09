@@ -26,17 +26,17 @@ import grandfatherGranddaughter from '@/assets/grandfather-granddaughter.jpg'
 import familySelfie from '@/assets/family-selfie.jpg'
 
 const Hero = () => (
-  <section className="relative bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60 py-20 lg:py-32">
+  <section className="relative bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60 py-12 lg:py-16">
     <div className="container mx-auto px-4">
-      <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+      <div className="grid lg:grid-cols-2 gap-8 items-center max-w-7xl mx-auto">
         <div className="text-center lg:text-left">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             Preserve your family's{" "}
             <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">
               stories for generations
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground mb-6 leading-relaxed">
             LifeScribe is a private family memory book where everyone can share stories, photos, and wisdom — 
             safely kept for the future.
           </p>
@@ -62,7 +62,7 @@ const Hero = () => (
 )
 
 const PositioningSection = () => (
-  <section className="py-16 bg-white">
+  <section className="py-8 bg-white">
     <div className="container mx-auto px-4">
       <div className="max-w-4xl mx-auto text-center">
         <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 italic leading-relaxed">
@@ -96,11 +96,11 @@ const FeatureCard = ({
 )
 
 const FeaturesSection = () => (
-  <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-slate-50/50">
+  <section className="py-12 lg:py-16 bg-gradient-to-b from-background to-slate-50/50">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
             Everything your family needs to stay connected
           </h2>
         </div>
@@ -124,7 +124,7 @@ const FeaturesSection = () => (
         </div>
         
         {/* Photo showcase section */}
-        <div className="mt-20 grid md:grid-cols-3 gap-8">
+        <div className="mt-12 grid md:grid-cols-3 gap-8">
           <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
             <img 
               src={familyTechnology} 
@@ -165,11 +165,11 @@ const TestimonialCard = ({ quote, author }: { quote: string, author: string }) =
 )
 
 const TestimonialsSection = () => (
-  <section className="py-20 lg:py-32">
+  <section className="py-12 lg:py-16">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
             Families love LifeScribe
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -197,15 +197,15 @@ const TestimonialsSection = () => (
 )
 
 const CallToAction = () => (
-  <section className="py-20 lg:py-32 bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60">
+  <section className="py-12 lg:py-16 bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60">
     <div className="container mx-auto px-4 text-center">
-      <h2 className="text-4xl md:text-6xl font-bold mb-6">
+      <h2 className="text-4xl md:text-6xl font-bold mb-4">
         Start your family archive{" "}
         <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">
           today
         </span>
       </h2>
-      <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+      <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
         Join families worldwide who are preserving their stories for future generations. 
         Create your private family space in just minutes.
       </p>
@@ -220,7 +220,7 @@ const CallToAction = () => (
 
 const Footer = () => (
   <footer className="border-t bg-slate-50/50 backdrop-blur">
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
         <div className="col-span-2">
           <div className="flex items-center space-x-2 mb-4">
