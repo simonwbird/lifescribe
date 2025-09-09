@@ -651,15 +651,27 @@ export default function FamilyTree() {
         <div className="flex-1 overflow-hidden">
           <div 
             ref={containerRef}
-            className="w-full h-[calc(100vh-140px)] overflow-auto bg-gradient-to-br from-slate-50 to-white relative"
+            className="w-full h-[calc(100vh-140px)] overflow-auto bg-gradient-to-br from-background via-muted/30 to-background relative"
             style={{
               transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
               transformOrigin: 'center center'
             }}
           >
-            <div className="absolute inset-0 p-8">
+            {/* Subtle grid pattern */}
+            <div className="absolute inset-0 opacity-20">
+              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="grid-pattern" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="0.5"/>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+              </svg>
+            </div>
+            
+            <div className="absolute inset-0 p-8 relative z-10">
               {treeGraph.nodes.length > 0 || people.length > 0 ? (
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full min-h-[800px]">
                   {/* Connection lines */}
                   <FamilyTreeConnections
                     nodes={treeGraph.nodes}
@@ -670,12 +682,14 @@ export default function FamilyTree() {
                   {/* Main connected tree */}
                   {treeGraph.nodes.length > 0 && (
                     <div className="mb-16 relative z-10">
-                      <h3 className="text-lg font-semibold mb-8 text-center">
-                        Family Tree 
-                        <span className="ml-2 text-sm font-normal text-muted-foreground">
-                          ({layoutMode === 'auto' ? 'Auto Layout' : 'Manual Layout'})
-                        </span>
-                      </h3>
+                      <div className="text-center mb-8">
+                        <h3 className="text-2xl font-bold text-foreground mb-2">
+                          Family Tree
+                        </h3>
+                        <p className="text-sm text-muted-foreground bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 inline-block border shadow-sm">
+                          {layoutMode === 'auto' ? '📐 Auto Layout Active' : '✋ Manual Layout'} • {treeGraph.nodes.length} connected member{treeGraph.nodes.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
                       <div className="relative">
                         {(layoutMode === 'auto' ? layoutNodes.filter(n => treeGraph.nodes.some(tn => tn.id === n.id)) : treeGraph.nodes).map((node) => (
                           <FamilyTreeNode
@@ -704,7 +718,14 @@ export default function FamilyTree() {
                   {/* Unconnected people */}
                   {people.filter(person => !treeGraph.nodes.some(node => node.person.id === person.id)).length > 0 && (
                     <div className="relative z-10">
-                      <h3 className="text-lg font-semibold mb-8 text-center">Unconnected Family Members</h3>
+                      <div className="text-center mb-8">
+                        <h3 className="text-xl font-semibold text-foreground mb-2">
+                          Unconnected Family Members
+                        </h3>
+                        <p className="text-sm text-muted-foreground bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 inline-block border shadow-sm">
+                          🔗 Hover borders to create connections
+                        </p>
+                      </div>
                       <div className="relative">
                         {people
                           .filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
@@ -739,21 +760,25 @@ export default function FamilyTree() {
                   )}
                 </div>
               ) : (
-                <Card className="max-w-md mx-auto">
-                  <CardHeader className="text-center">
-                    <TreePine className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                    <CardTitle>No Family Tree Yet</CardTitle>
-                    <CardDescription>
-                      Start building your family tree by adding people and their relationships.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <Button>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add First Person
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center justify-center min-h-[600px]">
+                  <Card className="max-w-md mx-auto shadow-lg border-2">
+                    <CardHeader className="text-center">
+                      <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                        <TreePine className="h-8 w-8 text-primary" />
+                      </div>
+                      <CardTitle className="text-xl">No Family Tree Yet</CardTitle>
+                      <CardDescription className="text-base">
+                        Start building your family tree by adding people and their relationships.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <Button size="lg" className="shadow-sm">
+                        <UserPlus className="h-5 w-5 mr-2" />
+                        Add First Person
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
             </div>
           </div>
