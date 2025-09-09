@@ -13,6 +13,7 @@ import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
 import Profile from "./pages/Profile";
 import FamilyTree from "./pages/FamilyTree";
+import PersonProfile from "./pages/PersonProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/prompts/browse" element={<PromptsBrowse />} />
           <Route path="/family/members" element={<FamilyMembers />} />
           <Route path="/family/tree" element={<FamilyTree />} />
+          <Route path="/people/:id" element={<PersonProfile />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
