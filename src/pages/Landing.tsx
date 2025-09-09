@@ -15,118 +15,159 @@ import {
   Users, 
   Camera,
   MessageCircle,
-  Shield
+  Shield,
+  Quote
 } from 'lucide-react'
 
 const Hero = () => (
-  <section className="relative bg-gradient-to-br from-primary/5 via-background to-primary/5 py-20 lg:py-32">
+  <section className="relative bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60 py-20 lg:py-32">
     <div className="container mx-auto px-4">
-      <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Preserve Your Family Stories Forever
-        </h1>
-        <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          LifeScribe is your private family memory platform. Capture stories, answer prompts, 
-          and create a lasting archive that connects generations.
-        </p>
-        <Button asChild size="lg" className="text-lg px-8 py-6">
-          <Link to="/onboarding">
-            Get Started <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
-        </Button>
+      <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+        <div className="text-center lg:text-left">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            Preserve your family's{" "}
+            <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">
+              stories for generations
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
+            LifeScribe is a private family memory book where everyone can share stories, photos, and wisdom — 
+            safely kept for the future.
+          </p>
+          <Button asChild size="lg" className="text-lg px-10 py-6 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white border-0 shadow-lg hover:shadow-xl transition-all">
+            <Link to="/onboarding">
+              Start Your Family Archive <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
+        <div className="relative">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-rose-100 to-amber-100 aspect-[4/3]">
+            <img 
+              src="/placeholder.svg" 
+              alt="Multi-generational family sharing stories together"
+              className="w-full h-full object-cover opacity-80"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </section>
 )
 
-const FeatureSection = ({ 
+const FeatureCard = ({ 
   title, 
   description, 
-  icon: Icon, 
-  imageSrc, 
-  reverse = false,
-  children 
+  icon: Icon
 }: {
   title: string
   description: string
   icon: React.ComponentType<any>
-  imageSrc?: string
-  reverse?: boolean
-  children?: React.ReactNode
 }) => (
-  <section className="py-16 lg:py-24">
-    <div className="container mx-auto px-4">
-      <div className={`grid lg:grid-cols-2 gap-12 items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}>
-        <div className={reverse ? 'lg:order-2' : 'lg:order-1'}>
-          <div className="flex items-center mb-6">
-            <div className="p-3 bg-primary/10 rounded-full mr-4">
-              <Icon className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold">{title}</h2>
-          </div>
-          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-            {description}
-          </p>
-          {children}
+  <Card className="bg-white rounded-3xl shadow-lg border-0 hover:shadow-xl transition-all p-8 h-full">
+    <CardContent className="p-0 text-center">
+      <div className="mb-6 flex justify-center">
+        <div className="p-4 bg-gradient-to-br from-rose-100 to-amber-100 rounded-2xl">
+          <Icon className="h-8 w-8 text-gradient" style={{color: '#f43f5e'}} />
         </div>
-        <div className={reverse ? 'lg:order-1' : 'lg:order-2'}>
-          {imageSrc ? (
-            <div className="relative">
-              <img 
-                src="/placeholder.svg" 
-                alt={title}
-                className="rounded-2xl shadow-2xl w-full h-64 md:h-80 object-cover bg-muted"
-              />
-            </div>
-          ) : children}
+      </div>
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{description}</p>
+    </CardContent>
+  </Card>
+)
+
+const FeaturesSection = () => (
+  <section className="py-20 lg:py-32 bg-gradient-to-b from-background to-slate-50/50">
+    <div className="container mx-auto px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Everything your family needs to stay connected
+          </h2>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          <FeatureCard
+            title="Capture Memories"
+            description="Answer fun prompts about your life, upload photos and videos, and create lasting memories that your family will treasure forever."
+            icon={Camera}
+          />
+          <FeatureCard
+            title="Private & Secure"
+            description="Your family's stories are protected with bank-level security. Only invited family members can access your memories — no ads, no data mining."
+            icon={Lock}
+          />
+          <FeatureCard
+            title="Connect Generations"
+            description="Bring children, parents, and grandparents together in one shared space where everyone can contribute to your family's story."
+            icon={Heart}
+          />
         </div>
       </div>
     </div>
   </section>
 )
 
-const ExamplePromptCard = () => (
-  <Card className="max-w-md mx-auto bg-card/50 backdrop-blur border-primary/20">
-    <CardContent className="p-6">
-      <div className="flex items-start space-x-3 mb-4">
-        <MessageCircle className="h-5 w-5 text-primary mt-1" />
-        <div>
-          <h3 className="font-semibold text-sm text-primary mb-1">Daily Prompt</h3>
-          <p className="text-sm text-muted-foreground">Family • Childhood</p>
-        </div>
+const TestimonialCard = ({ quote, author }: { quote: string, author: string }) => (
+  <Card className="bg-white rounded-3xl shadow-lg border-0 p-8 h-full">
+    <CardContent className="p-0">
+      <div className="mb-6 flex justify-center">
+        <Quote className="h-8 w-8 text-rose-400" />
       </div>
-      <h4 className="font-medium mb-3">
-        "What is your earliest memory, and what made it so special?"
-      </h4>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="flex -space-x-2">
-            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/60 border-2 border-background"></div>
-            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-secondary/30 to-secondary/60 border-2 border-background"></div>
-          </div>
-          <span className="text-xs text-muted-foreground">3 family members</span>
-        </div>
-        <Button size="sm" variant="ghost" className="text-xs">
-          Answer <ArrowRight className="ml-1 h-3 w-3" />
-        </Button>
-      </div>
+      <p className="text-lg text-center mb-6 italic leading-relaxed">"{quote}"</p>
+      <p className="text-center text-muted-foreground font-medium">— {author}</p>
     </CardContent>
   </Card>
 )
 
+const TestimonialsSection = () => (
+  <section className="py-20 lg:py-32">
+    <div className="container mx-auto px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Families love LifeScribe
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            See what families are saying about preserving their memories together
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          <TestimonialCard
+            quote="It feels like having a digital family book we can all write in."
+            author="Sarah M."
+          />
+          <TestimonialCard
+            quote="My kids love asking grandma questions and seeing her answers."
+            author="Michael R."
+          />
+          <TestimonialCard
+            quote="LifeScribe made us laugh and cry together — in the best way."
+            author="Jennifer L."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+)
+
 const CallToAction = () => (
-  <section className="py-20 lg:py-32 bg-gradient-to-r from-primary/5 to-secondary/5">
+  <section className="py-20 lg:py-32 bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60">
     <div className="container mx-auto px-4 text-center">
-      <h2 className="text-3xl md:text-5xl font-bold mb-6">
-        Start Your Family Archive Today
+      <h2 className="text-4xl md:text-6xl font-bold mb-6">
+        Start your family archive{" "}
+        <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">
+          today
+        </span>
       </h2>
-      <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-        Join thousands of families preserving their stories for future generations. 
-        Create your private family space in minutes.
+      <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+        Join families worldwide who are preserving their stories for future generations. 
+        Create your private family space in just minutes.
       </p>
-      <Button asChild size="lg" className="text-lg px-8 py-6">
+      <Button asChild size="lg" className="text-xl px-12 py-8 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white border-0 shadow-2xl hover:shadow-3xl transition-all">
         <Link to="/onboarding">
-          Create Your Family Archive <ArrowRight className="ml-2 h-5 w-5" />
+          Start Your Family Archive <ArrowRight className="ml-3 h-6 w-6" />
         </Link>
       </Button>
     </div>
@@ -134,38 +175,36 @@ const CallToAction = () => (
 )
 
 const Footer = () => (
-  <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-    <div className="container mx-auto px-4 py-12">
-      <div className="grid md:grid-cols-3 gap-8">
-        <div>
+  <footer className="border-t bg-slate-50/50 backdrop-blur">
+    <div className="container mx-auto px-4 py-16">
+      <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        <div className="col-span-2">
           <div className="flex items-center space-x-2 mb-4">
-            <BookHeart className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">LifeScribe</span>
+            <BookHeart className="h-8 w-8 text-rose-500" />
+            <span className="text-2xl font-bold">LifeScribe</span>
           </div>
-          <p className="text-muted-foreground">
-            Preserving family stories, one memory at a time.
+          <p className="text-muted-foreground leading-relaxed mb-6">
+            Preserving family stories, one memory at a time. Connect generations through 
+            shared memories in your private family archive.
           </p>
         </div>
         <div>
-          <h3 className="font-semibold mb-4">Features</h3>
-          <ul className="space-y-2 text-muted-foreground">
-            <li>Private Family Spaces</li>
-            <li>Story Capture & Sharing</li>
-            <li>Guided Memory Prompts</li>
-            <li>Secure Media Storage</li>
+          <h3 className="font-semibold mb-4">Company</h3>
+          <ul className="space-y-3 text-muted-foreground">
+            <li><a href="#" className="hover:text-foreground transition-colors">About</a></li>
+            <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
+            <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
           </ul>
         </div>
         <div>
           <h3 className="font-semibold mb-4">Get Started</h3>
-          <div className="space-y-2">
-            <Button asChild variant="ghost" size="sm" className="justify-start p-0">
-              <Link to="/onboarding">Create Family Account</Link>
-            </Button>
-          </div>
+          <Button asChild variant="ghost" className="justify-start p-0 text-muted-foreground hover:text-foreground">
+            <Link to="/onboarding">Create Family Account</Link>
+          </Button>
         </div>
       </div>
-      <div className="border-t mt-8 pt-8 text-center text-muted-foreground">
-        <p>&copy; 2024 LifeScribe. Made with ❤️ for families everywhere.</p>
+      <div className="border-t mt-12 pt-8 text-center text-muted-foreground">
+        <p>&copy; 2025 LifeScribe. Made with ❤️ for families everywhere.</p>
       </div>
     </div>
   </footer>
@@ -265,21 +304,26 @@ const LoginForm = () => {
 }
 
 const LandingHeader = () => (
-  <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95 shadow-sm">
     <div className="container mx-auto px-4">
-      <div className="flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <BookHeart className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">LifeScribe</span>
+      <div className="flex h-18 items-center justify-between">
+        <Link to="/" className="flex items-center space-x-3">
+          <BookHeart className="h-8 w-8 text-rose-500" />
+          <span className="text-2xl font-bold">LifeScribe</span>
         </Link>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">Login</Button>
-          </DialogTrigger>
-          <DialogContent className="p-0 border-0 bg-transparent shadow-none">
-            <LoginForm />
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center space-x-4">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">Login</Button>
+            </DialogTrigger>
+            <DialogContent className="p-0 border-0 bg-transparent shadow-none">
+              <LoginForm />
+            </DialogContent>
+          </Dialog>
+          <Button asChild className="rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white border-0 px-6">
+            <Link to="/onboarding">Start</Link>
+          </Button>
+        </div>
       </div>
     </div>
   </header>
@@ -289,49 +333,9 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
-      
       <Hero />
-      
-      <FeatureSection
-        title="Capture Your Family Stories"
-        description="Share photos, videos, and written memories in your private family space. Every story becomes part of your family's permanent archive, accessible to all family members across generations."
-        icon={Camera}
-        imageSrc="/placeholder.svg"
-      />
-      
-      <FeatureSection
-        title="Answer Prompts, Keep Memories Alive"
-        description="Discover new stories with our carefully crafted memory prompts. From childhood adventures to family traditions, these guided questions help unlock precious memories you might have forgotten."
-        icon={Heart}
-        reverse
-      >
-        <div className="space-y-6">
-          <ExamplePromptCard />
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              New prompts delivered weekly to keep the conversation flowing
-            </p>
-          </div>
-        </div>
-      </FeatureSection>
-      
-      <FeatureSection
-        title="Private & Secure"
-        description="Your family memories are precious and private. LifeScribe uses bank-level security to ensure only your family members can access your stories. No ads, no data mining – just your memories, safely preserved."
-        icon={Shield}
-      >
-        <div className="grid grid-cols-2 gap-4 max-w-sm">
-          <div className="flex flex-col items-center text-center p-4 bg-muted/30 rounded-lg">
-            <Lock className="h-8 w-8 text-primary mb-2" />
-            <h4 className="font-medium text-sm">End-to-End Encryption</h4>
-          </div>
-          <div className="flex flex-col items-center text-center p-4 bg-muted/30 rounded-lg">
-            <Users className="h-8 w-8 text-primary mb-2" />
-            <h4 className="font-medium text-sm">Family-Only Access</h4>
-          </div>
-        </div>
-      </FeatureSection>
-      
+      <FeaturesSection />
+      <TestimonialsSection />
       <CallToAction />
       <Footer />
     </div>
