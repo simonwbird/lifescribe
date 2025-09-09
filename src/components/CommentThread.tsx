@@ -23,18 +23,35 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
   useEffect(() => {
     const getComments = async () => {
       const column = `${targetType}_id`
-      const { data } = await supabase
+      const { data: commentsData } = await (supabase as any)
         .from('comments')
-        .select(`
-          *,
-          profiles (*)
-        `)
+        .select('*')
         .eq(column, targetId)
         .eq('family_id', familyId)
         .order('created_at')
 
-      if (data) {
-        setComments(data)
+      if (commentsData) {
+        // Fetch profiles separately to avoid type complexity
+        const profileIds = [...new Set(commentsData.map((c: any) => c.profile_id))]
+        const { data: profilesData } = await (supabase as any)
+          .from('profiles')
+          .select('*')
+          .in('id', profileIds)
+        
+        // Combine the data
+        const commentsWithProfiles = commentsData.map((comment: any) => ({
+          ...comment,
+          profiles: profilesData?.find((p: any) => p.id === comment.profile_id) || {
+            id: comment.profile_id,
+            email: 'Unknown User',
+            full_name: null,
+            avatar_url: null,
+            created_at: '',
+            updated_at: ''
+          }
+        }))
+        
+        setComments(commentsWithProfiles)
       }
     }
 
@@ -54,24 +71,40 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
       if (!user) return
 
       const column = `${targetType}_id`
-      const { data } = await supabase
-        .from('comments')
-        .insert({
-          [column]: targetId,
-          profile_id: user.id,
-          family_id: familyId,
-          content: newComment.trim(),
-        })
-        .select(`
-          *,
-          profiles (*)
-        `)
-        .single()
-      
-      if (data) {
-        setComments(prev => [...prev, data])
-        setNewComment('')
-      }
+        const { data: commentData } = await (supabase as any)
+          .from('comments')
+          .insert({
+            [column]: targetId,
+            profile_id: user.id,
+            family_id: familyId,
+            content: newComment.trim(),
+          })
+          .select('*')
+          .single()
+        
+        if (commentData) {
+          // Fetch the user's profile
+          const { data: profileData } = await (supabase as any)
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          
+          const newCommentWithProfile = {
+            ...commentData,
+            profiles: profileData || {
+              id: user.id,
+              email: user.email || 'Unknown User',
+              full_name: null,
+              avatar_url: null,
+              created_at: '',
+              updated_at: ''
+            }
+          }
+          
+          setComments(prev => [...prev, newCommentWithProfile])
+          setNewComment('')
+        }
     } catch (error) {
       console.error('Error adding comment:', error)
     } finally {

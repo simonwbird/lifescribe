@@ -25,7 +25,7 @@ export default function ReactionBar({ targetType, targetId, familyId }: Reaction
   useEffect(() => {
     const getReactions = async () => {
       const column = `${targetType}_id`
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('reactions')
         .select('*')
         .eq(column, targetId)
@@ -37,7 +37,7 @@ export default function ReactionBar({ targetType, targetId, familyId }: Reaction
         // Check if current user has reacted
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          const userReact = data.find(r => r.profile_id === user.id)
+          const userReact = data.find((r: any) => r.profile_id === user.id)
           setUserReaction(userReact?.reaction_type || null)
         }
       }
@@ -57,26 +57,26 @@ export default function ReactionBar({ targetType, targetId, familyId }: Reaction
       
       if (userReaction === reactionType) {
         // Remove reaction
-        await supabase
+        await (supabase as any)
           .from('reactions')
           .delete()
           .eq(column, targetId)
           .eq('profile_id', user.id)
         
         setUserReaction(null)
-        setReactions(prev => prev.filter(r => r.profile_id !== user.id))
+        setReactions(prev => prev.filter((r: any) => r.profile_id !== user.id))
       } else {
         // Add or update reaction
         if (userReaction) {
           // Update existing reaction
-          await supabase
+          await (supabase as any)
             .from('reactions')
             .update({ reaction_type: reactionType })
             .eq(column, targetId)
             .eq('profile_id', user.id)
         } else {
           // Create new reaction
-          const { data } = await supabase
+          const { data } = await (supabase as any)
             .from('reactions')
             .insert({
               [column]: targetId,
