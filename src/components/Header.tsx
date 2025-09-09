@@ -58,6 +58,9 @@ export default function Header() {
             <Link to="/family/tree" className="text-sm font-medium hover:text-primary">
               Tree
             </Link>
+            <Link to="/archive" className="text-sm font-medium hover:text-primary">
+              Archive
+            </Link>
           </nav>
         </div>
 

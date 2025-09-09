@@ -98,7 +98,7 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
 
       const { error } = await supabase
         .from('recipes')
-        .insert([{
+        .insert({
           family_id: memberData.family_id,
           created_by: (await supabase.auth.getUser()).data.user?.id!,
           title: title.trim(),
@@ -107,10 +107,10 @@ export function RecipeForm({ onSuccess }: RecipeFormProps) {
           time_prep_minutes: prepMinutes || null,
           time_cook_minutes: cookMinutes || null,
           dietary_tags: dietaryTags,
-          ingredients: ingredients.filter(ing => ing.item.trim()),
-          steps: steps.filter(step => step.text.trim()),
+          ingredients: ingredients.filter(ing => ing.item.trim()) as any,
+          steps: steps.filter(step => step.text.trim()) as any,
           notes: notes.trim() || null
-        }]);
+        });
 
       if (error) throw error;
 
