@@ -56,6 +56,7 @@ export default function FamilyTree() {
     gender: ''
   })
   const [isGedcomModalOpen, setIsGedcomModalOpen] = useState(false)
+  const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
   
   const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
@@ -320,6 +321,13 @@ export default function FamilyTree() {
     }
   }
 
+  const handleNodePositionChange = (nodeId: string, x: number, y: number) => {
+    setNodePositions(prev => ({
+      ...prev,
+      [nodeId]: { x, y }
+    }))
+  }
+
   const filteredPeople = people.filter(person =>
     getPersonDisplayName(person).toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -506,22 +514,20 @@ export default function FamilyTree() {
         <div className="flex-1 overflow-hidden">
           <div 
             ref={containerRef}
-            className="w-full h-[calc(100vh-140px)] overflow-auto bg-gradient-to-br from-slate-50 to-white"
+            className="w-full h-[calc(100vh-140px)] overflow-auto bg-gradient-to-br from-slate-50 to-white relative"
+            style={{
+              transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
+              transformOrigin: 'center center'
+            }}
           >
-            <div 
-              className="min-w-full min-h-full flex items-center justify-center p-8"
-              style={{
-                transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-                transformOrigin: 'center center'
-              }}
-            >
+            <div className="absolute inset-0 p-8">
               {treeGraph.nodes.length > 0 || people.length > 0 ? (
-                <div className="family-tree-container space-y-8">
+                <div className="relative w-full h-full">
                   {/* Main connected tree */}
                   {treeGraph.nodes.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 text-center">Family Tree</h3>
-                      <div className="flex justify-center">
+                    <div className="mb-16">
+                      <h3 className="text-lg font-semibold mb-8 text-center">Family Tree</h3>
+                      <div className="relative">
                         {treeGraph.nodes.map((node) => (
                           <FamilyTreeNode
                             key={node.id}
@@ -531,6 +537,7 @@ export default function FamilyTree() {
                             onAddChild={handleAddChild}
                             onAddSpouse={handleAddSpouse}
                             onEditPerson={handleEditPerson}
+                            onPositionChange={handleNodePositionChange}
                           />
                         ))}
                       </div>
@@ -540,24 +547,27 @@ export default function FamilyTree() {
                   {/* Unconnected people */}
                   {people.filter(person => !treeGraph.nodes.some(node => node.person.id === person.id)).length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-4 text-center">Unconnected Family Members</h3>
-                      <div className="flex flex-wrap justify-center gap-4">
+                      <h3 className="text-lg font-semibold mb-8 text-center">Unconnected Family Members</h3>
+                      <div className="relative">
                         {people
                           .filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
-                          .map((person) => (
+                          .map((person, index) => (
                             <FamilyTreeNode
                               key={person.id}
                               node={{
                                 id: person.id,
                                 person: person,
                                 children: [],
-                                spouses: []
+                                spouses: [],
+                                x: nodePositions[person.id]?.x || index * 300 + 100,
+                                y: nodePositions[person.id]?.y || 100
                               }}
                               onViewPerson={handleViewPerson}
                               onAddParent={handleAddParent}
                               onAddChild={handleAddChild}
                               onAddSpouse={handleAddSpouse}
                               onEditPerson={handleEditPerson}
+                              onPositionChange={handleNodePositionChange}
                             />
                           ))}
                       </div>
