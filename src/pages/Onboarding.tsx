@@ -45,8 +45,8 @@ export default function Onboarding() {
     setError('')
 
     try {
-      // Create or update profile
-      const { error } = await supabase
+      // Create or update profile with proper error handling
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .upsert({
           id: user.id,
@@ -54,11 +54,18 @@ export default function Onboarding() {
           full_name: fullName,
           updated_at: new Date().toISOString(),
         })
+        .select()
       
-      if (error) throw error
+      if (error) {
+        console.error('Profile error:', error)
+        throw error
+      }
+      
+      console.log('Profile created/updated:', data)
       setStep(2)
     } catch (error: any) {
-      setError(error.message)
+      console.error('Profile update failed:', error)
+      setError(`Profile update failed: ${error.message}`)
     } finally {
       setLoading(false)
     }
@@ -72,8 +79,21 @@ export default function Onboarding() {
     setError('')
 
     try {
-      // Create family
-      const { data: family, error: familyError } = await supabase
+      // Verify profile exists first
+      const { data: profileCheck } = await (supabase as any)
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+      
+      if (!profileCheck) {
+        throw new Error('Profile not found. Please complete step 1 first.')
+      }
+      
+      console.log('Profile verified:', profileCheck)
+
+      // Create family with better error handling
+      const { data: family, error: familyError } = await (supabase as any)
         .from('families')
         .insert({
           name: familyName,
@@ -83,10 +103,15 @@ export default function Onboarding() {
         .select()
         .single()
       
-      if (familyError) throw familyError
+      if (familyError) {
+        console.error('Family creation error:', familyError)
+        throw familyError
+      }
+
+      console.log('Family created:', family)
 
       // Add user as admin member
-      const { error: memberError } = await supabase
+      const { error: memberError } = await (supabase as any)
         .from('members')
         .insert({
           family_id: family.id,
@@ -94,11 +119,16 @@ export default function Onboarding() {
           role: 'admin',
         })
       
-      if (memberError) throw memberError
-      
+      if (memberError) {
+        console.error('Member creation error:', memberError)
+        throw memberError
+      }
+
+      console.log('Member added successfully')
       navigate('/feed')
     } catch (error: any) {
-      setError(error.message)
+      console.error('Family creation failed:', error)
+      setError(`Family creation failed: ${error.message}`)
     } finally {
       setLoading(false)
     }
