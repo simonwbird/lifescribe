@@ -515,19 +515,54 @@ export default function FamilyTree() {
                 transformOrigin: 'center center'
               }}
             >
-              {treeGraph.nodes.length > 0 ? (
-                <div className="family-tree-container">
-                  {treeGraph.nodes.map((node) => (
-                    <FamilyTreeNode
-                      key={node.id}
-                      node={node}
-                      onViewPerson={handleViewPerson}
-                      onAddParent={handleAddParent}
-                      onAddChild={handleAddChild}
-                      onAddSpouse={handleAddSpouse}
-                      onEditPerson={handleEditPerson}
-                    />
-                  ))}
+              {treeGraph.nodes.length > 0 || people.length > 0 ? (
+                <div className="family-tree-container space-y-8">
+                  {/* Main connected tree */}
+                  {treeGraph.nodes.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 text-center">Family Tree</h3>
+                      <div className="flex justify-center">
+                        {treeGraph.nodes.map((node) => (
+                          <FamilyTreeNode
+                            key={node.id}
+                            node={node}
+                            onViewPerson={handleViewPerson}
+                            onAddParent={handleAddParent}
+                            onAddChild={handleAddChild}
+                            onAddSpouse={handleAddSpouse}
+                            onEditPerson={handleEditPerson}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Unconnected people */}
+                  {people.filter(person => !treeGraph.nodes.some(node => node.person.id === person.id)).length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 text-center">Unconnected Family Members</h3>
+                      <div className="flex flex-wrap justify-center gap-4">
+                        {people
+                          .filter(person => !treeGraph.nodes.some(node => node.person.id === person.id))
+                          .map((person) => (
+                            <FamilyTreeNode
+                              key={person.id}
+                              node={{
+                                id: person.id,
+                                person: person,
+                                children: [],
+                                spouses: []
+                              }}
+                              onViewPerson={handleViewPerson}
+                              onAddParent={handleAddParent}
+                              onAddChild={handleAddChild}
+                              onAddSpouse={handleAddSpouse}
+                              onEditPerson={handleEditPerson}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Card className="max-w-md mx-auto">
