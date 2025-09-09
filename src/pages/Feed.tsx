@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, SkipForward } from 'lucide-react'
 import type { Story, Answer, Profile, Question } from '@/lib/types'
 
 type FeedItem = {
@@ -22,6 +22,46 @@ export default function Feed() {
   const [loading, setLoading] = useState(true)
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [featuredQuestion, setFeaturedQuestion] = useState<Question | null>(null)
+
+  const handleSkipQuestion = async () => {
+    if (!featuredQuestion || !familyId) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Store skipped question in localStorage
+      const skippedKey = `skipped_questions_${user.id}_${familyId}`
+      const skipped = JSON.parse(localStorage.getItem(skippedKey) || '[]')
+      skipped.push(featuredQuestion.id)
+      localStorage.setItem(skippedKey, JSON.stringify(skipped))
+
+      // Find next available question
+      const { data: answeredQuestions } = await supabase
+        .from('answers')
+        .select('question_id')
+        .eq('profile_id', user.id)
+        .eq('family_id', familyId)
+
+      const answeredIds = answeredQuestions?.map(a => a.question_id) || []
+      const excludedIds = [...answeredIds, ...skipped]
+      
+      let questionQuery = supabase
+        .from('questions')
+        .select('*')
+        .eq('is_active', true)
+        .limit(1)
+
+      if (excludedIds.length > 0) {
+        questionQuery = questionQuery.not('id', 'in', `(${excludedIds.join(',')})`)
+      }
+
+      const { data: questions } = await questionQuery
+      setFeaturedQuestion(questions?.[0] || null)
+    } catch (error) {
+      console.error('Error skipping question:', error)
+    }
+  }
 
   useEffect(() => {
     const getFamilyAndFeed = async () => {
@@ -48,14 +88,19 @@ export default function Feed() {
 
         const answeredIds = answeredQuestions?.map(a => a.question_id) || []
         
+        // Get skipped questions from localStorage
+        const skippedKey = `skipped_questions_${user.id}_${member.family_id}`
+        const skippedIds = JSON.parse(localStorage.getItem(skippedKey) || '[]')
+        const excludedIds = [...answeredIds, ...skippedIds]
+        
         let questionQuery = supabase
           .from('questions')
           .select('*')
           .eq('is_active', true)
           .limit(1)
 
-        if (answeredIds.length > 0) {
-          questionQuery = questionQuery.not('id', 'in', `(${answeredIds.join(',')})`)
+        if (excludedIds.length > 0) {
+          questionQuery = questionQuery.not('id', 'in', `(${excludedIds.join(',')})`)
         }
 
         const { data: questions } = await questionQuery
@@ -188,11 +233,21 @@ export default function Feed() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button asChild className="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600">
-                        <Link to="/prompts">
-                          Answer This Prompt <ArrowRight className="w-4 h-4 ml-2" />
-                        </Link>
-                      </Button>
+                      <div className="flex space-x-3">
+                        <Button asChild className="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600">
+                          <Link to="/prompts">
+                            Answer This Prompt <ArrowRight className="w-4 h-4 ml-2" />
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleSkipQuestion}
+                          className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                        >
+                          <SkipForward className="w-4 h-4 mr-2" />
+                          Skip Question
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
