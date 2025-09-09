@@ -21,7 +21,8 @@ import {
   PenTool,
   Calendar,
   Link2,
-  Unlink
+  Unlink,
+  Minus
 } from 'lucide-react'
 import { TreeNode } from '@/lib/familyTreeTypes'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
@@ -59,6 +60,7 @@ export default function FamilyTreeNode({
   const years = formatPersonYears(person)
   
   const [showConnectionPanel, setShowConnectionPanel] = useState(false)
+  const [hoveredBorder, setHoveredBorder] = useState<'top' | 'bottom' | 'left' | 'right' | null>(null)
   
   // Get existing relationships for this person
   const personRelationships = relationships.filter(rel => 
@@ -125,17 +127,148 @@ export default function FamilyTreeNode({
     <div 
       className={`family-tree-node flex flex-col items-center space-y-2 absolute ${
         isDragging ? 'cursor-grabbing z-50 scale-105' : 'cursor-grab'
-      } ${isDragging ? 'opacity-90' : ''} transition-all duration-200`}
+      } ${isDragging ? 'opacity-90' : ''} transition-all duration-200 group`}
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         transition: isDragging ? 'none' : 'transform 0.2s ease'
       }}
       onMouseDown={handleMouseDown}
     >
+      {/* Border hover zones */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Top border */}
+        <div 
+          className="absolute top-0 left-1/4 right-1/4 h-3 -translate-y-1/2 pointer-events-auto z-20"
+          onMouseEnter={() => setHoveredBorder('top')}
+          onMouseLeave={() => setHoveredBorder(null)}
+        >
+          {hoveredBorder === 'top' && (
+            <div className="flex items-center justify-center space-x-2 bg-primary/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
+              <button 
+                className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddParent(person.id)
+                }}
+                title="Add Parent"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+              {personRelationships.some(rel => rel.relationship_type === 'parent') && (
+                <button 
+                  className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const parentRel = personRelationships.find(rel => rel.relationship_type === 'parent')
+                    if (parentRel) onRemoveRelationship?.(parentRel.id)
+                  }}
+                  title="Remove Parent Connection"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom border */}
+        <div 
+          className="absolute bottom-0 left-1/4 right-1/4 h-3 translate-y-1/2 pointer-events-auto z-20"
+          onMouseEnter={() => setHoveredBorder('bottom')}
+          onMouseLeave={() => setHoveredBorder(null)}
+        >
+          {hoveredBorder === 'bottom' && (
+            <div className="flex items-center justify-center space-x-2 bg-primary/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
+              <button 
+                className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddChild(person.id)
+                }}
+                title="Add Child"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+              {children.length > 0 && (
+                <button 
+                  className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const childRel = personRelationships.find(rel => 
+                      rel.relationship_type === 'parent' && rel.to_person_id === person.id
+                    )
+                    if (childRel) onRemoveRelationship?.(childRel.id)
+                  }}
+                  title="Remove Child Connection"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Left border */}
+        <div 
+          className="absolute left-0 top-1/4 bottom-1/4 w-3 -translate-x-1/2 pointer-events-auto z-20"
+          onMouseEnter={() => setHoveredBorder('left')}
+          onMouseLeave={() => setHoveredBorder(null)}
+        >
+          {hoveredBorder === 'left' && (
+            <div className="flex flex-col items-center justify-center space-y-2 bg-primary/90 backdrop-blur-sm rounded-full px-1 py-3 shadow-lg">
+              <button 
+                className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddSpouse(person.id)
+                }}
+                title="Add Spouse"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+              {spouses.length > 0 && (
+                <button 
+                  className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const spouseRel = personRelationships.find(rel => rel.relationship_type === 'spouse')
+                    if (spouseRel) onRemoveRelationship?.(spouseRel.id)
+                  }}
+                  title="Remove Spouse Connection"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right border */}
+        <div 
+          className="absolute right-0 top-1/4 bottom-1/4 w-3 translate-x-1/2 pointer-events-auto z-20"
+          onMouseEnter={() => setHoveredBorder('right')}
+          onMouseLeave={() => setHoveredBorder(null)}
+        >
+          {hoveredBorder === 'right' && (
+            <div className="flex flex-col items-center justify-center space-y-2 bg-primary/90 backdrop-blur-sm rounded-full px-1 py-3 shadow-lg">
+              <button 
+                className="text-white hover:text-primary-foreground p-1 rounded-full hover:bg-white/20 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowConnectionPanel(!showConnectionPanel)
+                }}
+                title="Manage All Connections"
+              >
+                <Link2 className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
       {/* Main Person Card */}
-      <Card className={`w-48 hover:shadow-lg transition-all duration-200 ${
+      <Card className={`w-48 hover:shadow-lg transition-all duration-200 relative z-10 ${
         isDragging ? 'shadow-xl ring-2 ring-primary' : ''
-      }`}>
+      } ${hoveredBorder ? 'ring-2 ring-primary/50' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
@@ -162,24 +295,13 @@ export default function FamilyTreeNode({
               </div>
             </div>
             <div className="flex items-center space-x-1">
-              {/* Connection Controls */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0 dropdown-trigger"
-                onClick={() => setShowConnectionPanel(!showConnectionPanel)}
-                title="Manage Connections"
-              >
-                <Link2 className="h-4 w-4" />
-              </Button>
-              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 dropdown-trigger">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
                   <DropdownMenuItem onClick={() => onViewPerson(person.id)}>
                     <Eye className="mr-2 h-4 w-4" />
                     View Profile
@@ -218,7 +340,7 @@ export default function FamilyTreeNode({
 
       {/* Connection Panel */}
       {showConnectionPanel && (
-        <Card className="w-64 mt-2 z-50 bg-white border-2 border-primary shadow-lg">
+        <Card className="w-64 mt-2 z-50 bg-background border-2 border-primary shadow-xl backdrop-blur-sm">
           <CardContent className="p-3">
             <h4 className="font-medium text-sm mb-3 flex items-center">
               <Link2 className="h-4 w-4 mr-2" />
