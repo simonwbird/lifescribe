@@ -61,6 +61,18 @@ const Hero = () => (
   </section>
 )
 
+const PositioningSection = () => (
+  <section className="py-16 bg-white">
+    <div className="container mx-auto px-4">
+      <div className="max-w-4xl mx-auto text-center">
+        <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 italic leading-relaxed">
+          "If Ancestry is your family's skeleton, LifeScribe is the heartbeat and voice."
+        </blockquote>
+      </div>
+    </div>
+  </section>
+)
+
 const FeatureCard = ({ 
   title, 
   description, 
@@ -366,6 +378,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <LandingHeader />
       <Hero />
+      <PositioningSection />
       <FeaturesSection />
       <TestimonialsSection />
       <CallToAction />
