@@ -189,9 +189,9 @@ export default function Prompts() {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold mb-2">Family Questions</h1>
+              <h1 className="text-3xl font-bold mb-2">Memory Questions</h1>
               <p className="text-muted-foreground">
-                Choose a question to answer and share your memories
+                Choose a question to answer and share your personal memories with your family
               </p>
             </div>
 
