@@ -14,7 +14,478 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      answers: {
+        Row: {
+          answer_text: string
+          created_at: string
+          family_id: string
+          id: string
+          profile_id: string
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer_text: string
+          created_at?: string
+          family_id: string
+          id?: string
+          profile_id: string
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer_text?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          profile_id?: string
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answers_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          answer_id: string | null
+          content: string
+          created_at: string
+          family_id: string
+          id: string
+          profile_id: string
+          story_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer_id?: string | null
+          content: string
+          created_at?: string
+          family_id: string
+          id?: string
+          profile_id: string
+          story_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer_id?: string | null
+          content?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          profile_id?: string
+          story_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      families: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "families_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          family_id: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["role_type"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          family_id: string
+          id?: string
+          invited_by: string
+          role?: Database["public"]["Enums"]["role_type"]
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["role_type"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media: {
+        Row: {
+          answer_id: string | null
+          created_at: string
+          family_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          profile_id: string
+          story_id: string | null
+        }
+        Insert: {
+          answer_id?: string | null
+          created_at?: string
+          family_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          profile_id: string
+          story_id?: string | null
+        }
+        Update: {
+          answer_id?: string | null
+          created_at?: string
+          family_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          profile_id?: string
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          family_id: string
+          id: string
+          joined_at: string
+          profile_id: string
+          role: Database["public"]["Enums"]["role_type"]
+        }
+        Insert: {
+          family_id: string
+          id?: string
+          joined_at?: string
+          profile_id: string
+          role?: Database["public"]["Enums"]["role_type"]
+        }
+        Update: {
+          family_id?: string
+          id?: string
+          joined_at?: string
+          profile_id?: string
+          role?: Database["public"]["Enums"]["role_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          question_text: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          question_text: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          question_text?: string
+        }
+        Relationships: []
+      }
+      reactions: {
+        Row: {
+          answer_id: string | null
+          comment_id: string | null
+          created_at: string
+          family_id: string
+          id: string
+          profile_id: string
+          reaction_type: string
+          story_id: string | null
+        }
+        Insert: {
+          answer_id?: string | null
+          comment_id?: string | null
+          created_at?: string
+          family_id: string
+          id?: string
+          profile_id: string
+          reaction_type: string
+          story_id?: string | null
+        }
+        Update: {
+          answer_id?: string | null
+          comment_id?: string | null
+          created_at?: string
+          family_id?: string
+          id?: string
+          profile_id?: string
+          reaction_type?: string
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stories: {
+        Row: {
+          content: string
+          created_at: string
+          family_id: string
+          id: string
+          profile_id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          family_id: string
+          id?: string
+          profile_id: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          profile_id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +494,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      invite_status: "pending" | "accepted" | "expired"
+      role_type: "admin" | "member" | "guest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +622,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      invite_status: ["pending", "accepted", "expired"],
+      role_type: ["admin", "member", "guest"],
+    },
   },
 } as const
