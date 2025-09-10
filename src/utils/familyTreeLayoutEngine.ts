@@ -568,12 +568,6 @@ export class FamilyTreeLayoutEngine {
 
       const currMarriages = marriages.filter(m => m.depth === depth);
 
-      console.log(`=== Generation ${depth + 1} (depth ${depth}) ===`);
-      console.log(`People:`, genPeople.map(p => p.full_name));
-      console.log(`Marriages found:`, currMarriages.map(m => 
-        `${m.parentA?.full_name || 'none'} + ${m.parentB?.full_name || 'none'} (depth ${m.depth})`
-      ));
-
       // collect spouse pairs present in this row
       currMarriages.forEach(m => {
         const arr: Person[] = [];
@@ -652,7 +646,7 @@ export class FamilyTreeLayoutEngine {
       }
     });
 
-    // 4) Resolve horizontal collisions within each row
+    // 4) Resolve horizontal collisions within each row - PRESERVE SPOUSE PAIRS
     const rowsForCollision = new Map<number, Person[]>();
     people.forEach(p => {
       const d = depths.get(p.id) ?? 0;
@@ -660,27 +654,77 @@ export class FamilyTreeLayoutEngine {
       rowsForCollision.get(d)!.push(p);
     });
 
-    rowsForCollision.forEach(rowPeople => {
-      const items = rowPeople
-        .map(p => ({ p, pos: pos.get(p.id)! }))
-        .filter(x => x.pos)
-        .sort((a, b) => a.pos.x - b.pos.x);
+    rowsForCollision.forEach((rowPeople, depth) => {
+      // Group people into spouse pairs and singles for this row
+      const marriagesInRow = marriages.filter(m => m.depth === depth);
+      const processedIds = new Set<string>();
+      const units: Array<{ people: Person[], leftX: number, rightX: number }> = [];
 
-      const minGap = this.config.personWidth + this.config.minGap;
-
-      for (let i = 1; i < items.length; i++) {
-        const prev = items[i - 1];
-        const curr = items[i];
-        const gap = curr.pos.x - prev.pos.x;
+      // Add spouse pairs as units
+      marriagesInRow.forEach(m => {
+        const pairPeople: Person[] = [];
+        if (m.parentA && rowPeople.includes(m.parentA)) {
+          pairPeople.push(m.parentA);
+          processedIds.add(m.parentA.id);
+        }
+        if (m.parentB && rowPeople.includes(m.parentB)) {
+          pairPeople.push(m.parentB);
+          processedIds.add(m.parentB.id);
+        }
         
-        if (gap < minGap) {
-          const shift = minGap - gap;
+        if (pairPeople.length === 2) {
+          const positions = pairPeople.map(p => pos.get(p.id)!).sort((a, b) => a.x - b.x);
+          units.push({
+            people: pairPeople,
+            leftX: positions[0].x,
+            rightX: positions[1].x + this.config.personWidth
+          });
+        } else if (pairPeople.length === 1) {
+          const p = pairPeople[0];
+          const position = pos.get(p.id)!;
+          units.push({
+            people: [p],
+            leftX: position.x,
+            rightX: position.x + this.config.personWidth
+          });
+        }
+      });
+
+      // Add remaining singles
+      rowPeople.forEach(p => {
+        if (!processedIds.has(p.id)) {
+          const position = pos.get(p.id)!;
+          units.push({
+            people: [p],
+            leftX: position.x,
+            rightX: position.x + this.config.personWidth
+          });
+        }
+      });
+
+      // Sort units by left edge
+      units.sort((a, b) => a.leftX - b.leftX);
+
+      // Resolve collisions between units (not individuals)
+      for (let i = 1; i < units.length; i++) {
+        const prevUnit = units[i - 1];
+        const currUnit = units[i];
+        const gap = currUnit.leftX - prevUnit.rightX;
+
+        if (gap < this.config.minGap) {
+          const shift = this.config.minGap - gap;
           
-          for (let j = i; j < items.length; j++) {
-            const it = items[j];
-            const np = { x: it.pos.x + shift, y: it.pos.y };
-            pos.set(it.p.id, np);
-            it.pos = np;
+          // Shift this unit and all following units
+          for (let j = i; j < units.length; j++) {
+            const unit = units[j];
+            unit.leftX += shift;
+            unit.rightX += shift;
+            
+            // Update positions for all people in this unit
+            unit.people.forEach(person => {
+              const currentPos = pos.get(person.id)!;
+              pos.set(person.id, { x: currentPos.x + shift, y: currentPos.y });
+            });
           }
         }
       }
