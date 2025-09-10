@@ -158,6 +158,7 @@ export class FamilyTreeLayoutEngine {
       const da = m.parentA ? (depths.get(m.parentA.id) ?? 0) : 0;
       const db = m.parentB ? (depths.get(m.parentB.id) ?? da) : da;
       m.depth = Math.min(da, db); // important: MIN, not max
+      console.log(`Marriage ${m.parentA?.full_name || 'none'} + ${m.parentB?.full_name || 'none'}: depths ${da},${db} -> marriage depth ${m.depth}`);
     });
 
     // one more pass to ensure all children are below the union row
@@ -566,6 +567,12 @@ export class FamilyTreeLayoutEngine {
       const singles: Person[] = [];
 
       const currMarriages = marriages.filter(m => m.depth === depth);
+
+      console.log(`=== Generation ${depth + 1} (depth ${depth}) ===`);
+      console.log(`People:`, genPeople.map(p => p.full_name));
+      console.log(`Marriages found:`, currMarriages.map(m => 
+        `${m.parentA?.full_name || 'none'} + ${m.parentB?.full_name || 'none'} (depth ${m.depth})`
+      ));
 
       // collect spouse pairs present in this row
       currMarriages.forEach(m => {
