@@ -219,6 +219,23 @@ export default function FamilyTreeCanvas({
 
   return (
     <div className="relative w-full h-full bg-gray-50 overflow-hidden">
+      {/* Debug Panel - Temporary */}
+      <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50 max-w-sm">
+        <h3 className="font-bold mb-2">Debug Info:</h3>
+        <p>People: {people.length}</p>
+        <p>Positions: {Object.keys(positions).length}</p>
+        <p>Zoom: {zoom.toFixed(2)}</p>
+        <p>Pan: {pan.x.toFixed(0)}, {pan.y.toFixed(0)}</p>
+        <div className="mt-2 max-h-32 overflow-y-auto">
+          <p className="text-sm font-semibold">People:</p>
+          {people.map(person => (
+            <div key={person.id} className="text-xs">
+              {person.full_name} at ({positions[person.id]?.x}, {positions[person.id]?.y})
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Canvas */}
       <div
         ref={canvasRef}
