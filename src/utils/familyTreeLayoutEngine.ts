@@ -99,6 +99,7 @@ export class FamilyTreeLayoutEngine {
   }
 
   public generateLayout(people: Person[], relationships: Relationship[]): LayoutResult {
+    console.log('=== FamilyTreeLayoutEngine STARTING (NEW UNIT ALGORITHM) ===')
     console.log('=== FamilyTreeLayoutEngine.generateLayout ===')
     console.log('People:', people.map(p => `${p.full_name} (${p.id})`))
     console.log('Relationships:', relationships.map(r => `${r.from_person_id} --${r.relationship_type}--> ${r.to_person_id}`))
@@ -546,7 +547,7 @@ export class FamilyTreeLayoutEngine {
     }[],
     depths: Map<string, number>
   ): Map<string, { x: number; y: number }> {
-    console.log('\n=== UNIT-BASED ORG CHART POSITIONING (v2) ===');
+    console.log('\n=== UNIT-BASED ORG CHART POSITIONING (v3) ===');
     
     const pos = new Map<string, { x: number; y: number }>();
     const lockedIds = new Set<string>(); // People placed as part of spouse pairs
