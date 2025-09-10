@@ -218,54 +218,52 @@ export default function FamilyTreeCanvas({
   }, [handleWheel, handleCanvasMouseMove, handleCanvasMouseUp, isPanning])
 
   return (
-    <div className="relative w-full h-full bg-gray-50 overflow-hidden">
-      {/* Debug Panel - Temporary */}
-      <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50 max-w-sm">
+    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-purple-50 overflow-hidden">
+      {/* Debug Panel */}
+      <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-40 max-w-sm">
         <h3 className="font-bold mb-2">Debug Info:</h3>
         <p>People: {people.length}</p>
         <p>Positions: {Object.keys(positions).length}</p>
-        <p>Zoom: {zoom.toFixed(2)}</p>
-        <p>Pan: {pan.x.toFixed(0)}, {pan.y.toFixed(0)}</p>
         <div className="mt-2 max-h-32 overflow-y-auto">
           <p className="text-sm font-semibold">People:</p>
           {people.map(person => (
             <div key={person.id} className="text-xs">
-              {person.full_name} at ({positions[person.id]?.x}, {positions[person.id]?.y})
+              {person.full_name}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Super Simple Test - No Canvas Transforms */}
-      <div className="absolute inset-0 bg-blue-100">
-        <h2 className="text-2xl font-bold p-4">Family Tree Test</h2>
+      {/* Simple Family Tree Layout - No Complex Transforms */}
+      <div className="absolute inset-0 p-8">
+        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">Your Family Tree</h2>
         
-        {/* Direct positioning without canvas transforms */}
-        {people.map((person, index) => {
-          const position = positions[person.id] || { x: 100, y: 100 }
-          
-          return (
+        {/* Simple Grid Layout for People */}
+        <div className="grid grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {people.map((person, index) => (
             <div
               key={person.id}
-              className="absolute bg-red-500 text-white p-2 rounded shadow-lg border-2 border-black"
-              style={{
-                left: `${100 + (index * 150)}px`,
-                top: `${200 + (index % 2) * 100}px`,
-                width: '140px',
-                height: '80px',
-                zIndex: 10
-              }}
+              className="bg-white rounded-lg shadow-lg p-4 border-2 border-blue-200 hover:border-blue-400 transition-all hover:shadow-xl"
             >
-              <div className="text-sm font-bold">{person.full_name}</div>
-              <div className="text-xs">#{index + 1}</div>
-              <div className="text-xs">Orig: {position.x}, {position.y}</div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold">
+                  {person.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
+                </div>
+                <h3 className="font-semibold text-sm mb-1">{person.full_name}</h3>
+                <p className="text-xs text-gray-600">Person #{index + 1}</p>
+                <p className="text-xs text-gray-500">{person.gender || 'Unknown'}</p>
+                {person.birth_year && (
+                  <p className="text-xs text-gray-500">Born: {person.birth_year}</p>
+                )}
+              </div>
             </div>
-          )
-        })}
+          ))}
+        </div>
         
-        {/* Fixed position test */}
-        <div className="absolute top-32 left-4 bg-green-500 text-white p-4 rounded">
-          This should always be visible
+        {/* Instructions */}
+        <div className="text-center mt-8">
+          <p className="text-gray-600">Your {people.length} family members are displayed above</p>
+          <p className="text-sm text-gray-500 mt-2">The drag-and-drop editor is being fixed - this is a simplified view for now</p>
         </div>
       </div>
     </div>
