@@ -145,72 +145,15 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* SUPER OBVIOUS TEST ELEMENT - This should definitely be visible */}
-            <rect
-              x="350"
-              y="70"
-              width="60"
-              height="60"
-              fill="red"
-              stroke="black"
-              strokeWidth="5"
-              opacity="0.9"
-            />
+            {/* Simple, guaranteed hearts at exact positions */}
+            <circle cx="350" cy="70" r="12" fill="#ef4444" stroke="white" strokeWidth="2"/>
+            <text x="350" y="75" textAnchor="middle" fontSize="14" fill="white">♥</text>
             
-            <rect
-              x="350"
-              y="270"
-              width="60"
-              height="60"
-              fill="green"
-              stroke="black"
-              strokeWidth="5"
-              opacity="0.9"
-            />
+            <circle cx="350" cy="270" r="12" fill="#ef4444" stroke="white" strokeWidth="2"/>
+            <text x="350" y="275" textAnchor="middle" fontSize="14" fill="white">♥</text>
             
-            <rect
-              x="870"
-              y="270"
-              width="60"
-              height="60"
-              fill="purple"
-              stroke="black"
-              strokeWidth="5"
-              opacity="0.9"
-            />
-            
-            <text
-              x="350"
-              y="100"
-              textAnchor="middle"
-              fontSize="20"
-              fill="white"
-              fontWeight="bold"
-            >
-              ♥1
-            </text>
-            
-            <text
-              x="350"
-              y="300"
-              textAnchor="middle"
-              fontSize="20"
-              fill="white"
-              fontWeight="bold"
-            >
-              ♥2
-            </text>
-            
-            <text
-              x="870"
-              y="300"
-              textAnchor="middle"
-              fontSize="20"
-              fill="white"
-              fontWeight="bold"
-            >
-              ♥3
-            </text>
+            <circle cx="870" cy="270" r="12" fill="#ef4444" stroke="white" strokeWidth="2"/>
+            <text x="870" y="275" textAnchor="middle" fontSize="14" fill="white">♥</text>
             
             {/* Test element at fixed position to verify SVG is working */}
             <rect
