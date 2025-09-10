@@ -189,6 +189,19 @@ export default function EnhancedPersonCard({
           >
             <Heart className="w-4 h-4 text-white" />
           </div>
+          
+          {/* Right hotspot - for spouse */}
+          <div 
+            className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-pink-500 hover:bg-pink-600 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            onMouseDown={(e) => {
+              console.log('Spouse hotspot mousedown')
+              handleConnectionStart(e, 'spouse')
+            }}
+            onClick={(e) => handleHotspotClick(e, 'spouse')}
+            title="Drag to connect spouse/partner or click to add"
+          >
+            <Heart className="w-4 h-4 text-white" />
+          </div>
         </>
       )}
 
