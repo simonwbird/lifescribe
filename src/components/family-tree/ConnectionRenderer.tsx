@@ -60,16 +60,16 @@ export function ConnectionRenderer({
         />
       )
 
-      // 2) If multiple children, draw the sibling bar
+      // 2) If multiple children, draw the sibling bar connecting their left edges
       if (childNodes.length > 1) {
-        const minCenter = Math.min(...childNodes.map(n => n.x + personWidth / 2))
-        const maxCenter = Math.max(...childNodes.map(n => n.x + personWidth / 2))
+        const minLeft = Math.min(...childNodes.map(n => n.x))
+        const maxLeft = Math.max(...childNodes.map(n => n.x))
         connections.push(
           <line
             key={`sibling-bar-${marriage.id}`}
-            x1={minCenter}
+            x1={minLeft}
             y1={barY}
-            x2={maxCenter}
+            x2={maxLeft}
             y2={barY}
             stroke="#94A3B8"
             strokeWidth="2"
@@ -77,16 +77,18 @@ export function ConnectionRenderer({
         )
       }
 
-      // 3) Drops from sibling bar to each child top center
+      // 3) Drops from sibling bar to each child left edge
       childNodes.forEach((cn, idx) => {
-        const cx = cn.x + personWidth / 2
+        const childLeftEdge = cn.x // Left edge of the child card
+        const childVerticalCenter = cn.y + personHeight / 2 // Vertical center of child card
+        
         connections.push(
           <line
             key={`child-drop-${marriage.id}-${cn.person.id}-${idx}`}
-            x1={cx}
+            x1={childLeftEdge}
             y1={barY}
-            x2={cx}
-            y2={cn.y}
+            x2={childLeftEdge}
+            y2={childVerticalCenter}
             stroke="#94A3B8"
             strokeWidth="2"
           />
