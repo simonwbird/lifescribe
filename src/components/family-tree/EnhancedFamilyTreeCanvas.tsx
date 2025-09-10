@@ -429,14 +429,18 @@ export default function EnhancedFamilyTreeCanvas({
               height: CANVAS_SIZE,
             }}
           >
-            <line
-              x1={positions[isConnecting.fromPersonId]?.x + 128 || 0}
-              y1={positions[isConnecting.fromPersonId]?.y + 64 || 0}
-              x2={hoveredPersonId ? (positions[hoveredPersonId]?.x + 128 || isConnecting.mousePos.x) : isConnecting.mousePos.x}
-              y2={hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y}
+            {/* Preview line with 90-degree angles */}
+            <path
+              d={`M ${positions[isConnecting.fromPersonId]?.x + 128 || 0} ${positions[isConnecting.fromPersonId]?.y + 64 || 0} 
+                  L ${positions[isConnecting.fromPersonId]?.x + 128 || 0} ${((positions[isConnecting.fromPersonId]?.y + 64 || 0) + (hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y)) / 2} 
+                  L ${hoveredPersonId ? (positions[hoveredPersonId]?.x + 128 || isConnecting.mousePos.x) : isConnecting.mousePos.x} ${((positions[isConnecting.fromPersonId]?.y + 64 || 0) + (hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y)) / 2}
+                  L ${hoveredPersonId ? (positions[hoveredPersonId]?.x + 128 || isConnecting.mousePos.x) : isConnecting.mousePos.x} ${hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y}`}
               stroke={hoveredPersonId ? '#10b981' : (isConnecting.connectionType === 'spouse' ? '#ec4899' : '#3b82f6')}
               strokeWidth={hoveredPersonId ? "4" : "3"}
               strokeDasharray={isConnecting.connectionType === 'spouse' ? '8 4' : 'none'}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className={hoveredPersonId ? 'animate-pulse' : ''}
             />
             
@@ -507,8 +511,16 @@ export default function EnhancedFamilyTreeCanvas({
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center">
-              <svg width="24" height="2" className="mr-2">
-                <line x1="0" y1="1" x2="24" y2="1" stroke="#6b7280" strokeWidth="2" markerEnd="url(#legend-arrow)" />
+              <svg width="32" height="16" className="mr-2">
+                <path 
+                  d="M 0 8 L 0 4 L 24 4 L 24 8" 
+                  stroke="#6b7280" 
+                  strokeWidth="2" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  markerEnd="url(#legend-arrow)" 
+                />
                 <defs>
                   <marker
                     id="legend-arrow"
@@ -524,15 +536,15 @@ export default function EnhancedFamilyTreeCanvas({
                 </defs>
               </svg>
             </div>
-            <span className="text-xs text-gray-600">Parent-Child</span>
+            <span className="text-xs text-gray-600">Parent-Child (L-shaped)</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center">
-              <svg width="24" height="2" className="mr-2">
-                <line x1="0" y1="1" x2="24" y2="1" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" />
+              <svg width="32" height="16" className="mr-2">
+                <line x1="0" y1="8" x2="32" y2="8" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" />
               </svg>
             </div>
-            <span className="text-xs text-gray-600">Married/Partner</span>
+            <span className="text-xs text-gray-600">Married/Partner (straight)</span>
           </div>
         </div>
         <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
