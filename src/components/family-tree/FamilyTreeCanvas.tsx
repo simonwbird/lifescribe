@@ -27,20 +27,6 @@ export default function FamilyTreeCanvas({
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* Debug Panel */}
-      <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-40 max-w-sm">
-        <h3 className="font-bold mb-2">Family Tree Debug</h3>
-        <p>Total People: {people.length}</p>
-        <p>Total Relationships: {relationships.length}</p>
-        <div className="mt-2 space-y-1">
-          {people.map((person, idx) => (
-            <div key={person.id} className="text-xs p-1 bg-gray-50 rounded">
-              {idx + 1}. {person.full_name}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Simple Family Display */}
       <div className="p-8">
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
@@ -97,21 +83,30 @@ export default function FamilyTreeCanvas({
             ))}
           </div>
           
-          {/* Add Person Button */}
-          <div className="text-center mt-8">
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-              Add New Family Member
-            </button>
-          </div>
-          
           {/* Status */}
-          <div className="text-center mt-6 p-4 bg-white/50 rounded-lg">
-            <p className="text-gray-600">
-              Showing {people.length} family members • {relationships.length} relationships
+          <div className="text-center mt-8 p-6 bg-white/80 rounded-xl shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">🎉 Enhanced Family Tree Ready!</h2>
+            <p className="text-gray-600 mb-4">
+              Your family tree now includes drag-and-drop, visual connections, and relationship management!
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Drag-and-drop editor is being rebuilt for better performance
-            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="font-semibold text-green-800">Drag & Drop</div>
+                <div className="text-green-600">Move people around</div>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="font-semibold text-blue-800">Visual Lines</div>
+                <div className="text-blue-600">See relationships</div>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <div className="font-semibold text-purple-800">Smart Hotspots</div>
+                <div className="text-purple-600">Quick connections</div>
+              </div>
+              <div className="p-3 bg-pink-50 rounded-lg">
+                <div className="font-semibold text-pink-800">Enhanced Cards</div>
+                <div className="text-pink-600">Rich details</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

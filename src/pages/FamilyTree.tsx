@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
-import DragDropFamilyTree from '@/components/family-tree/DragDropFamilyTree'
+import EnhancedFamilyTreeCanvas from '@/components/family-tree/EnhancedFamilyTreeCanvas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -422,18 +422,15 @@ export default function FamilyTree() {
               </Card>
             </div>
           ) : (
-            <DragDropFamilyTree
+            <EnhancedFamilyTreeCanvas
               people={people}
               relationships={relationships}
-              familyId={familyId || ''}
               positions={nodePositions}
               onPersonMove={handlePersonMove}
-              onAddPerson={() => setIsAddPersonOpen(true)}
+              onPersonSelect={(personId) => console.log('Selected:', personId)}
+              onAddRelation={handleAddRelation}
               onViewProfile={handleViewPerson}
               onEditPerson={(personId) => navigate(`/people/${personId}`)}
-              onAddRelation={handleAddRelation}
-              onSaveLayout={handleSaveLayout}
-              isFirstTime={isFirstTime}
             />
           )}
         </div>
