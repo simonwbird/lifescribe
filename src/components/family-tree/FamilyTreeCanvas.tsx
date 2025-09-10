@@ -236,84 +236,36 @@ export default function FamilyTreeCanvas({
         </div>
       </div>
 
-      {/* Canvas */}
-      <div
-        ref={canvasRef}
-        className={`relative w-full h-full ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-        onMouseDown={handleCanvasMouseDown}
-        style={{ 
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          transformOrigin: '0 0',
-          width: CANVAS_SIZE,
-          height: CANVAS_SIZE
-        }}
-      >
-        {/* Grid Overlay */}
-        {showGrid && <GridOverlay zoom={zoom} />}
-
-        {/* Connection Lines */}
-        {relationships.map(relationship => {
-          const fromPos = positions[relationship.from_person_id]
-          const toPos = positions[relationship.to_person_id]
-          
-          if (!fromPos || !toPos) return null
-
-          return (
-            <ConnectionLine
-              key={relationship.id}
-              from={fromPos}
-              to={toPos}
-              type={relationship.relationship_type as 'parent' | 'spouse'}
-              isHighlighted={
-                selectedPersonId === relationship.from_person_id ||
-                selectedPersonId === relationship.to_person_id
-              }
-            />
-          )
-        })}
-
-        {/* Person Cards - Simplified for debugging */}
-        {people.map(person => {
-          const position = positions[person.id] || { x: CANVAS_SIZE / 2, y: CANVAS_SIZE / 2 }
+      {/* Super Simple Test - No Canvas Transforms */}
+      <div className="absolute inset-0 bg-blue-100">
+        <h2 className="text-2xl font-bold p-4">Family Tree Test</h2>
+        
+        {/* Direct positioning without canvas transforms */}
+        {people.map((person, index) => {
+          const position = positions[person.id] || { x: 100, y: 100 }
           
           return (
             <div
               key={person.id}
-              className="absolute bg-white border-2 border-blue-500 p-4 rounded-lg shadow-lg"
+              className="absolute bg-red-500 text-white p-2 rounded shadow-lg border-2 border-black"
               style={{
-                left: position.x,
-                top: position.y,
-                width: '200px',
-                height: '100px'
+                left: `${100 + (index * 150)}px`,
+                top: `${200 + (index % 2) * 100}px`,
+                width: '140px',
+                height: '80px',
+                zIndex: 10
               }}
             >
-              <h3 className="font-bold text-sm">{person.full_name}</h3>
-              <p className="text-xs text-gray-600">ID: {person.id.substring(0, 8)}</p>
-              <p className="text-xs text-gray-600">Pos: {position.x}, {position.y}</p>
+              <div className="text-sm font-bold">{person.full_name}</div>
+              <div className="text-xs">#{index + 1}</div>
+              <div className="text-xs">Orig: {position.x}, {position.y}</div>
             </div>
           )
         })}
-      </div>
-
-      {/* Zoom Controls */}
-      <div className="absolute bottom-4 right-4">
-        <ZoomControls
-          zoom={zoom}
-          onZoomIn={() => setZoom(prev => Math.min(MAX_ZOOM, prev * 1.2))}
-          onZoomOut={() => setZoom(prev => Math.max(MIN_ZOOM, prev / 1.2))}
-          onFitToScreen={handleFitToScreen}
-          onAutoArrange={handleAutoArrange}
-          onToggleGrid={() => setShowGrid(!showGrid)}
-          showGrid={showGrid}
-        />
-      </div>
-
-      {/* Canvas Info */}
-      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-gray-600 shadow-sm">
-        <div>Zoom: {Math.round(zoom * 100)}%</div>
-        <div>{people.length} people, {relationships.length} connections</div>
-        <div className="text-xs text-gray-500 mt-1">
-          {isPanning ? 'Panning...' : isDragging ? `Moving ${getPersonDisplayName(people.find(p => p.id === isDragging)!)}` : 'Click and drag to pan'}
+        
+        {/* Fixed position test */}
+        <div className="absolute top-32 left-4 bg-green-500 text-white p-4 rounded">
+          This should always be visible
         </div>
       </div>
     </div>
