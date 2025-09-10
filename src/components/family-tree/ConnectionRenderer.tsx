@@ -128,15 +128,20 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Heart icon */}
-            <g transform={`translate(${centerX - 8}, ${spouseY - 8})`}>
+            {/* Heart icon using foreignObject for proper rendering */}
+            <foreignObject
+              x={centerX - 8}
+              y={spouseY - 8}
+              width={16}
+              height={16}
+            >
               <Heart
-                width={16}
-                height={16}
+                size={16}
                 fill={marriage.branchColor}
                 stroke="none"
+                className="pointer-events-none"
               />
-            </g>
+            </foreignObject>
           </g>
         )
       }).filter(Boolean)
