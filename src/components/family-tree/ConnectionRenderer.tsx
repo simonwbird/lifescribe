@@ -138,17 +138,27 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Heart icon using simple SVG path for reliable rendering */}
-            <path
-              d={`M ${centerX - 6},${spouseY - 2} 
-                  C ${centerX - 6},${spouseY - 5} ${centerX - 3},${spouseY - 8} ${centerX},${spouseY - 5}
-                  C ${centerX + 3},${spouseY - 8} ${centerX + 6},${spouseY - 5} ${centerX + 6},${spouseY - 2}
-                  C ${centerX + 6},${spouseY + 1} ${centerX},${spouseY + 6} ${centerX},${spouseY + 6}
-                  C ${centerX},${spouseY + 6} ${centerX - 6},${spouseY + 1} ${centerX - 6},${spouseY - 2} Z`}
+            {/* Test heart with simple circle for debugging */}
+            <circle
+              cx={centerX}
+              cy={spouseY}
+              r="8"
               fill={marriage.branchColor}
               stroke="white"
-              strokeWidth="1"
+              strokeWidth="2"
             />
+            
+            {/* Test text to show it's working */}
+            <text
+              x={centerX}
+              y={spouseY + 3}
+              textAnchor="middle"
+              fontSize="10"
+              fill="white"
+              fontWeight="bold"
+            >
+              ♥
+            </text>
           </g>
         )
       }).filter(Boolean)
