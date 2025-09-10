@@ -249,6 +249,10 @@ export default function GenerationalFamilyTree({
             <pattern id="generational-grid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F1F5F9" strokeWidth="1" opacity="0.3"/>
             </pattern>
+            <linearGradient id="generationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#F8FAFC" stopOpacity="0.5"/>
+              <stop offset="100%" stopColor="#E2E8F0" stopOpacity="0.2"/>
+            </linearGradient>
           </defs>
           
           <rect 
@@ -258,6 +262,33 @@ export default function GenerationalFamilyTree({
             height={dimensions.height} 
             fill="url(#generational-grid)" 
           />
+          
+          {/* Generation background stripes for visual clarity */}
+          {autoLayout && Array.from(new Set(nodes.map(n => n.generation))).sort().map(gen => (
+            <rect
+              key={`generation-bg-${gen}`}
+              x={dimensions.minX}
+              y={gen * 200 - 10}
+              width={dimensions.width}
+              height={PERSON_HEIGHT + 20}
+              fill="url(#generationGradient)"
+              opacity={gen % 2 === 0 ? 0.4 : 0.2}
+              rx="4"
+            />
+          ))}
+          
+          {/* Generation labels */}
+          {autoLayout && Array.from(new Set(nodes.map(n => n.generation))).sort().map(gen => (
+            <text
+              key={`generation-label-${gen}`}
+              x={dimensions.minX + 20}
+              y={gen * 200 + 20}
+              className="fill-gray-400 text-xs font-medium"
+              fontSize="11"
+            >
+              Generation {gen + 1}
+            </text>
+          ))}
           
           {/* Connection lines */}
           <ConnectionRenderer 
@@ -270,6 +301,74 @@ export default function GenerationalFamilyTree({
           {/* Person cards */}
           {nodes.map(renderPersonCard)}
         </svg>
+      </div>
+
+      {/* Status indicators */}
+      {autoLayout ? (
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-green-200">
+          <div className="flex items-center gap-2 text-green-700 mb-2">
+            <Grid className="w-4 h-4" />
+            <span className="font-semibold text-sm">Auto-Layout Active</span>
+          </div>
+          <div className="text-gray-600 space-y-1 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Perfect generational rows</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Spouses side-by-side</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Children centered under parents</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-orange-200">
+          <div className="flex items-center gap-2 text-orange-700 mb-2">
+            <Shuffle className="w-4 h-4" />
+            <span className="font-semibold text-sm">Manual Mode</span>
+          </div>
+          <div className="text-gray-600 text-xs">
+            <span>Drag people to position them manually</span>
+          </div>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-gray-200">
+        <h4 className="font-semibold text-sm mb-3 text-gray-800">Family Tree Legend</h4>
+        
+        {/* Connection types */}
+        <div className="space-y-2 mb-4">
+          <h5 className="font-medium text-xs text-gray-600 mb-1">Connection Types</h5>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-4 h-0 border-t-4 border-blue-500"></div>
+            <span>Marriage/Partnership</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-4 h-0 border-t-2 border-gray-400"></div>
+            <span>Parent-Child</span>
+          </div>
+        </div>
+        
+        {/* Family branches */}
+        {nodes.length > 0 && (
+          <div className="space-y-2">
+            <h5 className="font-medium text-xs text-gray-600 mb-1">Family Branches</h5>
+            {Array.from(new Set(nodes.map(n => n.branchColor))).slice(0, 4).map((color, index) => (
+              <div key={color} className="flex items-center gap-2 text-xs">
+                <div 
+                  className="w-4 h-4 rounded-full border-2" 
+                  style={{ backgroundColor: color, borderColor: color }}
+                ></div>
+                <span>Branch {index + 1}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

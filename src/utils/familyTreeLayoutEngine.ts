@@ -223,38 +223,82 @@ export class FamilyTreeLayoutEngine {
     generations: Map<number, Person[]>, 
     spousePairs: SpousePair[]
   ): LayoutNode[] {
-    const nodes: LayoutNode[] = []
-
     // First, position spouse pairs by generation
     this.positionSpousePairs(spousePairs, generations)
 
-    // Then position individual nodes
-    people.forEach(person => {
-      const generation = this.findPersonGeneration(person.id, generations)
+    // Create a map to track person positions
+    const personPositions = new Map<string, { x: number, y: number }>()
+    
+    // Position people generation by generation, top-down
+    const sortedGenerations = Array.from(generations.entries()).sort(([a], [b]) => a - b)
+    
+    sortedGenerations.forEach(([generation, genPeople]) => {
       const y = generation * this.config.generationHeight
       
-      // Check if person is part of a spouse pair
-      const spousePair = spousePairs.find(sp => 
-        sp.spouse1.id === person.id || sp.spouse2.id === person.id
-      )
-
-      let x = 0
-      if (spousePair) {
-        // Position relative to spouse pair center
-        x = spousePair.spouse1.id === person.id 
-          ? spousePair.x - this.config.spouseSpacing / 4
-          : spousePair.x + this.config.spouseSpacing / 4
-      } else {
-        // Position single person
-        x = this.calculateSinglePersonPosition(person, generation, generations, spousePairs)
-      }
-
-      // If person has parents, center under them
-      const parents = this.parentsMap.get(person.id) || []
-      if (parents.length > 0) {
-        x = this.centerUnderParents(person, parents, nodes, spousePairs)
-      }
-
+      // Separate married couples from single people
+      const marriedPeople = new Set<string>()
+      const currentGenSpousePairs = spousePairs.filter(sp => sp.generation === generation)
+      
+      currentGenSpousePairs.forEach(pair => {
+        marriedPeople.add(pair.spouse1.id)
+        marriedPeople.add(pair.spouse2.id)
+        
+        // Position spouse pair
+        personPositions.set(pair.spouse1.id, { 
+          x: pair.x - this.config.spouseSpacing / 4, 
+          y 
+        })
+        personPositions.set(pair.spouse2.id, { 
+          x: pair.x + this.config.spouseSpacing / 4, 
+          y 
+        })
+      })
+      
+      // Position single people
+      const singlePeople = genPeople.filter(p => !marriedPeople.has(p.id))
+      const totalSpousePairWidth = currentGenSpousePairs.length * this.config.spouseSpacing
+      let singlePersonX = totalSpousePairWidth / 2 + this.config.siblingSpacing / 2
+      
+      singlePeople.forEach(person => {
+        personPositions.set(person.id, { x: singlePersonX, y })
+        singlePersonX += this.config.siblingSpacing
+      })
+    })
+    
+    // Second pass: adjust children to be centered under parents
+    sortedGenerations.forEach(([generation]) => {
+      if (generation === 0) return // Skip root generation
+      
+      const genPeople = generations.get(generation) || []
+      
+      genPeople.forEach(person => {
+        const parents = this.parentsMap.get(person.id) || []
+        if (parents.length > 0) {
+          const parentPositions = parents.map(pid => personPositions.get(pid)).filter(Boolean)
+          if (parentPositions.length > 0) {
+            const avgParentX = parentPositions.reduce((sum, pos) => sum + pos!.x, 0) / parentPositions.length
+            
+            // Center child under parents
+            const currentPos = personPositions.get(person.id)
+            if (currentPos) {
+              personPositions.set(person.id, { x: avgParentX, y: currentPos.y })
+            }
+          }
+        }
+      })
+    })
+    
+    // Handle multiple children spacing
+    this.adjustSiblingSpacing(personPositions, generations)
+    
+    // Create nodes from calculated positions
+    const nodes: LayoutNode[] = []
+    
+    people.forEach(person => {
+      const position = personPositions.get(person.id)
+      if (!position) return
+      
+      const generation = this.findPersonGeneration(person.id, generations)
       const spouses = (this.spouseMap.get(person.id) || [])
         .map(id => people.find(p => p.id === id)!)
         .filter(Boolean)
@@ -263,19 +307,19 @@ export class FamilyTreeLayoutEngine {
         .map(id => people.find(p => p.id === id)!)
         .filter(Boolean)
       
-      const parentPeople = parents
+      const parents = (this.parentsMap.get(person.id) || [])
         .map(id => people.find(p => p.id === id)!)
         .filter(Boolean)
 
       nodes.push({
         person,
-        x,
-        y,
+        x: position.x,
+        y: position.y,
         generation,
         branchColor: this.branchColors.get(person.id) || BRANCH_COLORS[0],
         spouses,
         children,
-        parents: parentPeople
+        parents
       })
     })
 
@@ -292,15 +336,54 @@ export class FamilyTreeLayoutEngine {
       pairsByGeneration.get(pair.generation)!.push(pair)
     })
 
-    // Position each generation's pairs
+    // Position each generation's pairs centered around origin
     pairsByGeneration.forEach((pairs, generation) => {
       const totalWidth = pairs.length * this.config.spouseSpacing
       let currentX = -totalWidth / 2
 
       pairs.forEach(pair => {
         pair.x = currentX + this.config.spouseSpacing / 2
+        pair.width = this.config.spouseSpacing
         currentX += this.config.spouseSpacing
       })
+    })
+  }
+
+  private adjustSiblingSpacing(
+    personPositions: Map<string, { x: number, y: number }>, 
+    generations: Map<number, Person[]>
+  ) {
+    // Handle multiple children under the same parents
+    const childrenByParents = new Map<string, string[]>()
+    
+    this.parentsMap.forEach((parents, childId) => {
+      const parentKey = parents.sort().join('-')
+      if (!childrenByParents.has(parentKey)) {
+        childrenByParents.set(parentKey, [])
+      }
+      childrenByParents.get(parentKey)!.push(childId)
+    })
+    
+    // Adjust spacing for multiple children
+    childrenByParents.forEach((children, parentKey) => {
+      if (children.length > 1) {
+        const parents = parentKey.split('-')
+        const parentPositions = parents.map(pid => personPositions.get(pid)).filter(Boolean)
+        
+        if (parentPositions.length > 0) {
+          const parentCenterX = parentPositions.reduce((sum, pos) => sum + pos!.x, 0) / parentPositions.length
+          const totalChildWidth = (children.length - 1) * this.config.childSpacing
+          let childX = parentCenterX - totalChildWidth / 2
+          
+          children.forEach(childId => {
+            const childPos = personPositions.get(childId)
+            if (childPos) {
+              personPositions.set(childId, { x: childX, y: childPos.y })
+              childX += this.config.childSpacing
+            }
+          })
+        }
+      }
     })
   }
 
@@ -313,50 +396,7 @@ export class FamilyTreeLayoutEngine {
     return 0
   }
 
-  private calculateSinglePersonPosition(
-    person: Person, 
-    generation: number, 
-    generations: Map<number, Person[]>,
-    spousePairs: SpousePair[]
-  ): number {
-    const genPeople = generations.get(generation) || []
-    const singlePeople = genPeople.filter(p => {
-      return !spousePairs.some(sp => sp.spouse1.id === p.id || sp.spouse2.id === p.id)
-    })
-
-    const personIndex = singlePeople.findIndex(p => p.id === person.id)
-    const totalSingleWidth = singlePeople.length * this.config.siblingSpacing
-    
-    // Position single people to the right of spouse pairs
-    const spousePairsWidth = spousePairs.filter(sp => sp.generation === generation).length * this.config.spouseSpacing
-    const startX = spousePairsWidth / 2 + this.config.siblingSpacing
-    
-    return startX + personIndex * this.config.siblingSpacing
-  }
-
-  private centerUnderParents(
-    person: Person, 
-    parentIds: string[], 
-    nodes: LayoutNode[], 
-    spousePairs: SpousePair[]
-  ): number {
-    // Find parent positions
-    const parentNodes = nodes.filter(n => parentIds.includes(n.person.id))
-    const parentPair = spousePairs.find(sp => 
-      parentIds.includes(sp.spouse1.id) && parentIds.includes(sp.spouse2.id)
-    )
-
-    if (parentPair) {
-      // Center under spouse pair
-      return parentPair.x
-    } else if (parentNodes.length > 0) {
-      // Center under single parent or average of parents
-      const avgX = parentNodes.reduce((sum, node) => sum + node.x, 0) / parentNodes.length
-      return avgX
-    }
-
-    return 0
-  }
+  // Remove these methods as they're no longer needed with the new positioning system
 
   private calculateDimensions(nodes: LayoutNode[], spousePairs: SpousePair[]) {
     const allX = [
