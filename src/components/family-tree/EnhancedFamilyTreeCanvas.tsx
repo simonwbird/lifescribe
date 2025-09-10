@@ -81,6 +81,7 @@ export default function EnhancedFamilyTreeCanvas({
 
   // Handle connection dragging
   const handleConnectionStart = useCallback((personId: string, connectionType: 'parent' | 'child' | 'spouse', mousePos: { x: number; y: number }) => {
+    console.log('Canvas received connection start:', personId, connectionType)
     setIsConnecting({ fromPersonId: personId, connectionType, mousePos })
   }, [])
 
@@ -91,6 +92,7 @@ export default function EnhancedFamilyTreeCanvas({
   }, [isConnecting])
 
   const handleConnectionEnd = useCallback((targetPersonId?: string) => {
+    console.log('Connection end:', isConnecting, targetPersonId)
     if (isConnecting && targetPersonId && targetPersonId !== isConnecting.fromPersonId) {
       // Auto-determine relationship type based on connection type
       let relType: 'parent' | 'spouse' = 'parent'
@@ -102,6 +104,7 @@ export default function EnhancedFamilyTreeCanvas({
         relType = 'parent' // from parent to child
       }
       
+      console.log('Creating connection:', isConnecting.fromPersonId, '->', targetPersonId, 'as', relType)
       onAddRelation(isConnecting.fromPersonId, targetPersonId, relType)
     }
     setIsConnecting(null)

@@ -110,6 +110,8 @@ export default function EnhancedPersonCard({
     e.preventDefault()
     e.stopPropagation()
     
+    console.log('Connection start:', connectionType, person.full_name)
+    
     if (onConnectionStart) {
       const rect = cardRef.current?.getBoundingClientRect()
       if (rect) {
@@ -151,27 +153,39 @@ export default function EnhancedPersonCard({
         <>
           {/* Top hotspot - for parents */}
           <div 
-            className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            onMouseDown={(e) => {
+              console.log('Parent hotspot mousedown')
+              handleConnectionStart(e, 'parent')
+            }}
             onClick={(e) => handleHotspotClick(e, 'parent')}
-            title="Add Parent"
+            title="Drag to connect parent or click to add"
           >
             <Plus className="w-4 h-4 text-white" />
           </div>
           
           {/* Bottom hotspot - for children */}
           <div 
-            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            onMouseDown={(e) => {
+              console.log('Child hotspot mousedown')
+              handleConnectionStart(e, 'child')
+            }}
             onClick={(e) => handleHotspotClick(e, 'child')}
-            title="Add Child"
+            title="Drag to connect child or click to add"
           >
             <Plus className="w-4 h-4 text-white" />
           </div>
           
           {/* Left hotspot - for spouse */}
           <div 
-            className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-pink-500 hover:bg-pink-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-pink-500 hover:bg-pink-600 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg transition-all hover:scale-110 z-30 no-drag border-2 border-white"
+            onMouseDown={(e) => {
+              console.log('Spouse hotspot mousedown')
+              handleConnectionStart(e, 'spouse')
+            }}
             onClick={(e) => handleHotspotClick(e, 'spouse')}
-            title="Add Spouse/Partner"
+            title="Drag to connect spouse/partner or click to add"
           >
             <Heart className="w-4 h-4 text-white" />
           </div>
