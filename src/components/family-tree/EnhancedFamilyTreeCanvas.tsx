@@ -232,14 +232,31 @@ export default function EnhancedFamilyTreeCanvas({
     })
   }, [people])
 
-  // Auto-center on people when they first load
+  const handleTopLeftView = useCallback(() => {
+    if (people.length === 0) return
+
+    const personPositions = Object.values(positions)
+    if (personPositions.length === 0) return
+
+    const minX = Math.min(...personPositions.map(p => p.x))
+    const minY = Math.min(...personPositions.map(p => p.y))
+
+    // Position the tree in the top-left with some padding
+    const padding = 50
+    setPan({
+      x: padding - minX * zoom,
+      y: padding - minY * zoom
+    })
+  }, [positions, people.length, zoom])
+
+  // Auto-position to top-left when people first load
   useEffect(() => {
     if (people.length > 0 && Object.keys(positions).length > 0) {
       setTimeout(() => {
-        handleFitToScreen()
+        handleTopLeftView()
       }, 100)
     }
-  }, [people.length, positions, handleFitToScreen])
+  }, [people.length, positions, handleTopLeftView])
 
   // Setup event listeners
   useEffect(() => {
