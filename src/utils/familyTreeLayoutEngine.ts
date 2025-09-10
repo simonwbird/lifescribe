@@ -1,4 +1,5 @@
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
+import { validateFamily } from './validateFamily'
 
 export interface LayoutNode {
   person: Person
@@ -98,6 +99,16 @@ export class FamilyTreeLayoutEngine {
   }
 
   public generateLayout(people: Person[], relationships: Relationship[]): LayoutResult {
+    console.log('=== FamilyTreeLayoutEngine.generateLayout ===')
+    console.log('People:', people.map(p => `${p.full_name} (${p.id})`))
+    console.log('Relationships:', relationships.map(r => `${r.from_person_id} --${r.relationship_type}--> ${r.to_person_id}`))
+
+    // Validate family data before processing
+    const validationErrors = validateFamily(people, relationships)
+    if (validationErrors.length) {
+      console.warn('Family data issues:\n' + validationErrors.join('\n'))
+    }
+
     // Clear previous state
     this.childrenMap.clear()
     this.parentsMap.clear()
