@@ -96,11 +96,13 @@ export function ConnectionRenderer({
         
         if (!spouseANode || !spouseBNode) return null
         
-        // Calculate the actual positions
+        // Use the layout engine's calculated positions - DON'T recalculate!
         const spouseAX = spouseANode.x + personWidth / 2
         const spouseBX = spouseBNode.x + personWidth / 2  
         const spouseY = spouseANode.y + personHeight / 2
-        const centerX = (spouseAX + spouseBX) / 2
+        
+        // Trust the layout engine's marriage.x calculation for perfect centering
+        const centerX = marriage.x
         
         return (
           <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
