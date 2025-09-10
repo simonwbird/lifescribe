@@ -127,8 +127,48 @@ export class FamilyTreeLayoutEngine {
     // Step 2: Assign generation depths using ancestry BFS (not birth years)
     const depths = this.assignDepthsByAncestry(people, marriages)
     
-    // Step 2.5: Force spouses onto same depth and normalize
-    this.forceSpousesSameDepth(people, marriages, depths)
+    // Step 2.5: Force spouses to same depth, re-enforce constraints, normalize
+    // 1) keep spouses at the SAME depth (row)
+    const forceSpousesSameDepth = () => {
+      // move both spouses to the shallower (smaller) depth
+      this.spouseMap.forEach((spouses, aId) => {
+        const a = depths.get(aId) ?? 0;
+        spouses.forEach(bId => {
+          const b = depths.get(bId) ?? a;
+          const target = Math.min(a, b);
+          if ((depths.get(aId) ?? 0) !== target) depths.set(aId, target);
+          if ((depths.get(bId) ?? 0) !== target) depths.set(bId, target);
+        });
+      });
+    };
+    forceSpousesSameDepth();
+
+    // 2) children must be STRICTLY below their deepest parent
+    this.enforceParentChildConstraints(people, marriages, depths);
+
+    // 3) normalize so oldest generation is always depth 0 (top row)
+    const allDepths = Array.from(depths.values());
+    const minDepth = Math.min(...allDepths);
+    if (isFinite(minDepth) && minDepth !== 0) {
+      depths.forEach((d, id) => depths.set(id, d - minDepth));
+    }
+
+    // marriages live on the SAME row as their parents' pair
+    marriages.forEach(m => {
+      const da = m.parentA ? (depths.get(m.parentA.id) ?? 0) : 0;
+      const db = m.parentB ? (depths.get(m.parentB.id) ?? da) : da;
+      m.depth = Math.min(da, db); // important: MIN, not max
+    });
+
+    // one more pass to ensure all children are below the union row
+    this.enforceParentChildConstraints(people, marriages, depths);
+
+    // and normalize again to keep the top at 0
+    {
+      const vals = Array.from(depths.values());
+      const m = Math.min(...vals);
+      if (isFinite(m) && m !== 0) depths.forEach((d, id) => depths.set(id, d - m));
+    }
 
     // Step 3: Calculate subtree widths (bottom-up)
     this.calculateSubtreeWidths(people, marriages, depths)
@@ -395,29 +435,6 @@ export class FamilyTreeLayoutEngine {
           }
         }
       })
-    }
-  }
-
-  private forceSpousesSameDepth(people: Person[], marriages: MarriageNode[], depths: Map<string, number>) {
-    // Use the *lowest* (earliest) depth of the pair to keep ancestors high
-    this.spouseMap.forEach((spouses, aId) => {
-      const aDepth = depths.get(aId) ?? 0
-      spouses.forEach(bId => {
-        const bDepth = depths.get(bId) ?? aDepth
-        const target = Math.min(aDepth, bDepth) // both move up to the shallower depth
-        depths.set(aId, target)
-        depths.set(bId, target)
-      })
-    })
-
-    // Re-enforce child > parent rule until stable
-    this.enforceParentChildConstraints(people, marriages, depths)
-
-    // Normalize again to keep the top row at 0
-    const all = Array.from(depths.values())
-    const min = Math.min(...all)
-    if (min !== 0 && isFinite(min)) {
-      depths.forEach((d, id) => depths.set(id, d - min))
     }
   }
 
