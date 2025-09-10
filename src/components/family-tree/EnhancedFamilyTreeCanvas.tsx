@@ -131,7 +131,7 @@ export default function EnhancedFamilyTreeCanvas({
         // Check if we're near any person cards for auto-connect
         let nearestPerson = null
         let minDistance = Infinity
-        const snapDistance = 150 // pixels
+        const snapDistance = 250 // Increased snap distance for easier connection
 
         people.forEach(person => {
           if (person.id === isConnecting.fromPersonId) return
@@ -139,8 +139,9 @@ export default function EnhancedFamilyTreeCanvas({
           const personPos = positions[person.id]
           if (!personPos) return
           
-          const cardCenterX = personPos.x + 128 // card width/2
-          const cardCenterY = personPos.y + 64  // card height/2
+          // Updated card dimensions to match actual EnhancedPersonCard (256x160 approx)
+          const cardCenterX = personPos.x + 132 // card width/2 (264/2)
+          const cardCenterY = personPos.y + 100  // card height/2 (approx 200/2)
           
           const distance = Math.sqrt(
             Math.pow(x - cardCenterX, 2) + Math.pow(y - cardCenterY, 2)
