@@ -169,6 +169,16 @@ export default function FamilyTreeCanvas({
     })
   }, [positions, people.length])
 
+  // Auto-center on people when they first load
+  useEffect(() => {
+    if (people.length > 0 && Object.keys(positions).length > 0) {
+      // Small delay to ensure canvas is rendered
+      setTimeout(() => {
+        handleFitToScreen()
+      }, 100)
+    }
+  }, [people.length, positions, handleFitToScreen])
+
   // Get relationships for rendering connections
   const getPersonRelationships = useCallback((personId: string) => {
     return relationships.filter(rel => 
