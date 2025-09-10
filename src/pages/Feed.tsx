@@ -192,7 +192,7 @@ export default function Feed() {
                 <h1 className="text-3xl font-bold">Family Feed</h1>
                 <div className="flex space-x-2">
                   <Button asChild>
-                    <Link to="/new-story">Share Story</Link>
+                    <Link to="/stories/new">Share Story</Link>
                   </Button>
                   <Button variant="outline" asChild>
                     <Link to="/prompts">Answer Question</Link>
@@ -210,7 +210,7 @@ export default function Feed() {
                   </CardHeader>
                   <CardContent className="flex space-x-4">
                     <Button asChild>
-                      <Link to="/new-story">Share Your First Story</Link>
+                      <Link to="/stories/new">Share Your First Story</Link>
                     </Button>
                     <Button variant="outline" asChild>
                       <Link to="/prompts">Answer a Question</Link>

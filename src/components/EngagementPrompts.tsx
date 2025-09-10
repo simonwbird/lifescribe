@@ -148,7 +148,7 @@ export default function EngagementPrompts() {
 
   const handlePromptClick = (prompt: PromptSuggestion) => {
     // Navigate to new story page with the prompt pre-filled
-    navigate(`/new-story?prompt=${encodeURIComponent(prompt.title)}&description=${encodeURIComponent(prompt.description)}`)
+    navigate(`/stories/new?prompt=${encodeURIComponent(prompt.title)}&description=${encodeURIComponent(prompt.description)}`)
   }
 
   if (currentPrompts.length === 0) return null
