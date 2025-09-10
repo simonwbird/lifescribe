@@ -130,25 +130,31 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Heart symbol using calculated position */}
-            <circle 
-              cx={centerX} 
-              cy={spouseY} 
-              r="12" 
-              fill="#ef4444" 
-              stroke="white" 
-              strokeWidth="2"
+            {/* SUPER OBVIOUS TEST - Red square at marriage center */}
+            <rect
+              x={centerX - 25}
+              y={spouseY - 25}
+              width="50"
+              height="50"
+              fill="red"
+              stroke="black"
+              strokeWidth="3"
+              opacity="0.9"
             />
-            <text 
-              x={centerX} 
-              y={spouseY + 4} 
-              textAnchor="middle" 
-              fontSize="12" 
-              fill="white" 
+            <text
+              x={centerX}
+              y={spouseY + 5}
+              textAnchor="middle"
+              fontSize="16"
+              fill="white"
               fontWeight="bold"
             >
-              ♥
+              HEART
             </text>
+            
+            {/* Also add absolute positioned hearts for comparison */}
+            <circle cx="100" cy="100" r="15" fill="blue"/>
+            <text x="100" y="105" textAnchor="middle" fontSize="12" fill="white">♥</text>
           </g>
         )
       }).filter(Boolean);
