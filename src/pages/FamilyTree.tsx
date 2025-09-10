@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import EnhancedFamilyTreeCanvas from '@/components/family-tree/EnhancedFamilyTreeCanvas'
+import ProfessionalFamilyTree from '@/components/family-tree/ProfessionalFamilyTree'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,6 +27,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   TreePine,
   UserPlus,
+  Layout,
+  Move3D,
 } from 'lucide-react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { useToast } from '@/hooks/use-toast'
@@ -36,6 +39,7 @@ export default function FamilyTree() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false)
+  const [layoutMode, setLayoutMode] = useState<'interactive' | 'professional'>('professional')
   const [newPersonForm, setNewPersonForm] = useState({
     given_name: '',
     surname: '',
@@ -363,9 +367,33 @@ export default function FamilyTree() {
               </div>
               
               <div className="flex items-center gap-2">
-                <Button onClick={handleSaveLayout} variant="outline" size="sm">
-                  Save Layout
-                </Button>
+                {/* Layout Mode Toggle */}
+                <div className="flex items-center gap-1 border rounded-lg p-1">
+                  <Button
+                    variant={layoutMode === 'professional' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setLayoutMode('professional')}
+                    className="h-8 px-3"
+                  >
+                    <Layout className="h-4 w-4 mr-1" />
+                    Clean
+                  </Button>
+                  <Button
+                    variant={layoutMode === 'interactive' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setLayoutMode('interactive')}
+                    className="h-8 px-3"
+                  >
+                    <Move3D className="h-4 w-4 mr-1" />
+                    Interactive
+                  </Button>
+                </div>
+
+                {layoutMode === 'interactive' && (
+                  <Button onClick={handleSaveLayout} variant="outline" size="sm">
+                    Save Layout
+                  </Button>
+                )}
                 
                 <Dialog open={isAddPersonOpen} onOpenChange={setIsAddPersonOpen}>
                   <DialogTrigger asChild>
@@ -462,19 +490,30 @@ export default function FamilyTree() {
               </Card>
             </div>
           ) : (
-            <EnhancedFamilyTreeCanvas
-              people={people}
-              relationships={relationships}
-              positions={nodePositions}
-              onPersonMove={handlePersonMove}
-              onPersonSelect={(personId) => console.log('Selected:', personId)}
-              onAddRelation={handleAddRelation}
-              onDeleteRelation={handleDeleteRelation}
-              onViewProfile={handleViewPerson}
-              onEditPerson={(personId) => navigate(`/people/${personId}`)}
-              shouldFitToScreen={shouldFitToScreen}
-              onFitToScreenComplete={() => setShouldFitToScreen(false)}
-            />
+            <>
+              {layoutMode === 'professional' ? (
+                <ProfessionalFamilyTree
+                  people={people}
+                  relationships={relationships}
+                  onPersonClick={handleViewPerson}
+                  onPersonEdit={(personId) => navigate(`/people/${personId}`)}
+                />
+              ) : (
+                <EnhancedFamilyTreeCanvas
+                  people={people}
+                  relationships={relationships}
+                  positions={nodePositions}
+                  onPersonMove={handlePersonMove}
+                  onPersonSelect={(personId) => console.log('Selected:', personId)}
+                  onAddRelation={handleAddRelation}
+                  onDeleteRelation={handleDeleteRelation}
+                  onViewProfile={handleViewPerson}
+                  onEditPerson={(personId) => navigate(`/people/${personId}`)}
+                  shouldFitToScreen={shouldFitToScreen}
+                  onFitToScreenComplete={() => setShouldFitToScreen(false)}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
