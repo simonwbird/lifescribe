@@ -122,12 +122,12 @@ export default function FamilyTreeTutorial({ onClose, onComplete, isVisible }: F
       <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm">
         {/* Tutorial Card */}
         <Card 
-          className={`fixed w-80 bg-white shadow-2xl border-2 border-primary transition-all duration-500 ${
+          className={`absolute w-80 bg-white shadow-2xl border-2 border-primary transition-all duration-500 ${
             isAnimating ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
           }`}
           style={{
-            left: `${currentTutorialStep.position.x}%`,
-            top: `${currentTutorialStep.position.y}%`,
+            left: '50%',
+            top: '50%',
             transform: 'translate(-50%, -50%)'
           }}
         >
