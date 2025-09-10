@@ -201,7 +201,7 @@ export default function EnhancedPersonCard({
       <Card className={`w-64 hover:shadow-xl transition-all duration-300 bg-white/95 backdrop-blur-sm ${
         isDragging ? 'shadow-2xl ring-2 ring-blue-400' : 'shadow-lg'
       } ${isSelected ? 'ring-1 ring-blue-400/50' : ''} ${
-        isHovered ? 'ring-2 ring-green-400/70' : ''
+        isHovered ? 'ring-4 ring-green-400 ring-opacity-60 shadow-2xl scale-105' : ''
       } border-2 border-gray-100`}>
         <CardContent className="p-5">
           <div className="space-y-4">

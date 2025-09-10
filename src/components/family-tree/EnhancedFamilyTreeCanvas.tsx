@@ -123,17 +123,44 @@ export default function EnhancedFamilyTreeCanvas({
         const x = (e.clientX - rect.left - pan.x) / zoom
         const y = (e.clientY - rect.top - pan.y) / zoom
         handleConnectionDrag({ x, y })
+
+        // Check if we're near any person cards for auto-connect
+        let nearestPerson = null
+        let minDistance = Infinity
+        const snapDistance = 150 // pixels
+
+        people.forEach(person => {
+          if (person.id === isConnecting.fromPersonId) return
+          
+          const personPos = positions[person.id]
+          if (!personPos) return
+          
+          const cardCenterX = personPos.x + 128 // card width/2
+          const cardCenterY = personPos.y + 64  // card height/2
+          
+          const distance = Math.sqrt(
+            Math.pow(x - cardCenterX, 2) + Math.pow(y - cardCenterY, 2)
+          )
+          
+          if (distance < snapDistance && distance < minDistance) {
+            minDistance = distance
+            nearestPerson = person.id
+          }
+        })
+        
+        setHoveredPersonId(nearestPerson)
       }
     }
-  }, [isPanning, panStart, isConnecting, pan.x, pan.y, zoom, handleConnectionDrag])
+  }, [isPanning, panStart, isConnecting, pan.x, pan.y, zoom, handleConnectionDrag, people, positions])
 
   const handleCanvasMouseUp = useCallback(() => {
     if (isPanning) {
       setIsPanning(false)
     } else if (isConnecting) {
-      handleConnectionEnd()
+      // Auto-connect to hovered person if nearby
+      handleConnectionEnd(hoveredPersonId)
     }
-  }, [isPanning, isConnecting, handleConnectionEnd])
+  }, [isPanning, isConnecting, handleConnectionEnd, hoveredPersonId])
 
   // Handle person dragging
   const handlePersonDrag = useCallback((personId: string, deltaX: number, deltaY: number) => {
@@ -405,13 +432,26 @@ export default function EnhancedFamilyTreeCanvas({
             <line
               x1={positions[isConnecting.fromPersonId]?.x + 128 || 0}
               y1={positions[isConnecting.fromPersonId]?.y + 64 || 0}
-              x2={isConnecting.mousePos.x}
-              y2={isConnecting.mousePos.y}
-              stroke={isConnecting.connectionType === 'spouse' ? '#ec4899' : '#3b82f6'}
-              strokeWidth="3"
+              x2={hoveredPersonId ? (positions[hoveredPersonId]?.x + 128 || isConnecting.mousePos.x) : isConnecting.mousePos.x}
+              y2={hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y}
+              stroke={hoveredPersonId ? '#10b981' : (isConnecting.connectionType === 'spouse' ? '#ec4899' : '#3b82f6')}
+              strokeWidth={hoveredPersonId ? "4" : "3"}
               strokeDasharray={isConnecting.connectionType === 'spouse' ? '8 4' : 'none'}
-              className="animate-pulse"
+              className={hoveredPersonId ? 'animate-pulse' : ''}
             />
+            
+            {/* Connection preview circle at target */}
+            {hoveredPersonId && (
+              <circle
+                cx={positions[hoveredPersonId]?.x + 128 || 0}
+                cy={positions[hoveredPersonId]?.y + 64 || 0}
+                r="20"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="3"
+                className="animate-ping"
+              />
+            )}
           </svg>
         )}
 
