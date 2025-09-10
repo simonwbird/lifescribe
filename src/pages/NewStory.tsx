@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import MediaUploader from '@/components/MediaUploader'
+import TagSelector from '@/components/TagSelector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,7 +18,6 @@ export default function NewStory() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [currentTag, setCurrentTag] = useState('')
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
@@ -68,17 +68,11 @@ export default function NewStory() {
   }, [searchParams])
 
   const handleAddTag = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && currentTag.trim()) {
-      e.preventDefault()
-      if (!tags.includes(currentTag.trim())) {
-        setTags([...tags, currentTag.trim()])
-      }
-      setCurrentTag('')
-    }
+    // This function is no longer needed as TagSelector handles tag management
   }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
+    // This function is no longer needed as TagSelector handles tag management
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,34 +203,11 @@ export default function NewStory() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tags">Tags</Label>
-                    <Input
-                      id="tags"
-                      value={currentTag}
-                      onChange={(e) => setCurrentTag(e.target.value)}
-                      onKeyDown={handleAddTag}
-                      placeholder="Add tags (press Enter to add)..."
-                    />
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                            {tag}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-4 w-4 p-0 hover:bg-transparent"
-                              onClick={() => handleRemoveTag(tag)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <TagSelector
+                    selectedTags={tags}
+                    onTagsChange={setTags}
+                    familyId={familyId}
+                  />
 
                   <div className="space-y-2">
                     <Label>Photos & Videos</Label>
