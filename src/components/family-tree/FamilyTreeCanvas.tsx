@@ -272,32 +272,25 @@ export default function FamilyTreeCanvas({
           )
         })}
 
-        {/* Person Cards */}
+        {/* Person Cards - Simplified for debugging */}
         {people.map(person => {
           const position = positions[person.id] || { x: CANVAS_SIZE / 2, y: CANVAS_SIZE / 2 }
-          const stats = getPersonStats(person.id)
           
           return (
-            <PersonCard
+            <div
               key={person.id}
-              person={person}
-              x={position.x}
-              y={position.y}
-              isDragging={isDragging === person.id}
-              isSelected={selectedPersonId === person.id}
-              onDrag={(deltaX, deltaY) => handlePersonDrag(person.id, deltaX, deltaY)}
-              onDragStart={() => handlePersonDragStart(person.id)}
-              onDragEnd={handlePersonDragEnd}
-              onSelect={() => onPersonSelect(person.id)}
-              onViewProfile={() => onViewProfile(person.id)}
-              onEditPerson={() => onEditPerson(person.id)}
-              onAddRelation={(type) => {
-                // This would open a modal to select the target person
-                console.log(`Add ${type} to ${person.id}`)
+              className="absolute bg-white border-2 border-blue-500 p-4 rounded-lg shadow-lg"
+              style={{
+                left: position.x,
+                top: position.y,
+                width: '200px',
+                height: '100px'
               }}
-              spouses={stats.spouses}
-              childrenCount={stats.childrenCount}
-            />
+            >
+              <h3 className="font-bold text-sm">{person.full_name}</h3>
+              <p className="text-xs text-gray-600">ID: {person.id.substring(0, 8)}</p>
+              <p className="text-xs text-gray-600">Pos: {position.x}, {position.y}</p>
+            </div>
           )
         })}
       </div>
