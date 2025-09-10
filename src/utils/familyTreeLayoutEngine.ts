@@ -618,6 +618,15 @@ export class FamilyTreeLayoutEngine {
       });
     });
 
+    // Debug positions after each major step
+    console.log('=== AFTER INITIAL POSITIONING ===')
+    people.forEach(person => {
+      const position = pos.get(person.id)
+      if (position) {
+        console.log(`${person.full_name}: x=${position.x}`)
+      }
+    })
+
     // 3) Children pass — ALWAYS centered under union midpoint
     marriages.forEach(m => {
       if (!m.children.length) return;
@@ -638,6 +647,14 @@ export class FamilyTreeLayoutEngine {
         });
       }
     });
+
+    console.log('=== AFTER CHILD CENTERING ===')
+    people.forEach(person => {
+      const position = pos.get(person.id)
+      if (position) {
+        console.log(`${person.full_name}: x=${position.x}`)
+      }
+    })
 
     // 4) TEMPORARILY DISABLED - Resolve horizontal collisions within each row - PRESERVE SPOUSE PAIRS
     // TODO: Fix collision resolution to properly handle spouse pairs
@@ -727,10 +744,20 @@ export class FamilyTreeLayoutEngine {
     */
 
     // 5) Re-center children UNDER unions again (collisions may have shifted parents)
+    console.log('=== BEFORE RE-CENTERING CHILDREN ===')
+    people.forEach(person => {
+      const position = pos.get(person.id)
+      if (position) {
+        console.log(`${person.full_name}: x=${position.x}`)
+      }
+    })
+
     marriages.forEach(m => {
       if (!m.children.length) return;
       const dChild = m.depth + 1;
       const yTop = dChild * this.config.gridY;
+
+      console.log(`Re-centering children for marriage: ${m.parentA?.full_name} + ${m.parentB?.full_name}`)
 
       // recompute union midpoint from spouse positions (in case they moved)
       const ax = m.parentA ? pos.get(m.parentA.id) : undefined;
@@ -738,23 +765,37 @@ export class FamilyTreeLayoutEngine {
       if (ax && bx) {
         const cA = ax.x + this.config.personWidth / 2;
         const cB = bx.x + this.config.personWidth / 2;
+        console.log(`  Parent A (${m.parentA?.full_name}): x=${ax.x}, center=${cA}`)
+        console.log(`  Parent B (${m.parentB?.full_name}): x=${bx.x}, center=${cB}`)
+        const oldX = m.x;
         m.x = (cA + cB) / 2;
+        console.log(`  Union midpoint changed from ${oldX} to ${m.x}`)
       }
       const cx = m.x;
 
       if (m.children.length === 1) {
         const c = m.children[0];
+        console.log(`  Positioning single child ${c.full_name} at x=${cx - this.config.personWidth / 2}`)
         pos.set(c.id, { x: cx - this.config.personWidth / 2, y: yTop });
       } else {
         const n = m.children.length;
         const span = (n - 1) * this.config.childGap;
         let center = cx - span / 2;
         m.children.forEach(child => {
+          console.log(`  Positioning child ${child.full_name} at x=${center - this.config.personWidth / 2}`)
           pos.set(child.id, { x: center - this.config.personWidth / 2, y: yTop });
           center += this.config.childGap;
         });
       }
     });
+
+    console.log('=== FINAL POSITIONS ===')
+    people.forEach(person => {
+      const position = pos.get(person.id)
+      if (position) {
+        console.log(`${person.full_name}: x=${position.x}`)
+      }
+    })
 
     return pos;
   }
