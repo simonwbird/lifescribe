@@ -19,6 +19,8 @@ interface FamilyTreeCanvasProps {
   onEditPerson: (personId: string) => void
   positions: Record<string, { x: number; y: number }>
   selectedPersonId?: string
+  shouldFitToScreen?: boolean
+  onFitToScreenComplete?: () => void
 }
 
 export default function EnhancedFamilyTreeCanvas({
@@ -31,7 +33,9 @@ export default function EnhancedFamilyTreeCanvas({
   onViewProfile,
   onEditPerson,
   positions,
-  selectedPersonId
+  selectedPersonId,
+  shouldFitToScreen,
+  onFitToScreenComplete
 }: FamilyTreeCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1.0) // Default to 100% zoom
@@ -360,6 +364,14 @@ export default function EnhancedFamilyTreeCanvas({
       }, 100)
     }
   }, [people.length, positions, handleTopLeftView])
+
+  // Handle shouldFitToScreen trigger from parent
+  useEffect(() => {
+    if (shouldFitToScreen && onFitToScreenComplete) {
+      handleFitToScreen()
+      onFitToScreenComplete()
+    }
+  }, [shouldFitToScreen, onFitToScreenComplete, handleFitToScreen])
 
   // Setup event listeners
   useEffect(() => {

@@ -44,6 +44,8 @@ export default function FamilyTree() {
   })
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
   const [isFirstTime, setIsFirstTime] = useState(false)
+  // State to trigger fit-to-screen after adding a person
+  const [shouldFitToScreen, setShouldFitToScreen] = useState(false)
   
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -297,6 +299,17 @@ export default function FamilyTree() {
         throw error
       }
 
+      // Position the new person in a visible area
+      const newPersonId = newPerson.id
+      const centerX = 400
+      const centerY = 400
+      
+      // Update positions immediately to ensure the new person is visible
+      setNodePositions(prev => ({
+        ...prev,
+        [newPersonId]: { x: centerX, y: centerY }
+      }))
+
       // Reset form and close dialog
       setNewPersonForm({ given_name: '', surname: '', birth_year: '', gender: '' })
       setIsAddPersonOpen(false)
@@ -304,9 +317,12 @@ export default function FamilyTree() {
       // Reload data
       await loadFamilyData()
       
+      // Trigger fit to screen to show the new person
+      setShouldFitToScreen(true)
+      
       toast({
         title: "Person Added",
-        description: `${full_name} has been added to your family tree`
+        description: `${full_name} has been added to your family tree and is visible in the center`
       })
 
     } catch (error) {
@@ -456,6 +472,8 @@ export default function FamilyTree() {
               onDeleteRelation={handleDeleteRelation}
               onViewProfile={handleViewPerson}
               onEditPerson={(personId) => navigate(`/people/${personId}`)}
+              shouldFitToScreen={shouldFitToScreen}
+              onFitToScreenComplete={() => setShouldFitToScreen(false)}
             />
           )}
         </div>
