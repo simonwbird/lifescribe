@@ -254,7 +254,7 @@ export default function EnhancedFamilyTreeCanvas({
     // Start with people who have no parents (roots)
     const rootPeople = people.filter(person => 
       !relationships.some(rel => 
-        rel.relationship_type === 'parent' && rel.from_person_id === person.id
+        rel.relationship_type === 'parent' && rel.to_person_id === person.id
       )
     )
     
@@ -292,8 +292,8 @@ export default function EnhancedFamilyTreeCanvas({
       
       // Add children to next level
       const children = relationships
-        .filter(rel => rel.relationship_type === 'parent' && rel.to_person_id === person.id)
-        .map(rel => people.find(p => p.id === rel.from_person_id))
+        .filter(rel => rel.relationship_type === 'parent' && rel.from_person_id === person.id)
+        .map(rel => people.find(p => p.id === rel.to_person_id))
         .filter(Boolean) as Person[]
       
       children.forEach(child => {
