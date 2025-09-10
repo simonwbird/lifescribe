@@ -179,6 +179,15 @@ export class FamilyTreeLayoutEngine {
     // Step 5: Calculate positions using org-chart algorithm
     const positions = this.calculateOrgChartPositions(people, marriages, depths)
 
+    // Debug X positioning for overlapping issue
+    console.log('=== X POSITIONING DEBUG ===')
+    people.forEach(person => {
+      const pos = positions.get(person.id)
+      if (pos) {
+        console.log(`${person.full_name}: x=${pos.x}, y=${pos.y}, depth=${depths.get(person.id)}`)
+      }
+    })
+
     // Step 6: Create layout nodes
     const nodes = this.createLayoutNodes(people, positions, depths)
     const marriageNodes = this.createMarriageLayout(marriages, positions)
