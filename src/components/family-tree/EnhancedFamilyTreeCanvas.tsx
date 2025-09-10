@@ -41,6 +41,12 @@ export default function EnhancedFamilyTreeCanvas({
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [showGrid, setShowGrid] = useState(true)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isConnecting, setIsConnecting] = useState<{
+    fromPersonId: string
+    connectionType: 'parent' | 'child' | 'spouse'
+    mousePos: { x: number; y: number }
+  } | null>(null)
+  const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null)
   const [relationshipModal, setRelationshipModal] = useState<{
     isOpen: boolean
     fromPerson: Person | null
@@ -73,18 +79,58 @@ export default function EnhancedFamilyTreeCanvas({
     }
   }, [pan])
 
+  // Handle connection dragging
+  const handleConnectionStart = useCallback((personId: string, connectionType: 'parent' | 'child' | 'spouse', mousePos: { x: number; y: number }) => {
+    setIsConnecting({ fromPersonId: personId, connectionType, mousePos })
+  }, [])
+
+  const handleConnectionDrag = useCallback((mousePos: { x: number; y: number }) => {
+    if (isConnecting) {
+      setIsConnecting(prev => prev ? { ...prev, mousePos } : null)
+    }
+  }, [isConnecting])
+
+  const handleConnectionEnd = useCallback((targetPersonId?: string) => {
+    if (isConnecting && targetPersonId && targetPersonId !== isConnecting.fromPersonId) {
+      // Auto-determine relationship type based on connection type
+      let relType: 'parent' | 'spouse' = 'parent'
+      if (isConnecting.connectionType === 'spouse') {
+        relType = 'spouse'
+      } else if (isConnecting.connectionType === 'parent') {
+        relType = 'parent' // from child to parent
+      } else if (isConnecting.connectionType === 'child') {
+        relType = 'parent' // from parent to child
+      }
+      
+      onAddRelation(isConnecting.fromPersonId, targetPersonId, relType)
+    }
+    setIsConnecting(null)
+    setHoveredPersonId(null)
+  }, [isConnecting, onAddRelation])
+
   const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
     if (isPanning) {
       setPan({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y
       })
+    } else if (isConnecting) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (rect) {
+        const x = (e.clientX - rect.left - pan.x) / zoom
+        const y = (e.clientY - rect.top - pan.y) / zoom
+        handleConnectionDrag({ x, y })
+      }
     }
-  }, [isPanning, panStart])
+  }, [isPanning, panStart, isConnecting, pan.x, pan.y, zoom, handleConnectionDrag])
 
   const handleCanvasMouseUp = useCallback(() => {
-    setIsPanning(false)
-  }, [])
+    if (isPanning) {
+      setIsPanning(false)
+    } else if (isConnecting) {
+      handleConnectionEnd()
+    }
+  }, [isPanning, isConnecting, handleConnectionEnd])
 
   // Handle person dragging
   const handlePersonDrag = useCallback((personId: string, deltaX: number, deltaY: number) => {
@@ -245,7 +291,7 @@ export default function EnhancedFamilyTreeCanvas({
     return { spouseCount, childrenCount }
   }, [getPersonRelationships])
 
-  // Handle adding relation from hotspots
+  // Handle adding relation from hotspots (keep for backward compatibility)
   const handleAddRelationFromCard = useCallback((personId: string, type: 'parent' | 'child' | 'spouse') => {
     const person = people.find(p => p.id === personId)
     if (!person) return
@@ -292,7 +338,7 @@ export default function EnhancedFamilyTreeCanvas({
 
     canvas.addEventListener('wheel', handleWheel, { passive: false })
     
-    if (isPanning) {
+    if (isPanning || isConnecting) {
       document.addEventListener('mousemove', handleCanvasMouseMove)
       document.addEventListener('mouseup', handleCanvasMouseUp)
     }
@@ -302,7 +348,7 @@ export default function EnhancedFamilyTreeCanvas({
       document.removeEventListener('mousemove', handleCanvasMouseMove)
       document.removeEventListener('mouseup', handleCanvasMouseUp)
     }
-  }, [handleWheel, handleCanvasMouseMove, handleCanvasMouseUp, isPanning])
+  }, [handleWheel, handleCanvasMouseMove, handleCanvasMouseUp, isPanning, isConnecting])
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
@@ -344,6 +390,28 @@ export default function EnhancedFamilyTreeCanvas({
           )
         })}
 
+        {/* Dynamic Connection Line (while dragging) */}
+        {isConnecting && (
+          <svg
+            className="absolute top-0 left-0 pointer-events-none z-20"
+            style={{
+              width: CANVAS_SIZE,
+              height: CANVAS_SIZE,
+            }}
+          >
+            <line
+              x1={positions[isConnecting.fromPersonId]?.x + 128 || 0}
+              y1={positions[isConnecting.fromPersonId]?.y + 64 || 0}
+              x2={isConnecting.mousePos.x}
+              y2={isConnecting.mousePos.y}
+              stroke={isConnecting.connectionType === 'spouse' ? '#ec4899' : '#3b82f6'}
+              strokeWidth="3"
+              strokeDasharray={isConnecting.connectionType === 'spouse' ? '8 4' : 'none'}
+              className="animate-pulse"
+            />
+          </svg>
+        )}
+
         {/* Person Cards */}
         {people.map(person => {
           const position = positions[person.id] || { x: CANVAS_SIZE / 2, y: CANVAS_SIZE / 2 }
@@ -357,6 +425,7 @@ export default function EnhancedFamilyTreeCanvas({
               y={position.y}
               isDragging={isDragging === person.id}
               isSelected={selectedPersonId === person.id}
+              isHovered={hoveredPersonId === person.id}
               spouseCount={stats.spouseCount}
               childrenCount={stats.childrenCount}
               onDrag={(deltaX, deltaY) => handlePersonDragUpdate(person.id, deltaX, deltaY)}
@@ -366,6 +435,9 @@ export default function EnhancedFamilyTreeCanvas({
               onViewProfile={() => onViewProfile(person.id)}
               onEditPerson={() => onEditPerson(person.id)}
               onAddRelation={(type) => handleAddRelationFromCard(person.id, type)}
+              onConnectionStart={(connectionType, mousePos) => handleConnectionStart(person.id, connectionType, mousePos)}
+              onConnectionEnd={() => handleConnectionEnd(person.id)}
+              onHover={(isHovered) => setHoveredPersonId(isHovered ? person.id : null)}
               showConnectionHotspots={selectedPersonId === person.id}
             />
           )
@@ -421,7 +493,7 @@ export default function EnhancedFamilyTreeCanvas({
           </div>
         </div>
         <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-          Hover over lines to delete
+          Hover over lines to delete • Drag from colored hotspots to connect
         </div>
       </div>
 
@@ -432,7 +504,10 @@ export default function EnhancedFamilyTreeCanvas({
           <div>Zoom: {Math.round(zoom * 100)}%</div>
           <div>{people.length} people, {relationships.length} connections</div>
           <div className="text-xs text-gray-500 mt-2">
-            {isPanning ? 'Panning...' : isDragging ? `Moving ${getPersonDisplayName(people.find(p => p.id === isDragging)!)}` : 'Drag cards to move • Mouse wheel to zoom'}
+            {isPanning ? 'Panning...' : 
+             isDragging ? `Moving ${getPersonDisplayName(people.find(p => p.id === isDragging)!)}` : 
+             isConnecting ? 'Drag to connect people...' :
+             'Drag cards to move • Drag from hotspots to connect • Mouse wheel to zoom'}
           </div>
           {hasUnsavedChanges && (
             <div className="text-xs text-blue-600 font-medium animate-pulse">

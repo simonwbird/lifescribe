@@ -22,6 +22,7 @@ interface EnhancedPersonCardProps {
   y: number
   isDragging?: boolean
   isSelected?: boolean
+  isHovered?: boolean
   spouseCount?: number
   childrenCount?: number
   onDrag: (deltaX: number, deltaY: number) => void
@@ -31,6 +32,9 @@ interface EnhancedPersonCardProps {
   onViewProfile: () => void
   onEditPerson: () => void
   onAddRelation: (type: 'parent' | 'child' | 'spouse') => void
+  onConnectionStart?: (connectionType: 'parent' | 'child' | 'spouse', mousePos: { x: number; y: number }) => void
+  onConnectionEnd?: () => void
+  onHover?: (isHovered: boolean) => void
   showConnectionHotspots?: boolean
 }
 
@@ -40,6 +44,7 @@ export default function EnhancedPersonCard({
   y,
   isDragging = false,
   isSelected = false,
+  isHovered = false,
   spouseCount = 0,
   childrenCount = 0,
   onDrag,
@@ -49,6 +54,9 @@ export default function EnhancedPersonCard({
   onViewProfile,
   onEditPerson,
   onAddRelation,
+  onConnectionStart,
+  onConnectionEnd,
+  onHover,
   showConnectionHotspots = false
 }: EnhancedPersonCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
@@ -98,6 +106,21 @@ export default function EnhancedPersonCard({
     document.addEventListener('mouseup', handleMouseUp)
   }, [onDrag, onDragStart, onDragEnd, onSelect])
 
+  const handleConnectionStart = (e: React.MouseEvent, connectionType: 'parent' | 'child' | 'spouse') => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (onConnectionStart) {
+      const rect = cardRef.current?.getBoundingClientRect()
+      if (rect) {
+        onConnectionStart(connectionType, { 
+          x: e.clientX - rect.left + rect.width / 2,
+          y: e.clientY - rect.top + rect.height / 2
+        })
+      }
+    }
+  }
+
   const handleHotspotClick = (e: React.MouseEvent, type: 'parent' | 'child' | 'spouse') => {
     e.stopPropagation()
     onAddRelation(type)
@@ -114,8 +137,14 @@ export default function EnhancedPersonCard({
         transition: isDragging ? 'none' : 'transform 0.2s ease-out, box-shadow 0.2s ease-out'
       }}
       onMouseDown={handleMouseDown}
-      onMouseEnter={() => setShowHotspots(true)}
-      onMouseLeave={() => setShowHotspots(false)}
+      onMouseEnter={() => {
+        setShowHotspots(true)
+        onHover?.(true)
+      }}
+      onMouseLeave={() => {
+        setShowHotspots(false)
+        onHover?.(false)
+      }}
     >
       {/* Connection Hotspots */}
       {(showHotspots || showConnectionHotspots) && (
@@ -157,7 +186,9 @@ export default function EnhancedPersonCard({
       {/* Main Card */}
       <Card className={`w-64 hover:shadow-xl transition-all duration-300 bg-white/95 backdrop-blur-sm ${
         isDragging ? 'shadow-2xl ring-2 ring-blue-400' : 'shadow-lg'
-      } ${isSelected ? 'ring-1 ring-blue-400/50' : ''} border-2 border-gray-100`}>
+      } ${isSelected ? 'ring-1 ring-blue-400/50' : ''} ${
+        isHovered ? 'ring-2 ring-green-400/70' : ''
+      } border-2 border-gray-100`}>
         <CardContent className="p-5">
           <div className="space-y-4">
             {/* Header with Avatar and Info */}
