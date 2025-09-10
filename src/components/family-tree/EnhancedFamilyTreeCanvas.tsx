@@ -541,10 +541,18 @@ export default function EnhancedFamilyTreeCanvas({
           <div className="flex items-center gap-3">
             <div className="flex items-center">
               <svg width="32" height="16" className="mr-2">
-                <line x1="0" y1="8" x2="32" y2="8" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" />
+                <path 
+                  d="M 0 8 L 0 4 L 24 4 L 24 8" 
+                  stroke="#f59e0b" 
+                  strokeWidth="2" 
+                  strokeDasharray="4 2"
+                  fill="none" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
-            <span className="text-xs text-gray-600">Married/Partner (straight)</span>
+            <span className="text-xs text-gray-600">Married/Partner (L-shaped)</span>
           </div>
         </div>
         <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
