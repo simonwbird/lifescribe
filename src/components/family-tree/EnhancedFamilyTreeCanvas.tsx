@@ -249,9 +249,11 @@ export default function EnhancedFamilyTreeCanvas({
     })
   }, [positions, people.length, zoom])
 
-  // Auto-position to top-left when people first load
+  // Auto-position to top-left when people first load (only once)
+  const hasInitialized = useRef(false)
   useEffect(() => {
-    if (people.length > 0 && Object.keys(positions).length > 0) {
+    if (people.length > 0 && Object.keys(positions).length > 0 && !hasInitialized.current) {
+      hasInitialized.current = true
       setTimeout(() => {
         handleTopLeftView()
       }, 100)
