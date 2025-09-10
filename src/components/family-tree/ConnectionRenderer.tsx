@@ -138,26 +138,38 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Test heart with simple circle for debugging */}
-            <circle
-              cx={centerX}
-              cy={spouseY}
-              r="8"
-              fill={marriage.branchColor}
-              stroke="white"
-              strokeWidth="2"
+            {/* Large, obvious test elements for debugging */}
+            <rect
+              x={centerX - 20}
+              y={spouseY - 20}
+              width="40"
+              height="40"
+              fill="red"
+              stroke="black"
+              strokeWidth="3"
+              opacity="0.8"
             />
             
-            {/* Test text to show it's working */}
             <text
               x={centerX}
-              y={spouseY + 3}
+              y={spouseY + 5}
               textAnchor="middle"
-              fontSize="10"
+              fontSize="16"
               fill="white"
               fontWeight="bold"
             >
               ♥
+            </text>
+            
+            {/* Debug coordinates */}
+            <text
+              x={centerX}
+              y={spouseY + 25}
+              textAnchor="middle"
+              fontSize="8"
+              fill="black"
+            >
+              {centerX},{spouseY}
             </text>
           </g>
         )
