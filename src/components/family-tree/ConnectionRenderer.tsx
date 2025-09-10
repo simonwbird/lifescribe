@@ -87,8 +87,23 @@ export function ConnectionRenderer({
   }
 
   const renderSpouseConnections = () => {
-    return marriages
-      .filter(m => m.explicit && m.parentA && m.parentB) // only explicit marriages
+    console.log('=== RENDERING SPOUSE CONNECTIONS ===')
+    console.log('Total marriages:', marriages.length)
+    marriages.forEach(m => {
+      console.log(`Marriage ${m.id}:`, {
+        explicit: m.explicit,
+        parentA: m.parentA?.full_name,
+        parentB: m.parentB?.full_name,
+        x: m.x,
+        y: m.y,
+        branchColor: m.branchColor
+      })
+    })
+    
+    const explicitMarriages = marriages.filter(m => m.explicit && m.parentA && m.parentB)
+    console.log('Explicit marriages to render:', explicitMarriages.length)
+    
+    return explicitMarriages
       .map((marriage) => {
         // Find the actual positions of the spouses
         const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
