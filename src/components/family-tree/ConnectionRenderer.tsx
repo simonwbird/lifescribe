@@ -16,10 +16,6 @@ export function ConnectionRenderer({
   personHeight 
 }: ConnectionRendererProps) {
   
-  console.log('=== ConnectionRenderer called ===');
-  console.log('Received marriages:', marriages.length);
-  console.log('Marriages data:', marriages.map(m => `${m.id}: explicit=${m.explicit}`));
-  
   const renderParentChildConnections = () => {
     const connections: JSX.Element[] = []
     let connectionIndex = 0
@@ -91,35 +87,24 @@ export function ConnectionRenderer({
   }
 
   const renderSpouseConnections = () => {
-    console.log('=== RENDERING SPOUSE CONNECTIONS ===');
-    console.log('Total marriages:', marriages.length);
-    console.log('Explicit marriages:', marriages.filter(m => m.explicit).length);
-    
     const elements = marriages
       .filter(m => m.explicit && m.parentA && m.parentB) // only explicit marriages
       .map((marriage) => {
-        console.log(`Rendering marriage: ${marriage.parentA?.full_name} + ${marriage.parentB?.full_name} at x=${marriage.x}`);
-        
         // Find the actual positions of the spouses
         const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
         const spouseBNode = nodes.find(n => n.person.id === marriage.parentB?.id)
         
         if (!spouseANode || !spouseBNode) {
-          console.log('  Missing spouse nodes, skipping');
           return null;
         }
         
-        // Use the layout engine's calculated positions - DON'T recalculate!
+        // Use the layout engine's calculated positions
         const spouseAX = spouseANode.x + personWidth / 2
         const spouseBX = spouseBNode.x + personWidth / 2  
         const spouseY = spouseANode.y + personHeight / 2
         
         // Trust the layout engine's marriage.x calculation for perfect centering
         const centerX = marriage.x
-        
-        console.log(`  Spouse A: ${spouseANode.person.full_name} at (${spouseAX}, ${spouseY})`);
-        console.log(`  Spouse B: ${spouseBNode.person.full_name} at (${spouseBX}, ${spouseY})`);
-        console.log(`  Heart center: (${centerX}, ${spouseY})`);
         
         return (
           <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
@@ -145,40 +130,29 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Simple, guaranteed hearts at exact positions */}
-            <circle cx="350" cy="70" r="12" fill="#ef4444" stroke="white" strokeWidth="2"/>
-            <text x="350" y="75" textAnchor="middle" fontSize="14" fill="white">♥</text>
-            
-            <circle cx="350" cy="270" r="12" fill="#ef4444" stroke="white" strokeWidth="2"/>
-            <text x="350" y="275" textAnchor="middle" fontSize="14" fill="white">♥</text>
-            
-            <circle cx="870" cy="270" r="12" fill="#ef4444" stroke="white" strokeWidth="2"/>
-            <text x="870" y="275" textAnchor="middle" fontSize="14" fill="white">♥</text>
-            
-            {/* Test element at fixed position to verify SVG is working */}
-            <rect
-              x="50"
-              y="50"
-              width="100"
-              height="50"
-              fill="blue"
-              opacity="0.7"
+            {/* Heart symbol using calculated position */}
+            <circle 
+              cx={centerX} 
+              cy={spouseY} 
+              r="12" 
+              fill="#ef4444" 
+              stroke="white" 
+              strokeWidth="2"
             />
-            <text
-              x="100"
-              y="80"
-              textAnchor="middle"
-              fontSize="14"
-              fill="white"
+            <text 
+              x={centerX} 
+              y={spouseY + 4} 
+              textAnchor="middle" 
+              fontSize="12" 
+              fill="white" 
               fontWeight="bold"
             >
-              TEST
+              ♥
             </text>
           </g>
         )
       }).filter(Boolean);
       
-    console.log(`Returning ${elements.length} spouse connection elements`);
     return elements;
   }
 
