@@ -95,9 +95,32 @@ export default function EnhancedFamilyTreeCanvas({
     setHasUnsavedChanges(true)
   }, [positions, zoom, onPersonMove])
 
+  const [dragStartPos, setDragStartPos] = useState<Record<string, { x: number; y: number; startX: number; startY: number }>>({})
+
   const handlePersonDragStart = useCallback((personId: string) => {
+    const currentPos = positions[personId] || { x: 0, y: 0 }
+    setDragStartPos(prev => ({
+      ...prev,
+      [personId]: { 
+        x: currentPos.x, 
+        y: currentPos.y,
+        startX: currentPos.x,
+        startY: currentPos.y
+      }
+    }))
     setIsDragging(personId)
-  }, [])
+  }, [positions])
+
+  const handlePersonDragUpdate = useCallback((personId: string, deltaX: number, deltaY: number) => {
+    const startPos = dragStartPos[personId]
+    if (!startPos) return
+    
+    const newX = startPos.startX + deltaX / zoom
+    const newY = startPos.startY + deltaY / zoom
+    
+    onPersonMove(personId, newX, newY)
+    setHasUnsavedChanges(true)
+  }, [dragStartPos, zoom, onPersonMove])
 
   const handlePersonDragEnd = useCallback(() => {
     setIsDragging(null)
@@ -336,7 +359,7 @@ export default function EnhancedFamilyTreeCanvas({
               isSelected={selectedPersonId === person.id}
               spouseCount={stats.spouseCount}
               childrenCount={stats.childrenCount}
-              onDrag={(deltaX, deltaY) => handlePersonDrag(person.id, deltaX, deltaY)}
+              onDrag={(deltaX, deltaY) => handlePersonDragUpdate(person.id, deltaX, deltaY)}
               onDragStart={() => handlePersonDragStart(person.id)}
               onDragEnd={handlePersonDragEnd}
               onSelect={() => onPersonSelect(person.id)}

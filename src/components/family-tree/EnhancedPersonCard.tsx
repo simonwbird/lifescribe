@@ -52,44 +52,39 @@ export default function EnhancedPersonCard({
   showConnectionHotspots = false
 }: EnhancedPersonCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
-  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 })
   const [showHotspots, setShowHotspots] = useState(false)
   
   const displayName = getPersonDisplayName(person)
   const years = formatPersonYears(person)
   
-  const GRID_SIZE = 20
-
-  const snapToGrid = (value: number) => {
-    return Math.round(value / GRID_SIZE) * GRID_SIZE
-  }
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.no-drag')) {
       return
     }
-    
+
     e.preventDefault()
     e.stopPropagation()
     
     onSelect()
     onDragStart()
     
-    setDragStartPos({
-      x: e.clientX,
-      y: e.clientY
-    })
+    const startX = e.clientX
+    const startY = e.clientY
+    let hasMoved = false
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - dragStartPos.x
-      const deltaY = moveEvent.clientY - dragStartPos.y
+      const deltaX = moveEvent.clientX - startX
+      const deltaY = moveEvent.clientY - startY
       
-      if (Math.abs(deltaX) >= GRID_SIZE || Math.abs(deltaY) >= GRID_SIZE) {
-        onDrag(snapToGrid(deltaX), snapToGrid(deltaY))
-        setDragStartPos({
-          x: moveEvent.clientX,
-          y: moveEvent.clientY
-        })
+      // Start dragging after minimal movement to distinguish from clicks
+      if (!hasMoved && (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3)) {
+        hasMoved = true
+      }
+      
+      if (hasMoved) {
+        // Smooth continuous movement without grid snapping
+        onDrag(deltaX, deltaY)
       }
     }
 
@@ -99,9 +94,9 @@ export default function EnhancedPersonCard({
       document.removeEventListener('mouseup', handleMouseUp)
     }
 
-    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mousemove', handleMouseMove, { passive: false })
     document.addEventListener('mouseup', handleMouseUp)
-  }, [dragStartPos, onDrag, onDragStart, onDragEnd, onSelect])
+  }, [onDrag, onDragStart, onDragEnd, onSelect])
 
   const handleHotspotClick = (e: React.MouseEvent, type: 'parent' | 'child' | 'spouse') => {
     e.stopPropagation()
@@ -111,12 +106,12 @@ export default function EnhancedPersonCard({
   return (
     <div 
       ref={cardRef}
-      className={`absolute cursor-grab active:cursor-grabbing transition-all duration-200 ${
-        isDragging ? 'scale-105 z-50 shadow-2xl rotate-2' : 'z-10'
+      className={`absolute cursor-grab active:cursor-grabbing select-none ${
+        isDragging ? 'scale-105 z-50 shadow-2xl rotate-1' : 'z-10'
       } ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
       style={{
         transform: `translate(${x}px, ${y}px)`,
-        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        transition: isDragging ? 'none' : 'transform 0.2s ease-out, box-shadow 0.2s ease-out'
       }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => setShowHotspots(true)}
