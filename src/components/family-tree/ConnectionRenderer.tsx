@@ -87,9 +87,15 @@ export function ConnectionRenderer({
   }
 
   const renderSpouseConnections = () => {
+    console.log('=== RENDERING SPOUSE CONNECTIONS ===');
+    console.log('Total marriages:', marriages.length);
+    console.log('Explicit marriages:', marriages.filter(m => m.explicit).length);
+    
     return marriages
       .filter(m => m.explicit && m.parentA && m.parentB) // only explicit marriages
       .map((marriage) => {
+        console.log(`Rendering marriage: ${marriage.parentA?.full_name} + ${marriage.parentB?.full_name} at x=${marriage.x}`);
+        
         // Find the actual positions of the spouses
         const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
         const spouseBNode = nodes.find(n => n.person.id === marriage.parentB?.id)
@@ -128,20 +134,17 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Heart icon using foreignObject for proper rendering */}
-            <foreignObject
-              x={centerX - 8}
-              y={spouseY - 8}
-              width={16}
-              height={16}
-            >
-              <Heart
-                size={16}
-                fill={marriage.branchColor}
-                stroke="none"
-                className="pointer-events-none"
-              />
-            </foreignObject>
+            {/* Heart icon using simple SVG path for reliable rendering */}
+            <path
+              d={`M ${centerX - 6},${spouseY - 2} 
+                  C ${centerX - 6},${spouseY - 5} ${centerX - 3},${spouseY - 8} ${centerX},${spouseY - 5}
+                  C ${centerX + 3},${spouseY - 8} ${centerX + 6},${spouseY - 5} ${centerX + 6},${spouseY - 2}
+                  C ${centerX + 6},${spouseY + 1} ${centerX},${spouseY + 6} ${centerX},${spouseY + 6}
+                  C ${centerX},${spouseY + 6} ${centerX - 6},${spouseY + 1} ${centerX - 6},${spouseY - 2} Z`}
+              fill={marriage.branchColor}
+              stroke="white"
+              strokeWidth="1"
+            />
           </g>
         )
       }).filter(Boolean)
