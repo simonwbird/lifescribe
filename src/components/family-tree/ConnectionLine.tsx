@@ -45,30 +45,10 @@ export default function ConnectionLine({ from, to, type, isHighlighted = false }
 
   const { startPoint, endPoint } = getConnectionPoints()
 
-  // Create smooth curved path
+  // Create straight path for all connections
   const createPath = () => {
-    const dx = endPoint.x - startPoint.x
-    const dy = endPoint.y - startPoint.y
-    
-    if (type === 'spouse') {
-      // Straight line for spouses
-      return `M ${startPoint.x} ${startPoint.y} L ${endPoint.x} ${endPoint.y}`
-    } else {
-      // Curved line for parent-child relationships
-      const controlPoint1 = {
-        x: startPoint.x,
-        y: startPoint.y + dy * 0.5
-      }
-      const controlPoint2 = {
-        x: endPoint.x,
-        y: endPoint.y - dy * 0.5
-      }
-
-      return `M ${startPoint.x} ${startPoint.y} 
-              C ${controlPoint1.x} ${controlPoint1.y}, 
-                ${controlPoint2.x} ${controlPoint2.y}, 
-                ${endPoint.x} ${endPoint.y}`
-    }
+    // All connections are now straight lines
+    return `M ${startPoint.x} ${startPoint.y} L ${endPoint.x} ${endPoint.y}`
   }
 
   const getLineStyle = () => {
