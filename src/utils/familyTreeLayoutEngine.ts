@@ -584,14 +584,10 @@ export class FamilyTreeLayoutEngine {
 
       // spouse pairs first (keeps unions stable)
       pairs.forEach(({ m, people }) => {
-        console.log(`  Processing pair: ${people.map(p => p.full_name).join(' + ')}`);
         if (people.length === 2) {
           const [A, B] = people;
           const xA = x;
           const xB = x + this.config.personWidth + this.config.spouseGap;
-
-          console.log(`    ${A.full_name}: x=${xA}, ${B.full_name}: x=${xB}`);
-          console.log(`    personWidth=${this.config.personWidth}, spouseGap=${this.config.spouseGap}`);
 
           pos.set(A.id, { x: xA, y: yTop });
           pos.set(B.id, { x: xB, y: yTop });
@@ -603,12 +599,10 @@ export class FamilyTreeLayoutEngine {
           m.y = unionY;
 
           const nextX = x + (this.config.personWidth * 2) + this.config.spouseGap + this.config.siblingGap;
-          console.log(`    Next x will be: ${nextX} (current: ${x})`);
           x = nextX;
         } else if (people.length === 1) {
           // single parent union sits at center of the card
           const P = people[0];
-          console.log(`  Processing single parent: ${P.full_name} at x=${x}`);
           pos.set(P.id, { x, y: yTop });
           m.x = x + this.config.personWidth / 2;
           m.y = unionY;
@@ -619,7 +613,6 @@ export class FamilyTreeLayoutEngine {
 
       // then singles
       singles.forEach(P => {
-        console.log(`  Processing single: ${P.full_name} at x=${x}`);
         pos.set(P.id, { x, y: yTop });
         x += this.config.personWidth + this.config.siblingGap;
       });
@@ -646,7 +639,9 @@ export class FamilyTreeLayoutEngine {
       }
     });
 
-    // 4) Resolve horizontal collisions within each row - PRESERVE SPOUSE PAIRS
+    // 4) TEMPORARILY DISABLED - Resolve horizontal collisions within each row - PRESERVE SPOUSE PAIRS
+    // TODO: Fix collision resolution to properly handle spouse pairs
+    /*
     const rowsForCollision = new Map<number, Person[]>();
     people.forEach(p => {
       const d = depths.get(p.id) ?? 0;
@@ -729,6 +724,7 @@ export class FamilyTreeLayoutEngine {
         }
       }
     });
+    */
 
     // 5) Re-center children UNDER unions again (collisions may have shifted parents)
     marriages.forEach(m => {
