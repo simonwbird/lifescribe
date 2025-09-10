@@ -32,7 +32,7 @@ export default function EnhancedFamilyTreeCanvas({
   selectedPersonId
 }: FamilyTreeCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(1.0) // Default to 100% zoom
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState<string | null>(null)
   const [isPanning, setIsPanning] = useState(false)
