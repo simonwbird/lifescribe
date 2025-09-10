@@ -4,6 +4,8 @@ import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import StoryCard from '@/components/StoryCard'
 import AnswerCard from '@/components/AnswerCard'
+import ActivityFeed from '@/components/ActivityFeed'
+import EngagementPrompts from '@/components/EngagementPrompts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -183,87 +185,96 @@ export default function Feed() {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">Family Feed</h1>
-              <div className="flex space-x-2">
-                <Button asChild>
-                  <Link to="/stories/new">Share Story</Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to="/prompts">Answer Question</Link>
-                </Button>
-              </div>
-            </div>
-
-            {feedItems.length === 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Welcome to your family feed!</CardTitle>
-                  <CardDescription>
-                    Start sharing memories by creating your first story or answering a question.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex space-x-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Feed */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold">Family Feed</h1>
+                <div className="flex space-x-2">
                   <Button asChild>
-                    <Link to="/stories/new">Share Your First Story</Link>
+                    <Link to="/new-story">Share Story</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link to="/prompts">Answer a Question</Link>
+                    <Link to="/prompts">Answer Question</Link>
                   </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-6">
-                {/* Featured Prompt Card */}
-                {featuredQuestion && (
-                  <Card className="bg-gradient-to-br from-rose-50/80 to-amber-50/60 border-rose-200/50 shadow-lg">
-                    <CardHeader>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Sparkles className="w-5 h-5 text-rose-500" />
-                        <Badge variant="secondary" className="bg-rose-100 text-rose-700 border-rose-200">
-                          Daily Prompt
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-xl leading-relaxed">
-                        {featuredQuestion.question_text}
-                      </CardTitle>
-                      <CardDescription>
-                        Share your memories with your family • {featuredQuestion.category}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex space-x-3">
-                        <Button asChild className="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600">
-                          <Link to="/prompts">
-                            Answer This Prompt <ArrowRight className="w-4 h-4 ml-2" />
-                          </Link>
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={handleSkipQuestion}
-                          className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                        >
-                          <SkipForward className="w-4 h-4 mr-2" />
-                          Skip Question
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Feed Items */}
-                {feedItems.map((item, index) => (
-                  <div key={`${item.type}-${item.data.id}-${index}`}>
-                    {item.type === 'story' ? (
-                      <StoryCard story={item.data as Story & { profiles: Profile }} />
-                    ) : (
-                      <AnswerCard answer={item.data as Answer & { profiles: Profile; questions: Question }} />
-                    )}
-                  </div>
-                ))}
+                </div>
               </div>
-            )}
+
+              {feedItems.length === 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Welcome to your family feed!</CardTitle>
+                    <CardDescription>
+                      Start sharing memories by creating your first story or answering a question.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex space-x-4">
+                    <Button asChild>
+                      <Link to="/new-story">Share Your First Story</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link to="/prompts">Answer a Question</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  {/* Featured Prompt Card */}
+                  {featuredQuestion && (
+                    <Card className="bg-gradient-to-br from-rose-50/80 to-amber-50/60 border-rose-200/50 shadow-lg">
+                      <CardHeader>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Sparkles className="w-5 h-5 text-rose-500" />
+                          <Badge variant="secondary" className="bg-rose-100 text-rose-700 border-rose-200">
+                            Daily Prompt
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-xl leading-relaxed">
+                          {featuredQuestion.question_text}
+                        </CardTitle>
+                        <CardDescription>
+                          Share your memories with your family • {featuredQuestion.category}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex space-x-3">
+                          <Button asChild className="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600">
+                            <Link to="/prompts">
+                              Answer This Prompt <ArrowRight className="w-4 h-4 ml-2" />
+                            </Link>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={handleSkipQuestion}
+                            className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                          >
+                            <SkipForward className="w-4 h-4 mr-2" />
+                            Skip Question
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Feed Items */}
+                  {feedItems.map((item, index) => (
+                    <div key={`${item.type}-${item.data.id}-${index}`}>
+                      {item.type === 'story' ? (
+                        <StoryCard story={item.data as Story & { profiles: Profile }} />
+                      ) : (
+                        <AnswerCard answer={item.data as Answer & { profiles: Profile; questions: Question }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {familyId && <ActivityFeed familyId={familyId} showNotifications={true} />}
+              <EngagementPrompts />
+            </div>
           </div>
         </div>
       </div>

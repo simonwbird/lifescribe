@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useNavigate } from 'react-router-dom'
 import type { User } from '@supabase/supabase-js'
+import OnboardingWizard from '@/components/OnboardingWizard'
 
 export default function Onboarding() {
   const [user, setUser] = useState<User | null>(null)
+  const [useEnhancedWizard, setUseEnhancedWizard] = useState(true)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,6 +38,11 @@ export default function Onboarding() {
     }
     getUser()
   }, [])
+
+  // Use enhanced onboarding wizard for new users
+  if (user && useEnhancedWizard) {
+    return <OnboardingWizard user={user} />
+  }
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
