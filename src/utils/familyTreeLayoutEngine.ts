@@ -711,11 +711,16 @@ export class FamilyTreeLayoutEngine {
           pos.set(unit.a.id, { x: unit.left, y: yTop });
           pos.set(unit.b.id, { x: unit.left + this.config.personWidth + this.config.spouseGap, y: yTop });
           
-          // Set marriage union position
-          unit.marriage.x = unit.centerX;
+          // Set marriage union position - CENTER it between the CENTER of each person card
+          const personACenterX = unit.left + this.config.personWidth / 2;
+          const personBCenterX = unit.left + this.config.personWidth + this.config.spouseGap + this.config.personWidth / 2;
+          unit.marriage.x = (personACenterX + personBCenterX) / 2;
           unit.marriage.y = yTop + this.config.personHeight / 2;
           
-          console.log(`✓ Positioned pair: ${unit.a.full_name} at x=${unit.left}, ${unit.b.full_name} at x=${unit.left + this.config.personWidth + this.config.spouseGap}`);
+          // Update the marriage center for children positioning
+          marriageCenter.set(unit.marriage.id, unit.marriage.x);
+          
+          console.log(`✓ Positioned pair: ${unit.a.full_name} at x=${unit.left}, ${unit.b.full_name} at x=${unit.left + this.config.personWidth + this.config.spouseGap}, heart at x=${unit.marriage.x}`);
         } else {
           // Position single person
           pos.set(unit.a.id, { x: unit.left, y: yTop });
