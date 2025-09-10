@@ -23,75 +23,64 @@ export function ConnectionRenderer({
     marriages.forEach(marriage => {
       if (marriage.children.length === 0) return
 
-      const dropDistance = 50 // Distance to drop down from parents
-      
-      marriage.children.forEach(child => {
-        const childNode = nodes.find(n => n.person.id === child.id)
-        if (!childNode) return
+      const drop = 50 // vertical down from union bar to the sibling bar
 
-        const connectionKey = `marriage-to-child-${marriage.id}-${child.id}-${connectionIndex++}`
-        
+      // Build child nodes list once
+      const childNodes = marriage.children
+        .map(c => nodes.find(n => n.person.id === c.id))
+        .filter(Boolean) as LayoutNode[]
+
+      if (childNodes.length === 0) return
+
+      // Horizontal bar Y level
+      const barY = marriage.y + drop
+
+      // 1) Vertical from union bar down to the sibling bar
+      connections.push(
+        <line
+          key={`union-drop-${marriage.id}`}
+          x1={marriage.x}
+          y1={marriage.y}
+          x2={marriage.x}
+          y2={barY}
+          stroke="#94A3B8"
+          strokeWidth="2"
+          className="transition-colors hover:stroke-blue-500"
+        />
+      )
+
+      // 2) If multiple children, draw the sibling bar
+      if (childNodes.length > 1) {
+        const minCenter = Math.min(...childNodes.map(n => n.x + personWidth / 2))
+        const maxCenter = Math.max(...childNodes.map(n => n.x + personWidth / 2))
         connections.push(
-          <g key={connectionKey} className="parent-child-connection">
-            {/* Vertical line down from marriage center */}
-            <line
-              x1={marriage.x}
-              y1={marriage.y + personHeight}
-              x2={marriage.x}
-              y2={marriage.y + personHeight + dropDistance}
-              stroke="#94A3B8"
-              strokeWidth="2"
-              className="transition-colors hover:stroke-blue-500"
-            />
-            {/* Horizontal line to child x-position */}
-            <line
-              x1={marriage.x}
-              y1={marriage.y + personHeight + dropDistance}
-              x2={childNode.x}
-              y2={marriage.y + personHeight + dropDistance}
-              stroke="#94A3B8"
-              strokeWidth="2"
-              className="transition-colors hover:stroke-blue-500"
-            />
-            {/* Vertical line down to child */}
-            <line
-              x1={childNode.x}
-              y1={marriage.y + personHeight + dropDistance}
-              x2={childNode.x}
-              y2={childNode.y}
-              stroke="#94A3B8"
-              strokeWidth="2"
-              className="transition-colors hover:stroke-blue-500"
-            />
-          </g>
+          <line
+            key={`sibling-bar-${marriage.id}`}
+            x1={minCenter}
+            y1={barY}
+            x2={maxCenter}
+            y2={barY}
+            stroke="#94A3B8"
+            strokeWidth="2"
+          />
+        )
+      }
+
+      // 3) Drops from sibling bar to each child top center
+      childNodes.forEach((cn, idx) => {
+        const cx = cn.x + personWidth / 2
+        connections.push(
+          <line
+            key={`child-drop-${marriage.id}-${cn.person.id}-${idx}`}
+            x1={cx}
+            y1={barY}
+            x2={cx}
+            y2={cn.y}
+            stroke="#94A3B8"
+            strokeWidth="2"
+          />
         )
       })
-
-      // Draw horizontal connector between siblings if multiple children
-      if (marriage.children.length > 1) {
-        const childNodes = marriage.children
-          .map(child => nodes.find(n => n.person.id === child.id))
-          .filter(Boolean) as LayoutNode[]
-        
-        if (childNodes.length > 1) {
-          const minX = Math.min(...childNodes.map(n => n.x))
-          const maxX = Math.max(...childNodes.map(n => n.x))
-          const connectorY = marriage.y + personHeight + dropDistance
-          
-          connections.push(
-            <line
-              key={`sibling-connector-${marriage.id}-${connectionIndex++}`}
-              x1={minX}
-              y1={connectorY}
-              x2={maxX}
-              y2={connectorY}
-              stroke="#94A3B8"
-              strokeWidth="2"
-              className="transition-colors hover:stroke-blue-500"
-            />
-          )
-        }
-      }
     })
 
     return connections
