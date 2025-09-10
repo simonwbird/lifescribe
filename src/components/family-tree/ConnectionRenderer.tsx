@@ -87,55 +87,57 @@ export function ConnectionRenderer({
   }
 
   const renderSpouseConnections = () => {
-    return marriages.filter(m => m.parentA && m.parentB).map((marriage) => {
-      // Find the actual positions of the spouses
-      const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
-      const spouseBNode = nodes.find(n => n.person.id === marriage.parentB?.id)
-      
-      if (!spouseANode || !spouseBNode) return null
-      
-      // Calculate the actual positions
-      const spouseAX = spouseANode.x + personWidth / 2
-      const spouseBX = spouseBNode.x + personWidth / 2  
-      const spouseY = spouseANode.y + personHeight / 2
-      const centerX = (spouseAX + spouseBX) / 2
-      
-      return (
-        <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
-          {/* Clean horizontal connection line between spouses */}
-          <line
-            x1={spouseAX}
-            y1={spouseY}
-            x2={spouseBX}
-            y2={spouseY}
-            stroke={marriage.branchColor}
-            strokeWidth="4"
-            className="transition-colors"
-          />
-          
-          {/* Heart icon in center with subtle shadow */}
-          <circle
-            cx={centerX}
-            cy={spouseY}
-            r="16"
-            fill="white"
-            stroke={marriage.branchColor}
-            strokeWidth="3"
-            className="drop-shadow-md"
-          />
-          
-          {/* Heart icon */}
-          <Heart
-            x={centerX - 8}
-            y={spouseY - 8}
-            width={16}
-            height={16}
-            fill={marriage.branchColor}
-            stroke="none"
-          />
-        </g>
-      )
-    }).filter(Boolean)
+    return marriages
+      .filter(m => m.explicit && m.parentA && m.parentB) // only explicit marriages
+      .map((marriage) => {
+        // Find the actual positions of the spouses
+        const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
+        const spouseBNode = nodes.find(n => n.person.id === marriage.parentB?.id)
+        
+        if (!spouseANode || !spouseBNode) return null
+        
+        // Calculate the actual positions
+        const spouseAX = spouseANode.x + personWidth / 2
+        const spouseBX = spouseBNode.x + personWidth / 2  
+        const spouseY = spouseANode.y + personHeight / 2
+        const centerX = (spouseAX + spouseBX) / 2
+        
+        return (
+          <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
+            {/* Clean horizontal connection line between spouses */}
+            <line
+              x1={spouseAX}
+              y1={spouseY}
+              x2={spouseBX}
+              y2={spouseY}
+              stroke={marriage.branchColor}
+              strokeWidth="4"
+              className="transition-colors"
+            />
+            
+            {/* Heart icon in center with subtle shadow */}
+            <circle
+              cx={centerX}
+              cy={spouseY}
+              r="16"
+              fill="white"
+              stroke={marriage.branchColor}
+              strokeWidth="3"
+              className="drop-shadow-md"
+            />
+            
+            {/* Heart icon */}
+            <Heart
+              x={centerX - 8}
+              y={spouseY - 8}
+              width={16}
+              height={16}
+              fill={marriage.branchColor}
+              stroke="none"
+            />
+          </g>
+        )
+      }).filter(Boolean)
   }
 
   return (

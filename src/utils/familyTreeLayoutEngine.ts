@@ -20,6 +20,7 @@ export interface Marriage {
   y: number
   depth: number
   branchColor: string
+  explicit: boolean
 }
 
 export interface LayoutResult {
@@ -80,6 +81,7 @@ interface MarriageNode {
   y: number
   depth: number
   subtreeWidth: number
+  explicit: boolean
 }
 
 export class FamilyTreeLayoutEngine {
@@ -89,6 +91,7 @@ export class FamilyTreeLayoutEngine {
   private spouseMap = new Map<string, string[]>()
   private branchColors = new Map<string, string>()
   private peopleById = new Map<string, Person>()
+  private explicitSpouseSet = new Set<string>()
 
   constructor(config: Partial<LayoutConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -101,6 +104,7 @@ export class FamilyTreeLayoutEngine {
     this.spouseMap.clear()
     this.branchColors.clear()
     this.peopleById.clear()
+    this.explicitSpouseSet.clear()
 
     // Index people by ID
     people.forEach(p => this.peopleById.set(p.id, p))
@@ -138,6 +142,11 @@ export class FamilyTreeLayoutEngine {
   private buildRelationshipMaps(relationships: Relationship[]) {
     relationships.forEach(rel => {
       if (rel.relationship_type === 'spouse') {
+        const a = rel.from_person_id
+        const b = rel.to_person_id
+        const key = [a, b].sort().join('-')
+        this.explicitSpouseSet.add(key) // mark as explicit spouse pair
+        
         if (!this.spouseMap.has(rel.from_person_id)) this.spouseMap.set(rel.from_person_id, [])
         if (!this.spouseMap.has(rel.to_person_id)) this.spouseMap.set(rel.to_person_id, [])
         this.spouseMap.get(rel.from_person_id)!.push(rel.to_person_id)
@@ -154,7 +163,7 @@ export class FamilyTreeLayoutEngine {
   private buildMarriageNodes(people: Person[]): MarriageNode[] {
     const marriages = new Map<string, MarriageNode>()
     
-    // First, create marriages from spouse relationships
+    // First, create marriages from spouse relationships (explicit)
     people.forEach(person => {
       const spouses = this.spouseMap.get(person.id) || []
       spouses.forEach(spouseId => {
@@ -174,13 +183,14 @@ export class FamilyTreeLayoutEngine {
             x: 0,
             y: 0,
             depth: 0,
-            subtreeWidth: 0
+            subtreeWidth: 0,
+            explicit: this.explicitSpouseSet.has(marriageId)
           })
         }
       })
     })
     
-    // Then, associate children with their parent marriages
+    // Then, associate children with their parent marriages (may not be explicit)
     people.forEach(person => {
       const parents = this.parentsMap.get(person.id) || []
       if (parents.length > 0) {
@@ -201,7 +211,8 @@ export class FamilyTreeLayoutEngine {
             x: 0,
             y: 0,
             depth: 0,
-            subtreeWidth: 0
+            subtreeWidth: 0,
+            explicit: this.explicitSpouseSet.has(marriageId)
           })
         }
         
@@ -296,6 +307,19 @@ export class FamilyTreeLayoutEngine {
 
     // Enforce parent-child constraints (children must be deeper than parents)
     this.enforceParentChildConstraints(people, marriages, depths)
+
+    // Final pass: ensure roots stay at depth 0 and fix any inversion
+    const roots = people.filter(p => (this.parentsMap.get(p.id) || []).length === 0)
+    roots.forEach(r => depths.set(r.id, 0)) // force roots to depth 0
+
+    // Make sure every child is at least one deeper than max parent
+    people.forEach(p => {
+      const ps = this.parentsMap.get(p.id) || []
+      if (ps.length) {
+        const minDepth = Math.max(...ps.map(id => depths.get(id) ?? 0)) + 1
+        if ((depths.get(p.id) ?? 0) < minDepth) depths.set(p.id, minDepth)
+      }
+    })
 
     // Log final depths
     console.log('Final depths:')
@@ -610,7 +634,8 @@ export class FamilyTreeLayoutEngine {
       depth: marriage.depth,
       branchColor: marriage.parentA 
         ? this.branchColors.get(marriage.parentA.id) || BRANCH_COLORS[0]
-        : BRANCH_COLORS[0]
+        : BRANCH_COLORS[0],
+      explicit: marriage.explicit
     }))
   }
 
