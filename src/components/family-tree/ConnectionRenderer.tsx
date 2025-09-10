@@ -16,6 +16,10 @@ export function ConnectionRenderer({
   personHeight 
 }: ConnectionRendererProps) {
   
+  console.log('=== ConnectionRenderer called ===');
+  console.log('Received marriages:', marriages.length);
+  console.log('Marriages data:', marriages.map(m => `${m.id}: explicit=${m.explicit}`));
+  
   const renderParentChildConnections = () => {
     const connections: JSX.Element[] = []
     let connectionIndex = 0
