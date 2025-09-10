@@ -111,9 +111,13 @@ export default function ConnectionLine({
   }
 
   return (
-    <div className="absolute top-0 left-0 z-0">
+    <div 
+      className="absolute top-0 left-0 z-10"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <svg
-        className="absolute top-0 left-0 pointer-events-none"
+        className="absolute top-0 left-0 pointer-events-auto"
         style={{
           left: minX,
           top: minY,
@@ -136,38 +140,32 @@ export default function ConnectionLine({
           )}
           
           {/* Arrow markers */}
-          <defs>
-            <marker
-              id={`arrow-${type}`}
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="3"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto"
-            >
-              <path
-                d="M0,0 L0,6 L9,3 z"
-                fill={isHighlighted ? (type === 'spouse' ? '#ec4899' : '#3b82f6') : '#6b7280'}
-              />
-            </marker>
-          </defs>
+          <marker
+            id={`arrow-${type}`}
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="3"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto"
+          >
+            <path
+              d="M0,0 L0,6 L9,3 z"
+              fill={isHighlighted ? (type === 'spouse' ? '#ec4899' : '#3b82f6') : '#6b7280'}
+            />
+          </marker>
         </defs>
 
-        {/* Invisible thicker line for easier interaction */}
+        {/* Invisible thicker line for easier hover detection */}
         <path
           d={createPath()}
           style={{
             ...getLineStyle(),
-            strokeWidth: 12,
+            strokeWidth: 15,
             stroke: 'transparent',
-            cursor: onDelete ? 'pointer' : 'default',
             transform: `translate(${-minX}px, ${-minY}px)`,
-            pointerEvents: onDelete ? 'stroke' : 'none'
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="pointer-events-auto"
+          className="cursor-pointer"
         />
 
         {/* Visible line */}
@@ -196,14 +194,14 @@ export default function ConnectionLine({
         )}
       </svg>
 
-      {/* Delete button - positioned at midpoint */}
+      {/* Delete button */}
       {isHovered && onDelete && relationshipId && (
         <button
           onClick={handleDelete}
-          className="absolute z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-all duration-200 transform hover:scale-110"
+          className="absolute bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-all duration-200 transform hover:scale-110 z-20"
           style={{
-            left: midX - 12,
-            top: midY - 12,
+            left: minX + width / 2 - 10,
+            top: minY + height / 2 - 10,
           }}
           title="Delete relationship"
         >
