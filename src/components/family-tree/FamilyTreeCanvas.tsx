@@ -177,13 +177,26 @@ export default function FamilyTreeCanvas({
 
   // Auto-center on people when they first load
   useEffect(() => {
+    console.log('FamilyTreeCanvas: people.length =', people.length)
+    console.log('FamilyTreeCanvas: positions keys =', Object.keys(positions))
+    console.log('FamilyTreeCanvas: positions =', positions)
+    
     if (people.length > 0 && Object.keys(positions).length > 0) {
+      console.log('FamilyTreeCanvas: Auto-centering triggered')
       // Small delay to ensure canvas is rendered
       setTimeout(() => {
         handleFitToScreen()
       }, 100)
+    } else if (people.length > 0 && Object.keys(positions).length === 0) {
+      console.log('FamilyTreeCanvas: People exist but no positions - creating default positions')
+      // Create default positions if none exist
+      people.forEach((person, index) => {
+        const x = (index % 4) * 300 + 200
+        const y = Math.floor(index / 4) * 200 + 200
+        onPersonMove(person.id, x, y)
+      })
     }
-  }, [people.length, positions, handleFitToScreen])
+  }, [people.length, positions, handleFitToScreen, people, onPersonMove])
 
   // Setup event listeners
   useEffect(() => {
