@@ -31,12 +31,14 @@ export default function ConnectionLine({
     let startPoint = { ...fromCenter }
     let endPoint = { ...toCenter }
 
-    if (type === 'parent') {
-      // Parent connections: from bottom of parent to top of child
+    if (type === 'parent' || type === 'child') {
+      // Parent-child connections: from bottom of parent to top of child
       if (from.y < to.y) {
+        // Parent to child
         startPoint = { x: from.x + CARD_WIDTH / 2, y: from.y + CARD_HEIGHT }
         endPoint = { x: to.x + CARD_WIDTH / 2, y: to.y }
       } else {
+        // Child to parent
         startPoint = { x: from.x + CARD_WIDTH / 2, y: from.y }
         endPoint = { x: to.x + CARD_WIDTH / 2, y: to.y + CARD_HEIGHT }
       }
