@@ -142,4 +142,56 @@ describe('FamilyTreeLayoutEngine — org-chart invariants', () => {
       }
     });
   });
+
+  it('routes ALL parent→child edges via a union (marriage) node', () => {
+    const eng = new FamilyTreeLayoutEngine(CONFIG);
+    const { marriages } = eng.generateLayout(people, relationships);
+
+    // Build: childId -> sorted unique parentIds (from raw data)
+    const childParents = new Map<string, string[]>();
+    relationships
+      .filter(r => r.relationship_type === 'parent')
+      .forEach(r => {
+        const list = childParents.get(r.to_person_id) || [];
+        if (!list.includes(r.from_person_id)) list.push(r.from_person_id);
+        childParents.set(r.to_person_id, list.sort());
+      });
+
+    // For each child in the data, there must be EXACTLY ONE union
+    // whose parents match and that lists the child under marriage.children
+    for (const [childId, parents] of childParents) {
+      // Find candidate unions whose parent set matches this child's parents
+      const matches = marriages.filter(m => {
+        const a = m.parentA?.id;
+        const b = m.parentB?.id;
+        const parentsOfUnion = [a, b].filter(Boolean).sort();
+        return (
+          parentsOfUnion.length === parents.length &&
+          parentsOfUnion.every((p, i) => p === parents[i]) &&
+          m.children.some(c => c.id === childId)
+        );
+      });
+
+      // Assertion: exactly one union anchors this child
+      expect(matches.length).toBe(
+        1,
+        `Child ${childId} should be attached to exactly one union of ${parents.join(' & ')}`
+      );
+
+      // Optional: for spouse pairs, we expect the union to be explicit (has a heart)
+      const m = matches[0];
+      if (parents.length === 2) {
+        const isKnownSpousePair = [
+          ['mary','robert'], ['michael','sarah'], ['simon','zuzana']
+        ]
+          .some(([x,y]) => parents.includes(x) && parents.includes(y));
+        if (isKnownSpousePair) {
+          expect(m.explicit).toBe(
+            true,
+            `Union for ${parents.join(' & ')} should be an explicit marriage (heart shown)`
+          );
+        }
+      }
+    }
+  });
 });

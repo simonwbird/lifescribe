@@ -244,33 +244,36 @@ export class FamilyTreeLayoutEngine {
       })
     })
     
-    // Then, associate children with their parent marriages (may not be explicit)
+    // Children always belong to the *union* of their parents
     people.forEach(person => {
       const parents = this.parentsMap.get(person.id) || []
-      if (parents.length > 0) {
-        // Sort parents for consistent marriage ID
-        const sortedParents = [...parents].sort()
-        const marriageId = sortedParents.join('-')
-        
-        // If marriage doesn't exist yet (single parent or parents not marked as spouses), create it
-        if (!marriages.has(marriageId)) {
-          const parentA = this.peopleById.get(sortedParents[0])
-          const parentB = sortedParents[1] ? this.peopleById.get(sortedParents[1]) : undefined
-          
-          marriages.set(marriageId, {
-            id: marriageId,
-            parentA,
-            parentB,
-            children: [],
-            x: 0,
-            y: 0,
-            depth: 0,
-            subtreeWidth: 0,
-            explicit: this.explicitSpouseSet.has(marriageId)
-          })
-        }
-        
-        marriages.get(marriageId)!.children.push(person)
+      if (parents.length === 0) return
+
+      const sortedParents = [...parents].sort()
+      const marriageId = sortedParents.join('-')
+
+      // If parents are not marked spouses, still create a pseudo-marriage
+      if (!marriages.has(marriageId)) {
+        const parentA = this.peopleById.get(sortedParents[0])
+        const parentB = sortedParents[1] ? this.peopleById.get(sortedParents[1]) : undefined
+
+        marriages.set(marriageId, {
+          id: marriageId,
+          parentA,
+          parentB,
+          children: [],
+          x: 0,
+          y: 0,
+          depth: 0,
+          subtreeWidth: 0,
+          explicit: this.explicitSpouseSet.has(marriageId),
+        })
+      }
+
+      // Always attach child to the union node, not a single parent
+      const marriage = marriages.get(marriageId)!
+      if (!marriage.children.some(c => c.id === person.id)) {
+        marriage.children.push(person)
       }
     })
 
