@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
-import FamilyTreeNode from '@/components/FamilyTreeNode'
-import FamilyTreeConnections from '@/components/FamilyTreeConnections'
-import FamilyGroupContainer from '@/components/FamilyGroupContainer'
+import DragDropFamilyTree from '@/components/family-tree/DragDropFamilyTree'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,32 +25,16 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   TreePine,
-  Search,
-  ZoomIn,
-  ZoomOut,
-  Download,
-  Upload,
   UserPlus,
-  Maximize2,
-  RotateCcw,
-  Grid3x3,
-  Shuffle
 } from 'lucide-react'
-import type { Person, Relationship, TreePreference, TreeGraph } from '@/lib/familyTreeTypes'
-import { buildFamilyTree, getPersonDisplayName } from '@/utils/familyTreeUtils'
-import { calculateFamilyTreeLayout, centerLayout, autoSpace, type LayoutNode } from '@/utils/familyTreeLayout'
+import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FamilyTree() {
   const [people, setPeople] = useState<Person[]>([])
   const [relationships, setRelationships] = useState<Relationship[]>([])
-  const [treeGraph, setTreeGraph] = useState<TreeGraph>({ nodes: [], relationships: [], people: [] })
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [rootPersonId, setRootPersonId] = useState<string>('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false)
   const [newPersonForm, setNewPersonForm] = useState({
     given_name: '',
@@ -60,30 +42,15 @@ export default function FamilyTree() {
     birth_year: '',
     gender: ''
   })
-  const [isGedcomModalOpen, setIsGedcomModalOpen] = useState(false)
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
-  const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('auto')
-  const [layoutNodes, setLayoutNodes] = useState<LayoutNode[]>([])
+  const [isFirstTime, setIsFirstTime] = useState(false)
   
-  const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { toast } = useToast()
 
   useEffect(() => {
     loadFamilyData()
   }, [])
-
-  useEffect(() => {
-    if (people.length > 0) {
-      const graph = buildFamilyTree(people, relationships, rootPersonId || undefined)
-      setTreeGraph(graph)
-      
-      // Auto-layout when in auto mode
-      if (layoutMode === 'auto') {
-        calculateAutoLayout(graph, people, relationships)
-      }
-    }
-  }, [people, relationships, rootPersonId, layoutMode])
 
   const loadFamilyData = async () => {
     try {
@@ -100,18 +67,9 @@ export default function FamilyTree() {
       if (!member) return
       setFamilyId(member.family_id)
 
-      // Load tree preference
-      const { data: preference } = await supabase
-        .from('tree_preferences')
-        .select('root_person_id')
-        .eq('user_id', user.id)
-        .eq('family_id', member.family_id)
-        .single()
-
-      if (preference?.root_person_id) {
-        setRootPersonId(preference.root_person_id)
-      }
-
+      // Check if first time (no existing positions)
+      const hasCompletedTutorial = localStorage.getItem('familyTree.tutorialCompleted')
+      
       // Load people
       const { data: peopleData } = await supabase
         .from('people')
@@ -129,7 +87,15 @@ export default function FamilyTree() {
 
       setRelationships(relationshipsData || [])
 
-      // If no people exist, suggest creating person nodes for current family members
+      // Initialize positions for new family trees
+      if (peopleData?.length && !hasCompletedTutorial) {
+        setIsFirstTime(true)
+        initializeDefaultPositions(peopleData as Person[])
+      } else if (peopleData?.length) {
+        loadSavedPositions(peopleData as Person[])
+      }
+
+      // If no people exist, create initial people from family members
       if (!peopleData?.length) {
         await createInitialPeople(member.family_id)
       }
@@ -141,8 +107,24 @@ export default function FamilyTree() {
         description: "Failed to load family tree data",
         variant: "destructive"
       })
-    } finally {
-      setLoading(false)
+  const initializeDefaultPositions = (peopleData: Person[]) => {
+    const positions: Record<string, { x: number; y: number }> = {}
+    peopleData.forEach((person, index) => {
+      positions[person.id] = {
+        x: (index % 4) * 300 + 200,
+        y: Math.floor(index / 4) * 200 + 200
+      }
+    })
+    setNodePositions(positions)
+  }
+
+  const loadSavedPositions = (peopleData: Person[]) => {
+    // Load from localStorage or use defaults
+    const saved = localStorage.getItem(`familyTree.positions.${familyId}`)
+    if (saved) {
+      setNodePositions(JSON.parse(saved))
+    } else {
+      initializeDefaultPositions(peopleData)
     }
   }
 
@@ -167,9 +149,45 @@ export default function FamilyTree() {
       positions[node.id] = { x: node.x, y: node.y }
     })
     setNodePositions(positions)
+  const handlePersonMove = (personId: string, x: number, y: number) => {
+    setNodePositions(prev => ({
+      ...prev,
+      [personId]: { x, y }
+    }))
   }
 
-  const createInitialPeople = async (familyId: string) => {
+  const handleSaveLayout = () => {
+    if (familyId) {
+      localStorage.setItem(`familyTree.positions.${familyId}`, JSON.stringify(nodePositions))
+    }
+  }
+
+  const handleAddRelation = async (fromPersonId: string, toPersonId: string, type: 'parent' | 'child' | 'spouse') => {
+    if (!familyId) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      await supabase
+        .from('relationships')
+        .insert({
+          family_id: familyId,
+          from_person_id: fromPersonId,
+          to_person_id: toPersonId,
+          relationship_type: type,
+          created_by: user.id
+        })
+
+      await loadFamilyData()
+      toast({
+        title: "Connection Added",
+        description: `${type} relationship created successfully`
+      })
+    } catch (error) {
+      console.error('Error connecting people:', error)
+    }
+  }
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
