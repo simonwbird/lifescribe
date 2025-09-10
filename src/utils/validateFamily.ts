@@ -17,15 +17,22 @@ export function validateFamily(people: Person[], relationships: Relationship[]) 
     }
   });
 
-  // 1) child should never be spouse with another child (James↔Emma case)
+  // 1) Check for suspicious spouse relationships (siblings marrying each other)
   relationships.forEach(r => {
     if (r.relationship_type === 'spouse') {
       const a = byId.get(r.from_person_id)?.full_name ?? r.from_person_id;
       const b = byId.get(r.to_person_id)?.full_name ?? r.to_person_id;
-      // heuristic: if both are also someone's children, warn
-      const aHasParents = [...parentsOf.values()].some(list => list.includes(r.from_person_id));
-      const bHasParents = [...parentsOf.values()].some(list => list.includes(r.to_person_id));
-      if (aHasParents && bHasParents) errs.push(`Suspicious spouse link between two children: ${a} ↔ ${b}`);
+      
+      // Only flag if they share the same parents (siblings marrying)
+      const aParents = parentsOf.get(r.from_person_id) ?? [];
+      const bParents = parentsOf.get(r.to_person_id) ?? [];
+      
+      if (aParents.length > 0 && bParents.length > 0) {
+        const sharedParents = aParents.filter(p => bParents.includes(p));
+        if (sharedParents.length > 0) {
+          errs.push(`Suspicious spouse link between siblings: ${a} ↔ ${b}`);
+        }
+      }
     }
   });
 
