@@ -289,10 +289,19 @@ export class FamilyTreeLayoutEngine {
     console.log('ParentsMap:', Array.from(this.parentsMap.entries()))
     console.log('ChildrenMap:', Array.from(this.childrenMap.entries()))
 
-    // Find TRUE root people (those with no parents) - these are Generation 1 (depth 0)
+    // Find TRUE root people (those with no parents AND not spouses of people with parents)
     const rootPeople = people.filter(p => {
       const parents = this.parentsMap.get(p.id) || []
-      return parents.length === 0
+      if (parents.length > 0) return false // Has parents, not a root
+      
+      // Check if this person is a spouse of someone who has parents
+      const spouses = this.spouseMap.get(p.id) || []
+      const isSpouseOfNonRoot = spouses.some(spouseId => {
+        const spouseParents = this.parentsMap.get(spouseId) || []
+        return spouseParents.length > 0
+      })
+      
+      return !isSpouseOfNonRoot // Only true roots (not spouses of people with parents)
     })
     
     console.log('Root people (no parents):', rootPeople.map(p => p.full_name))
