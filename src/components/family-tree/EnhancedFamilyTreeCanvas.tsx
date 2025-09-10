@@ -517,8 +517,8 @@ export default function EnhancedFamilyTreeCanvas({
         />
       </div>
 
-      {/* Legend - moved to top-left for better visibility */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg px-4 py-3 text-sm shadow-lg border border-gray-200/50 z-30">
+      {/* Legend - moved to top-right and fixed to viewport */}
+      <div className="fixed top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-4 py-3 text-sm shadow-lg border border-gray-200/50 z-30">
         <div className="font-semibold mb-2 text-gray-700">Connection Types</div>
         <div className="space-y-2">
           <div className="flex items-center gap-3">
@@ -572,8 +572,8 @@ export default function EnhancedFamilyTreeCanvas({
         </div>
       </div>
 
-      {/* Canvas Info - moved to top-right to avoid overlap */}
-      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 text-sm text-gray-700 shadow-lg border border-gray-200/50 z-30">
+      {/* Canvas Info - moved to top-left to avoid overlap with legend */}
+      <div className="fixed top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 text-sm text-gray-700 shadow-lg border border-gray-200/50 z-30">
         <div className="space-y-1">
           <div className="font-semibold">Family Tree</div>
           <div>Zoom: {Math.round(zoom * 100)}%</div>
