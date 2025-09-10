@@ -26,13 +26,13 @@ import grandfatherGranddaughter from '@/assets/grandfather-granddaughter.jpg'
 import familySelfie from '@/assets/family-selfie.jpg'
 
 const Hero = () => (
-  <section className="relative bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60 py-12 lg:py-16">
+  <section className="relative bg-[var(--gradient-background)] py-12 lg:py-16">
     <div className="container mx-auto px-4">
       <div className="grid lg:grid-cols-2 gap-8 items-center max-w-7xl mx-auto">
         <div className="text-center lg:text-left">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
             Preserve your family's{" "}
-            <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
               stories for generations
             </span>
           </h1>
@@ -40,14 +40,14 @@ const Hero = () => (
             LifeScribe is a private family memory book where everyone can share stories, photos, and wisdom — 
             safely kept for the future.
           </p>
-          <Button asChild size="lg" className="text-lg px-10 py-6 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white border-0 shadow-lg hover:shadow-xl transition-all">
+          <Button asChild size="lg" className="text-lg px-10 py-6 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 shadow-lg hover:shadow-xl transition-all">
             <Link to="/onboarding">
               Start Your Family Archive <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
         </div>
         <div className="relative">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-rose-100 to-amber-100 aspect-[4/3]">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-brand-muted to-brand-accent aspect-[4/3]">
             <img 
               src={heroFamilyStories} 
               alt="Multi-generational family sharing stories and memories together"
@@ -62,10 +62,10 @@ const Hero = () => (
 )
 
 const PositioningSection = () => (
-  <section className="py-8 bg-white">
+  <section className="py-8 bg-card">
     <div className="container mx-auto px-4">
       <div className="max-w-4xl mx-auto text-center">
-        <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 italic leading-relaxed">
+        <blockquote className="text-2xl md:text-3xl font-medium text-muted-foreground italic leading-relaxed">
           "If Ancestry is your family's skeleton, LifeScribe is the heartbeat and voice."
         </blockquote>
       </div>
@@ -82,11 +82,11 @@ const FeatureCard = ({
   description: string
   icon: React.ComponentType<any>
 }) => (
-  <Card className="bg-white rounded-3xl shadow-lg border-0 hover:shadow-xl transition-all p-8 h-full">
+  <Card className="bg-card rounded-3xl shadow-lg border-0 hover:shadow-xl transition-all p-8 h-full">
     <CardContent className="p-0 text-center">
       <div className="mb-6 flex justify-center">
-        <div className="p-4 bg-gradient-to-br from-rose-100 to-amber-100 rounded-2xl">
-          <Icon className="h-8 w-8 text-gradient" style={{color: '#f43f5e'}} />
+        <div className="p-4 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl">
+          <Icon className="h-8 w-8 text-brand-primary" />
         </div>
       </div>
       <h3 className="text-xl font-bold mb-4">{title}</h3>
@@ -96,7 +96,7 @@ const FeatureCard = ({
 )
 
 const FeaturesSection = () => (
-  <section className="py-12 lg:py-16 bg-gradient-to-b from-background to-slate-50/50">
+  <section className="py-12 lg:py-16 bg-[var(--gradient-subtle)]">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
@@ -153,10 +153,10 @@ const FeaturesSection = () => (
 )
 
 const TestimonialCard = ({ quote, author }: { quote: string, author: string }) => (
-  <Card className="bg-white rounded-3xl shadow-lg border-0 p-8 h-full">
+  <Card className="bg-card rounded-3xl shadow-lg border-0 p-8 h-full">
     <CardContent className="p-0">
       <div className="mb-6 flex justify-center">
-        <Quote className="h-8 w-8 text-rose-400" />
+        <Quote className="h-8 w-8 text-brand-primary" />
       </div>
       <p className="text-lg text-center mb-6 italic leading-relaxed">"{quote}"</p>
       <p className="text-center text-muted-foreground font-medium">— {author}</p>
@@ -197,11 +197,11 @@ const TestimonialsSection = () => (
 )
 
 const CallToAction = () => (
-  <section className="py-12 lg:py-16 bg-gradient-to-br from-rose-50/80 via-background to-amber-50/60">
+  <section className="py-12 lg:py-16 bg-[var(--gradient-background)]">
     <div className="container mx-auto px-4 text-center">
       <h2 className="text-4xl md:text-6xl font-bold mb-4">
         Start your family archive{" "}
-        <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
           today
         </span>
       </h2>
@@ -209,7 +209,7 @@ const CallToAction = () => (
         Join families worldwide who are preserving their stories for future generations. 
         Create your private family space in just minutes.
       </p>
-      <Button asChild size="lg" className="text-xl px-12 py-8 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white border-0 shadow-2xl hover:shadow-3xl transition-all">
+      <Button asChild size="lg" className="text-xl px-12 py-8 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 shadow-2xl hover:shadow-3xl transition-all">
         <Link to="/onboarding">
           Start Your Family Archive <ArrowRight className="ml-3 h-6 w-6" />
         </Link>
@@ -219,12 +219,12 @@ const CallToAction = () => (
 )
 
 const Footer = () => (
-  <footer className="border-t bg-slate-50/50 backdrop-blur">
+  <footer className="border-t bg-muted/50 backdrop-blur">
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
         <div className="col-span-2">
           <div className="flex items-center space-x-2 mb-4">
-            <BookHeart className="h-8 w-8 text-rose-500" />
+            <BookHeart className="h-8 w-8 text-brand-primary" />
             <span className="text-2xl font-bold">LifeScribe</span>
           </div>
           <p className="text-muted-foreground leading-relaxed mb-6">
@@ -348,11 +348,11 @@ const LoginForm = () => {
 }
 
 const LandingHeader = () => (
-  <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95 shadow-sm">
+  <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 shadow-sm">
     <div className="container mx-auto px-4">
       <div className="flex h-18 items-center justify-between">
         <Link to="/" className="flex items-center space-x-3">
-          <BookHeart className="h-8 w-8 text-rose-500" />
+          <BookHeart className="h-8 w-8 text-brand-primary" />
           <span className="text-2xl font-bold">LifeScribe</span>
         </Link>
         <div className="flex items-center space-x-4">
@@ -364,7 +364,7 @@ const LandingHeader = () => (
               <LoginForm />
             </DialogContent>
           </Dialog>
-          <Button asChild className="rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white border-0 px-6">
+          <Button asChild className="rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 px-6">
             <Link to="/onboarding">Start</Link>
           </Button>
         </div>
