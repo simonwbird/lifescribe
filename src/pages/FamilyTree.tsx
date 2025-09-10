@@ -92,7 +92,7 @@ export default function FamilyTree() {
         setIsFirstTime(true)
         initializeDefaultPositions(peopleData as Person[])
       } else if (peopleData?.length) {
-        loadSavedPositions(peopleData as Person[])
+        loadSavedPositions(peopleData as Person[], member.family_id)
       }
 
       // If no people exist, create initial people from family members
@@ -123,9 +123,9 @@ export default function FamilyTree() {
     setNodePositions(positions)
   }
 
-  const loadSavedPositions = (peopleData: Person[]) => {
+  const loadSavedPositions = (peopleData: Person[], currentFamilyId: string) => {
     // Load from localStorage or use defaults
-    const saved = localStorage.getItem(`familyTree.positions.${familyId}`)
+    const saved = localStorage.getItem(`familyTree.positions.${currentFamilyId}`)
     if (saved) {
       setNodePositions(JSON.parse(saved))
     } else {
