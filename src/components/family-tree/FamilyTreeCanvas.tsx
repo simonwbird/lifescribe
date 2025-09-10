@@ -48,6 +48,13 @@ export default function FamilyTreeCanvas({
   const MIN_ZOOM = 0.2
   const MAX_ZOOM = 2.0
 
+  // Handle zoom
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    setZoom(prev => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev * delta)))
+  }, [])
+
   // Handle canvas panning
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.target === canvasRef.current) {
@@ -72,32 +79,6 @@ export default function FamilyTreeCanvas({
   const handleCanvasMouseUp = useCallback(() => {
     setIsPanning(false)
   }, [])
-
-  // Handle zoom
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom(prev => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev * delta)))
-  }, [])
-
-  // Setup event listeners
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    canvas.addEventListener('wheel', handleWheel, { passive: false })
-    
-    if (isPanning) {
-      document.addEventListener('mousemove', handleCanvasMouseMove)
-      document.addEventListener('mouseup', handleCanvasMouseUp)
-    }
-
-    return () => {
-      canvas.removeEventListener('wheel', handleWheel)
-      document.removeEventListener('mousemove', handleCanvasMouseMove)
-      document.removeEventListener('mouseup', handleCanvasMouseUp)
-    }
-  }, [handleWheel, handleCanvasMouseMove, handleCanvasMouseUp, isPanning])
 
   // Handle person dragging
   const handlePersonDrag = useCallback((personId: string, deltaX: number, deltaY: number) => {
@@ -169,16 +150,6 @@ export default function FamilyTreeCanvas({
     })
   }, [positions, people.length])
 
-  // Auto-center on people when they first load
-  useEffect(() => {
-    if (people.length > 0 && Object.keys(positions).length > 0) {
-      // Small delay to ensure canvas is rendered
-      setTimeout(() => {
-        handleFitToScreen()
-      }, 100)
-    }
-  }, [people.length, positions, handleFitToScreen])
-
   // Get relationships for rendering connections
   const getPersonRelationships = useCallback((personId: string) => {
     return relationships.filter(rel => 
@@ -203,6 +174,35 @@ export default function FamilyTreeCanvas({
 
     return { spouses, childrenCount }
   }, [people, getPersonRelationships])
+
+  // Auto-center on people when they first load
+  useEffect(() => {
+    if (people.length > 0 && Object.keys(positions).length > 0) {
+      // Small delay to ensure canvas is rendered
+      setTimeout(() => {
+        handleFitToScreen()
+      }, 100)
+    }
+  }, [people.length, positions, handleFitToScreen])
+
+  // Setup event listeners
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false })
+    
+    if (isPanning) {
+      document.addEventListener('mousemove', handleCanvasMouseMove)
+      document.addEventListener('mouseup', handleCanvasMouseUp)
+    }
+
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel)
+      document.removeEventListener('mousemove', handleCanvasMouseMove)
+      document.removeEventListener('mouseup', handleCanvasMouseUp)
+    }
+  }, [handleWheel, handleCanvasMouseMove, handleCanvasMouseUp, isPanning])
 
   return (
     <div className="relative w-full h-full bg-gray-50 overflow-hidden">
