@@ -374,9 +374,14 @@ export class FamilyTreeLayoutEngine {
     // Enforce parent-child constraints (children must be deeper than parents)
     this.enforceParentChildConstraints(people, marriages, depths)
 
-    // Final pass: ensure roots stay at depth 0 and fix any inversion
-    const roots = people.filter(p => (this.parentsMap.get(p.id) || []).length === 0)
-    roots.forEach(r => depths.set(r.id, 0)) // force roots to depth 0
+    // Final pass: ensure TRUE roots stay at depth 0 and fix any inversion
+    // Don't include spouses as roots - they should maintain their spouse's depth
+    const trueRoots = people.filter(p => {
+      const hasNoParents = (this.parentsMap.get(p.id) || []).length === 0
+      const isSpouse = (this.spouseMap.get(p.id) || []).length > 0
+      return hasNoParents && !isSpouse // Only true roots, not spouses
+    })
+    trueRoots.forEach(r => depths.set(r.id, 0)) // force true roots to depth 0
 
     // Make sure every child is at least one deeper than max parent
     people.forEach(p => {
