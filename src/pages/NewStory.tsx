@@ -37,6 +37,19 @@ export default function NewStory() {
       setTitle(`Story about ${decodeURIComponent(personName)}`)
     }
     
+    // Check if we have prompt context from URL params
+    const promptTitle = searchParams.get('prompt')
+    const promptDescription = searchParams.get('description')
+    
+    if (promptTitle) {
+      setTitle(decodeURIComponent(promptTitle))
+      if (promptDescription) {
+        setContent(`${decodeURIComponent(promptDescription)}\n\n`)
+      }
+      // Add prompt-related tag
+      setTags(['memory-prompt'])
+    }
+    
     const getFamilyId = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -52,7 +65,7 @@ export default function NewStory() {
       }
     }
     getFamilyId()
-  }, [])
+  }, [searchParams])
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && currentTag.trim()) {
@@ -149,11 +162,14 @@ export default function NewStory() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {linkedPersonName ? `Share a Story About ${linkedPersonName}` : 'Share Your Story'}
+                  {linkedPersonName ? `Share a Story About ${linkedPersonName}` : 
+                   searchParams.get('prompt') ? 'Memory Prompt' : 'Share Your Story'}
                 </CardTitle>
                 <CardDescription>
                   {linkedPersonName 
                     ? `Tell a story or memory about ${linkedPersonName} to preserve for the family`
+                    : searchParams.get('prompt')
+                    ? 'Share your memory based on this prompt'
                     : 'Create a new family memory to share with everyone'
                   }
                 </CardDescription>
@@ -168,6 +184,8 @@ export default function NewStory() {
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder={linkedPersonName 
                         ? `Share a memory about ${linkedPersonName}...`
+                        : searchParams.get('prompt')
+                        ? "Give this memory a title..."
                         : "Give your story a title..."
                       }
                       required
@@ -182,6 +200,8 @@ export default function NewStory() {
                       onChange={(e) => setContent(e.target.value)}
                       placeholder={linkedPersonName
                         ? `Tell us about ${linkedPersonName}. What are your favorite memories? What was special about them?`
+                        : searchParams.get('prompt')
+                        ? "Share your memory here..."
                         : "Tell your story..."
                       }
                       rows={8}
