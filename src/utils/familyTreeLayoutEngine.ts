@@ -626,6 +626,13 @@ export class FamilyTreeLayoutEngine {
 
     console.log('\n=== Positioning children ===');
     // Position children under their parents' union midpoints - WITHOUT MOVING PARENTS
+    // Get all people who are already positioned as part of spouse pairs
+    const spouseIds = new Set<string>();
+    marriages.forEach(marriage => {
+      if (marriage.parentA) spouseIds.add(marriage.parentA.id);
+      if (marriage.parentB) spouseIds.add(marriage.parentB.id);
+    });
+
     marriages.forEach(marriage => {
       if (marriage.children.length === 0) return;
       
@@ -635,17 +642,25 @@ export class FamilyTreeLayoutEngine {
 
       console.log(`Children for ${marriage.parentA?.full_name || 'none'} + ${marriage.parentB?.full_name || 'none'}: ${marriage.children.map(c => c.full_name).join(', ')}`);
 
-      if (marriage.children.length === 1) {
-        const child = marriage.children[0];
+      // Filter out children who are already positioned as spouses themselves
+      const actualChildren = marriage.children.filter(child => !spouseIds.has(child.id));
+      
+      if (actualChildren.length === 0) {
+        console.log(`  All children are already positioned as spouses, skipping`);
+        return;
+      }
+
+      if (actualChildren.length === 1) {
+        const child = actualChildren[0];
         pos.set(child.id, { x: unionX - this.config.personWidth / 2, y: childY });
         console.log(`✓ Positioned single child ${child.full_name} under union at x=${unionX - this.config.personWidth / 2}`);
       } else {
         // Multiple children - spread them under the union
-        const childCount = marriage.children.length;
+        const childCount = actualChildren.length;
         const totalWidth = (childCount - 1) * this.config.childGap;
         let startX = unionX - totalWidth / 2;
         
-        marriage.children.forEach((child, index) => {
+        actualChildren.forEach((child, index) => {
           const childX = startX + (index * this.config.childGap) - this.config.personWidth / 2;
           pos.set(child.id, { x: childX, y: childY });
           console.log(`✓ Positioned child ${child.full_name} under union at x=${childX}`);
