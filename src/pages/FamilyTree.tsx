@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import EnhancedFamilyTreeCanvas from '@/components/family-tree/EnhancedFamilyTreeCanvas'
-import ProfessionalFamilyTree from '@/components/family-tree/ProfessionalFamilyTree'
+import GenerationalFamilyTree from '@/components/family-tree/GenerationalFamilyTree'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -492,11 +492,15 @@ export default function FamilyTree() {
           ) : (
             <>
               {layoutMode === 'professional' ? (
-                <ProfessionalFamilyTree
+                <GenerationalFamilyTree
                   people={people}
-                  relationships={relationships}
+                  relationships={relationships} 
                   onPersonClick={handleViewPerson}
                   onPersonEdit={(personId) => navigate(`/people/${personId}`)}
+                  onAddPerson={(parentId, type) => {
+                    console.log('Add person:', parentId, type)
+                    setIsAddPersonOpen(true)
+                  }}
                 />
               ) : (
                 <EnhancedFamilyTreeCanvas
