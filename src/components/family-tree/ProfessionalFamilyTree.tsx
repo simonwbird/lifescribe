@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ZoomIn, ZoomOut, Home, Download } from 'lucide-react'
+import { ZoomIn, ZoomOut, Home } from 'lucide-react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 
 interface FamilyNode {
@@ -27,23 +27,34 @@ export default function ProfessionalFamilyTree({
   onPersonEdit
 }: ProfessionalFamilyTreeProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(0.8)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [nodes, setNodes] = useState<FamilyNode[]>([])
 
-  // Layout constants
-  const NODE_WIDTH = 120
-  const NODE_HEIGHT = 140
-  const GENERATION_HEIGHT = 200
-  const SPOUSE_SPACING = 160
-  const SIBLING_SPACING = 180
-  const MIN_HORIZONTAL_SPACING = 200
+  // Layout constants - adjusted for better visibility
+  const NODE_WIDTH = 140
+  const NODE_HEIGHT = 160
+  const GENERATION_HEIGHT = 250
+  const SPOUSE_SPACING = 180
+  const SIBLING_SPACING = 200
 
-  // Build family tree structure
+  console.log('ProfessionalFamilyTree rendering with:', { 
+    peopleCount: people.length, 
+    relationshipsCount: relationships.length,
+    nodesCount: nodes.length 
+  })
+
+  // Simplified family tree builder
   const buildFamilyTree = () => {
-    if (!people.length) return []
+    if (!people.length) {
+      console.log('No people data')
+      return []
+    }
+
+    console.log('Building family tree with people:', people.map(p => p.full_name))
+    console.log('Relationships:', relationships)
 
     // Create relationship maps
     const spouseMap = new Map<string, string[]>()
@@ -66,8 +77,14 @@ export default function ProfessionalFamilyTree({
 
     // Find root generation (people with no parents)
     const rootPeople = people.filter(person => !parentsMap.has(person.id))
+    console.log('Root people:', rootPeople.map(p => p.full_name))
     
-    // Assign generations
+    // If no root people found, take first person as root
+    if (rootPeople.length === 0) {
+      rootPeople.push(people[0])
+    }
+
+    // Assign generations using BFS
     const generations = new Map<number, Person[]>()
     const personGeneration = new Map<string, number>()
     const visited = new Set<string>()
@@ -102,77 +119,32 @@ export default function ProfessionalFamilyTree({
     // Start from root people
     rootPeople.forEach(person => assignGeneration(person, 0))
 
-    // Create nodes with positions
+    console.log('Generations:', Array.from(generations.entries()))
+
+    // Create nodes with simple positioning
     const treeNodes: FamilyNode[] = []
     
     Array.from(generations.entries()).forEach(([generation, genPeople]) => {
-      // Group married couples
-      const processed = new Set<string>()
-      const couples: Person[][] = []
-      const singles: Person[] = []
-
-      genPeople.forEach(person => {
-        if (processed.has(person.id)) return
-        
-        const spouses = spouseMap.get(person.id) || []
-        const spousesInGeneration = spouses
-          .map(id => people.find(p => p.id === id))
-          .filter(p => p && personGeneration.get(p.id) === generation)
-
-        if (spousesInGeneration.length > 0) {
-          const couple = [person, ...spousesInGeneration]
-          couples.push(couple)
-          couple.forEach(p => processed.add(p.id))
-        } else {
-          singles.push(person)
-          processed.add(person.id)
-        }
-      })
-
-      // Calculate positions
-      const totalWidth = couples.length * SPOUSE_SPACING * 2 + singles.length * SIBLING_SPACING + 
-                        Math.max(0, couples.length + singles.length - 1) * MIN_HORIZONTAL_SPACING
-      
+      const totalWidth = genPeople.length * SIBLING_SPACING
       let currentX = -totalWidth / 2
 
-      // Position couples
-      couples.forEach(couple => {
-        const coupleWidth = couple.length * SPOUSE_SPACING
-        const startX = currentX + coupleWidth / 2
-        
-        couple.forEach((person, index) => {
-          const x = startX + (index - (couple.length - 1) / 2) * SPOUSE_SPACING
-          const y = generation * GENERATION_HEIGHT
-          
-          treeNodes.push({
-            person,
-            x,
-            y,
-            generation,
-            spouses: couple.filter(p => p.id !== person.id),
-            children: (childrenMap.get(person.id) || []).map(id => people.find(p => p.id === id)!).filter(Boolean),
-            parents: (parentsMap.get(person.id) || []).map(id => people.find(p => p.id === id)!).filter(Boolean)
-          })
-        })
-        
-        currentX += coupleWidth + MIN_HORIZONTAL_SPACING
-      })
+      genPeople.forEach((person, index) => {
+        const x = currentX + index * SIBLING_SPACING
+        const y = generation * GENERATION_HEIGHT
 
-      // Position singles
-      singles.forEach(person => {
         treeNodes.push({
           person,
-          x: currentX,
-          y: generation * GENERATION_HEIGHT,
+          x,
+          y,
           generation,
-          spouses: [],
+          spouses: (spouseMap.get(person.id) || []).map(id => people.find(p => p.id === id)!).filter(Boolean),
           children: (childrenMap.get(person.id) || []).map(id => people.find(p => p.id === id)!).filter(Boolean),
           parents: (parentsMap.get(person.id) || []).map(id => people.find(p => p.id === id)!).filter(Boolean)
         })
-        currentX += SIBLING_SPACING + MIN_HORIZONTAL_SPACING
       })
     })
 
+    console.log('Generated nodes:', treeNodes)
     return treeNodes
   }
 
@@ -185,7 +157,7 @@ export default function ProfessionalFamilyTree({
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
   const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.3))
   const handleResetView = () => {
-    setZoom(1)
+    setZoom(0.8)
     setPan({ x: 0, y: 0 })
   }
 
@@ -208,6 +180,8 @@ export default function ProfessionalFamilyTree({
 
   // Render connection lines
   const renderConnections = () => {
+    if (!nodes.length) return []
+    
     const lines: JSX.Element[] = []
 
     nodes.forEach(node => {
@@ -234,67 +208,23 @@ export default function ProfessionalFamilyTree({
       node.children.forEach(child => {
         const childNode = nodes.find(n => n.person.id === child.id)
         if (childNode) {
-          // Find marriage line midpoint if parents are married
-          const parentSpouse = node.spouses[0]
-          const spouseNode = parentSpouse ? nodes.find(n => n.person.id === parentSpouse.id) : null
-          
-          if (spouseNode) {
-            // T-intersection from marriage line
-            const midX = (node.x + spouseNode.x) / 2 + NODE_WIDTH / 2
-            const parentY = node.y + NODE_HEIGHT / 2
-            const childX = childNode.x + NODE_WIDTH / 2
-            const childY = childNode.y + NODE_HEIGHT / 2
-            const intermediateY = parentY + 40
-
-            lines.push(
-              <g key={`parent-child-${node.person.id}-${child.id}`}>
-                {/* Vertical line down from marriage */}
-                <line
-                  x1={midX}
-                  y1={parentY}
-                  x2={midX}
-                  y2={intermediateY}
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                />
-                {/* Horizontal line to child */}
-                <line
-                  x1={midX}
-                  y1={intermediateY}
-                  x2={childX}
-                  y2={intermediateY}
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                />
-                {/* Vertical line to child */}
-                <line
-                  x1={childX}
-                  y1={intermediateY}
-                  x2={childX}
-                  y2={childY}
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                />
-              </g>
-            )
-          } else {
-            // Direct parent-child line
-            lines.push(
-              <line
-                key={`parent-child-${node.person.id}-${child.id}`}
-                x1={node.x + NODE_WIDTH / 2}
-                y1={node.y + NODE_HEIGHT}
-                x2={childNode.x + NODE_WIDTH / 2}
-                y2={childNode.y}
-                stroke="#3b82f6"
-                strokeWidth="2"
-              />
-            )
-          }
+          // Simple direct line for now
+          lines.push(
+            <line
+              key={`parent-child-${node.person.id}-${child.id}`}
+              x1={node.x + NODE_WIDTH / 2}
+              y1={node.y + NODE_HEIGHT}
+              x2={childNode.x + NODE_WIDTH / 2}
+              y2={childNode.y}
+              stroke="#3b82f6"
+              strokeWidth="2"
+            />
+          )
         }
       })
     })
 
+    console.log('Rendering connections:', lines.length)
     return lines
   }
 
@@ -318,15 +248,15 @@ export default function ProfessionalFamilyTree({
           rx="12"
           fill="white"
           stroke="#e5e7eb"
-          strokeWidth="1"
-          className="hover:stroke-blue-400 transition-colors"
+          strokeWidth="2"
+          className="hover:stroke-blue-400 transition-colors drop-shadow-md"
         />
         
         {/* Profile photo circle */}
         <circle
           cx={NODE_WIDTH / 2}
-          cy={35}
-          r="25"
+          cy={40}
+          r="28"
           fill="#f3f4f6"
           stroke="#d1d5db"
           strokeWidth="2"
@@ -336,18 +266,18 @@ export default function ProfessionalFamilyTree({
         {person.avatar_url ? (
           <image
             href={person.avatar_url}
-            x={NODE_WIDTH / 2 - 25}
-            y={10}
-            width="50"
-            height="50"
-            clipPath="circle(25px at center)"
+            x={NODE_WIDTH / 2 - 28}
+            y={12}
+            width="56"
+            height="56"
+            clipPath="circle(28px at center)"
           />
         ) : (
           <text
             x={NODE_WIDTH / 2}
-            y={42}
+            y={48}
             textAnchor="middle"
-            className="fill-gray-600 text-sm font-medium"
+            className="fill-gray-600 text-base font-bold"
           >
             {displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
           </text>
@@ -356,18 +286,18 @@ export default function ProfessionalFamilyTree({
         {/* Name */}
         <text
           x={NODE_WIDTH / 2}
-          y={80}
+          y={90}
           textAnchor="middle"
           className="fill-gray-900 text-sm font-semibold"
         >
-          {displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName}
+          {displayName.length > 14 ? displayName.substring(0, 14) + '...' : displayName}
         </text>
         
         {/* Years */}
         {years && (
           <text
             x={NODE_WIDTH / 2}
-            y={100}
+            y={110}
             textAnchor="middle"
             className="fill-gray-500 text-xs"
           >
@@ -375,29 +305,40 @@ export default function ProfessionalFamilyTree({
           </text>
         )}
         
-        {/* Gender indicator */}
-        {person.gender && (
-          <rect
-            x={NODE_WIDTH - 20}
-            y={5}
-            width="15"
-            height="15"
-            rx="3"
-            fill={person.gender.toLowerCase() === 'male' ? '#3b82f6' : person.gender.toLowerCase() === 'female' ? '#ec4899' : '#6b7280'}
-          />
-        )}
+        {/* Status indicator */}
+        <text
+          x={NODE_WIDTH / 2}
+          y={130}
+          textAnchor="middle"
+          className="fill-gray-400 text-xs"
+        >
+          Gen {node.generation}
+        </text>
       </g>
     )
   }
 
   // Calculate SVG dimensions
-  const padding = 200
+  if (!nodes.length) {
+    return (
+      <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-600 mb-2">No Family Tree Data</h3>
+          <p className="text-gray-500">Add people and relationships to see your family tree</p>
+        </div>
+      </div>
+    )
+  }
+
+  const padding = 300  
   const minX = Math.min(...nodes.map(n => n.x)) - padding
   const maxX = Math.max(...nodes.map(n => n.x + NODE_WIDTH)) + padding
   const minY = Math.min(...nodes.map(n => n.y)) - padding
   const maxY = Math.max(...nodes.map(n => n.y + NODE_HEIGHT)) + padding
   const width = maxX - minX
   const height = maxY - minY
+
+  console.log('SVG dimensions:', { minX, maxX, minY, maxY, width, height })
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
@@ -414,6 +355,13 @@ export default function ProfessionalFamilyTree({
         </Button>
       </div>
 
+      {/* Debug info */}
+      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg text-xs">
+        <div>People: {people.length}</div>
+        <div>Nodes: {nodes.length}</div>
+        <div>Zoom: {zoom.toFixed(2)}</div>
+      </div>
+
       {/* Family Tree SVG */}
       <svg
         ref={svgRef}
@@ -422,23 +370,22 @@ export default function ProfessionalFamilyTree({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        viewBox={`${minX} ${minY} ${width} ${height}`}
       >
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-          <g transform={`translate(${-minX}, ${-minY})`}>
-            {/* Grid background */}
-            <defs>
-              <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.3"/>
-              </pattern>
-            </defs>
-            <rect width={width} height={height} fill="url(#grid)" />
-            
-            {/* Connection lines */}
-            {renderConnections()}
-            
-            {/* Person nodes */}
-            {nodes.map(renderPersonNode)}
-          </g>
+          {/* Grid background */}
+          <defs>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.3"/>
+            </pattern>
+          </defs>
+          <rect x={minX} y={minY} width={width} height={height} fill="url(#grid)" />
+          
+          {/* Connection lines */}
+          {renderConnections()}
+          
+          {/* Person nodes */}
+          {nodes.map(renderPersonNode)}
         </g>
       </svg>
 
