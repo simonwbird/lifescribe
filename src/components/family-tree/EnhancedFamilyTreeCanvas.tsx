@@ -110,10 +110,34 @@ export default function EnhancedFamilyTreeCanvas({
       
       console.log('Creating connection:', isConnecting.fromPersonId, '->', targetPersonId, 'as', relType)
       onAddRelation(isConnecting.fromPersonId, targetPersonId, relType)
+      
+      // Auto-align and position spouses
+      if (relType === 'spouse') {
+        const fromPos = positions[isConnecting.fromPersonId]
+        const toPos = positions[targetPersonId]
+        
+        if (fromPos && toPos) {
+          // Align both to the same Y level (use the average)
+          const alignedY = Math.round((fromPos.y + toPos.y) / 2 / 50) * 50 // Snap to 50px grid
+          
+          // Position them closer together horizontally
+          const centerX = (fromPos.x + toPos.x) / 2
+          const spouseDistance = 300 // Distance between spouses
+          
+          const leftX = Math.round((centerX - spouseDistance / 2) / 50) * 50 // Snap to grid
+          const rightX = Math.round((centerX + spouseDistance / 2) / 50) * 50 // Snap to grid
+          
+          // Position the person who initiated the connection on the left
+          onPersonMove(isConnecting.fromPersonId, leftX, alignedY)
+          onPersonMove(targetPersonId, rightX, alignedY)
+          
+          setHasUnsavedChanges(true)
+        }
+      }
     }
     setIsConnecting(null)
     setHoveredPersonId(null)
-  }, [isConnecting, onAddRelation])
+  }, [isConnecting, onAddRelation, positions, onPersonMove])
 
   const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
     if (isPanning) {
