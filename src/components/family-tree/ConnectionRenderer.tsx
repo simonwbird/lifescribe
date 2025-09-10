@@ -95,7 +95,7 @@ export function ConnectionRenderer({
     console.log('Total marriages:', marriages.length);
     console.log('Explicit marriages:', marriages.filter(m => m.explicit).length);
     
-    return marriages
+    const elements = marriages
       .filter(m => m.explicit && m.parentA && m.parentB) // only explicit marriages
       .map((marriage) => {
         console.log(`Rendering marriage: ${marriage.parentA?.full_name} + ${marriage.parentB?.full_name} at x=${marriage.x}`);
@@ -104,7 +104,10 @@ export function ConnectionRenderer({
         const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
         const spouseBNode = nodes.find(n => n.person.id === marriage.parentB?.id)
         
-        if (!spouseANode || !spouseBNode) return null
+        if (!spouseANode || !spouseBNode) {
+          console.log('  Missing spouse nodes, skipping');
+          return null;
+        }
         
         // Use the layout engine's calculated positions - DON'T recalculate!
         const spouseAX = spouseANode.x + personWidth / 2
@@ -113,6 +116,10 @@ export function ConnectionRenderer({
         
         // Trust the layout engine's marriage.x calculation for perfect centering
         const centerX = marriage.x
+        
+        console.log(`  Spouse A: ${spouseANode.person.full_name} at (${spouseAX}, ${spouseY})`);
+        console.log(`  Spouse B: ${spouseBNode.person.full_name} at (${spouseBX}, ${spouseY})`);
+        console.log(`  Heart center: (${centerX}, ${spouseY})`);
         
         return (
           <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
@@ -138,23 +145,23 @@ export function ConnectionRenderer({
               className="drop-shadow-md"
             />
             
-            {/* Large, obvious test elements for debugging */}
+            {/* SUPER OBVIOUS TEST ELEMENT - This should definitely be visible */}
             <rect
-              x={centerX - 20}
-              y={spouseY - 20}
-              width="40"
-              height="40"
+              x={centerX - 30}
+              y={spouseY - 30}
+              width="60"
+              height="60"
               fill="red"
               stroke="black"
-              strokeWidth="3"
-              opacity="0.8"
+              strokeWidth="5"
+              opacity="0.9"
             />
             
             <text
               x={centerX}
-              y={spouseY + 5}
+              y={spouseY + 8}
               textAnchor="middle"
-              fontSize="16"
+              fontSize="20"
               fill="white"
               fontWeight="bold"
             >
@@ -164,16 +171,40 @@ export function ConnectionRenderer({
             {/* Debug coordinates */}
             <text
               x={centerX}
-              y={spouseY + 25}
+              y={spouseY + 35}
               textAnchor="middle"
-              fontSize="8"
+              fontSize="12"
               fill="black"
+              fontWeight="bold"
             >
               {centerX},{spouseY}
             </text>
+            
+            {/* Test element at fixed position to verify SVG is working */}
+            <rect
+              x="50"
+              y="50"
+              width="100"
+              height="50"
+              fill="blue"
+              opacity="0.7"
+            />
+            <text
+              x="100"
+              y="80"
+              textAnchor="middle"
+              fontSize="14"
+              fill="white"
+              fontWeight="bold"
+            >
+              TEST
+            </text>
           </g>
         )
-      }).filter(Boolean)
+      }).filter(Boolean);
+      
+    console.log(`Returning ${elements.length} spouse connection elements`);
+    return elements;
   }
 
   return (
