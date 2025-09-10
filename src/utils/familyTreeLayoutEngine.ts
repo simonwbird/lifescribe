@@ -130,14 +130,26 @@ export class FamilyTreeLayoutEngine {
     // Step 2.5: Force spouses to same depth, re-enforce constraints, normalize
     // 1) keep spouses at the SAME depth (row) - use DEEPER depth
     const forceSpousesSameDepth = () => {
+      console.log('=== FORCING SPOUSES TO SAME DEPTH ===');
       // move both spouses to the deeper (larger) depth to ensure children stay below
       this.spouseMap.forEach((spouses, aId) => {
+        const aName = this.peopleById.get(aId)?.full_name;
         const a = depths.get(aId) ?? 0;
         spouses.forEach(bId => {
+          const bName = this.peopleById.get(bId)?.full_name;
           const b = depths.get(bId) ?? a;
           const target = Math.max(a, b); // Use MAX, not min!
-          if ((depths.get(aId) ?? 0) !== target) depths.set(aId, target);
-          if ((depths.get(bId) ?? 0) !== target) depths.set(bId, target);
+          
+          console.log(`Spouse pair: ${aName} (depth ${a}) + ${bName} (depth ${b}) → target depth ${target}`);
+          
+          if ((depths.get(aId) ?? 0) !== target) {
+            console.log(`  Moving ${aName} from depth ${depths.get(aId)} to depth ${target}`);
+            depths.set(aId, target);
+          }
+          if ((depths.get(bId) ?? 0) !== target) {
+            console.log(`  Moving ${bName} from depth ${depths.get(bId)} to depth ${target}`);
+            depths.set(bId, target);
+          }
         });
       });
     };
@@ -631,25 +643,35 @@ export class FamilyTreeLayoutEngine {
       rowsForCollision.get(d)!.push(p);
     });
 
-    rowsForCollision.forEach(rowPeople => {
+    console.log('=== COLLISION RESOLUTION DEBUG ===');
+    rowsForCollision.forEach((rowPeople, depth) => {
+      console.log(`Row ${depth}:`, rowPeople.map(p => `${p.full_name} at x=${pos.get(p.id)?.x}`));
+      
       const items = rowPeople
         .map(p => ({ p, pos: pos.get(p.id)! }))
         .filter(x => x.pos)
         .sort((a, b) => a.pos.x - b.pos.x);
 
       const minGap = this.config.personWidth + this.config.minGap;
+      console.log(`  Required gap: ${minGap}px`);
 
       for (let i = 1; i < items.length; i++) {
         const prev = items[i - 1];
         const curr = items[i];
         const gap = curr.pos.x - prev.pos.x;
+        
+        console.log(`  Gap between ${prev.p.full_name} and ${curr.p.full_name}: ${gap}px`);
+        
         if (gap < minGap) {
           const shift = minGap - gap;
+          console.log(`    COLLISION! Shifting ${curr.p.full_name} and following by ${shift}px`);
+          
           for (let j = i; j < items.length; j++) {
             const it = items[j];
             const np = { x: it.pos.x + shift, y: it.pos.y };
             pos.set(it.p.id, np);
             it.pos = np;
+            console.log(`      ${it.p.full_name} moved to x=${np.x}`);
           }
         }
       }
