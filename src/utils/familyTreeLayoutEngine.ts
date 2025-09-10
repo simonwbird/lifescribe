@@ -50,15 +50,15 @@ export interface LayoutConfig {
 }
 
 const DEFAULT_CONFIG: LayoutConfig = {
-  personWidth: 160,
-  personHeight: 100,
+  personWidth: 170,
+  personHeight: 108,
   gridX: 220,
-  gridY: 170,
-  spouseGap: 40,
-  siblingGap: 40,
-  childGap: 180,
-  padding: 100,
-  minGap: 40
+  gridY: 180,
+  spouseGap: 32,
+  siblingGap: 48,
+  childGap: 200,
+  padding: 80,
+  minGap: 36
 }
 
 // Color palette for family branches
@@ -546,129 +546,231 @@ export class FamilyTreeLayoutEngine {
     }[],
     depths: Map<string, number>
   ): Map<string, { x: number; y: number }> {
-    console.log('=== NEW SIMPLE POSITIONING ALGORITHM ===');
+    console.log('\n=== UNIT-BASED ORG CHART POSITIONING ===');
+    
     const pos = new Map<string, { x: number; y: number }>();
-
-    // SIMPLE APPROACH: Position each generation left-to-right, keeping spouse pairs together
+    const lockedIds = new Set<string>(); // People placed as part of spouse pairs
+    const marriageCenter = new Map<string, number>(); // Marriage ID -> centerX for children
+    
+    // Group people by generation depth
     const generations = new Map<number, Person[]>();
-    people.forEach(p => {
-      const d = depths.get(p.id) ?? 0;
-      if (!generations.has(d)) generations.set(d, []);
-      generations.get(d)!.push(p);
+    people.forEach(person => {
+      const depth = depths.get(person.id) ?? 0;
+      if (!generations.has(depth)) {
+        generations.set(depth, []);
+      }
+      generations.get(depth)!.push(person);
     });
 
-    console.log('Generations:', Array.from(generations.entries()).map(([depth, people]) => 
-      `Depth ${depth}: ${people.map(p => p.full_name).join(', ')}`
-    ));
+    // Sort generations by depth
+    const genKeys = Array.from(generations.keys()).sort((a, b) => a - b);
+    console.log(`Generations: ${genKeys.map(d => `Depth ${d}: ${generations.get(d)!.map(p => p.full_name).join(', ')}`).join(', ')}`);
+
+    // Define unit types
+    type Unit = 
+      | { kind: 'pair'; a: Person; b: Person; left: number; width: number; centerX: number; marriage: Marriage }
+      | { kind: 'single'; a: Person; left: number; width: number; centerX: number };
+
+    type Marriage = typeof marriages[0];
 
     // Process each generation
-    Array.from(generations.entries()).sort(([a], [b]) => a - b).forEach(([depth, genPeople]) => {
+    genKeys.forEach(depth => {
+      const genPeople = generations.get(depth)!;
       const yTop = depth * this.config.gridY;
-      let x = this.config.padding;
-
+      
       console.log(`\n=== Processing Generation ${depth + 1} (depth ${depth}) ===`);
-
-      // Find marriages at this depth
+      
+      // Get marriages at this depth
       const marriagesAtDepth = marriages.filter(m => m.depth === depth);
-      const processedIds = new Set<string>();
+      const units: Unit[] = [];
+      let cursorX = this.config.padding;
 
-      console.log(`Marriages at this depth: ${marriagesAtDepth.map(m => 
-        `${m.parentA?.full_name || 'none'} + ${m.parentB?.full_name || 'none'}`
-      ).join(', ')}`);
+      // Sort marriages by earliest birth year in the unit, then by name
+      const sortedMarriages = marriagesAtDepth
+        .filter(m => {
+          // Only include marriages where at least one spouse is in this generation
+          return (m.parentA && genPeople.includes(m.parentA)) || 
+                 (m.parentB && genPeople.includes(m.parentB));
+        })
+        .sort((a, b) => {
+          const aEarliest = Math.min(
+            a.parentA?.birth_year || 9999,
+            a.parentB?.birth_year || 9999
+          );
+          const bEarliest = Math.min(
+            b.parentA?.birth_year || 9999,
+            b.parentB?.birth_year || 9999
+          );
+          if (aEarliest !== bEarliest) return aEarliest - bEarliest;
+          
+          const aName = (a.parentA?.full_name || '') + (a.parentB?.full_name || '');
+          const bName = (b.parentA?.full_name || '') + (b.parentB?.full_name || '');
+          return aName.localeCompare(bName);
+        });
 
-      // First: Place all spouse pairs
-      marriagesAtDepth.forEach(marriage => {
-        const spouses: Person[] = [];
+      // First pass: Create units for spouse pairs
+      sortedMarriages.forEach(marriage => {
+        const spousesInGen = [];
         if (marriage.parentA && genPeople.includes(marriage.parentA)) {
-          spouses.push(marriage.parentA);
-          processedIds.add(marriage.parentA.id);
+          spousesInGen.push(marriage.parentA);
         }
         if (marriage.parentB && genPeople.includes(marriage.parentB)) {
-          spouses.push(marriage.parentB);
-          processedIds.add(marriage.parentB.id);
+          spousesInGen.push(marriage.parentB);
         }
 
-        if (spouses.length === 2) {
-          // Place spouse pair with proper spacing
-          const [spouse1, spouse2] = spouses;
-          pos.set(spouse1.id, { x, y: yTop });
-          pos.set(spouse2.id, { x: x + this.config.personWidth + this.config.spouseGap, y: yTop });
+        if (spousesInGen.length === 2) {
+          // Create pair unit
+          const [a, b] = spousesInGen;
+          const width = this.config.personWidth * 2 + this.config.spouseGap;
+          const centerX = cursorX + width / 2;
+          
+          const unit: Unit = {
+            kind: 'pair',
+            a, b,
+            left: cursorX,
+            width,
+            centerX,
+            marriage
+          };
+          
+          units.push(unit);
+          lockedIds.add(a.id);
+          lockedIds.add(b.id);
+          marriageCenter.set(marriage.id, centerX);
+          
+          console.log(`✓ Created pair unit: ${a.full_name} + ${b.full_name} at centerX=${centerX}`);
+          cursorX += width + this.config.siblingGap;
+        } else if (spousesInGen.length === 1) {
+          // Create single parent unit
+          const a = spousesInGen[0];
+          const width = this.config.personWidth;
+          const centerX = cursorX + width / 2;
+          
+          const unit: Unit = {
+            kind: 'single',
+            a,
+            left: cursorX,
+            width,
+            centerX
+          };
+          
+          units.push(unit);
+          lockedIds.add(a.id);
+          marriageCenter.set(marriage.id, centerX);
+          
+          console.log(`✓ Created single parent unit: ${a.full_name} at centerX=${centerX}`);
+          cursorX += width + this.config.siblingGap;
+        }
+      });
+
+      // Second pass: Create units for remaining singles (not locked)
+      const remainingSingles = genPeople
+        .filter(p => !lockedIds.has(p.id))
+        .sort((a, b) => {
+          if ((a.birth_year || 0) !== (b.birth_year || 0)) {
+            return (a.birth_year || 0) - (b.birth_year || 0);
+          }
+          return a.full_name.localeCompare(b.full_name);
+        });
+
+      remainingSingles.forEach(person => {
+        const width = this.config.personWidth;
+        const centerX = cursorX + width / 2;
+        
+        const unit: Unit = {
+          kind: 'single',
+          a: person,
+          left: cursorX,
+          width,
+          centerX
+        };
+        
+        units.push(unit);
+        console.log(`✓ Created single unit: ${person.full_name} at centerX=${centerX}`);
+        cursorX += width + this.config.siblingGap;
+      });
+
+      // Collision resolution on units
+      for (let i = 1; i < units.length; i++) {
+        const prev = units[i - 1];
+        const cur = units[i];
+        const requiredGap = this.config.siblingGap;
+        const overlap = (prev.left + prev.width + requiredGap) - cur.left;
+        
+        if (overlap > 0) {
+          console.log(`  Collision detected, shifting unit ${i} by ${overlap}`);
+          cur.left += overlap;
+          cur.centerX += overlap;
+        }
+      }
+
+      // Position people from units
+      units.forEach(unit => {
+        if (unit.kind === 'pair') {
+          // Position both spouses
+          pos.set(unit.a.id, { x: unit.left, y: yTop });
+          pos.set(unit.b.id, { x: unit.left + this.config.personWidth + this.config.spouseGap, y: yTop });
           
           // Set marriage union position
-          const center1 = x + this.config.personWidth / 2;
-          const center2 = x + this.config.personWidth + this.config.spouseGap + this.config.personWidth / 2;
-          marriage.x = (center1 + center2) / 2;
-          marriage.y = yTop + this.config.personHeight / 2;
-
-          console.log(`✓ Positioned spouse pair: ${spouse1.full_name} at x=${x}, ${spouse2.full_name} at x=${x + this.config.personWidth + this.config.spouseGap}`);
+          unit.marriage.x = unit.centerX;
+          unit.marriage.y = yTop + this.config.personHeight / 2;
           
-          x += (this.config.personWidth * 2) + this.config.spouseGap + this.config.siblingGap;
-        } else if (spouses.length === 1) {
-          // Single parent
-          const spouse = spouses[0];
-          pos.set(spouse.id, { x, y: yTop });
-          marriage.x = x + this.config.personWidth / 2;
-          marriage.y = yTop + this.config.personHeight / 2;
-          console.log(`✓ Positioned single parent: ${spouse.full_name} at x=${x}`);
-          x += this.config.personWidth + this.config.siblingGap;
-        }
-      });
-
-      // Second: Place remaining singles
-      genPeople.forEach(person => {
-        if (!processedIds.has(person.id)) {
-          pos.set(person.id, { x, y: yTop });
-          console.log(`✓ Positioned single: ${person.full_name} at x=${x}`);
-          x += this.config.personWidth + this.config.siblingGap;
+          console.log(`✓ Positioned pair: ${unit.a.full_name} at x=${unit.left}, ${unit.b.full_name} at x=${unit.left + this.config.personWidth + this.config.spouseGap}`);
+        } else {
+          // Position single person
+          pos.set(unit.a.id, { x: unit.left, y: yTop });
+          console.log(`✓ Positioned single: ${unit.a.full_name} at x=${unit.left}`);
         }
       });
     });
 
-    console.log('\n=== Positioning children ===');
-    // Position children under their parents' union midpoints - WITHOUT MOVING PARENTS
-    // Get all people who are already positioned as part of spouse pairs
-    const spouseIds = new Set<string>();
-    marriages.forEach(marriage => {
-      if (marriage.parentA) spouseIds.add(marriage.parentA.id);
-      if (marriage.parentB) spouseIds.add(marriage.parentB.id);
-    });
-
+    // Children positioning pass - only move unlocked people
+    console.log('\n=== Positioning children (unlocked only) ===');
     marriages.forEach(marriage => {
       if (marriage.children.length === 0) return;
       
+      const centerX = marriageCenter.get(marriage.id);
+      if (!centerX) return; // No center recorded, skip
+      
       const childDepth = marriage.depth + 1;
       const childY = childDepth * this.config.gridY;
-      const unionX = marriage.x;
 
-      console.log(`Children for ${marriage.parentA?.full_name || 'none'} + ${marriage.parentB?.full_name || 'none'}: ${marriage.children.map(c => c.full_name).join(', ')}`);
-
-      // Filter out children who are already positioned as spouses themselves
-      const actualChildren = marriage.children.filter(child => !spouseIds.has(child.id));
+      // Only position children not already locked as spouses
+      const freeChildren = marriage.children
+        .filter(child => !lockedIds.has(child.id))
+        .sort((a, b) => {
+          if ((a.birth_year || 0) !== (b.birth_year || 0)) {
+            return (a.birth_year || 0) - (b.birth_year || 0);
+          }
+          return a.full_name.localeCompare(b.full_name);
+        });
       
-      if (actualChildren.length === 0) {
-        console.log(`  All children are already positioned as spouses, skipping`);
+      if (freeChildren.length === 0) {
+        console.log(`  All children of ${marriage.parentA?.full_name || 'none'} + ${marriage.parentB?.full_name || 'none'} are locked, skipping`);
         return;
       }
 
-      if (actualChildren.length === 1) {
-        const child = actualChildren[0];
-        pos.set(child.id, { x: unionX - this.config.personWidth / 2, y: childY });
-        console.log(`✓ Positioned single child ${child.full_name} under union at x=${unionX - this.config.personWidth / 2}`);
+      console.log(`Children for ${marriage.parentA?.full_name || 'none'} + ${marriage.parentB?.full_name || 'none'}: ${freeChildren.map(c => c.full_name).join(', ')}`);
+
+      if (freeChildren.length === 1) {
+        // Single child centered under union
+        const child = freeChildren[0];
+        pos.set(child.id, { x: centerX - this.config.personWidth / 2, y: childY });
+        console.log(`✓ Positioned single child ${child.full_name} under union at x=${centerX - this.config.personWidth / 2}`);
       } else {
-        // Multiple children - spread them under the union
-        const childCount = actualChildren.length;
-        const totalWidth = (childCount - 1) * this.config.childGap;
-        let startX = unionX - totalWidth / 2;
+        // Multiple children spread evenly
+        const span = (freeChildren.length - 1) * this.config.childGap;
+        let childX = centerX - span / 2;
         
-        actualChildren.forEach((child, index) => {
-          const childX = startX + (index * this.config.childGap) - this.config.personWidth / 2;
-          pos.set(child.id, { x: childX, y: childY });
-          console.log(`✓ Positioned child ${child.full_name} under union at x=${childX}`);
+        freeChildren.forEach(child => {
+          pos.set(child.id, { x: childX - this.config.personWidth / 2, y: childY });
+          console.log(`✓ Positioned child ${child.full_name} under union at x=${childX - this.config.personWidth / 2}`);
+          childX += this.config.childGap;
         });
       }
     });
 
-    console.log('\n=== FINAL SIMPLE POSITIONS ===');
+    console.log('\n=== FINAL UNIT-BASED POSITIONS ===');
     people.forEach(person => {
       const position = pos.get(person.id);
       if (position) {
