@@ -2,7 +2,6 @@ import React, { useRef, useCallback, useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import EnhancedPersonCard from './EnhancedPersonCard'
 import ConnectionLine from './ConnectionLine'
-import FamilyConnections from './FamilyConnections'
 import ZoomControls from './ZoomControls'
 import GridOverlay from './GridOverlay'
 import RelationshipModal from './RelationshipModal'
@@ -496,13 +495,29 @@ export default function EnhancedFamilyTreeCanvas({
         {showGrid && <GridOverlay zoom={zoom} />}
 
         {/* Connection Lines */}
-        <FamilyConnections
-          people={people}
-          relationships={relationships}
-          positions={positions}
-          selectedPersonId={selectedPersonId}
-          onDeleteRelation={onDeleteRelation}
-        />
+        {relationships.map(relationship => {
+          const fromPos = positions[relationship.from_person_id]
+          const toPos = positions[relationship.to_person_id]
+          
+          if (!fromPos || !toPos) return null
+
+          return (
+            <ConnectionLine
+              key={relationship.id}
+              from={fromPos}
+              to={toPos}
+              type={relationship.relationship_type as 'parent' | 'spouse' | 'child'}
+              isHighlighted={
+                selectedPersonId === relationship.from_person_id ||
+                selectedPersonId === relationship.to_person_id
+              }
+              relationshipId={relationship.id}
+              onDelete={onDeleteRelation}
+              allRelationships={relationships}
+              allPositions={positions}
+            />
+          )
+        })}
 
         {/* Dynamic Connection Line (while dragging) */}
         {isConnecting && (

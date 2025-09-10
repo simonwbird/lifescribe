@@ -8,6 +8,13 @@ interface ConnectionLineProps {
   isHighlighted?: boolean
   relationshipId?: string
   onDelete?: (relationshipId: string) => void
+  allRelationships?: Array<{
+    id: string
+    from_person_id: string
+    to_person_id: string
+    relationship_type: 'parent' | 'spouse' | 'child'
+  }>
+  allPositions?: Record<string, { x: number; y: number }>
 }
 
 export default function ConnectionLine({ 
@@ -16,7 +23,9 @@ export default function ConnectionLine({
   type, 
   isHighlighted = false, 
   relationshipId, 
-  onDelete 
+  onDelete,
+  allRelationships = [],
+  allPositions = {}
 }: ConnectionLineProps) {
   const [isHovered, setIsHovered] = useState(false)
   // Card dimensions for connection points
@@ -58,11 +67,93 @@ export default function ConnectionLine({
 
   const { startPoint, endPoint } = getConnectionPoints()
 
-  // Create path - straight line for spouses, L-shaped for others
+  // Check if this parent-child connection should use T-intersection
+  const shouldUseTIntersection = () => {
+    if (type !== 'parent' || !allRelationships || !allPositions) return false
+    
+    // Get the relationship details
+    const currentRel = allRelationships.find(r => r.id === relationshipId)
+    if (!currentRel) return false
+    
+    const parentId = currentRel.from_person_id
+    const childId = currentRel.to_person_id
+    
+    // Find if this parent has a spouse
+    const spouseRel = allRelationships.find(r => 
+      r.relationship_type === 'spouse' && 
+      (r.from_person_id === parentId || r.to_person_id === parentId)
+    )
+    
+    if (!spouseRel) return false
+    
+    const spouseId = spouseRel.from_person_id === parentId ? spouseRel.to_person_id : spouseRel.from_person_id
+    const spousePos = allPositions[spouseId]
+    
+    if (!spousePos) return false
+    
+    // Check if spouse is also parent to this child
+    const spouseParentRel = allRelationships.find(r =>
+      r.relationship_type === 'parent' &&
+      r.from_person_id === spouseId &&
+      r.to_person_id === childId
+    )
+    
+    return !!spouseParentRel
+  }
+
+  const getTIntersectionPath = () => {
+    if (!allRelationships || !allPositions) return createPath()
+    
+    const currentRel = allRelationships.find(r => r.id === relationshipId)
+    if (!currentRel) return createPath()
+    
+    const parentId = currentRel.from_person_id
+    const childId = currentRel.to_person_id
+    
+    // Find spouse
+    const spouseRel = allRelationships.find(r => 
+      r.relationship_type === 'spouse' && 
+      (r.from_person_id === parentId || r.to_person_id === parentId)
+    )
+    
+    if (!spouseRel) return createPath()
+    
+    const spouseId = spouseRel.from_person_id === parentId ? spouseRel.to_person_id : spouseRel.from_person_id
+    const spousePos = allPositions[spouseId]
+    const parentPos = allPositions[parentId]
+    const childPos = allPositions[childId]
+    
+    if (!spousePos || !parentPos || !childPos) return createPath()
+    
+    // Calculate T-intersection point (middle of marriage line)
+    const leftParent = parentPos.x < spousePos.x ? parentPos : spousePos
+    const rightParent = parentPos.x < spousePos.x ? spousePos : parentPos
+    
+    const marriageStartX = leftParent.x + CARD_WIDTH
+    const marriageEndX = rightParent.x
+    const marriageY = leftParent.y + CARD_HEIGHT / 2
+    
+    const tIntersectionX = (marriageStartX + marriageEndX) / 2
+    const tIntersectionY = marriageY
+    
+    // Path from T-intersection to child
+    const verticalLineLength = 60
+    const childConnectionY = childPos.y
+    const childConnectionX = childPos.x + CARD_WIDTH / 2
+    
+    return `M ${tIntersectionX} ${tIntersectionY} 
+            L ${tIntersectionX} ${tIntersectionY + verticalLineLength}
+            L ${childConnectionX} ${tIntersectionY + verticalLineLength}
+            L ${childConnectionX} ${childConnectionY}`
+  }
+
+  // Create path - with T-intersection for children of married parents
   const createPath = () => {
     if (type === 'spouse') {
       // Straight horizontal line for spouse connections
       return `M ${startPoint.x} ${startPoint.y} L ${endPoint.x} ${endPoint.y}`
+    } else if (shouldUseTIntersection()) {
+      return getTIntersectionPath()
     } else {
       // L-shaped path for parent/child connections
       const midY = startPoint.y + (endPoint.y - startPoint.y) / 2
