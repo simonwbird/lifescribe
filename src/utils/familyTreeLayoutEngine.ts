@@ -228,6 +228,9 @@ export class FamilyTreeLayoutEngine {
   private buildMarriageNodes(people: Person[]): MarriageNode[] {
     const marriages = new Map<string, MarriageNode>()
     
+    console.log('=== BUILDING MARRIAGE NODES ===');
+    console.log('Explicit spouse set:', Array.from(this.explicitSpouseSet));
+    
     // First, create marriages from spouse relationships (explicit)
     people.forEach(person => {
       const spouses = this.spouseMap.get(person.id) || []
@@ -239,6 +242,9 @@ export class FamilyTreeLayoutEngine {
         if (!marriages.has(marriageId)) {
           const parentA = this.peopleById.get(sortedIds[0])
           const parentB = this.peopleById.get(sortedIds[1])
+          const isExplicit = this.explicitSpouseSet.has(marriageId);
+          
+          console.log(`Creating marriage ${marriageId}: ${parentA?.full_name} + ${parentB?.full_name}, explicit: ${isExplicit}`);
           
           marriages.set(marriageId, {
             id: marriageId,
@@ -249,7 +255,7 @@ export class FamilyTreeLayoutEngine {
             y: 0,
             depth: 0,
             subtreeWidth: 0,
-            explicit: this.explicitSpouseSet.has(marriageId)
+            explicit: isExplicit
           })
         }
       })
@@ -288,7 +294,13 @@ export class FamilyTreeLayoutEngine {
       }
     })
 
-    return Array.from(marriages.values())
+    const finalMarriages = Array.from(marriages.values());
+    console.log('=== FINAL MARRIAGES ===');
+    finalMarriages.forEach(m => {
+      console.log(`Marriage ${m.id}: ${m.parentA?.full_name} + ${m.parentB?.full_name}, explicit: ${m.explicit}, children: ${m.children.length}`);
+    });
+
+    return finalMarriages
   }
 
   private assignDepthsByAncestry(people: Person[], marriages: MarriageNode[]): Map<string, number> {
