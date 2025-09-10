@@ -546,6 +546,7 @@ export class FamilyTreeLayoutEngine {
     }[],
     depths: Map<string, number>
   ): Map<string, { x: number; y: number }> {
+    console.log('=== NEW SIMPLE POSITIONING ALGORITHM ===');
     const pos = new Map<string, { x: number; y: number }>();
 
     // SIMPLE APPROACH: Position each generation left-to-right, keeping spouse pairs together
@@ -556,14 +557,24 @@ export class FamilyTreeLayoutEngine {
       generations.get(d)!.push(p);
     });
 
+    console.log('Generations:', Array.from(generations.entries()).map(([depth, people]) => 
+      `Depth ${depth}: ${people.map(p => p.full_name).join(', ')}`
+    ));
+
     // Process each generation
     Array.from(generations.entries()).sort(([a], [b]) => a - b).forEach(([depth, genPeople]) => {
       const yTop = depth * this.config.gridY;
       let x = this.config.padding;
 
+      console.log(`\n=== Processing Generation ${depth + 1} (depth ${depth}) ===`);
+
       // Find marriages at this depth
       const marriagesAtDepth = marriages.filter(m => m.depth === depth);
       const processedIds = new Set<string>();
+
+      console.log(`Marriages at this depth: ${marriagesAtDepth.map(m => 
+        `${m.parentA?.full_name || 'none'} + ${m.parentB?.full_name || 'none'}`
+      ).join(', ')}`);
 
       // First: Place all spouse pairs
       marriagesAtDepth.forEach(marriage => {
@@ -589,7 +600,7 @@ export class FamilyTreeLayoutEngine {
           marriage.x = (center1 + center2) / 2;
           marriage.y = yTop + this.config.personHeight / 2;
 
-          console.log(`Positioned spouse pair: ${spouse1.full_name} at x=${x}, ${spouse2.full_name} at x=${x + this.config.personWidth + this.config.spouseGap}`);
+          console.log(`✓ Positioned spouse pair: ${spouse1.full_name} at x=${x}, ${spouse2.full_name} at x=${x + this.config.personWidth + this.config.spouseGap}`);
           
           x += (this.config.personWidth * 2) + this.config.spouseGap + this.config.siblingGap;
         } else if (spouses.length === 1) {
@@ -598,6 +609,7 @@ export class FamilyTreeLayoutEngine {
           pos.set(spouse.id, { x, y: yTop });
           marriage.x = x + this.config.personWidth / 2;
           marriage.y = yTop + this.config.personHeight / 2;
+          console.log(`✓ Positioned single parent: ${spouse.full_name} at x=${x}`);
           x += this.config.personWidth + this.config.siblingGap;
         }
       });
@@ -606,12 +618,13 @@ export class FamilyTreeLayoutEngine {
       genPeople.forEach(person => {
         if (!processedIds.has(person.id)) {
           pos.set(person.id, { x, y: yTop });
-          console.log(`Positioned single: ${person.full_name} at x=${x}`);
+          console.log(`✓ Positioned single: ${person.full_name} at x=${x}`);
           x += this.config.personWidth + this.config.siblingGap;
         }
       });
     });
 
+    console.log('\n=== Positioning children ===');
     // Position children under their parents' union midpoints - WITHOUT MOVING PARENTS
     marriages.forEach(marriage => {
       if (marriage.children.length === 0) return;
@@ -620,10 +633,12 @@ export class FamilyTreeLayoutEngine {
       const childY = childDepth * this.config.gridY;
       const unionX = marriage.x;
 
+      console.log(`Children for ${marriage.parentA?.full_name || 'none'} + ${marriage.parentB?.full_name || 'none'}: ${marriage.children.map(c => c.full_name).join(', ')}`);
+
       if (marriage.children.length === 1) {
         const child = marriage.children[0];
         pos.set(child.id, { x: unionX - this.config.personWidth / 2, y: childY });
-        console.log(`Positioned single child ${child.full_name} under union at x=${unionX - this.config.personWidth / 2}`);
+        console.log(`✓ Positioned single child ${child.full_name} under union at x=${unionX - this.config.personWidth / 2}`);
       } else {
         // Multiple children - spread them under the union
         const childCount = marriage.children.length;
@@ -633,12 +648,12 @@ export class FamilyTreeLayoutEngine {
         marriage.children.forEach((child, index) => {
           const childX = startX + (index * this.config.childGap) - this.config.personWidth / 2;
           pos.set(child.id, { x: childX, y: childY });
-          console.log(`Positioned child ${child.full_name} under union at x=${childX}`);
+          console.log(`✓ Positioned child ${child.full_name} under union at x=${childX}`);
         });
       }
     });
 
-    console.log('=== FINAL SIMPLE POSITIONS ===');
+    console.log('\n=== FINAL SIMPLE POSITIONS ===');
     people.forEach(person => {
       const position = pos.get(person.id);
       if (position) {
