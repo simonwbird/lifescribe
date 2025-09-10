@@ -503,8 +503,8 @@ export default function EnhancedFamilyTreeCanvas({
         })}
       </div>
 
-      {/* Zoom Controls */}
-      <div className="absolute bottom-4 right-4">
+      {/* Zoom Controls - fixed to bottom right of viewport */}
+      <div className="fixed bottom-4 right-4 z-50">
         <ZoomControls
           zoom={zoom}
           onZoomIn={() => setZoom(prev => Math.min(MAX_ZOOM, prev * 1.2))}
