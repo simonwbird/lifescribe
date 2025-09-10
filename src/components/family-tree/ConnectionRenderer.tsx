@@ -18,98 +18,80 @@ export function ConnectionRenderer({
   
   const renderParentChildConnections = () => {
     const connections: JSX.Element[] = []
+    let connectionIndex = 0
 
-    nodes.forEach(node => {
-      node.children.forEach(child => {
+    marriages.forEach(marriage => {
+      if (marriage.children.length === 0) return
+
+      const dropDistance = 50 // Distance to drop down from parents
+      
+      marriage.children.forEach(child => {
         const childNode = nodes.find(n => n.person.id === child.id)
         if (!childNode) return
 
-        // Check if this is a connection from a marriage
-        const parentMarriage = marriages.find(m => 
-          (m.parentA?.id === node.person.id || m.parentB?.id === node.person.id) &&
-          m.children.some(c => c.id === child.id)
+        const connectionKey = `marriage-to-child-${marriage.id}-${child.id}-${connectionIndex++}`
+        
+        connections.push(
+          <g key={connectionKey} className="parent-child-connection">
+            {/* Vertical line down from marriage center */}
+            <line
+              x1={marriage.x}
+              y1={marriage.y + personHeight}
+              x2={marriage.x}
+              y2={marriage.y + personHeight + dropDistance}
+              stroke="#94A3B8"
+              strokeWidth="2"
+              className="transition-colors hover:stroke-blue-500"
+            />
+            {/* Horizontal line to child x-position */}
+            <line
+              x1={marriage.x}
+              y1={marriage.y + personHeight + dropDistance}
+              x2={childNode.x}
+              y2={marriage.y + personHeight + dropDistance}
+              stroke="#94A3B8"
+              strokeWidth="2"
+              className="transition-colors hover:stroke-blue-500"
+            />
+            {/* Vertical line down to child */}
+            <line
+              x1={childNode.x}
+              y1={marriage.y + personHeight + dropDistance}
+              x2={childNode.x}
+              y2={childNode.y}
+              stroke="#94A3B8"
+              strokeWidth="2"
+              className="transition-colors hover:stroke-blue-500"
+            />
+          </g>
         )
+      })
 
-        if (parentMarriage) {
-          // Clean T-junction connection from marriage center to child
-          const connectionKey = `marriage-child-${parentMarriage.id}-${child.id}`
-          const dropDistance = 50 // Distance to drop down from parents
+      // Draw horizontal connector between siblings if multiple children
+      if (marriage.children.length > 1) {
+        const childNodes = marriage.children
+          .map(child => nodes.find(n => n.person.id === child.id))
+          .filter(Boolean) as LayoutNode[]
+        
+        if (childNodes.length > 1) {
+          const minX = Math.min(...childNodes.map(n => n.x))
+          const maxX = Math.max(...childNodes.map(n => n.x))
+          const connectorY = marriage.y + personHeight + dropDistance
           
           connections.push(
-            <g key={connectionKey} className="parent-child-connection">
-              {/* Vertical line down from marriage center */}
-              <line
-                x1={parentMarriage.x}
-                y1={parentMarriage.y + personHeight}
-                x2={parentMarriage.x}
-                y2={parentMarriage.y + personHeight + dropDistance}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-              {/* Horizontal line to child x-position */}
-              <line
-                x1={parentMarriage.x}
-                y1={parentMarriage.y + personHeight + dropDistance}
-                x2={childNode.x}
-                y2={parentMarriage.y + personHeight + dropDistance}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-              {/* Vertical line down to child */}
-              <line
-                x1={childNode.x}
-                y1={parentMarriage.y + personHeight + dropDistance}
-                x2={childNode.x}
-                y2={childNode.y}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-            </g>
-          )
-        } else {
-          // Direct parent-child connection for single parents
-          const connectionKey = `parent-child-${node.person.id}-${child.id}`
-          const dropDistance = 30
-          
-          connections.push(
-            <g key={connectionKey} className="single-parent-child-connection">
-              {/* Vertical line down from parent */}
-              <line
-                x1={node.x}
-                y1={node.y + personHeight}
-                x2={node.x}
-                y2={node.y + personHeight + dropDistance}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-              {/* Horizontal line to child */}
-              <line
-                x1={node.x}
-                y1={node.y + personHeight + dropDistance}
-                x2={childNode.x}
-                y2={node.y + personHeight + dropDistance}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-              {/* Vertical line down to child */}
-              <line
-                x1={childNode.x}
-                y1={node.y + personHeight + dropDistance}
-                x2={childNode.x}
-                y2={childNode.y}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-            </g>
+            <line
+              key={`sibling-connector-${marriage.id}-${connectionIndex++}`}
+              x1={minX}
+              y1={connectorY}
+              x2={maxX}
+              y2={connectorY}
+              stroke="#94A3B8"
+              strokeWidth="2"
+              className="transition-colors hover:stroke-blue-500"
+            />
           )
         }
-      })
+      }
     })
 
     return connections
@@ -117,7 +99,7 @@ export function ConnectionRenderer({
 
   const renderSpouseConnections = () => {
     return marriages.filter(m => m.parentA && m.parentB).map((marriage) => (
-      <g key={`spouse-${marriage.id}`} className="spouse-connection">
+      <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
         {/* Clean horizontal connection line between spouses */}
         <line
           x1={marriage.x - 50}
@@ -153,60 +135,6 @@ export function ConnectionRenderer({
     ))
   }
 
-  const renderMultiChildConnections = () => {
-    const connections: JSX.Element[] = []
-    
-    // Create horizontal connectors for siblings from the same parents
-    const siblingGroups = new Map<string, LayoutNode[]>()
-    
-    nodes.forEach(node => {
-      if (node.parents.length > 0) {
-        const parentKey = node.parents.map(p => p.id).sort().join('-')
-        if (!siblingGroups.has(parentKey)) {
-          siblingGroups.set(parentKey, [])
-        }
-        siblingGroups.get(parentKey)!.push(node)
-      }
-    })
-
-    siblingGroups.forEach((siblings, parentKey) => {
-      if (siblings.length > 1) {
-        // Find the parent connection point
-        const parentMarriage = marriages.find(m => {
-          const parentIds = []
-          if (m.parentA) parentIds.push(m.parentA.id)
-          if (m.parentB) parentIds.push(m.parentB.id)
-          const marriageKey = parentIds.sort().join('-')
-          return marriageKey === parentKey
-        })
-        
-        if (parentMarriage) {
-          const minChildX = Math.min(...siblings.map(n => n.x))
-          const maxChildX = Math.max(...siblings.map(n => n.x))
-          const connectorY = parentMarriage.y + personHeight + 50
-          
-          // Only draw horizontal connector if there are multiple children
-          if (minChildX !== maxChildX) {
-            connections.push(
-              <line
-                key={`sibling-connector-${parentKey}`}
-                x1={minChildX}
-                y1={connectorY}
-                x2={maxChildX}
-                y2={connectorY}
-                stroke="#94A3B8"
-                strokeWidth="2"
-                className="transition-colors hover:stroke-blue-500"
-              />
-            )
-          }
-        }
-      }
-    })
-
-    return connections
-  }
-
   return (
     <g className="family-tree-connections">
       {/* Render parent-child connections */}
@@ -214,9 +142,6 @@ export function ConnectionRenderer({
       
       {/* Render spouse connections */}
       {renderSpouseConnections()}
-      
-      {/* Render multi-child connectors */}
-      {renderMultiChildConnections()}
     </g>
   )
 }

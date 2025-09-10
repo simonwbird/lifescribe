@@ -264,7 +264,7 @@ export default function GenerationalFamilyTree({
           />
           
           {/* Generation background stripes for visual clarity */}
-          {autoLayout && Array.from(new Set(nodes.map(n => n.generation))).sort().map(gen => (
+          {autoLayout && Array.from(new Set(nodes.map(n => n.depth))).sort().map(gen => (
             <rect
               key={`generation-bg-${gen}`}
               x={dimensions.minX}
@@ -278,7 +278,7 @@ export default function GenerationalFamilyTree({
           ))}
           
           {/* Generation labels */}
-          {autoLayout && Array.from(new Set(nodes.map(n => n.generation))).sort().map(gen => (
+          {autoLayout && Array.from(new Set(nodes.map(n => n.depth))).sort().map(gen => (
             <text
               key={`generation-label-${gen}`}
               x={dimensions.minX + 20}
