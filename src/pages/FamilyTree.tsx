@@ -235,6 +235,30 @@ export default function FamilyTree() {
     }
   }
 
+  const handleDeleteRelation = async (relationshipId: string) => {
+    if (!familyId) return
+
+    try {
+      await supabase
+        .from('relationships')
+        .delete()
+        .eq('id', relationshipId)
+
+      await loadFamilyData()
+      toast({
+        title: "Connection Removed",
+        description: "Relationship deleted successfully"
+      })
+    } catch (error) {
+      console.error('Error deleting relationship:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete relationship",
+        variant: "destructive"
+      })
+    }
+  }
+
   const handleViewPerson = (personId: string) => {
     navigate(`/people/${personId}`)
   }
@@ -429,6 +453,7 @@ export default function FamilyTree() {
               onPersonMove={handlePersonMove}
               onPersonSelect={(personId) => console.log('Selected:', personId)}
               onAddRelation={handleAddRelation}
+              onDeleteRelation={handleDeleteRelation}
               onViewProfile={handleViewPerson}
               onEditPerson={(personId) => navigate(`/people/${personId}`)}
             />

@@ -1,13 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { X } from 'lucide-react'
 
 interface ConnectionLineProps {
   from: { x: number; y: number }
   to: { x: number; y: number }
   type: 'parent' | 'spouse' | 'child'
   isHighlighted?: boolean
+  relationshipId?: string
+  onDelete?: (relationshipId: string) => void
 }
 
-export default function ConnectionLine({ from, to, type, isHighlighted = false }: ConnectionLineProps) {
+export default function ConnectionLine({ 
+  from, 
+  to, 
+  type, 
+  isHighlighted = false, 
+  relationshipId, 
+  onDelete 
+}: ConnectionLineProps) {
+  const [isHovered, setIsHovered] = useState(false)
   // Card dimensions for connection points
   const CARD_WIDTH = 208 // 52 * 4 (w-52 in Tailwind)
   const CARD_HEIGHT = 120 // Approximate card height
@@ -89,72 +100,116 @@ export default function ConnectionLine({ from, to, type, isHighlighted = false }
   const width = maxX - minX
   const height = maxY - minY
 
+  // Calculate midpoint for delete button
+  const midX = (startPoint.x + endPoint.x) / 2
+  const midY = (startPoint.y + endPoint.y) / 2
+
+  const handleDelete = () => {
+    if (relationshipId && onDelete) {
+      onDelete(relationshipId)
+    }
+  }
+
   return (
-    <svg
-      className="absolute top-0 left-0 pointer-events-none z-0"
-      style={{
-        left: minX,
-        top: minY,
-        width: width,
-        height: height,
-      }}
-      viewBox={`0 0 ${width} ${height}`}
-    >
-      <defs>
-        {/* Glow effect for highlighted lines */}
-        {isHighlighted && (
-          <filter id={`glow-${type}`}>
-            <feMorphology operator="dilate" radius="1"/>
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge> 
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/> 
-            </feMerge>
-          </filter>
-        )}
-        
-        {/* Arrow markers */}
-        <defs>
-          <marker
-            id={`arrow-${type}`}
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="3"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto"
-          >
-            <path
-              d="M0,0 L0,6 L9,3 z"
-              fill={isHighlighted ? (type === 'spouse' ? '#ec4899' : '#3b82f6') : '#6b7280'}
-            />
-          </marker>
-        </defs>
-      </defs>
-
-      <path
-        d={createPath()}
+    <div className="absolute top-0 left-0 z-0">
+      <svg
+        className="absolute top-0 left-0 pointer-events-none"
         style={{
-          ...getLineStyle(),
-          transform: `translate(${-minX}px, ${-minY}px)`,
-          filter: isHighlighted ? `url(#glow-${type})` : 'none',
-          markerEnd: type !== 'spouse' ? `url(#arrow-${type})` : 'none'
+          left: minX,
+          top: minY,
+          width: width,
+          height: height,
         }}
-        className={`transition-all duration-200 ${isHighlighted ? 'drop-shadow-lg' : ''}`}
-      />
+        viewBox={`0 0 ${width} ${height}`}
+      >
+        <defs>
+          {/* Glow effect for highlighted lines */}
+          {isHighlighted && (
+            <filter id={`glow-${type}`}>
+              <feMorphology operator="dilate" radius="1"/>
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge> 
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/> 
+              </feMerge>
+            </filter>
+          )}
+          
+          {/* Arrow markers */}
+          <defs>
+            <marker
+              id={`arrow-${type}`}
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="3"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto"
+            >
+              <path
+                d="M0,0 L0,6 L9,3 z"
+                fill={isHighlighted ? (type === 'spouse' ? '#ec4899' : '#3b82f6') : '#6b7280'}
+              />
+            </marker>
+          </defs>
+        </defs>
 
-      {/* Connection type label */}
-      {isHighlighted && (
-        <text
-          x={width / 2}
-          y={height / 2 - 10}
-          textAnchor="middle"
-          className="fill-gray-700 text-xs font-medium"
-          style={{ transform: `translate(${-minX}px, ${-minY}px)` }}
+        {/* Invisible thicker line for easier interaction */}
+        <path
+          d={createPath()}
+          style={{
+            ...getLineStyle(),
+            strokeWidth: 12,
+            stroke: 'transparent',
+            cursor: onDelete ? 'pointer' : 'default',
+            transform: `translate(${-minX}px, ${-minY}px)`,
+            pointerEvents: onDelete ? 'stroke' : 'none'
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="pointer-events-auto"
+        />
+
+        {/* Visible line */}
+        <path
+          d={createPath()}
+          style={{
+            ...getLineStyle(),
+            transform: `translate(${-minX}px, ${-minY}px)`,
+            filter: isHighlighted ? `url(#glow-${type})` : 'none',
+            markerEnd: type !== 'spouse' ? `url(#arrow-${type})` : 'none'
+          }}
+          className={`transition-all duration-200 ${isHighlighted ? 'drop-shadow-lg' : ''} pointer-events-none`}
+        />
+
+        {/* Connection type label */}
+        {isHighlighted && (
+          <text
+            x={width / 2}
+            y={height / 2 - 10}
+            textAnchor="middle"
+            className="fill-gray-700 text-xs font-medium pointer-events-none"
+            style={{ transform: `translate(${-minX}px, ${-minY}px)` }}
+          >
+            {type === 'parent' ? 'parent' : type === 'spouse' ? 'married' : type}
+          </text>
+        )}
+      </svg>
+
+      {/* Delete button - positioned at midpoint */}
+      {isHovered && onDelete && relationshipId && (
+        <button
+          onClick={handleDelete}
+          className="absolute z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-all duration-200 transform hover:scale-110"
+          style={{
+            left: midX - 12,
+            top: midY - 12,
+          }}
+          title="Delete relationship"
         >
-          {type === 'parent' ? 'parent' : type === 'spouse' ? 'married' : type}
-        </text>
+          <X size={12} />
+        </button>
       )}
-    </svg>
+    </div>
   )
 }

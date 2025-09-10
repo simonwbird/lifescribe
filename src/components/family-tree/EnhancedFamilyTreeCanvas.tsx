@@ -14,6 +14,7 @@ interface FamilyTreeCanvasProps {
   onPersonMove: (personId: string, x: number, y: number) => void
   onPersonSelect: (personId: string) => void
   onAddRelation: (fromPersonId: string, toPersonId: string, type: 'parent' | 'spouse') => void
+  onDeleteRelation: (relationshipId: string) => void
   onViewProfile: (personId: string) => void
   onEditPerson: (personId: string) => void
   positions: Record<string, { x: number; y: number }>
@@ -26,6 +27,7 @@ export default function EnhancedFamilyTreeCanvas({
   onPersonMove,
   onPersonSelect,
   onAddRelation,
+  onDeleteRelation,
   onViewProfile,
   onEditPerson,
   positions,
@@ -313,6 +315,8 @@ export default function EnhancedFamilyTreeCanvas({
                 selectedPersonId === relationship.from_person_id ||
                 selectedPersonId === relationship.to_person_id
               }
+              relationshipId={relationship.id}
+              onDelete={onDeleteRelation}
             />
           )
         })}
