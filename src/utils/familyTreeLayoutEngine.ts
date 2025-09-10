@@ -154,7 +154,33 @@ export class FamilyTreeLayoutEngine {
   private buildMarriageNodes(people: Person[]): MarriageNode[] {
     const marriages = new Map<string, MarriageNode>()
     
-    // Create marriages from parent-child relationships
+    // First, create marriages from spouse relationships
+    people.forEach(person => {
+      const spouses = this.spouseMap.get(person.id) || []
+      spouses.forEach(spouseId => {
+        // Create consistent marriage ID (smaller ID first)
+        const sortedIds = [person.id, spouseId].sort()
+        const marriageId = sortedIds.join('-')
+        
+        if (!marriages.has(marriageId)) {
+          const parentA = this.peopleById.get(sortedIds[0])
+          const parentB = this.peopleById.get(sortedIds[1])
+          
+          marriages.set(marriageId, {
+            id: marriageId,
+            parentA,
+            parentB,
+            children: [],
+            x: 0,
+            y: 0,
+            depth: 0,
+            subtreeWidth: 0
+          })
+        }
+      })
+    })
+    
+    // Then, associate children with their parent marriages
     people.forEach(person => {
       const parents = this.parentsMap.get(person.id) || []
       if (parents.length > 0) {
@@ -162,6 +188,7 @@ export class FamilyTreeLayoutEngine {
         const sortedParents = [...parents].sort()
         const marriageId = sortedParents.join('-')
         
+        // If marriage doesn't exist yet (single parent or parents not marked as spouses), create it
         if (!marriages.has(marriageId)) {
           const parentA = this.peopleById.get(sortedParents[0])
           const parentB = sortedParents[1] ? this.peopleById.get(sortedParents[1]) : undefined
@@ -189,16 +216,28 @@ export class FamilyTreeLayoutEngine {
     const depths = new Map<string, number>()
     const visited = new Set<string>()
 
+    console.log('=== DEPTH ASSIGNMENT DEBUG ===')
+    console.log('People:', people.map(p => `${p.full_name} (${p.id})`))
+    console.log('ParentsMap:', Array.from(this.parentsMap.entries()))
+    console.log('ChildrenMap:', Array.from(this.childrenMap.entries()))
+
     // Find TRUE root people (those with no parents) - these are Generation 1
-    const rootPeople = people.filter(p => !this.parentsMap.has(p.id) || this.parentsMap.get(p.id)!.length === 0)
+    const rootPeople = people.filter(p => {
+      const parents = this.parentsMap.get(p.id) || []
+      return parents.length === 0
+    })
+    
+    console.log('Root people (no parents):', rootPeople.map(p => p.full_name))
     
     if (rootPeople.length === 0 && people.length > 0) {
       // Fallback: if circular or no clear roots, pick oldest by birth year
       const sorted = people.filter(p => p.birth_year).sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))
       if (sorted.length > 0) {
         rootPeople.push(sorted[0])
+        console.log('No true roots found, using oldest by birth year:', sorted[0].full_name)
       } else {
         rootPeople.push(people[0]) // Ultimate fallback
+        console.log('No birth years, using first person:', people[0].full_name)
       }
     }
 
@@ -207,6 +246,7 @@ export class FamilyTreeLayoutEngine {
     
     // Start with root people at depth 0 (Generation 1)
     rootPeople.forEach(person => {
+      console.log(`Setting ${person.full_name} to depth 0 (Generation 1)`)
       depths.set(person.id, 0)
       visited.add(person.id)
       queue.push({ person, depth: 0 })
@@ -214,12 +254,16 @@ export class FamilyTreeLayoutEngine {
 
     while (queue.length > 0) {
       const { person, depth } = queue.shift()!
+      console.log(`Processing ${person.full_name} at depth ${depth}`)
       
       // Process direct children (ancestry-based, not age-based)
       const children = this.childrenMap.get(person.id) || []
+      console.log(`  Children of ${person.full_name}:`, children.map(id => this.peopleById.get(id)?.full_name))
+      
       children.forEach(childId => {
         const child = this.peopleById.get(childId)
         if (child && !visited.has(child.id)) {
+          console.log(`  Setting child ${child.full_name} to depth ${depth + 1}`)
           depths.set(child.id, depth + 1)
           visited.add(child.id)
           queue.push({ person: child, depth: depth + 1 })
@@ -228,9 +272,12 @@ export class FamilyTreeLayoutEngine {
 
       // Handle spouses (same generation as current person)
       const spouses = this.spouseMap.get(person.id) || []
+      console.log(`  Spouses of ${person.full_name}:`, spouses.map(id => this.peopleById.get(id)?.full_name))
+      
       spouses.forEach(spouseId => {
         const spouse = this.peopleById.get(spouseId)
         if (spouse && !visited.has(spouse.id)) {
+          console.log(`  Setting spouse ${spouse.full_name} to depth ${depth} (same generation)`)
           depths.set(spouse.id, depth) // Same generation as spouse
           visited.add(spouse.id)
           queue.push({ person: spouse, depth })
@@ -241,8 +288,16 @@ export class FamilyTreeLayoutEngine {
     // Handle any remaining unvisited people (disconnected components)
     people.forEach(person => {
       if (!visited.has(person.id)) {
+        console.log(`Orphaned person ${person.full_name} assigned to depth 0`)
         depths.set(person.id, 0) // Put orphaned people in top generation
       }
+    })
+
+    // Log final depths
+    console.log('Final depths:')
+    Array.from(depths.entries()).forEach(([id, depth]) => {
+      const person = this.peopleById.get(id)
+      console.log(`  ${person?.full_name}: Generation ${depth + 1} (depth ${depth})`)
     })
 
     // Set marriage depths to match parents
@@ -440,14 +495,23 @@ export class FamilyTreeLayoutEngine {
         const childDepth = marriage.depth + 1
         const childY = childDepth * this.config.gridY
         
-        // Center children under marriage point
-        const totalChildWidth = (marriage.children.length - 1) * this.config.childGap
-        let childX = marriage.x - totalChildWidth / 2
+        // Center children under marriage point (union midpoint)
+        const marriageX = marriage.x
+        const childCount = marriage.children.length
         
-        marriage.children.forEach(child => {
-          positions.set(child.id, { x: childX, y: childY })
-          childX += this.config.childGap
-        })
+        if (childCount === 1) {
+          // Single child - place directly under marriage center
+          positions.set(marriage.children[0].id, { x: marriageX, y: childY })
+        } else {
+          // Multiple children - distribute evenly around marriage center
+          const totalChildWidth = (childCount - 1) * this.config.childGap
+          let childX = marriageX - totalChildWidth / 2
+          
+          marriage.children.forEach(child => {
+            positions.set(child.id, { x: childX, y: childY })
+            childX += this.config.childGap
+          })
+        }
       }
     })
 
