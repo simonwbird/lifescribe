@@ -53,12 +53,12 @@ const DEFAULT_CONFIG: LayoutConfig = {
   personWidth: 170,
   personHeight: 108,
   gridX: 220,
-  gridY: 180,
-  spouseGap: 32,
-  siblingGap: 48,
-  childGap: 200,
-  padding: 80,
-  minGap: 36
+  gridY: 200,
+  spouseGap: 60,
+  siblingGap: 120,
+  childGap: 300,
+  padding: 150,
+  minGap: 80
 }
 
 // Color palette for family branches
