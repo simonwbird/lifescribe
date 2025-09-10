@@ -111,8 +111,8 @@ export function ConnectionRenderer({
           return null;
         }
         
-        // Calculate connection points - spouse A center to spouse B left edge
-        const spouseAX = spouseANode.x + personWidth / 2
+        // Calculate connection points - right edge of spouse A to left edge of spouse B
+        const spouseAX = spouseANode.x + personWidth // Right edge of spouse A's tile
         const spouseBX = spouseBNode.x // Left edge of spouse B's tile
         const spouseY = spouseANode.y + personHeight / 2
         
