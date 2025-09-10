@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { ZoomIn, ZoomOut, Home, Grid, Shuffle, Plus } from 'lucide-react'
-import { FamilyTreeLayoutEngine, type LayoutNode, type SpousePair } from '@/utils/familyTreeLayoutEngine'
+import { FamilyTreeLayoutEngine, type LayoutNode, type Marriage } from '@/utils/familyTreeLayoutEngine'
 import ConnectionRenderer from '@/components/family-tree/ConnectionRenderer'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 
@@ -35,11 +35,11 @@ export default function GenerationalFamilyTree({
   const layoutEngine = useMemo(() => new FamilyTreeLayoutEngine(), [])
 
   // Generate layout using the engine
-  const { nodes, spousePairs, dimensions } = useMemo(() => {
+  const { nodes, marriages, dimensions } = useMemo(() => {
     if (!people.length || !autoLayout) {
       return { 
         nodes: [], 
-        spousePairs: [], 
+        marriages: [], 
         dimensions: { minX: 0, maxX: 800, minY: 0, maxY: 600, width: 800, height: 600 }
       }
     }
@@ -293,7 +293,7 @@ export default function GenerationalFamilyTree({
           {/* Connection lines */}
           <ConnectionRenderer 
             nodes={nodes}
-            spousePairs={spousePairs}
+            marriages={marriages}
             personWidth={PERSON_WIDTH}
             personHeight={PERSON_HEIGHT}
           />
