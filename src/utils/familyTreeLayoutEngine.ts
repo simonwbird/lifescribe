@@ -546,7 +546,7 @@ export class FamilyTreeLayoutEngine {
     }[],
     depths: Map<string, number>
   ): Map<string, { x: number; y: number }> {
-    console.log('\n=== UNIT-BASED ORG CHART POSITIONING ===');
+    console.log('\n=== UNIT-BASED ORG CHART POSITIONING (v2) ===');
     
     const pos = new Map<string, { x: number; y: number }>();
     const lockedIds = new Set<string>(); // People placed as part of spouse pairs
