@@ -290,16 +290,16 @@ export default function GenerationalFamilyTree({
             </text>
           ))}
           
-          {/* Connection lines */}
+          {/* Person cards */}
+          {nodes.map(renderPersonCard)}
+          
+          {/* Connection lines - render after person cards so they appear on top */}
           <ConnectionRenderer 
             nodes={nodes}
             marriages={marriages}
             personWidth={PERSON_WIDTH}
             personHeight={PERSON_HEIGHT}
           />
-          
-          {/* Person cards */}
-          {nodes.map(renderPersonCard)}
         </svg>
       </div>
 
