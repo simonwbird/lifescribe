@@ -115,6 +115,9 @@ export class FamilyTreeLayoutEngine {
 
     // Step 2: Assign generation depths using ancestry BFS (not birth years)
     const depths = this.assignDepthsByAncestry(people, marriages)
+    
+    // Step 2.5: Force spouses onto same depth and normalize
+    this.forceSpousesSameDepth(people, marriages, depths)
 
     // Step 3: Calculate subtree widths (bottom-up)
     this.calculateSubtreeWidths(people, marriages, depths)
@@ -321,6 +324,25 @@ export class FamilyTreeLayoutEngine {
       }
     })
 
+    // Normalize depths so the topmost generation is depth 0
+    const allDepths = Array.from(depths.values())
+    const minDepth = Math.min(...allDepths)
+    if (minDepth !== 0 && isFinite(minDepth)) {
+      depths.forEach((d, id) => depths.set(id, d - minDepth))
+    }
+
+    // Final debug guard against inverted trees
+    people.forEach(p => {
+      const ps = this.parentsMap.get(p.id) || []
+      if (ps.length) {
+        const maxParentDepth = Math.max(...ps.map(id => depths.get(id) ?? 0))
+        if ((depths.get(p.id) ?? 0) <= maxParentDepth) {
+          console.warn(`[DepthFix] Bumping ${p.full_name} below parents: ${maxParentDepth+1}`)
+          depths.set(p.id, maxParentDepth + 1)
+        }
+      }
+    })
+
     // Log final depths
     console.log('Final depths:')
     Array.from(depths.entries()).forEach(([id, depth]) => {
@@ -362,6 +384,29 @@ export class FamilyTreeLayoutEngine {
           }
         }
       })
+    }
+  }
+
+  private forceSpousesSameDepth(people: Person[], marriages: MarriageNode[], depths: Map<string, number>) {
+    // Use the *lowest* (earliest) depth of the pair to keep ancestors high
+    this.spouseMap.forEach((spouses, aId) => {
+      const aDepth = depths.get(aId) ?? 0
+      spouses.forEach(bId => {
+        const bDepth = depths.get(bId) ?? aDepth
+        const target = Math.min(aDepth, bDepth) // both move up to the shallower depth
+        depths.set(aId, target)
+        depths.set(bId, target)
+      })
+    })
+
+    // Re-enforce child > parent rule until stable
+    this.enforceParentChildConstraints(people, marriages, depths)
+
+    // Normalize again to keep the top row at 0
+    const all = Array.from(depths.values())
+    const min = Math.min(...all)
+    if (min !== 0 && isFinite(min)) {
+      depths.forEach((d, id) => depths.set(id, d - min))
     }
   }
 
