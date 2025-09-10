@@ -23,6 +23,17 @@ export function ConnectionRenderer({
     marriages.forEach(marriage => {
       if (marriage.children.length === 0) return
 
+      // Calculate the true center between spouses for child connections
+      const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
+      const spouseBNode = nodes.find(n => n.person.id === marriage.parentB?.id)
+      
+      if (!spouseANode || !spouseBNode) return
+      
+      const spouseAX = spouseANode.x + personWidth / 2
+      const spouseBX = spouseBNode.x + personWidth / 2
+      const spouseY = spouseANode.y + personHeight / 2
+      const centerX = (spouseAX + spouseBX) / 2
+
       const drop = 50 // vertical down from union bar to the sibling bar
 
       // Build child nodes list once
@@ -33,15 +44,15 @@ export function ConnectionRenderer({
       if (childNodes.length === 0) return
 
       // Horizontal bar Y level
-      const barY = marriage.y + drop
+      const barY = spouseY + drop
 
-      // 1) Vertical from union bar down to the sibling bar
+      // 1) Vertical from heart center down to the sibling bar
       connections.push(
         <line
           key={`union-drop-${marriage.id}`}
-          x1={marriage.x}
-          y1={marriage.y}
-          x2={marriage.x}
+          x1={centerX}
+          y1={spouseY + 12} // Start just below the heart
+          x2={centerX}
           y2={barY}
           stroke="#94A3B8"
           strokeWidth="2"
@@ -103,8 +114,8 @@ export function ConnectionRenderer({
         const spouseBX = spouseBNode.x + personWidth / 2  
         const spouseY = spouseANode.y + personHeight / 2
         
-        // Trust the layout engine's marriage.x calculation for perfect centering
-        const centerX = marriage.x
+        // Calculate the true center between spouses
+        const centerX = (spouseAX + spouseBX) / 2
         
         return (
           <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
