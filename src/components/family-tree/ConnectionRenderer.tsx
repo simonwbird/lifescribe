@@ -147,8 +147,8 @@ export function ConnectionRenderer({
             
             {/* SUPER OBVIOUS TEST ELEMENT - This should definitely be visible */}
             <rect
-              x={centerX - 30}
-              y={spouseY - 30}
+              x="350"
+              y="70"
               width="60"
               height="60"
               fill="red"
@@ -157,27 +157,59 @@ export function ConnectionRenderer({
               opacity="0.9"
             />
             
+            <rect
+              x="350"
+              y="270"
+              width="60"
+              height="60"
+              fill="green"
+              stroke="black"
+              strokeWidth="5"
+              opacity="0.9"
+            />
+            
+            <rect
+              x="870"
+              y="270"
+              width="60"
+              height="60"
+              fill="purple"
+              stroke="black"
+              strokeWidth="5"
+              opacity="0.9"
+            />
+            
             <text
-              x={centerX}
-              y={spouseY + 8}
+              x="350"
+              y="100"
               textAnchor="middle"
               fontSize="20"
               fill="white"
               fontWeight="bold"
             >
-              ♥
+              ♥1
             </text>
             
-            {/* Debug coordinates */}
             <text
-              x={centerX}
-              y={spouseY + 35}
+              x="350"
+              y="300"
               textAnchor="middle"
-              fontSize="12"
-              fill="black"
+              fontSize="20"
+              fill="white"
               fontWeight="bold"
             >
-              {centerX},{spouseY}
+              ♥2
+            </text>
+            
+            <text
+              x="870"
+              y="300"
+              textAnchor="middle"
+              fontSize="20"
+              fill="white"
+              fontWeight="bold"
+            >
+              ♥3
             </text>
             
             {/* Test element at fixed position to verify SVG is working */}
