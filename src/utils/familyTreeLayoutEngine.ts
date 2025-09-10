@@ -128,14 +128,14 @@ export class FamilyTreeLayoutEngine {
     const depths = this.assignDepthsByAncestry(people, marriages)
     
     // Step 2.5: Force spouses to same depth, re-enforce constraints, normalize
-    // 1) keep spouses at the SAME depth (row)
+    // 1) keep spouses at the SAME depth (row) - use DEEPER depth
     const forceSpousesSameDepth = () => {
-      // move both spouses to the shallower (smaller) depth
+      // move both spouses to the deeper (larger) depth to ensure children stay below
       this.spouseMap.forEach((spouses, aId) => {
         const a = depths.get(aId) ?? 0;
         spouses.forEach(bId => {
           const b = depths.get(bId) ?? a;
-          const target = Math.min(a, b);
+          const target = Math.max(a, b); // Use MAX, not min!
           if ((depths.get(aId) ?? 0) !== target) depths.set(aId, target);
           if ((depths.get(bId) ?? 0) !== target) depths.set(bId, target);
         });

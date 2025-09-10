@@ -211,11 +211,8 @@ export default function GenerationalFamilyTree({
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
-      {/* Controls with force refresh indicator */}
+      {/* Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        <div className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-          Layout Engine Updated - v2.0
-        </div>
         <Button 
           variant={autoLayout ? "default" : "outline"} 
           size="sm" 
