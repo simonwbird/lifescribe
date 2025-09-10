@@ -129,14 +129,14 @@ export function ConnectionRenderer({
             />
             
             {/* Heart icon */}
-            <Heart
-              x={centerX - 8}
-              y={spouseY - 8}
-              width={16}
-              height={16}
-              fill={marriage.branchColor}
-              stroke="none"
-            />
+            <g transform={`translate(${centerX - 8}, ${spouseY - 8})`}>
+              <Heart
+                width={16}
+                height={16}
+                fill={marriage.branchColor}
+                stroke="none"
+              />
+            </g>
           </g>
         )
       }).filter(Boolean)
