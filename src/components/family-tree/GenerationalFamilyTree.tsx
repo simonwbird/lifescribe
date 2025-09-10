@@ -31,11 +31,15 @@ export default function GenerationalFamilyTree({
   const PERSON_HEIGHT = 140
   const AVATAR_SIZE = 80
 
-  // Initialize layout engine
-  const layoutEngine = useMemo(() => new FamilyTreeLayoutEngine(), [])
+  // Initialize layout engine with cache-busting
+  const layoutEngine = useMemo(() => {
+    console.log('Creating new FamilyTreeLayoutEngine instance')
+    return new FamilyTreeLayoutEngine()
+  }, [])
 
-  // Generate layout using the engine
+  // Generate layout using the engine with forced refresh
   const { nodes, marriages, dimensions } = useMemo(() => {
+    console.log('Generating layout with', people.length, 'people and', relationships.length, 'relationships')
     if (!people.length || !autoLayout) {
       return { 
         nodes: [], 
@@ -43,7 +47,9 @@ export default function GenerationalFamilyTree({
         dimensions: { minX: 0, maxX: 800, minY: 0, maxY: 600, width: 800, height: 600 }
       }
     }
-    return layoutEngine.generateLayout(people, relationships)
+    const result = layoutEngine.generateLayout(people, relationships)
+    console.log('Layout generated:', result.nodes.length, 'nodes,', result.marriages.length, 'marriages')
+    return result
   }, [people, relationships, layoutEngine, autoLayout])
 
   // Zoom and pan handlers
