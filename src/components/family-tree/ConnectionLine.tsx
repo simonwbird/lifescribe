@@ -56,15 +56,20 @@ export default function ConnectionLine({
 
   const { startPoint, endPoint } = getConnectionPoints()
 
-  // Create path with 90-degree angles
+  // Create path - straight line for spouses, L-shaped for others
   const createPath = () => {
-    // All connections now use 90-degree angle paths
-    const midY = startPoint.y + (endPoint.y - startPoint.y) / 2
-    
-    return `M ${startPoint.x} ${startPoint.y} 
-            L ${startPoint.x} ${midY} 
-            L ${endPoint.x} ${midY} 
-            L ${endPoint.x} ${endPoint.y}`
+    if (type === 'spouse') {
+      // Straight horizontal line for spouse connections
+      return `M ${startPoint.x} ${startPoint.y} L ${endPoint.x} ${endPoint.y}`
+    } else {
+      // L-shaped path for parent/child connections
+      const midY = startPoint.y + (endPoint.y - startPoint.y) / 2
+      
+      return `M ${startPoint.x} ${startPoint.y} 
+              L ${startPoint.x} ${midY} 
+              L ${endPoint.x} ${midY} 
+              L ${endPoint.x} ${endPoint.y}`
+    }
   }
 
   const getLineStyle = () => {
