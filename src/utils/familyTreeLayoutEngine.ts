@@ -507,135 +507,176 @@ export class FamilyTreeLayoutEngine {
     })
   }
 
-  private calculateOrgChartPositions(people: Person[], marriages: MarriageNode[], depths: Map<string, number>): Map<string, { x: number; y: number }> {
-    const positions = new Map<string, { x: number; y: number }>()
-    
-    // Group by depth (generation)
-    const generations = new Map<number, Person[]>()
-    people.forEach(person => {
-      const depth = depths.get(person.id) || 0
-      if (!generations.has(depth)) generations.set(depth, [])
-      generations.get(depth)!.push(person)
-    })
+  private calculateOrgChartPositions(
+    people: Person[],
+    marriages: {
+      id: string
+      parentA?: Person
+      parentB?: Person
+      children: Person[]
+      x: number
+      y: number
+      depth: number
+      subtreeWidth: number
+      explicit: boolean
+    }[],
+    depths: Map<string, number>
+  ): Map<string, { x: number; y: number }> {
+    const pos = new Map<string, { x: number; y: number }>();
 
-    // Sort generations by depth (0 = top, higher numbers = lower rows)
-    const sortedGenerations = Array.from(generations.entries()).sort(([a], [b]) => a - b)
-    
-    console.log('=== POSITIONING DEBUG ===')
-    sortedGenerations.forEach(([depth, genPeople]) => {
-      console.log(`Generation ${depth + 1} (depth ${depth}):`, genPeople.map(p => p.full_name))
-    })
-    
-    // Calculate positions generation by generation (top to bottom)
-    sortedGenerations.forEach(([depth, genPeople]) => {
-      const yTop = depth * this.config.gridY        // top of the cards on this row
-      const unionY = yTop + this.config.personHeight / 2 // union bar sits mid-card
-      console.log(`Positioning generation ${depth} at y=${yTop}`)
-      
-      const processed = new Set<string>()
-      const spousePairs: Array<{ marriage: MarriageNode, people: Person[] }> = []
-      const singles: Person[] = []
+    // 1) Group people by generation (depth)
+    const generations = new Map<number, Person[]>();
+    people.forEach(p => {
+      const d = depths.get(p.id) ?? 0;
+      if (!generations.has(d)) generations.set(d, []);
+      generations.get(d)!.push(p);
+    });
 
-      const currentMarriages = marriages.filter(m => m.depth === depth)
-      console.log(`  Marriages at depth ${depth}:`, currentMarriages.map(m => `${m.parentA?.full_name || 'N/A'} + ${m.parentB?.full_name || 'N/A'}`))
+    // 2) Place spouse pairs and singles left→right per generation
+    const rowEntries = Array.from(generations.entries()).sort(([a], [b]) => a - b);
+    rowEntries.forEach(([depth, genPeople]) => {
+      const yTop = depth * this.config.gridY;                     // card top Y
+      const unionY = yTop + this.config.personHeight / 2;        // union bar Y
 
-      currentMarriages.forEach(marriage => {
-        const marriagePeople: Person[] = []
-        if (marriage.parentA && genPeople.includes(marriage.parentA)) {
-          marriagePeople.push(marriage.parentA); processed.add(marriage.parentA.id)
-        }
-        if (marriage.parentB && genPeople.includes(marriage.parentB)) {
-          marriagePeople.push(marriage.parentB); processed.add(marriage.parentB.id)
-        }
-        if (marriagePeople.length > 0) spousePairs.push({ marriage, people: marriagePeople })
-      })
+      const processed = new Set<string>();
+      const pairs: Array<{ m: any; people: Person[] }> = [];
+      const singles: Person[] = [];
 
-      genPeople.forEach(p => { if (!processed.has(p.id)) singles.push(p) })
-      
-      console.log(`  Spouse pairs:`, spousePairs.map(sp => sp.people.map(p => p.full_name).join(' + ')))
-      console.log(`  Singles:`, singles.map(p => p.full_name))
+      const currMarriages = marriages.filter(m => m.depth === depth);
 
-      let currentX = this.config.padding
+      // collect spouse pairs present in this row
+      currMarriages.forEach(m => {
+        const arr: Person[] = [];
+        if (m.parentA && genPeople.includes(m.parentA)) { arr.push(m.parentA); processed.add(m.parentA.id); }
+        if (m.parentB && genPeople.includes(m.parentB)) { arr.push(m.parentB); processed.add(m.parentB.id); }
+        if (arr.length) pairs.push({ m, people: arr });
+      });
 
-      // --- Spouse pairs first ---
-      spousePairs.forEach(({ marriage, people }) => {
+      // remaining singles
+      genPeople.forEach(p => { if (!processed.has(p.id)) singles.push(p); });
+
+      // Positioning
+      let x = this.config.padding;
+
+      // spouse pairs first (keeps unions stable)
+      pairs.forEach(({ m, people }) => {
         if (people.length === 2) {
-          const [A, B] = people
+          const [A, B] = people;
+          const xA = x;
+          const xB = x + this.config.personWidth + this.config.spouseGap;
 
-          // Left spouse at currentX; right spouse after card width + spouseGap
-          const xA = currentX
-          const xB = currentX + this.config.personWidth + this.config.spouseGap
+          pos.set(A.id, { x: xA, y: yTop });
+          pos.set(B.id, { x: xB, y: yTop });
 
-          positions.set(A.id, { x: xA, y: yTop })
-          positions.set(B.id, { x: xB, y: yTop })
+          // union midpoint between card CENTERS
+          const cA = xA + this.config.personWidth / 2;
+          const cB = xB + this.config.personWidth / 2;
+          m.x = (cA + cB) / 2;
+          m.y = unionY;
 
-          // Midpoint BETWEEN the two card CENTERS
-          const centerA = xA + this.config.personWidth / 2
-          const centerB = xB + this.config.personWidth / 2
-          marriage.x = (centerA + centerB) / 2
-          marriage.y = unionY     // union bar is at mid-card height
-
-          // Advance by exact block width (two cards + gap) + sibling spacing
-          const blockWidth = (this.config.personWidth * 2) + this.config.spouseGap
-          currentX += blockWidth + this.config.siblingGap
-
-          console.log(`    Positioned spouse pair: ${A.full_name} at x=${xA}, ${B.full_name} at x=${xB}, marriage at x=${marriage.x}`)
-
+          x += (this.config.personWidth * 2) + this.config.spouseGap + this.config.siblingGap;
         } else if (people.length === 1) {
-          // Single parent "union": card sits at currentX; union aligned to its center
-          const P = people[0]
-          positions.set(P.id, { x: currentX, y: yTop })
-          marriage.x = currentX + this.config.personWidth / 2
-          marriage.y = unionY
+          // single parent union sits at center of the card
+          const P = people[0];
+          pos.set(P.id, { x, y: yTop });
+          m.x = x + this.config.personWidth / 2;
+          m.y = unionY;
 
-          const blockWidth = this.config.personWidth
-          currentX += blockWidth + this.config.siblingGap
-          
-          console.log(`    Positioned single parent: ${P.full_name} at x=${currentX}`)
+          x += this.config.personWidth + this.config.siblingGap;
         }
-      })
+      });
 
-      // --- Singles next ---
+      // then singles
       singles.forEach(P => {
-        positions.set(P.id, { x: currentX, y: yTop })
-        console.log(`    Positioned single: ${P.full_name} at x=${currentX}`)
-        currentX += this.config.personWidth + this.config.siblingGap
-      })
-    })
+        pos.set(P.id, { x, y: yTop });
+        x += this.config.personWidth + this.config.siblingGap;
+      });
+    });
 
-    // Children pass (unchanged except for using marriage.y already at union bar):
-    marriages.forEach(marriage => {
-      if (marriage.children.length === 0) return
+    // 3) Children pass — ALWAYS centered under union midpoint
+    marriages.forEach(m => {
+      if (!m.children.length) return;
+      const dChild = m.depth + 1;
+      const yTop = dChild * this.config.gridY;
+      const cx = m.x; // union midpoint
 
-      const childDepth = marriage.depth + 1
-      const childTopY = childDepth * this.config.gridY
-
-      const cx = marriage.x
-      const n = marriage.children.length
-
-      console.log(`Positioning children for marriage at x=${cx}, depth ${marriage.depth}`)
-      console.log(`  Children:`, marriage.children.map(c => c.full_name))
-      console.log(`  Child depth: ${childDepth}, child Y: ${childTopY}`)
-
-      if (n === 1) {
-        const c = marriage.children[0]
-        positions.set(c.id, { x: cx - this.config.personWidth / 2, y: childTopY })
-        console.log(`    Single child ${c.full_name} positioned at x=${cx - this.config.personWidth / 2}`)
+      if (m.children.length === 1) {
+        const c = m.children[0];
+        pos.set(c.id, { x: cx - this.config.personWidth / 2, y: yTop });
       } else {
-        const total = (n - 1) * this.config.childGap
-        let x = cx - total / 2 - this.config.personWidth / 2
-        marriage.children.forEach(c => {
-          positions.set(c.id, { x, y: childTopY })
-          console.log(`    Child ${c.full_name} positioned at x=${x}`)
-          x += this.config.childGap
-        })
+        const n = m.children.length;
+        const span = (n - 1) * this.config.childGap;                     // span between centers
+        let center = cx - span / 2;                                      // first child center
+        m.children.forEach(child => {
+          pos.set(child.id, { x: center - this.config.personWidth / 2, y: yTop });
+          center += this.config.childGap;
+        });
       }
-    })
+    });
 
-    // Final pass: resolve collisions
-    this.resolveCollisions(positions, generations)
+    // 4) Resolve horizontal collisions within each row
+    const rowsForCollision = new Map<number, Person[]>();
+    people.forEach(p => {
+      const d = depths.get(p.id) ?? 0;
+      if (!rowsForCollision.has(d)) rowsForCollision.set(d, []);
+      rowsForCollision.get(d)!.push(p);
+    });
 
-    return positions
+    rowsForCollision.forEach(rowPeople => {
+      const items = rowPeople
+        .map(p => ({ p, pos: pos.get(p.id)! }))
+        .filter(x => x.pos)
+        .sort((a, b) => a.pos.x - b.pos.x);
+
+      const minGap = this.config.personWidth + this.config.minGap;
+
+      for (let i = 1; i < items.length; i++) {
+        const prev = items[i - 1];
+        const curr = items[i];
+        const gap = curr.pos.x - prev.pos.x;
+        if (gap < minGap) {
+          const shift = minGap - gap;
+          for (let j = i; j < items.length; j++) {
+            const it = items[j];
+            const np = { x: it.pos.x + shift, y: it.pos.y };
+            pos.set(it.p.id, np);
+            it.pos = np;
+          }
+        }
+      }
+    });
+
+    // 5) Re-center children UNDER unions again (collisions may have shifted parents)
+    marriages.forEach(m => {
+      if (!m.children.length) return;
+      const dChild = m.depth + 1;
+      const yTop = dChild * this.config.gridY;
+
+      // recompute union midpoint from spouse positions (in case they moved)
+      const ax = m.parentA ? pos.get(m.parentA.id) : undefined;
+      const bx = m.parentB ? pos.get(m.parentB.id) : undefined;
+      if (ax && bx) {
+        const cA = ax.x + this.config.personWidth / 2;
+        const cB = bx.x + this.config.personWidth / 2;
+        m.x = (cA + cB) / 2;
+      }
+      const cx = m.x;
+
+      if (m.children.length === 1) {
+        const c = m.children[0];
+        pos.set(c.id, { x: cx - this.config.personWidth / 2, y: yTop });
+      } else {
+        const n = m.children.length;
+        const span = (n - 1) * this.config.childGap;
+        let center = cx - span / 2;
+        m.children.forEach(child => {
+          pos.set(child.id, { x: center - this.config.personWidth / 2, y: yTop });
+          center += this.config.childGap;
+        });
+      }
+    });
+
+    return pos;
   }
 
   private resolveCollisions(positions: Map<string, { x: number; y: number }>, generations: Map<number, Person[]>) {
