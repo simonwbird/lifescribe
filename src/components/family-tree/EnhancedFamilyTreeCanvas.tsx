@@ -363,6 +363,45 @@ export default function EnhancedFamilyTreeCanvas({
         />
       </div>
 
+      {/* Legend */}
+      <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 text-sm shadow-lg">
+        <div className="font-semibold mb-2 text-gray-700">Connection Types</div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center">
+              <svg width="24" height="2" className="mr-2">
+                <line x1="0" y1="1" x2="24" y2="1" stroke="#6b7280" strokeWidth="2" markerEnd="url(#legend-arrow)" />
+                <defs>
+                  <marker
+                    id="legend-arrow"
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="3"
+                    markerWidth="4"
+                    markerHeight="4"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L0,6 L9,3 z" fill="#6b7280" />
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+            <span className="text-xs text-gray-600">Parent-Child</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center">
+              <svg width="24" height="2" className="mr-2">
+                <line x1="0" y1="1" x2="24" y2="1" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" />
+              </svg>
+            </div>
+            <span className="text-xs text-gray-600">Married/Partner</span>
+          </div>
+        </div>
+        <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+          Hover over lines to delete
+        </div>
+      </div>
+
       {/* Canvas Info */}
       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 text-sm text-gray-700 shadow-lg">
         <div className="space-y-1">
