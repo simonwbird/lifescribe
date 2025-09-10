@@ -111,12 +111,12 @@ export function ConnectionRenderer({
           return null;
         }
         
-        // Use the layout engine's calculated positions
+        // Calculate connection points - spouse A center to spouse B left edge
         const spouseAX = spouseANode.x + personWidth / 2
-        const spouseBX = spouseBNode.x + personWidth / 2  
+        const spouseBX = spouseBNode.x // Left edge of spouse B's tile
         const spouseY = spouseANode.y + personHeight / 2
         
-        // Calculate the true center between spouses
+        // Calculate the true center between connection points for heart placement
         const centerX = (spouseAX + spouseBX) / 2
         
         return (
