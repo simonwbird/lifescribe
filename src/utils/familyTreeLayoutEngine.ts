@@ -109,8 +109,8 @@ export class FamilyTreeLayoutEngine {
     this.buildRelationshipMaps(relationships)
     const marriages = this.buildMarriageNodes(people)
 
-    // Step 2: Assign depths using birth year ordering + ancestry
-    const depths = this.assignDepthsByBirthYear(people, marriages)
+    // Step 2: Assign generation depths using ancestry BFS (not birth years)
+    const depths = this.assignDepthsByAncestry(people, marriages)
 
     // Step 3: Calculate subtree widths (bottom-up)
     this.calculateSubtreeWidths(people, marriages, depths)
@@ -185,37 +185,65 @@ export class FamilyTreeLayoutEngine {
     return Array.from(marriages.values())
   }
 
-  private assignDepthsByBirthYear(people: Person[], marriages: MarriageNode[]): Map<string, number> {
+  private assignDepthsByAncestry(people: Person[], marriages: MarriageNode[]): Map<string, number> {
     const depths = new Map<string, number>()
+    const visited = new Set<string>()
+
+    // Find TRUE root people (those with no parents) - these are Generation 1
+    const rootPeople = people.filter(p => !this.parentsMap.has(p.id) || this.parentsMap.get(p.id)!.length === 0)
     
-    // Group people by birth year (or use 0 if unknown)
-    const byBirthYear = new Map<number, Person[]>()
-    people.forEach(person => {
-      const year = person.birth_year || 0
-      if (!byBirthYear.has(year)) byBirthYear.set(year, [])
-      byBirthYear.get(year)!.push(person)
+    if (rootPeople.length === 0 && people.length > 0) {
+      // Fallback: if circular or no clear roots, pick oldest by birth year
+      const sorted = people.filter(p => p.birth_year).sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))
+      if (sorted.length > 0) {
+        rootPeople.push(sorted[0])
+      } else {
+        rootPeople.push(people[0]) // Ultimate fallback
+      }
+    }
+
+    // BFS from root ancestors - they start at depth 0 (Generation 1)
+    const queue: Array<{ person: Person; depth: number }> = []
+    
+    // Start with root people at depth 0 (Generation 1)
+    rootPeople.forEach(person => {
+      depths.set(person.id, 0)
+      visited.add(person.id)
+      queue.push({ person, depth: 0 })
     })
 
-    // Sort years (oldest first)
-    const sortedYears = Array.from(byBirthYear.keys()).sort((a, b) => {
-      if (a === 0 && b === 0) return 0
-      if (a === 0) return 1
-      if (b === 0) return -1
-      return a - b
-    })
-
-    // Assign depths based on birth year groups
-    let currentDepth = 0
-    sortedYears.forEach(year => {
-      const peopleInYear = byBirthYear.get(year)!
-      peopleInYear.forEach(person => {
-        depths.set(person.id, currentDepth)
+    while (queue.length > 0) {
+      const { person, depth } = queue.shift()!
+      
+      // Process direct children (ancestry-based, not age-based)
+      const children = this.childrenMap.get(person.id) || []
+      children.forEach(childId => {
+        const child = this.peopleById.get(childId)
+        if (child && !visited.has(child.id)) {
+          depths.set(child.id, depth + 1)
+          visited.add(child.id)
+          queue.push({ person: child, depth: depth + 1 })
+        }
       })
-      currentDepth++
-    })
 
-    // Ensure parent-child constraints are respected
-    this.enforceParentChildConstraints(people, marriages, depths)
+      // Handle spouses (same generation as current person)
+      const spouses = this.spouseMap.get(person.id) || []
+      spouses.forEach(spouseId => {
+        const spouse = this.peopleById.get(spouseId)
+        if (spouse && !visited.has(spouse.id)) {
+          depths.set(spouse.id, depth) // Same generation as spouse
+          visited.add(spouse.id)
+          queue.push({ person: spouse, depth })
+        }
+      })
+    }
+
+    // Handle any remaining unvisited people (disconnected components)
+    people.forEach(person => {
+      if (!visited.has(person.id)) {
+        depths.set(person.id, 0) // Put orphaned people in top generation
+      }
+    })
 
     // Set marriage depths to match parents
     marriages.forEach(marriage => {
@@ -223,6 +251,7 @@ export class FamilyTreeLayoutEngine {
         marriage.depth = depths.get(marriage.parentA.id) || 0
       }
       if (marriage.parentB && marriage.parentA) {
+        // Both parents should be at same depth, but take max for safety
         marriage.depth = Math.max(
           depths.get(marriage.parentA.id) || 0,
           depths.get(marriage.parentB.id) || 0
