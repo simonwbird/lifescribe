@@ -413,7 +413,7 @@ const LoginForm = () => {
           password,
         })
         if (error) throw error
-        navigate('/feed')
+        navigate('/home')
       }
     } catch (error: any) {
       setError(error.message)
