@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Home, MapPin, Calendar, ArrowLeft, Package } from 'lucide-react';
+import { Home, MapPin, Calendar, ArrowLeft, Package, Users, FileText, Camera } from 'lucide-react';
 
 interface Property {
   id: string;
@@ -18,6 +18,10 @@ interface Property {
   sold_year: number;
   description: string;
   created_at: string;
+  first_known_date?: string;
+  last_known_date?: string;
+  built_year?: number;
+  status?: string;
 }
 
 interface Thing {
@@ -36,6 +40,43 @@ interface MediaItem {
   signedUrl: string | null;
 }
 
+interface PropertyOccupancy {
+  id: string;
+  role: string;
+  start_date?: string;
+  end_date?: string;
+  primary_home: boolean;
+  notes?: string;
+  people: {
+    id: string;
+    full_name: string;
+  };
+}
+
+interface PropertyEvent {
+  id: string;
+  event_type: string;
+  event_date?: string;
+  title: string;
+  notes?: string;
+}
+
+interface PropertyVisit {
+  id: string;
+  start_date?: string;
+  end_date?: string;
+  occasion: string;
+  notes?: string;
+}
+
+interface Story {
+  id: string;
+  title: string;
+  content: string;
+  occurred_on?: string;
+  created_at: string;
+}
+
 export default function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,11 +84,20 @@ export default function PropertyDetail() {
   const [things, setThings] = useState<Thing[]>([]);
   const [loading, setLoading] = useState(true);
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [occupancy, setOccupancy] = useState<PropertyOccupancy[]>([]);
+  const [events, setEvents] = useState<PropertyEvent[]>([]);
+  const [visits, setVisits] = useState<PropertyVisit[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
 
   useEffect(() => {
     if (id) {
       fetchProperty(id);
       fetchThingsAtProperty(id);
+      fetchMediaForProperty(id);
+      fetchOccupancy(id);
+      fetchEvents(id);
+      fetchVisits(id);
+      fetchStories(id);
     }
   }, [id]);
 
@@ -111,6 +161,65 @@ export default function PropertyDetail() {
       fetchMediaForProperty(id);
     }
   }, [id]);
+
+  async function fetchOccupancy(propertyId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('property_occupancy')
+        .select(`
+          id, role, start_date, end_date, primary_home, notes,
+          people (id, full_name)
+        `)
+        .eq('property_id', propertyId)
+        .order('start_date', { ascending: false });
+      if (error) throw error;
+      setOccupancy(data || []);
+    } catch (error) {
+      console.error('Error fetching occupancy:', error);
+    }
+  }
+
+  async function fetchEvents(propertyId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('property_events')
+        .select('id, event_type, event_date, title, notes')
+        .eq('property_id', propertyId)
+        .order('event_date', { ascending: false });
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  }
+
+  async function fetchVisits(propertyId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('property_visits')
+        .select('id, start_date, end_date, occasion, notes')
+        .eq('property_id', propertyId)
+        .order('start_date', { ascending: false });
+      if (error) throw error;
+      setVisits(data || []);
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+    }
+  }
+
+  async function fetchStories(propertyId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('stories')
+        .select('id, title, content, occurred_on, created_at')
+        .eq('happened_at_property_id', propertyId)
+        .order('occurred_on', { ascending: false });
+      if (error) throw error;
+      setStories(data || []);
+    } catch (error) {
+      console.error('Error fetching stories:', error);
+    }
+  }
 
   if (loading) {
     return (
@@ -226,6 +335,146 @@ export default function PropertyDetail() {
                           {m.file_name}
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {occupancy.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Who Lived Here ({occupancy.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {occupancy.map((occ) => (
+                    <div key={occ.id} className="p-4 rounded-lg border bg-muted/30">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium">{occ.people.full_name}</h4>
+                          <Badge variant="outline" className="mt-1 capitalize">
+                            {occ.role}
+                          </Badge>
+                        </div>
+                        {occ.primary_home && (
+                          <Badge variant="secondary">Primary Home</Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {occ.start_date && (
+                          <span>From {new Date(occ.start_date).toLocaleDateString()}</span>
+                        )}
+                        {occ.end_date && (
+                          <span> to {new Date(occ.end_date).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                      {occ.notes && (
+                        <p className="text-sm mt-2">{occ.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {events.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Property Events ({events.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {events.map((event) => (
+                    <div key={event.id} className="p-3 rounded-lg border">
+                      <div className="flex items-start justify-between mb-1">
+                        <h4 className="font-medium">{event.title}</h4>
+                        <Badge variant="outline" className="capitalize">
+                          {event.event_type.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      {event.event_date && (
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {new Date(event.event_date).toLocaleDateString()}
+                        </div>
+                      )}
+                      {event.notes && (
+                        <p className="text-sm">{event.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {visits.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Visits & Occasions ({visits.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {visits.map((visit) => (
+                    <div key={visit.id} className="p-3 rounded-lg border">
+                      <div className="flex items-start justify-between mb-1">
+                        <Badge variant="outline" className="capitalize">
+                          {visit.occasion.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {visit.start_date && (
+                          <span>From {new Date(visit.start_date).toLocaleDateString()}</span>
+                        )}
+                        {visit.end_date && (
+                          <span> to {new Date(visit.end_date).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                      {visit.notes && (
+                        <p className="text-sm">{visit.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {stories.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Stories & Memories ({stories.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {stories.map((story) => (
+                    <div key={story.id} className="p-4 rounded-lg border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                         onClick={() => navigate(`/stories/${story.id}`)}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium">{story.title}</h4>
+                        {story.occurred_on && (
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(story.occurred_on).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {story.content.substring(0, 200)}...
+                      </p>
                     </div>
                   ))}
                 </div>
