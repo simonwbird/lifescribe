@@ -405,6 +405,9 @@ export type Database = {
           mime_type: string
           profile_id: string
           property_id: string | null
+          property_media_role:
+            | Database["public"]["Enums"]["property_media_role"]
+            | null
           recipe_id: string | null
           story_id: string | null
           thing_id: string | null
@@ -420,6 +423,9 @@ export type Database = {
           mime_type: string
           profile_id: string
           property_id?: string | null
+          property_media_role?:
+            | Database["public"]["Enums"]["property_media_role"]
+            | null
           recipe_id?: string | null
           story_id?: string | null
           thing_id?: string | null
@@ -435,6 +441,9 @@ export type Database = {
           mime_type?: string
           profile_id?: string
           property_id?: string | null
+          property_media_role?:
+            | Database["public"]["Enums"]["property_media_role"]
+            | null
           recipe_id?: string | null
           story_id?: string | null
           thing_id?: string | null
@@ -873,6 +882,7 @@ export type Database = {
           favorites: string[] | null
           feeding_routine: string | null
           gotcha_date: string | null
+          home_property_id: string | null
           id: string
           insurance_policy: string | null
           insurance_provider: string | null
@@ -925,6 +935,7 @@ export type Database = {
           favorites?: string[] | null
           feeding_routine?: string | null
           gotcha_date?: string | null
+          home_property_id?: string | null
           id?: string
           insurance_policy?: string | null
           insurance_provider?: string | null
@@ -977,6 +988,7 @@ export type Database = {
           favorites?: string[] | null
           feeding_routine?: string | null
           gotcha_date?: string | null
+          home_property_id?: string | null
           id?: string
           insurance_policy?: string | null
           insurance_provider?: string | null
@@ -1009,7 +1021,15 @@ export type Database = {
           walks_routine?: string | null
           weight_kg?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pets_home_property_id_fkey"
+            columns: ["home_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1042,46 +1062,251 @@ export type Database = {
         Row: {
           acquired_year: number | null
           address: string | null
+          address_json: Json | null
+          address_visibility:
+            | Database["public"]["Enums"]["address_visibility"]
+            | null
+          built_year: number | null
+          built_year_circa: boolean | null
+          cover_media_id: string | null
           created_at: string | null
           created_by: string
           description: string | null
+          display_title: string | null
           family_id: string
+          first_known_circa: boolean | null
+          first_known_date: string | null
+          geocode: Json | null
           id: string
+          last_known_circa: boolean | null
+          last_known_date: string | null
           latitude: number | null
           longitude: number | null
+          map_visibility: boolean | null
           name: string
+          property_types: Database["public"]["Enums"]["property_type"][] | null
           sold_year: number | null
+          status: Database["public"]["Enums"]["property_status"] | null
+          tags: string[] | null
           updated_at: string | null
         }
         Insert: {
           acquired_year?: number | null
           address?: string | null
+          address_json?: Json | null
+          address_visibility?:
+            | Database["public"]["Enums"]["address_visibility"]
+            | null
+          built_year?: number | null
+          built_year_circa?: boolean | null
+          cover_media_id?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
+          display_title?: string | null
           family_id: string
+          first_known_circa?: boolean | null
+          first_known_date?: string | null
+          geocode?: Json | null
           id?: string
+          last_known_circa?: boolean | null
+          last_known_date?: string | null
           latitude?: number | null
           longitude?: number | null
+          map_visibility?: boolean | null
           name: string
+          property_types?: Database["public"]["Enums"]["property_type"][] | null
           sold_year?: number | null
+          status?: Database["public"]["Enums"]["property_status"] | null
+          tags?: string[] | null
           updated_at?: string | null
         }
         Update: {
           acquired_year?: number | null
           address?: string | null
+          address_json?: Json | null
+          address_visibility?:
+            | Database["public"]["Enums"]["address_visibility"]
+            | null
+          built_year?: number | null
+          built_year_circa?: boolean | null
+          cover_media_id?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
+          display_title?: string | null
           family_id?: string
+          first_known_circa?: boolean | null
+          first_known_date?: string | null
+          geocode?: Json | null
           id?: string
+          last_known_circa?: boolean | null
+          last_known_date?: string | null
           latitude?: number | null
           longitude?: number | null
+          map_visibility?: boolean | null
           name?: string
+          property_types?: Database["public"]["Enums"]["property_type"][] | null
           sold_year?: number | null
+          status?: Database["public"]["Enums"]["property_status"] | null
+          tags?: string[] | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      property_events: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_date: string | null
+          event_date_circa: boolean | null
+          event_type: Database["public"]["Enums"]["property_event_type"]
+          family_id: string
+          id: string
+          media_ids: string[] | null
+          notes: string | null
+          people_ids: string[] | null
+          property_id: string
+          story_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_date?: string | null
+          event_date_circa?: boolean | null
+          event_type: Database["public"]["Enums"]["property_event_type"]
+          family_id: string
+          id?: string
+          media_ids?: string[] | null
+          notes?: string | null
+          people_ids?: string[] | null
+          property_id: string
+          story_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_date?: string | null
+          event_date_circa?: boolean | null
+          event_type?: Database["public"]["Enums"]["property_event_type"]
+          family_id?: string
+          id?: string
+          media_ids?: string[] | null
+          notes?: string | null
+          people_ids?: string[] | null
+          property_id?: string
+          story_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_events_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_occupancy: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          end_date_circa: boolean | null
+          family_id: string
+          id: string
+          notes: string | null
+          person_id: string
+          primary_home: boolean | null
+          property_id: string
+          role: Database["public"]["Enums"]["occupancy_role"]
+          start_date: string | null
+          start_date_circa: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          end_date_circa?: boolean | null
+          family_id: string
+          id?: string
+          notes?: string | null
+          person_id: string
+          primary_home?: boolean | null
+          property_id: string
+          role?: Database["public"]["Enums"]["occupancy_role"]
+          start_date?: string | null
+          start_date_circa?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          end_date_circa?: boolean | null
+          family_id?: string
+          id?: string
+          notes?: string | null
+          person_id?: string
+          primary_home?: boolean | null
+          property_id?: string
+          role?: Database["public"]["Enums"]["occupancy_role"]
+          start_date?: string | null
+          start_date_circa?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_occupancy_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_occupancy_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_rooms: {
+        Row: {
+          created_at: string
+          created_by: string
+          family_id: string
+          id: string
+          name: string
+          notes: string | null
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          family_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          family_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_rooms_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_story_links: {
         Row: {
@@ -1106,6 +1331,56 @@ export type Database = {
           story_id?: string
         }
         Relationships: []
+      }
+      property_visits: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_date: string | null
+          family_id: string
+          id: string
+          notes: string | null
+          occasion: Database["public"]["Enums"]["visit_occasion"] | null
+          people_ids: string[] | null
+          property_id: string
+          recurring_pattern: string | null
+          start_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          family_id: string
+          id?: string
+          notes?: string | null
+          occasion?: Database["public"]["Enums"]["visit_occasion"] | null
+          people_ids?: string[] | null
+          property_id: string
+          recurring_pattern?: string | null
+          start_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          family_id?: string
+          id?: string
+          notes?: string | null
+          occasion?: Database["public"]["Enums"]["visit_occasion"] | null
+          people_ids?: string[] | null
+          property_id?: string
+          recurring_pattern?: string | null
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_visits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -1356,6 +1631,7 @@ export type Database = {
           content: string
           created_at: string
           family_id: string
+          happened_at_property_id: string | null
           id: string
           is_approx: boolean | null
           occurred_on: string | null
@@ -1371,6 +1647,7 @@ export type Database = {
           content: string
           created_at?: string
           family_id: string
+          happened_at_property_id?: string | null
           id?: string
           is_approx?: boolean | null
           occurred_on?: string | null
@@ -1386,6 +1663,7 @@ export type Database = {
           content?: string
           created_at?: string
           family_id?: string
+          happened_at_property_id?: string | null
           id?: string
           is_approx?: boolean | null
           occurred_on?: string | null
@@ -1403,6 +1681,13 @@ export type Database = {
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_happened_at_property_id_fkey"
+            columns: ["happened_at_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
           {
@@ -1471,10 +1756,12 @@ export type Database = {
           description: string | null
           family_id: string
           id: string
+          lives_at_property_id: string | null
           maker: string | null
           object_type: string | null
           provenance: string | null
           room_hint: string | null
+          room_id: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -1489,10 +1776,12 @@ export type Database = {
           description?: string | null
           family_id: string
           id?: string
+          lives_at_property_id?: string | null
           maker?: string | null
           object_type?: string | null
           provenance?: string | null
           room_hint?: string | null
+          room_id?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -1507,10 +1796,12 @@ export type Database = {
           description?: string | null
           family_id?: string
           id?: string
+          lives_at_property_id?: string | null
           maker?: string | null
           object_type?: string | null
           provenance?: string | null
           room_hint?: string | null
+          room_id?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
@@ -1523,6 +1814,20 @@ export type Database = {
             columns: ["current_property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "things_lives_at_property_id_fkey"
+            columns: ["lives_at_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "things_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "property_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -1589,10 +1894,77 @@ export type Database = {
       }
     }
     Enums: {
+      address_visibility: "exact" | "street_hidden" | "city_only"
       date_precision: "day" | "month" | "year"
       invite_status: "pending" | "accepted" | "expired"
+      occupancy_role:
+        | "owner"
+        | "tenant"
+        | "child"
+        | "guest"
+        | "host"
+        | "relative"
+        | "roommate"
+      property_event_type:
+        | "moved_in"
+        | "moved_out"
+        | "purchase"
+        | "sale"
+        | "renovation"
+        | "extension"
+        | "garden_change"
+        | "birth"
+        | "party"
+        | "storm"
+        | "flood"
+        | "fire"
+        | "holiday"
+        | "photo_taken"
+        | "other"
+      property_media_role:
+        | "cover"
+        | "then"
+        | "now"
+        | "floorplan"
+        | "deed"
+        | "mortgage"
+        | "survey"
+        | "letter"
+        | "bill"
+        | "receipt"
+        | "newspaper_clipping"
+        | "general"
+      property_status: "current" | "sold" | "rented" | "demolished" | "unknown"
+      property_type:
+        | "house"
+        | "apartment"
+        | "townhouse"
+        | "cottage"
+        | "villa"
+        | "holiday_home"
+        | "farm"
+        | "ranch"
+        | "student_housing"
+        | "military_housing"
+        | "multi_unit"
+        | "caravan"
+        | "motorhome"
+        | "houseboat"
+        | "boat"
+        | "bungalow"
+        | "duplex"
+        | "terrace"
+        | "loft"
+        | "studio"
+        | "retirement_home"
+        | "boarding_house"
+        | "ancestral_home"
+        | "business_premises"
+        | "land"
+        | "other"
       relationship_type: "parent" | "spouse"
       role_type: "admin" | "member" | "guest"
+      visit_occasion: "holiday" | "celebration" | "reunion" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1720,10 +2092,81 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      address_visibility: ["exact", "street_hidden", "city_only"],
       date_precision: ["day", "month", "year"],
       invite_status: ["pending", "accepted", "expired"],
+      occupancy_role: [
+        "owner",
+        "tenant",
+        "child",
+        "guest",
+        "host",
+        "relative",
+        "roommate",
+      ],
+      property_event_type: [
+        "moved_in",
+        "moved_out",
+        "purchase",
+        "sale",
+        "renovation",
+        "extension",
+        "garden_change",
+        "birth",
+        "party",
+        "storm",
+        "flood",
+        "fire",
+        "holiday",
+        "photo_taken",
+        "other",
+      ],
+      property_media_role: [
+        "cover",
+        "then",
+        "now",
+        "floorplan",
+        "deed",
+        "mortgage",
+        "survey",
+        "letter",
+        "bill",
+        "receipt",
+        "newspaper_clipping",
+        "general",
+      ],
+      property_status: ["current", "sold", "rented", "demolished", "unknown"],
+      property_type: [
+        "house",
+        "apartment",
+        "townhouse",
+        "cottage",
+        "villa",
+        "holiday_home",
+        "farm",
+        "ranch",
+        "student_housing",
+        "military_housing",
+        "multi_unit",
+        "caravan",
+        "motorhome",
+        "houseboat",
+        "boat",
+        "bungalow",
+        "duplex",
+        "terrace",
+        "loft",
+        "studio",
+        "retirement_home",
+        "boarding_house",
+        "ancestral_home",
+        "business_premises",
+        "land",
+        "other",
+      ],
       relationship_type: ["parent", "spouse"],
       role_type: ["admin", "member", "guest"],
+      visit_occasion: ["holiday", "celebration", "reunion", "other"],
     },
   },
 } as const

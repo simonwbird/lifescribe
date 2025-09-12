@@ -75,6 +75,19 @@ const sampleObjectImageForTitle = (title: string, description?: string): string 
   return null
 }
 
+const samplePropertyImageForTitle = (title: string, address?: any): string | null => {
+  const t = title.toLowerCase()
+  const city = typeof address === 'object' && address && 'city' in address ? (address.city || '').toLowerCase() : ''
+  
+  if (t.includes('holiday') || t.includes('vacation') || t.includes('cottage') || t.includes('cabin')) return familyVacationImg
+  if (t.includes('family home') || t.includes('childhood') || t.includes('grew up')) return familyDinnerImg
+  if (t.includes('farm') || t.includes('ranch') || t.includes('barn')) return campingTripImg
+  if (t.includes('apartment') || t.includes('flat') || city.includes('city')) return movingDayImg
+  if (t.includes('ancestral') || t.includes('heritage') || t.includes('old')) return vintagePhotosImg
+  
+  return null
+}
+
 const sampleStoryImageForTitle = (title: string, content?: string): string | null => {
   const t = title.toLowerCase()
   const c = (content || '').toLowerCase()
@@ -156,16 +169,16 @@ export class CollectionsService {
       content.push(...objects)
     }
 
-    // Get pets if included in filter
-    if (!filter.types || filter.types.includes('pet')) {
-      const pets = await this.getPets(familyId, filter, limit, offset)
-      content.push(...pets)
-    }
-
     // Get properties if included in filter
     if (!filter.types || filter.types.includes('property')) {
       const properties = await this.getProperties(familyId, filter, limit, offset)
       content.push(...properties)
+    }
+
+    // Get pets if included in filter
+    if (!filter.types || filter.types.includes('pet')) {
+      const pets = await this.getPets(familyId, filter, limit, offset)
+      content.push(...pets)
     }
 
     // Sort the combined results
@@ -345,9 +358,14 @@ export class CollectionsService {
       .from('properties')
       .select(`*`)
       .eq('family_id', familyId)
+      .order('updated_at', { ascending: false })
 
     if (filter.search) {
-      query = query.or(`name.ilike.%${filter.search}%,address.ilike.%${filter.search}%,description.ilike.%${filter.search}%`)
+      query = query.or(`display_title.ilike.%${filter.search}%,name.ilike.%${filter.search}%,description.ilike.%${filter.search}%`)
+    }
+
+    if (filter.tags?.length) {
+      query = query.overlaps('tags', filter.tags)
     }
 
     const { data: properties } = await query.range(offset, offset + limit - 1)
@@ -355,23 +373,26 @@ export class CollectionsService {
     return (properties || []).map(property => ({
       id: property.id,
       type: 'property' as const,
-      title: property.name,
-      occurredAt: property.acquired_year ? `${property.acquired_year}-01-01` : null,
+      title: property.display_title || property.name,
+      occurredAt: property.first_known_date || (property.acquired_year ? `${property.acquired_year}-01-01` : null),
       addedAt: property.created_at,
-      location: property.address,
+      location: (property.address_json as any)?.city || property.address,
       peopleIds: [],
-      tags: [],
-      coverUrl: null,
+      tags: Array.isArray(property.tags) ? property.tags : [],
+      coverUrl: samplePropertyImageForTitle(property.display_title || property.name, property.address_json),
       visibility: 'family',
       status: 'published',
       authorId: property.created_by,
       authorName: 'Unknown',
       familyId: property.family_id,
       fields: {
-        address: property.address,
+        address: (property.address_json as any)?.line1 || property.address,
         acquiredYear: property.acquired_year,
         soldYear: property.sold_year,
-        description: property.description
+        description: property.description,
+        propertyTypes: property.property_types || [],
+        builtYear: property.built_year,
+        propertyStatus: property.status
       }
     }))
   }
