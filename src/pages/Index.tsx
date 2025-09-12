@@ -30,7 +30,7 @@ const Index = () => {
             .single()
           
           if (member) {
-            navigate('/feed')
+            navigate('/home')
           } else {
             navigate('/onboarding')
           }

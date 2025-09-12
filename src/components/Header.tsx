@@ -39,27 +39,27 @@ export default function Header() {
     <header className="border-b bg-background">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
-          <Link to="/feed" className="text-xl font-bold text-primary">
+          <Link to="/home" className="text-xl font-serif text-charcoal hover:text-sage transition-colors">
             LifeScribe
           </Link>
           <nav className="flex space-x-4">
-            <Link to="/feed" className="text-sm font-medium hover:text-primary">
-              Feed
+            <Link to="/home" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
+              Home
             </Link>
-            <Link to="/stories/new" className="text-sm font-medium hover:text-primary">
-              New Story
+            <Link to="/stories/new" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
+              Create +
             </Link>
-            <Link to="/prompts" className="text-sm font-medium hover:text-primary">
-              Prompts
+            <Link to="/family/members" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
+              People
             </Link>
-            <Link to="/family/members" className="text-sm font-medium hover:text-primary">
-              Family
-            </Link>
-            <Link to="/family/tree" className="text-sm font-medium hover:text-primary">
+            <Link to="/family/tree" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
               Tree
             </Link>
-            <Link to="/archive" className="text-sm font-medium hover:text-primary">
-              Archive
+            <Link to="/archive" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
+              Library
+            </Link>
+            <Link to="/prompts" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
+              Prompts
             </Link>
           </nav>
         </div>
