@@ -109,10 +109,27 @@ export default function ArtifactWizard({ categoryId, onComplete, onCancel }: Art
   const canProceed = () => {
     if (!categorySpec) return false
     
-    // Basic validation
-    if (currentStep === 0 && !formData.title) return false
+    // Check required fields for current step
+    const currentStepSpec = categorySpec.steps[currentStep]
+    const requiredFields = currentStepSpec.fields.filter(field => 
+      'required' in field && field.required
+    )
+    
+    for (const field of requiredFields) {
+      const value = getFieldValue(field.id)
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        return false
+      }
+    }
     
     return true
+  }
+
+  const getFieldValue = (fieldId: string) => {
+    if (['title', 'description', 'tags', 'peopleIds', 'propertyId', 'room'].includes(fieldId)) {
+      return formData[fieldId as keyof ArtifactBase] || ''
+    }
+    return formData.categorySpecific?.[fieldId] || ''
   }
 
   const nextStep = () => {
@@ -291,7 +308,7 @@ export default function ArtifactWizard({ categoryId, onComplete, onCancel }: Art
               {isLastStep ? (
                 <Button
                   onClick={publishArtifact}
-                  disabled={!formData.title}
+                  disabled={!formData.title || !getFieldValue('type')}
                   className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground"
                 >
                   Publish {categorySpec.label}

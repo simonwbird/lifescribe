@@ -170,14 +170,47 @@ export const OBJECT_CATEGORY_SPECS: CategorySpec[] = [
     steps: [
       {
         id: 'basics',
-        title: 'Jewelry Details',
+        title: 'Basic Information',
+        description: 'Tell us about this piece of jewelry',
         fields: [
-          { kind: 'select', id: 'type', label: 'Type', options: ['Ring', 'Necklace', 'Bracelet', 'Earrings', 'Watch', 'Brooch', 'Cufflinks', 'Other'] },
+          { kind: 'text', id: 'title', label: 'Name/Title', required: true },
+          { kind: 'textarea', id: 'description', label: 'Description' },
+          { kind: 'select', id: 'type', label: 'Type', options: ['Ring', 'Necklace', 'Bracelet', 'Earrings', 'Watch', 'Brooch', 'Cufflinks', 'Other'], required: true },
           { kind: 'chips', id: 'materials', label: 'Materials', options: ['Gold', 'Silver', 'Platinum', 'Diamond', 'Pearl', 'Ruby', 'Sapphire', 'Emerald'] },
           { kind: 'text', id: 'hallmarks', label: 'Hallmarks/Stamps' },
           { kind: 'text', id: 'size', label: 'Size' },
-          { kind: 'money', id: 'appraisalValue', label: 'Appraised Value', private: true },
-          { kind: 'textarea', id: 'careInstructions', label: 'Care Instructions' }
+          { kind: 'money', id: 'appraisalValue', label: 'Appraised Value', private: true }
+        ]
+      },
+      {
+        id: 'media',
+        title: 'Photos & Documentation',
+        description: 'Upload photos and scan any certificates',
+        fields: [
+          { kind: 'text', id: 'photoInstructions', label: 'Photo Tips', help: 'Take photos showing hallmarks, unique features, and overall condition' }
+        ]
+      },
+      {
+        id: 'provenance',
+        title: 'History & Provenance',
+        description: 'Document the story and ownership history',
+        fields: [
+          { kind: 'date', id: 'acquiredDate', label: 'When acquired', approximate: true },
+          { kind: 'text', id: 'acquiredFrom', label: 'Acquired from' },
+          { kind: 'textarea', id: 'history', label: 'History & Story' },
+          { kind: 'text', id: 'occasion', label: 'Special occasion/significance' },
+          { kind: 'date', id: 'estimatedAge', label: 'Estimated date made', approximate: true }
+        ]
+      },
+      {
+        id: 'details',
+        title: 'Care & Details',
+        description: 'Additional details and care information',
+        fields: [
+          { kind: 'textarea', id: 'careInstructions', label: 'Care Instructions' },
+          { kind: 'text', id: 'insuranceDetails', label: 'Insurance policy details' },
+          { kind: 'chips', id: 'tags', label: 'Tags' },
+          { kind: 'relation', id: 'peopleIds', label: 'Associated People', to: 'people' }
         ]
       }
     ]
