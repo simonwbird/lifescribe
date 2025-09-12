@@ -543,6 +543,77 @@ export default function QuickCaptureComposer({
         }
       }
 
+      // Handle video recordings
+      else if (data.videoBlob) {
+        // Upload video file to storage
+        const fileExt = 'webm'
+        const fileName = `video-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `${familyId}/${user.id}/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, data.videoBlob)
+
+        if (uploadError) throw uploadError
+
+        // If we have a prompt, create an answer
+        if (prompt) {
+          const { data: answerData, error: answerError } = await supabase
+            .from('answers')
+            .insert({
+              question_id: prompt.id,
+              profile_id: user.id,
+              family_id: familyId,
+              answer_text: data.text.trim() || 'Video recording'
+            })
+            .select()
+            .single()
+
+          if (answerError) throw answerError
+
+          // Link media to answer
+          await supabase
+            .from('media')
+            .insert({
+              answer_id: answerData.id,
+              profile_id: user.id,
+              family_id: familyId,
+              file_path: filePath,
+              file_name: fileName,
+              file_size: data.videoBlob.size,
+              mime_type: data.videoBlob.type || 'video/webm'
+            })
+        } else {
+          // Create a video story
+          const { data: storyData, error: storyError } = await supabase
+            .from('stories')
+            .insert({
+              family_id: familyId,
+              profile_id: user.id,
+              title: data.title.trim() || data.text.trim() || 'Video Recording',
+              content: data.text.trim() || 'Video recording',
+              tags: data.tags.length > 0 ? data.tags : ['video-story']
+            })
+            .select()
+            .single()
+
+          if (storyError) throw storyError
+
+          // Link media to story
+          await supabase
+            .from('media')
+            .insert({
+              story_id: storyData.id,
+              profile_id: user.id,
+              family_id: familyId,
+              file_path: filePath,
+              file_name: fileName,
+              file_size: data.videoBlob.size,
+              mime_type: data.videoBlob.type || 'video/webm'
+            })
+        }
+      }
+
       // Handle text content (write mode)
       else if (data.text.trim()) {
         if (prompt) {
