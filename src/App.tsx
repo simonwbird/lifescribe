@@ -32,6 +32,7 @@ import PropertyNew from "./pages/PropertyNew";
 import PropertyEdit from "./pages/PropertyEdit";
 import StoryEdit from "./pages/StoryEdit";
 import SearchPage from "./pages/Search";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 

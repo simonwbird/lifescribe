@@ -125,10 +125,18 @@ export default function Search() {
   }
 
   const addFilter = (key: keyof SearchFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: [...(prev[key] || []), value]
-    }))
+    setFilters(prev => {
+      const current = prev[key] as unknown;
+      const arr = Array.isArray(current)
+        ? (current as string[])
+        : current !== undefined
+          ? [String(current)]
+          : [];
+      return {
+        ...prev,
+        [key]: [...arr, value]
+      };
+    })
     track('search_filter_add', { filter_type: key, filter_value: value })
   }
 
