@@ -24,6 +24,7 @@ import {
   MapPin,
   Users,
   Play,
+  Pause,
   Mic
 } from 'lucide-react'
 import { MediaService } from '@/lib/mediaService'
@@ -47,6 +48,7 @@ export default function ContentCard({
   const [isHovered, setIsHovered] = useState(false)
   const [showImageViewer, setShowImageViewer] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const navigate = useNavigate()
 
   const handleCardClick = () => {
@@ -130,22 +132,42 @@ export default function ContentCard({
 
   const handlePlayVoice = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isPlaying) return
 
+    // If already playing, pause it
+    if (isPlaying && currentAudio) {
+      currentAudio.pause()
+      setIsPlaying(false)
+      return
+    }
+
+    // If paused, resume
+    if (currentAudio && currentAudio.paused) {
+      currentAudio.play()
+      setIsPlaying(true)
+      return
+    }
+
+    // Start new playback
     try {
       setIsPlaying(true)
-      // Get the audio file from the story's media
-      // This would need to be implemented based on your media structure
       const audioUrl = await getVoiceRecordingUrl(content.id)
       if (audioUrl) {
         const audio = new Audio(audioUrl)
+        setCurrentAudio(audio)
         audio.play()
-        audio.onended = () => setIsPlaying(false)
-        audio.onerror = () => setIsPlaying(false)
+        audio.onended = () => {
+          setIsPlaying(false)
+          setCurrentAudio(null)
+        }
+        audio.onerror = () => {
+          setIsPlaying(false)
+          setCurrentAudio(null)
+        }
       }
     } catch (error) {
       console.error('Error playing voice recording:', error)
       setIsPlaying(false)
+      setCurrentAudio(null)
     }
   }
 
@@ -225,9 +247,12 @@ export default function ContentCard({
               size="icon"
               variant="secondary"
               className="h-12 w-12 rounded-full shadow-lg"
-              disabled={isPlaying}
             >
-              <Play className="h-6 w-6" fill="currentColor" />
+              {isPlaying ? (
+                <Pause className="h-6 w-6" fill="currentColor" />
+              ) : (
+                <Play className="h-6 w-6" fill="currentColor" />
+              )}
             </Button>
           </div>
         )}
