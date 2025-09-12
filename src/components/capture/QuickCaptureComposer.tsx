@@ -80,7 +80,9 @@ export default function QuickCaptureComposer({
   const [showPrompt, setShowPrompt] = useState(!!prompt)
   const [isSaving, setIsSaving] = useState(false)
   const [showPeoplePicker, setShowPeoplePicker] = useState(false)
+  const [showPlacePicker, setShowPlacePicker] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
+  const [properties, setProperties] = useState<Array<{id: string, name: string}>>([])
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -102,9 +104,9 @@ export default function QuickCaptureComposer({
     }
   }, [context])
 
-  // Get family ID
+  // Get family ID and properties
   useEffect(() => {
-    const getFamilyId = async () => {
+    const getFamilyData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: member } = await supabase
@@ -115,10 +117,21 @@ export default function QuickCaptureComposer({
         
         if (member) {
           setFamilyId(member.family_id)
+          
+          // Fetch properties for this family
+          const { data: propertyData } = await supabase
+            .from('properties')
+            .select('id, name')
+            .eq('family_id', member.family_id)
+            .order('name')
+          
+          if (propertyData) {
+            setProperties(propertyData)
+          }
         }
       }
     }
-    getFamilyId()
+    getFamilyData()
   }, [])
 
   // Keyboard shortcuts
@@ -811,7 +824,12 @@ export default function QuickCaptureComposer({
                   )}
                 </Button>
                 
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => setShowPlacePicker(true)}
+                >
                   <MapPin className="h-3 w-3" />
                   Place
                   {data.places.length > 0 && (
@@ -821,6 +839,110 @@ export default function QuickCaptureComposer({
                   )}
                 </Button>
               </div>
+
+              {/* Selected Places */}
+              {data.places.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {data.places.map((place, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="flex items-center gap-1 pr-1"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      {place}
+                      <button
+                        onClick={() => {
+                          setData(prev => ({
+                            ...prev,
+                            places: prev.places.filter((_, i) => i !== index)
+                          }))
+                        }}
+                        className="ml-1 hover:bg-destructive/20 rounded-sm p-0.5"
+                      >
+                        <X className="h-2 w-2" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Place Picker Dialog */}
+              {showPlacePicker && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                  <div className="bg-background rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">Select Place</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPlacePicker(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {/* Add custom place */}
+                        <div>
+                          <Input
+                            placeholder="Add a place..."
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                const place = e.currentTarget.value.trim()
+                                if (place && !data.places.includes(place)) {
+                                  setData(prev => ({
+                                    ...prev,
+                                    places: [...prev.places, place]
+                                  }))
+                                  e.currentTarget.value = ''
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+
+                        {/* Properties */}
+                        {properties.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">Family Properties</h4>
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {properties
+                                .filter(property => !data.places.includes(property.name))
+                                .map((property) => (
+                                <Button
+                                  key={property.id}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start h-auto p-2"
+                                  onClick={() => {
+                                    if (!data.places.includes(property.name)) {
+                                      setData(prev => ({
+                                        ...prev,
+                                        places: [...prev.places, property.name]
+                                      }))
+                                    }
+                                  }}
+                                >
+                                  <MapPin className="h-3 w-3 mr-2" />
+                                  {property.name}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex justify-end">
+                        <Button onClick={() => setShowPlacePicker(false)}>
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Tags */}
               <div className="space-y-2">
