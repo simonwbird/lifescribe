@@ -103,6 +103,31 @@ export default function QuickCaptureComposer({
   
   const { track } = useAnalytics()
 
+  useEffect(() => {
+    const videoEl = liveVideoRef.current
+    if (videoEl && liveVideoStream) {
+      try {
+        // @ts-ignore - srcObject is supported in modern browsers
+        videoEl.srcObject = liveVideoStream
+        const p = videoEl.play()
+        if (p && typeof (p as any).then === 'function') {
+          ;(p as Promise<void>).catch(() => {})
+        }
+      } catch (e) {
+        // no-op
+      }
+    }
+    return () => {
+      const v = liveVideoRef.current
+      if (v) {
+        try {
+          // @ts-ignore
+          v.srcObject = null
+        } catch {}
+      }
+    }
+  }, [liveVideoStream])
+
   // Initialize context data
   useEffect(() => {
     if (context) {
@@ -908,7 +933,7 @@ export default function QuickCaptureComposer({
                     <div className="space-y-4">
                       {/* Live Video Preview */}
                       {isVideoRecording && liveVideoStream && (
-                        <div className="border rounded-lg overflow-hidden bg-black">
+                        <div className="relative border rounded-lg overflow-hidden bg-black">
                           <video 
                             ref={liveVideoRef}
                             autoPlay
