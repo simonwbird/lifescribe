@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,8 @@ import {
   Users,
   Play,
   Pause,
-  Mic
+  Mic,
+  Video
 } from 'lucide-react'
 import { MediaService } from '@/lib/mediaService'
 import { supabase } from '@/lib/supabase'
@@ -39,6 +40,119 @@ interface ContentCardProps {
   showSelection?: boolean
 }
 
+interface VideoPlayerProps {
+  content: Content
+}
+
+function VideoPlayer({ content }: VideoPlayerProps) {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const loadVideo = async () => {
+    if (videoUrl || isLoading) return
+    
+    setIsLoading(true)
+    try {
+      // Fetch video media for this story
+      const { data: media, error } = await supabase
+        .from('media')
+        .select('file_path')
+        .eq('story_id', content.id)
+        .like('mime_type', 'video%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error || !media) {
+        console.error('No video media found for story:', content.id)
+        return
+      }
+
+      // Get signed URL for the video file
+      const url = await MediaService.getMediaUrl(media.file_path)
+      setVideoUrl(url)
+    } catch (error) {
+      console.error('Error fetching video:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!videoRef.current) return
+
+    if (isPlaying) {
+      videoRef.current.pause()
+      setIsPlaying(false)
+    } else {
+      videoRef.current.play()
+      setIsPlaying(true)
+    }
+  }
+
+  React.useEffect(() => {
+    loadVideo()
+  }, [content.id])
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted">
+        <Video className="h-8 w-8 text-muted-foreground animate-pulse" />
+      </div>
+    )
+  }
+
+  if (!videoUrl) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted">
+        <Video className="h-8 w-8 text-muted-foreground" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative w-full h-full group/video">
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className="w-full h-full object-cover"
+        muted
+        playsInline
+        preload="metadata"
+        onLoadedMetadata={(e) => {
+          const video = e.target as HTMLVideoElement
+          video.currentTime = Math.min(2, video.duration || 0)
+        }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onClick={handleVideoClick}
+      />
+      
+      {/* Play/Pause overlay */}
+      <div 
+        className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/video:opacity-100 transition-opacity cursor-pointer"
+        onClick={handleVideoClick}
+      >
+        <Button
+          size="icon"
+          variant="secondary"
+          className="h-12 w-12 rounded-full shadow-lg"
+        >
+          {isPlaying ? (
+            <Pause className="h-6 w-6" fill="currentColor" />
+          ) : (
+            <Play className="h-6 w-6" fill="currentColor" />
+          )}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export default function ContentCard({ 
   content, 
   isSelected = false, 
@@ -48,7 +162,9 @@ export default function ContentCard({
   const [isHovered, setIsHovered] = useState(false)
   const [showImageViewer, setShowImageViewer] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const navigate = useNavigate()
 
   const handleCardClick = () => {
@@ -130,6 +246,10 @@ export default function ContentCard({
   const isVoiceRecording = content.type === 'story' && 
     content.tags.some(tag => tag.includes('voice') || tag.includes('audio'))
 
+  // Check if this is a video recording
+  const isVideoRecording = content.type === 'story' && 
+    content.tags.some(tag => tag.includes('video'))
+
   const handlePlayVoice = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
@@ -186,7 +306,47 @@ export default function ContentCard({
       if (error || !media) {
         console.error('No audio media found for story:', storyId)
         return null
+  }
+
+  const handlePlayVideo = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!videoRef.current) return
+
+    if (isVideoPlaying) {
+      videoRef.current.pause()
+      setIsVideoPlaying(false)
+    } else {
+      videoRef.current.play()
+      setIsVideoPlaying(true)
+    }
+  }
+
+  const getVideoUrl = async (storyId: string): Promise<string | null> => {
+    try {
+      // Fetch video media for this story
+      const { data: media, error } = await supabase
+        .from('media')
+        .select('file_path')
+        .eq('story_id', storyId)
+        .like('mime_type', 'video%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error || !media) {
+        console.error('No video media found for story:', storyId)
+        return null
       }
+
+      // Get signed URL for the video file
+      const videoUrl = await MediaService.getMediaUrl(media.file_path)
+      return videoUrl
+    } catch (error) {
+      console.error('Error fetching video:', error)
+      return null
+    }
+  }
 
       // Get signed URL for the audio file
       const audioUrl = await MediaService.getMediaUrl(media.file_path)
@@ -215,12 +375,14 @@ export default function ContentCard({
         </div>
       )}
 
-      {/* Cover image placeholder */}
+      {/* Cover image/video placeholder */}
       <div 
-        className="h-32 bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center cursor-pointer group/image relative"
-        onClick={() => content.coverUrl && setShowImageViewer(true)}
+        className="h-32 bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center cursor-pointer group/image relative overflow-hidden"
+        onClick={() => content.coverUrl && !isVideoRecording && setShowImageViewer(true)}
       >
-        {content.coverUrl ? (
+        {isVideoRecording ? (
+          <VideoPlayer content={content} />
+        ) : content.coverUrl ? (
           <img 
             src={content.coverUrl} 
             alt={`${content.title} ${content.type} cover image`}
@@ -233,7 +395,9 @@ export default function ContentCard({
           />
         ) : (
           <div className="text-muted-foreground">
-            {isVoiceRecording ? <Mic className="h-8 w-8" /> : getTypeIcon()}
+            {isVoiceRecording ? <Mic className="h-8 w-8" /> : 
+             isVideoRecording ? <Video className="h-8 w-8" /> : 
+             getTypeIcon()}
           </div>
         )}
         
