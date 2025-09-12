@@ -67,6 +67,8 @@ export default {
           "secondary-foreground": "hsl(var(--brand-secondary-foreground))",
           muted: "hsl(var(--brand-muted))",
           accent: "hsl(var(--brand-accent))",
+          green: "hsl(var(--brand-green))",
+          "green-foreground": "hsl(var(--brand-green-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

@@ -11,7 +11,17 @@ export type AnalyticsEvent =
   | 'simple_mode_toggled'
   | 'suggestion_dismissed'
   | 'upcoming_quick_action'
-  | 'dragdrop_upload_started';
+  | 'dragdrop_upload_started'
+  | 'create_item_selected'
+  | 'family_menu_selected'
+  | 'search_keyboard_shortcut_used'
+  | 'search_slash_shortcut_used'
+  | 'search_performed'
+  | 'mobile_nav_clicked'
+  | 'mobile_create_clicked'
+  | 'notification_clicked'
+  | 'notifications_mark_all_read'
+  | 'notifications_view_all_clicked';
 
 export const useAnalytics = () => {
   const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {

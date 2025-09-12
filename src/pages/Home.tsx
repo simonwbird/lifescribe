@@ -95,7 +95,7 @@ export default function Home() {
 
   return (
     <AuthGate>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-16 sm:pb-0">
         <Header />
         
         {/* Simple Mode Toggle */}
