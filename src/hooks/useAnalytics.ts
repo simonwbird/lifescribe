@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 export type AnalyticsEvent = 
   | 'home_activity_open'
   | 'home_filter_changed'
@@ -24,13 +26,13 @@ export type AnalyticsEvent =
   | 'notifications_view_all_clicked';
 
 export const useAnalytics = () => {
-  const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {
+  const track = useCallback((event: AnalyticsEvent, properties?: Record<string, any>) => {
     // For now, just log to console - will be replaced with actual analytics
     console.log(`Analytics: ${event}`, properties);
     
     // In production, this would send to your analytics service
     // analytics.track(event, properties);
-  };
+  }, []);
 
   return { track };
 };

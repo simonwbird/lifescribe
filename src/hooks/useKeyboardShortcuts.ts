@@ -1,65 +1,54 @@
-import { useEffect } from 'react';
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAnalytics } from './useAnalytics'
 
-interface ShortcutHandlers {
-  s?: () => void; // Share a Story
-  u?: () => void; // Upload Photos  
-  q?: () => void; // Ask the Family
-  r?: () => void; // Record Audio
-  i?: () => void; // Invite a Family Member
-}
+export function useKeyboardShortcuts() {
+  const navigate = useNavigate()
+  const { track } = useAnalytics()
 
-export const useKeyboardShortcuts = (handlers: ShortcutHandlers) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Only trigger if not in an input field
-      if (event.target instanceof HTMLInputElement || 
-          event.target instanceof HTMLTextAreaElement ||
-          event.target instanceof HTMLSelectElement) {
-        return;
+      // Only handle shortcuts when not in an input field
+      const target = event.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return
       }
 
-      // Check if meta key (cmd/ctrl) or alt is pressed to avoid conflicts
-      if (event.metaKey || event.ctrlKey || event.altKey) {
-        return;
+      // Ignore shortcuts if modifier keys are pressed (except for normal typing)
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return
       }
 
-      const key = event.key.toLowerCase();
-      
-      switch (key) {
+      switch (event.key.toLowerCase()) {
         case 's':
-          if (handlers.s) {
-            event.preventDefault();
-            handlers.s();
-          }
-          break;
+          event.preventDefault()
+          track('quickstart_selected_s')
+          navigate('/stories/new')
+          break
         case 'u':
-          if (handlers.u) {
-            event.preventDefault();
-            handlers.u();
-          }
-          break;
+          event.preventDefault()
+          track('quickstart_selected_u')
+          navigate('/photos/upload')
+          break
         case 'q':
-          if (handlers.q) {
-            event.preventDefault();
-            handlers.q();
-          }
-          break;
+          event.preventDefault()
+          track('quickstart_selected_q')
+          navigate('/prompts/new')
+          break
         case 'r':
-          if (handlers.r) {
-            event.preventDefault();
-            handlers.r();
-          }
-          break;
+          event.preventDefault()
+          track('quickstart_selected_r')
+          navigate('/audio/new')
+          break
         case 'i':
-          if (handlers.i) {
-            event.preventDefault();
-            handlers.i();
-          }
-          break;
+          event.preventDefault()
+          track('quickstart_selected_i')
+          navigate('/family/invite')
+          break
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlers]);
-};
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [navigate, track])
+}
