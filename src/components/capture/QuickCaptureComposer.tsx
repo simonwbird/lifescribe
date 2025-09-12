@@ -47,6 +47,7 @@ type Privacy = 'family' | 'private' | 'custom'
 
 interface CaptureData {
   mode: CaptureMode
+  title: string
   text: string
   media: MediaItem[]
   audioBlob?: Blob
@@ -67,6 +68,7 @@ export default function QuickCaptureComposer({
   const [selectedMode, setSelectedMode] = useState<CaptureMode>('write')
   const [data, setData] = useState<CaptureData>({
     mode: 'write',
+    title: '',
     text: '',
     media: [],
     people: [],
@@ -505,6 +507,7 @@ export default function QuickCaptureComposer({
               // Reset form for another capture
               setData({
                 mode: 'write',
+                title: '',
                 text: '',
                 media: [],
                 people: context?.personId && context?.personName ? 
@@ -936,6 +939,16 @@ export default function QuickCaptureComposer({
                   </div>
                 </div>
               )}
+
+              {/* Title/Description */}
+              <div className="space-y-2">
+                <Input
+                  placeholder="What's the story? (becomes the title)"
+                  value={data.title}
+                  onChange={(e) => setData(prev => ({ ...prev, title: e.target.value }))}
+                  className="text-sm font-medium"
+                />
+              </div>
 
               {/* Tags */}
               <div className="space-y-2">
