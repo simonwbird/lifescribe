@@ -73,6 +73,23 @@ export default function ContentCard({
     }
   }
 
+  const getEditUrl = () => {
+    switch (content.type) {
+      case 'story':
+        return `/stories/${content.id}/edit`
+      case 'recipe':
+        return `/recipes/${content.id}/edit`
+      case 'pet':
+        return `/pets/${content.id}/edit`
+      case 'object':
+        return `/things/${content.id}/edit`
+      case 'property':
+        return `/properties/${content.id}/edit`
+      default:
+        return null
+    }
+  }
+
   const getDetailUrl = () => {
     switch (content.type) {
       case 'story':
@@ -170,10 +187,19 @@ export default function ContentCard({
                   View
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
+              {getEditUrl() ? (
+                <DropdownMenuItem asChild>
+                  <Link to={getEditUrl()!}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem disabled>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit (Coming Soon)
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem>
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
