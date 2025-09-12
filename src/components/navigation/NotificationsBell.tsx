@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,52 +11,151 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { supabase } from '@/lib/supabase'
 
-// Mock notification data - replace with real data
-const mockNotifications = [
-  {
-    id: '1',
-    title: 'New comment on your story',
-    actor: 'Sarah Johnson',
-    when: '2 minutes ago',
-    read: false,
-    href: '/stories/123#comment-456'
-  },
-  {
-    id: '2',
-    title: 'Family member added photos',
-    actor: 'Mike Thompson',
-    when: '1 hour ago',
-    read: false,
-    href: '/photos/album-789'
-  },
-  {
-    id: '3',
-    title: 'New family member joined',
-    actor: 'Emma Davis',
-    when: '3 hours ago',
-    read: true,
-    href: '/family/members'
-  }
-]
+interface Notification {
+  id: string
+  title: string
+  actor: string
+  when: string
+  read: boolean
+  href: string
+  type: 'story' | 'comment' | 'recipe' | 'member' | 'pet' | 'property'
+}
 
 export default function NotificationsBell() {
   const [open, setOpen] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
   const { track } = useAnalytics()
   
-  const unreadCount = mockNotifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter(n => !n.read).length
 
-  const handleNotificationClick = (notification: typeof mockNotifications[0]) => {
+  const getRelativeTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    
+    if (diffInHours < 1) return 'Just now'
+    if (diffInHours < 24) return `${diffInHours} hours ago`
+    
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays < 7) return `${diffInDays} days ago`
+    return date.toLocaleDateString()
+  }
+
+  const isRecent = (dateString: string): boolean => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    return diffInHours <= 24
+  }
+
+  const loadNotifications = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+
+      if (!member) return
+
+      const notificationList: Notification[] = []
+
+      // Get recent comments on user's stories
+      const { data: comments } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          story_id,
+          profiles:profile_id (full_name),
+          stories:story_id (title, profile_id)
+        `)
+        .eq('family_id', member.family_id)
+        .neq('profile_id', user.id) // Don't show own comments
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (comments) {
+        comments.forEach(comment => {
+          if (comment.stories?.profile_id === user.id) {
+            notificationList.push({
+              id: `comment-${comment.id}`,
+              title: 'New comment on your story',
+              actor: comment.profiles?.full_name || 'Someone',
+              when: getRelativeTime(comment.created_at),
+              read: !isRecent(comment.created_at),
+              href: `/stories/${comment.story_id}#comment-${comment.id}`,
+              type: 'comment'
+            })
+          }
+        })
+      }
+
+      // Get recent stories from family members
+      const { data: stories } = await supabase
+        .from('stories')
+        .select(`
+          id,
+          title,
+          created_at,
+          profiles:profile_id (full_name)
+        `)
+        .eq('family_id', member.family_id)
+        .neq('profile_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (stories) {
+        stories.forEach(story => {
+          notificationList.push({
+            id: `story-${story.id}`,
+            title: 'New family story shared',
+            actor: story.profiles?.full_name || 'Someone',
+            when: getRelativeTime(story.created_at),
+            read: !isRecent(story.created_at),
+            href: `/stories/${story.id}`,
+            type: 'story'
+          })
+        })
+      }
+
+      // Sort by most recent first
+      notificationList.sort((a, b) => {
+        const timeA = new Date(a.when.includes('ago') ? Date.now() : a.when).getTime()
+        const timeB = new Date(b.when.includes('ago') ? Date.now() : b.when).getTime()
+        return timeB - timeA
+      })
+
+      setNotifications(notificationList.slice(0, 10))
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications()
+  }, [])
+
+  const handleNotificationClick = (notification: Notification) => {
     track('notification_clicked', { 
       notificationId: notification.id,
-      type: notification.title.split(' ')[0].toLowerCase()
+      type: notification.type
     })
     setOpen(false)
   }
 
   const handleMarkAllRead = () => {
     track('notifications_mark_all_read')
-    // TODO: Implement mark all as read
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     setOpen(false)
   }
 
@@ -105,8 +204,12 @@ export default function NotificationsBell() {
         </div>
 
         <div className="max-h-96 overflow-y-auto">
-          {mockNotifications.length > 0 ? (
-            mockNotifications.map((notification, index) => (
+          {loading ? (
+            <div className="px-4 py-8 text-center text-muted-foreground">
+              <div className="animate-pulse">Loading notifications...</div>
+            </div>
+          ) : notifications.length > 0 ? (
+            notifications.map((notification, index) => (
               <div key={notification.id}>
                 <DropdownMenuItem className="p-0" role="none">
                   <Link
@@ -130,7 +233,7 @@ export default function NotificationsBell() {
                     </div>
                   </Link>
                 </DropdownMenuItem>
-                {index < mockNotifications.length - 1 && (
+                {index < notifications.length - 1 && (
                   <DropdownMenuSeparator className="mx-4" />
                 )}
               </div>
