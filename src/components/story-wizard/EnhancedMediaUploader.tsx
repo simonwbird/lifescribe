@@ -14,6 +14,7 @@ import {
   Camera,
   Plus
 } from 'lucide-react'
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { type MediaItem } from './StoryWizardTypes'
 
 interface EnhancedMediaUploaderProps {
@@ -28,6 +29,7 @@ export default function EnhancedMediaUploader({
   maxFiles = 10 
 }: EnhancedMediaUploaderProps) {
   const [dragActive, setDragActive] = useState(false)
+  const [isCapturing, setIsCapturing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -81,6 +83,36 @@ export default function EnhancedMediaUploader({
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       handleFiles(e.target.files)
+    }
+  }
+
+  const capturePhoto = async () => {
+    try {
+      setIsCapturing(true)
+      
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        saveToGallery: false
+      })
+
+      if (image.dataUrl) {
+        // Convert data URL to blob/file
+        const response = await fetch(image.dataUrl)
+        const blob = await response.blob()
+        const fileName = `camera-${Date.now()}.jpg`
+        const file = new File([blob], fileName, { type: 'image/jpeg' })
+        
+        handleFiles([file])
+      }
+    } catch (error) {
+      console.error('Error capturing photo:', error)
+      // Fallback to file picker on web or if camera access fails
+      fileInputRef.current?.click()
+    } finally {
+      setIsCapturing(false)
     }
   }
 
@@ -171,27 +203,32 @@ export default function EnhancedMediaUploader({
             </div>
           </div>
           
-          <div>
-            <p className="text-sm font-medium">
-              {dragActive ? 'Drop files here' : 'Drag & drop photos and videos here'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              or{' '}
-              <Button
-                variant="link"
-                className="h-auto p-0 text-xs underline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={media.length >= maxFiles}
-              >
-                choose files
-              </Button>
-              {' '}(up to {maxFiles})
-            </p>
+          <div className="flex items-center gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={capturePhoto}
+              disabled={media.length >= maxFiles || isCapturing}
+              className="gap-2"
+            >
+              <Camera className="h-4 w-4" />
+              {isCapturing ? 'Opening Camera...' : 'Take Photo'}
+            </Button>
+            
+            <span className="text-xs text-muted-foreground">or</span>
+            
+            <Button
+              variant="link"
+              className="h-auto p-0 text-xs underline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={media.length >= maxFiles}
+            >
+              choose files
+            </Button>
           </div>
           
-          <div className="text-xs text-muted-foreground">
-            {media.length}/{maxFiles} files • Supports JPG, PNG, MP4, MOV
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Up to {maxFiles} files • Supports JPG, PNG, MP4, MOV
+          </p>
         </div>
       </div>
 
