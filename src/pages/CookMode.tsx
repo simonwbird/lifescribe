@@ -55,7 +55,7 @@ export default function CookMode() {
         const transformedRecipe: Recipe = {
           id: data.id,
           title: data.title,
-          subtitle: data.subtitle || '',
+          subtitle: '',
           source: data.source,
           serves: data.serves,
           prepMin: data.time_prep_minutes,

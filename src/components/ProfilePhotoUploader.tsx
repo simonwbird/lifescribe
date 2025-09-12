@@ -2,9 +2,17 @@ import { useState, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Camera, Upload, Loader2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Camera, Upload, Loader2, ChevronDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { getSignedMediaUrl, uploadMediaFile } from '@/lib/media'
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera'
+import { Capacitor } from '@capacitor/core'
 
 interface ProfilePhotoUploaderProps {
   currentPhotoUrl?: string
@@ -59,6 +67,84 @@ export default function ProfilePhotoUploader({
     }
 
     await uploadPhoto(file)
+  }
+
+  const capturePhoto = async () => {
+    try {
+      if (!Capacitor.isNativePlatform()) {
+        // For web, we'll use the native camera input
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.capture = 'environment' // Use rear camera
+        
+        input.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0]
+          if (file) {
+            handleFileSelect({ target: { files: [file] } } as any)
+          }
+        }
+        
+        input.click()
+        return
+      }
+
+      // For native platforms, use Capacitor Camera
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      })
+
+      if (image.dataUrl) {
+        // Convert data URL to File
+        const response = await fetch(image.dataUrl)
+        const blob = await response.blob()
+        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' })
+        await uploadPhoto(file)
+      }
+    } catch (error) {
+      console.error('Error capturing photo:', error)
+      toast({
+        title: "Camera error",
+        description: "Failed to capture photo. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const selectFromGallery = async () => {
+    try {
+      if (!Capacitor.isNativePlatform()) {
+        // For web, fallback to file input
+        fileInputRef.current?.click()
+        return
+      }
+
+      // For native platforms, use gallery
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Photos,
+      })
+
+      if (image.dataUrl) {
+        // Convert data URL to File
+        const response = await fetch(image.dataUrl)
+        const blob = await response.blob()
+        const file = new File([blob], 'gallery-photo.jpg', { type: 'image/jpeg' })
+        await uploadPhoto(file)
+      }
+    } catch (error) {
+      console.error('Error selecting from gallery:', error)
+      toast({
+        title: "Gallery error",
+        description: "Failed to select photo. Please try again.",
+        variant: "destructive"
+      })
+    }
   }
 
   const uploadPhoto = async (file: File) => {
@@ -150,22 +236,39 @@ export default function ProfilePhotoUploader({
           </div>
         )}
         
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full">
+        <div 
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full cursor-pointer"
+          onClick={capturePhoto}
+        >
           <Camera className="h-6 w-6 text-white" />
         </div>
       </div>
 
       <div className="flex flex-col items-center space-y-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="flex items-center gap-2"
-        >
-          <Upload className="h-4 w-4" />
-          {currentPhotoUrl ? 'Change Photo' : 'Upload Photo'}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={uploading}
+              className="flex items-center gap-2"
+            >
+              <Camera className="h-4 w-4" />
+              {currentPhotoUrl ? 'Change Photo' : 'Add Photo'}
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-48">
+            <DropdownMenuItem onClick={capturePhoto} className="flex items-center gap-2">
+              <Camera className="h-4 w-4" />
+              Take Photo
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={selectFromGallery} className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Choose from Gallery
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         
         <p className="text-xs text-muted-foreground text-center">
           JPG, PNG or GIF (max 5MB)

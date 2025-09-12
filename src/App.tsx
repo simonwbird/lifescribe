@@ -17,7 +17,9 @@ import FamilyTree from "./pages/FamilyTree";
 import PersonProfile from "./pages/PersonProfile";
 import Collections from "./pages/Collections";
 import { PersonTimeline } from "./pages/PersonTimeline";
+import RecipeWizard from "./components/recipe/RecipeWizard";
 import RecipeDetail from "./pages/RecipeDetail";
+import CookMode from "./pages/CookMode";
 import ThingDetail from "./pages/ThingDetail";
 import PropertyDetail from "./pages/PropertyDetail";
 import NotFound from "./pages/NotFound";
@@ -49,7 +51,9 @@ const App = () => (
           <Route path="/collections/:tab" element={<Collections />} />
           {/* Backward compatibility */}
           <Route path="/archive" element={<Collections />} />
+          <Route path="/recipes/new" element={<RecipeWizard />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
+          <Route path="/recipes/:id/cook" element={<CookMode />} />
           <Route path="/things/:id" element={<ThingDetail />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
           <Route path="*" element={<NotFound />} />
