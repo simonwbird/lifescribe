@@ -638,7 +638,7 @@ export default function HomeV2() {
                       <Button variant="ghost" size="sm" onClick={handleMarkAllRead}>
                         Mark all as read
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={() => navigate('/collections')}>
                         View activity
                       </Button>
                     </div>
