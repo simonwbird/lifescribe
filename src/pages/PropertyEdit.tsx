@@ -16,6 +16,7 @@ import { PropertyService } from '@/lib/propertyService'
 import type { PropertyStatus, PropertyWithDetails, PropertyType, PropertyAddress } from '@/lib/propertyTypes'
 import { PROPERTY_STATUS_LABELS, PROPERTY_TYPE_LABELS } from '@/lib/propertyTypes'
 import { supabase } from '@/lib/supabase'
+import { MediaService } from '@/lib/mediaService'
 
 const steps = [
   { id: 1, title: 'Property Details', description: 'Basic information about your property' },
@@ -54,6 +55,8 @@ export default function PropertyEdit() {
     media_files: [] as File[]
   })
 
+  const [existingMedia, setExistingMedia] = useState<{ id: string; file_path: string; file_name: string; mime_type: string; signedUrl: string | null }[]>([])
+
   useEffect(() => {
     const load = async () => {
       if (!id) return
@@ -91,6 +94,27 @@ export default function PropertyEdit() {
     }
     load()
   }, [id, toast])
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      if (!id) return
+      try {
+        const { data } = await supabase
+          .from('media')
+          .select('id,file_path,file_name,mime_type,created_at')
+          .eq('property_id', id)
+          .order('created_at', { ascending: false })
+        const withUrls = await Promise.all((data || []).map(async (m: any) => ({
+          ...m,
+          signedUrl: await MediaService.getMediaUrl(m.file_path)
+        })))
+        setExistingMedia(withUrls)
+      } catch (e) {
+        console.error('Failed to load media', e)
+      }
+    }
+    fetchMedia()
+  }, [id])
 
   const handleNext = () => {
     if (currentStep < 5) {
@@ -487,7 +511,46 @@ export default function PropertyEdit() {
                 />
               </div>
             </div>
-          </div>
+            </div>
+
+            /*
+              <div>
+                <Label>Existing Files ({existingMedia.length})</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                  {existingMedia.map((m) => (
+                    <div key={m.id} className="relative group">
+                      <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                        {m.mime_type.startsWith('image/') && m.signedUrl ? (
+                          <img
+                            src={m.signedUrl || undefined}
+                            alt={m.file_name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              // @ts-ignore
+                              e.currentTarget.onerror = null
+                              // @ts-ignore
+                              e.currentTarget.src = '/placeholder.svg'
+                            }}
+                          />
+                        ) : (
+                          <div className="text-center px-2">
+                            <div className="text-2xl mb-1">📄</div>
+                            <div className="text-xs text-muted-foreground truncate">{m.file_name}</div>
+                          </div>
+                        )}
+                      </div>
+                      {property?.cover_media_id === m.id && (
+                        <Badge className="absolute top-1 left-1">Cover</Badge>
+                      )}
+                      <div className="mt-1 text-xs text-muted-foreground truncate">
+                        {m.file_name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            */
         )
 
       case 4:
