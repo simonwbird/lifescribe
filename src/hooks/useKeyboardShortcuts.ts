@@ -1,54 +1,65 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAnalytics } from './useAnalytics'
+import { useEffect } from 'react';
 
-export function useKeyboardShortcuts() {
-  const navigate = useNavigate()
-  const { track } = useAnalytics()
+interface ShortcutHandlers {
+  s?: () => void; // Share a Story
+  u?: () => void; // Upload Photos  
+  q?: () => void; // Ask the Family
+  r?: () => void; // Record Audio
+  i?: () => void; // Invite a Family Member
+}
 
+export const useKeyboardShortcuts = (handlers: ShortcutHandlers) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle shortcuts when not in an input field
-      const target = event.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        return
+      // Only trigger if not in an input field
+      if (event.target instanceof HTMLInputElement || 
+          event.target instanceof HTMLTextAreaElement ||
+          event.target instanceof HTMLSelectElement) {
+        return;
       }
 
-      // Ignore shortcuts if modifier keys are pressed (except for normal typing)
-      if (event.ctrlKey || event.metaKey || event.altKey) {
-        return
+      // Check if meta key (cmd/ctrl) or alt is pressed to avoid conflicts
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
       }
 
-      switch (event.key.toLowerCase()) {
+      const key = event.key.toLowerCase();
+      
+      switch (key) {
         case 's':
-          event.preventDefault()
-          track('quickstart_selected_s')
-          navigate('/stories/new')
-          break
+          if (handlers.s) {
+            event.preventDefault();
+            handlers.s();
+          }
+          break;
         case 'u':
-          event.preventDefault()
-          track('quickstart_selected_u')
-          navigate('/photos/upload')
-          break
+          if (handlers.u) {
+            event.preventDefault();
+            handlers.u();
+          }
+          break;
         case 'q':
-          event.preventDefault()
-          track('quickstart_selected_q')
-          navigate('/prompts/new')
-          break
+          if (handlers.q) {
+            event.preventDefault();
+            handlers.q();
+          }
+          break;
         case 'r':
-          event.preventDefault()
-          track('quickstart_selected_r')
-          navigate('/audio/new')
-          break
+          if (handlers.r) {
+            event.preventDefault();
+            handlers.r();
+          }
+          break;
         case 'i':
-          event.preventDefault()
-          track('quickstart_selected_i')
-          navigate('/family/invite')
-          break
+          if (handlers.i) {
+            event.preventDefault();
+            handlers.i();
+          }
+          break;
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [navigate, track])
-}
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlers]);
+};
