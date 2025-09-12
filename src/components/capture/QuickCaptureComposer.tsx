@@ -83,6 +83,8 @@ export default function QuickCaptureComposer({
   const [isSaving, setIsSaving] = useState(false)
   const [showPeoplePicker, setShowPeoplePicker] = useState(false)
   const [showPlacePicker, setShowPlacePicker] = useState(false)
+  const [showTagList, setShowTagList] = useState(false)
+  const [availableTags, setAvailableTags] = useState<string[]>([])
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [properties, setProperties] = useState<Array<{id: string, name: string}>>([])
 
@@ -129,6 +131,19 @@ export default function QuickCaptureComposer({
           
           if (propertyData) {
             setProperties(propertyData)
+          }
+
+          // Fetch common tags from existing stories
+          const { data: tagData } = await supabase
+            .from('stories')
+            .select('tags')
+            .eq('family_id', member.family_id)
+            .not('tags', 'is', null)
+          
+          if (tagData) {
+            const allTags = tagData.flatMap(story => story.tags || [])
+            const uniqueTags = Array.from(new Set(allTags)).sort()
+            setAvailableTags(uniqueTags)
           }
         }
       }
@@ -964,10 +979,40 @@ export default function QuickCaptureComposer({
                     }}
                     className="text-sm"
                   />
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setShowTagList(!showTagList)}
+                  >
                     <Plus className="h-3 w-3" />
                   </Button>
                 </div>
+
+                {/* Available Tags List */}
+                {showTagList && availableTags.length > 0 && (
+                  <div className="border rounded-lg p-3 bg-muted/30">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">
+                      Suggested tags:
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {availableTags
+                        .filter(tag => !data.tags.includes(tag))
+                        .map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="text-xs cursor-pointer hover:bg-accent"
+                            onClick={() => {
+                              addTag(tag)
+                              if (data.tags.length + 1 >= 5) setShowTagList(false)
+                            }}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                    </div>
+                  </div>
+                )}
                 
                 {data.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
