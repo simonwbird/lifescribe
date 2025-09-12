@@ -145,8 +145,13 @@ export default function PropertyEdit() {
     if (!id) return
     setSaving(true)
     try {
-      // 1) Update property core fields first
-      const updated = await PropertyService.updateProperty(id, formData)
+      // 1) Update property core fields first (sanitize empty dates)
+      const updates = {
+        ...formData,
+        first_known_date: formData.first_known_date || undefined,
+        last_known_date: formData.last_known_date || undefined,
+      }
+      const updated = await PropertyService.updateProperty(id, updates)
       if (!updated) throw new Error('Update failed')
 
       // 2) Upload any new media files and create media records
