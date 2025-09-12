@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { MediaService } from '@/lib/mediaService';
 import AuthGate from '@/components/AuthGate';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -26,12 +27,22 @@ interface Thing {
   room_hint: string;
 }
 
+interface MediaItem {
+  id: string;
+  file_path: string;
+  file_name: string;
+  mime_type: string;
+  created_at: string;
+  signedUrl: string | null;
+}
+
 export default function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
   const [things, setThings] = useState<Thing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [media, setMedia] = useState<MediaItem[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -70,6 +81,36 @@ export default function PropertyDetail() {
       setLoading(false);
     }
   }
+
+  async function fetchMediaForProperty(propertyId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('media')
+        .select('id,file_path,file_name,mime_type,created_at')
+        .eq('property_id', propertyId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const withUrls = await Promise.all((data || []).map(async (m: any) => ({
+        ...m,
+        signedUrl: await MediaService.getMediaUrl(m.file_path)
+      })));
+      setMedia(withUrls);
+    } catch (error) {
+      console.error('Error fetching property media:', error);
+    }
+  }
+
+  function formatAddress(addr: any): string | null {
+    if (!addr) return null;
+    const parts = [addr.line1, addr.line2, addr.city, addr.region, addr.country].filter(Boolean);
+    return parts.length ? parts.join(', ') : null;
+  }
+
+  useEffect(() => {
+    if (id) {
+      fetchMediaForProperty(id);
+    }
+  }, [id]);
 
   if (loading) {
     return (
@@ -124,10 +165,10 @@ export default function PropertyDetail() {
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-foreground mb-2">{property.name}</h1>
-                {property.address && (
+                {(property.address || formatAddress((property as any).address_json)) && (
                   <div className="flex items-center gap-2 text-lg text-muted-foreground">
                     <MapPin className="h-5 w-5" />
-                    {property.address}
+                    {property.address || formatAddress((property as any).address_json)}
                   </div>
                 )}
               </div>
@@ -159,6 +200,35 @@ export default function PropertyDetail() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{property.description}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {media.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Photos & Documents ({media.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {media.map((m) => (
+                    <div key={m.id} className="relative rounded-lg overflow-hidden border bg-muted">
+                      {m.mime_type.startsWith('image/') && m.signedUrl ? (
+                        <img
+                          src={m.signedUrl}
+                          alt={m.file_name}
+                          className="w-full h-48 object-cover"
+                          loading="lazy"
+                          onError={(e) => { (e.currentTarget as any).src = '/placeholder.svg' }}
+                        />
+                      ) : (
+                        <div className="h-48 flex items-center justify-center text-sm text-muted-foreground px-3">
+                          {m.file_name}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
