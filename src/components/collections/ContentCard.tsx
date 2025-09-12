@@ -110,8 +110,13 @@ export default function ContentCard({
         {content.coverUrl ? (
           <img 
             src={content.coverUrl} 
-            alt={content.title}
+            alt={`${content.title} ${content.type} cover image`}
             className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              e.currentTarget.src = '/placeholder.svg'
+            }}
           />
         ) : (
           <div className="text-muted-foreground">

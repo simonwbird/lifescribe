@@ -8,11 +8,16 @@ export class MediaService {
    */
   static async getMediaUrl(filePath: string): Promise<string | null> {
     try {
-      const { data } = supabase.storage
+      const { data, error } = await supabase.storage
         .from('media')
-        .getPublicUrl(filePath)
-      
-      return data.publicUrl
+        .createSignedUrl(filePath, 3600)
+
+      if (error) {
+        console.error('Error creating signed URL:', error)
+        return null
+      }
+
+      return data.signedUrl
     } catch (error) {
       console.error('Error getting media URL:', error)
       return null

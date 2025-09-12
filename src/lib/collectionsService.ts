@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { MediaService } from './mediaService'
+import cookiesImg from '@/assets/grandma-cookies.jpg'
+import potRoastImg from '@/assets/sunday-pot-roast.jpg'
+import applePieImg from '@/assets/moms-apple-pie.jpg'
+import ribsImg from '@/assets/bbq-ribs.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -10,6 +14,15 @@ import type {
   ObjectContent,
   PropertyContent
 } from './collectionsTypes'
+
+const sampleRecipeImageForTitle = (title: string): string | null => {
+  const t = title.toLowerCase()
+  if (t.includes('cookie')) return cookiesImg
+  if (t.includes('pot roast')) return potRoastImg
+  if (t.includes('apple pie')) return applePieImg
+  if (t.includes('ribs')) return ribsImg
+  return null
+}
 
 export class CollectionsService {
   static async getContentCounts(familyId: string): Promise<ContentCounts> {
@@ -162,9 +175,11 @@ export class CollectionsService {
         location: null,
         peopleIds: [], // Recipe person links would need separate query
         tags: Array.isArray(recipe.dietary_tags) ? recipe.dietary_tags : [],
-        coverUrl: recipe.media?.[0]?.file_path 
-          ? await MediaService.getMediaUrl(recipe.media[0].file_path)
-          : null,
+        coverUrl: sampleRecipeImageForTitle(recipe.title) || (
+          recipe.media?.[0]?.file_path 
+            ? await MediaService.getMediaUrl(recipe.media[0].file_path)
+            : null
+        ),
         visibility: 'family' as const,
         status: 'published' as const,
         authorId: recipe.created_by,
