@@ -37,7 +37,7 @@ const Hero = () => (
             <p className="text-lg font-sans text-muted-foreground italic">
               Where your family stories live forever.
             </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-tight text-foreground">
+            <h1 className="text-hero lg:text-6xl font-serif font-bold leading-tight text-foreground">
               Some stories live in photo albums.{" "}
               <span className="text-brand-primary">
                 Others only live in our hearts.
@@ -76,10 +76,10 @@ const ExperienceSection = () => (
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16 space-y-6">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground">
+          <h2 className="text-h1 font-serif font-semibold text-foreground">
             Your family, woven into one story
           </h2>
-          <p className="text-xl font-sans text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-body font-sans text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Every memory has a place. Every voice can be heard. LifeScribe gathers it all in one living family archive.
           </p>
         </div>
@@ -150,7 +150,7 @@ const BenefitsSection = () => (
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-foreground">
+          <h2 className="text-h1 font-serif font-semibold mb-6 text-foreground">
             Why families fall in love with LifeScribe
           </h2>
         </div>
@@ -210,12 +210,12 @@ const EmotionalSection = () => (
   <section className="py-20 bg-muted/20 relative overflow-hidden">
     <div className="container mx-auto px-4 text-center">
       <div className="max-w-5xl mx-auto space-y-8">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight text-foreground">
+        <h2 className="text-hero font-serif font-bold leading-tight text-foreground">
           Imagine your granddaughter discovering the recipe you cooked every Sunday, 
           <span className="text-brand-primary italic"> in your handwriting.</span> 
           Or hearing your laugh for the very first time.
         </h2>
-        <p className="text-xl font-sans text-muted-foreground leading-relaxed max-w-4xl mx-auto">
+        <p className="text-body font-sans text-muted-foreground leading-relaxed max-w-4xl mx-auto">
           LifeScribe makes sure the details — the ones that make life beautiful — are never forgotten.
         </p>
         <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">
@@ -253,7 +253,7 @@ const TestimonialsSection = () => (
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-foreground">
+          <h2 className="text-h1 font-serif font-semibold mb-6 text-foreground">
             Families are already writing their next chapters
           </h2>
         </div>
@@ -283,7 +283,7 @@ const HowItWorksSection = () => (
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-foreground">
+          <h2 className="text-h1 font-serif font-semibold mb-6 text-foreground">
             Simple, like telling a story around the table.
           </h2>
         </div>
@@ -323,11 +323,11 @@ const FinalCallToAction = () => (
   <section className="py-20 bg-gradient-paper relative">
     <div className="container mx-auto px-4 text-center">
       <div className="max-w-5xl mx-auto space-y-8">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight text-foreground">
+        <h2 className="text-hero font-serif font-bold leading-tight text-foreground">
           Your story is a gift.{" "}
           <span className="text-brand-primary">Pass it on.</span>
         </h2>
-        <p className="text-xl font-sans text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+        <p className="text-body font-sans text-muted-foreground leading-relaxed max-w-3xl mx-auto">
           Join the families building their own living archives with LifeScribe.
         </p>
         <Button asChild size="lg" className="text-xl px-12 py-8 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">

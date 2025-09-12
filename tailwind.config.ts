@@ -14,8 +14,17 @@ export default {
     },
     extend: {
       fontFamily: {
-        'serif': ['Merriweather', 'serif'],
-        'sans': ['Source Sans 3', 'sans-serif'],
+        sans: ['Inter', 'Helvetica Neue', 'Arial', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        serif: ['"Source Serif 4"', 'Georgia', '"Times New Roman"', 'serif'],
+      },
+      fontSize: {
+        // Ancestry-like calm scale
+        'hero': ['2.5rem', { lineHeight: '1.15', letterSpacing: '-0.01em' }],   // 40px
+        'h1':   ['2rem',   { lineHeight: '1.2',  letterSpacing: '-0.006em' }],  // 32px
+        'h2':   ['1.5rem', { lineHeight: '1.25'}],                              // 24px
+        'h3':   ['1.25rem',{ lineHeight: '1.3' }],                              // 20px
+        'body': ['1rem',   { lineHeight: '1.6' }],                              // 16px
+        'fine': ['0.875rem',{lineHeight:'1.5'}],                                // 14px
       },
       colors: {
         border: "hsl(var(--border))",
