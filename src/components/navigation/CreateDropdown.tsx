@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, FileText, Images, Mic, ChefHat, Package, Home, MessageSquare } from 'lucide-react'
+import { Plus, FileText, Images, Mic, ChefHat, Package, Home, MessageSquare, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -52,6 +52,13 @@ const createItems = [
     description: 'Document a family property',
     href: '/properties/new',
     shortcut: 'Y'
+  },
+  {
+    icon: Heart,
+    label: 'Pet',
+    description: 'Add a beloved family pet',
+    href: '/pets/new',
+    shortcut: 'T'
   },
   {
     icon: MessageSquare,
