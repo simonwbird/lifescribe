@@ -34,6 +34,7 @@ import vintageToolsImg from '@/assets/objects/vintage-tools.jpg'
 import vintageTextilesImg from '@/assets/objects/vintage-textiles.jpg'
 import familyArtworkImg from '@/assets/objects/family-artwork.jpg'
 import kitchenCollectiblesImg from '@/assets/objects/kitchen-collectibles.jpg'
+import vintageStationWagonImg from '@/assets/objects/vintage-station-wagon.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -69,6 +70,7 @@ const sampleObjectImageForTitle = (title: string, description?: string): string 
   if (t.includes('quilt') || t.includes('fabric') || t.includes('clothing') || t.includes('textile') || d.includes('cloth')) return vintageTextilesImg
   if (t.includes('painting') || t.includes('art') || t.includes('frame') || t.includes('canvas') || d.includes('artwork')) return familyArtworkImg
   if (t.includes('pot') || t.includes('pan') || t.includes('kitchen') || t.includes('cooking') || d.includes('cookware')) return kitchenCollectiblesImg
+  if (t.includes('car') || t.includes('wagon') || t.includes('ford') || t.includes('vehicle') || t.includes('automobile') || d.includes('car')) return vintageStationWagonImg
   
   return null
 }
