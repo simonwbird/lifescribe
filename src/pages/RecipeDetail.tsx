@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { MediaService } from '@/lib/mediaService';
 import AuthGate from '@/components/AuthGate';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Clock, Users, ChefHat, ArrowLeft } from 'lucide-react';
+import { ImageViewer } from '@/components/ui/image-viewer';
+import { Clock, Users, ChefHat, ArrowLeft, Edit2, Image as ImageIcon, Play } from 'lucide-react';
 
 interface Recipe {
   id: string;
@@ -21,19 +23,59 @@ interface Recipe {
   steps: any;
   notes: string;
   created_at: string;
+  family_id: string;
+}
+
+interface MediaItem {
+  id: string;
+  file_name: string;
+  file_path: string;
+  mime_type: string;
+  signed_url?: string;
 }
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState('');
+  const [currentImageAlt, setCurrentImageAlt] = useState('');
 
   useEffect(() => {
     if (id) {
       fetchRecipe(id);
     }
   }, [id]);
+
+  const fetchMedia = async (recipeId: string) => {
+    try {
+      const { data: mediaData, error } = await supabase
+        .from('media')
+        .select('*')
+        .eq('recipe_id', recipeId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (mediaData && mediaData.length > 0) {
+        const mediaWithUrls = await Promise.all(
+          mediaData.map(async (item) => {
+            const signedUrl = await MediaService.getSignedMediaUrl(item.file_path);
+            return {
+              ...item,
+              signed_url: signedUrl
+            };
+          })
+        );
+        setMedia(mediaWithUrls);
+      }
+    } catch (error) {
+      console.error('Error fetching media:', error);
+    }
+  };
 
   async function fetchRecipe(recipeId: string) {
     try {
@@ -45,12 +87,19 @@ export default function RecipeDetail() {
 
       if (error) throw error;
       setRecipe(data);
+      await fetchMedia(recipeId);
     } catch (error) {
       console.error('Error fetching recipe:', error);
     } finally {
       setLoading(false);
     }
   }
+
+  const openImageViewer = (imageUrl: string, imageAlt: string) => {
+    setCurrentImageUrl(imageUrl);
+    setCurrentImageAlt(imageAlt);
+    setImageViewerOpen(true);
+  };
 
   if (loading) {
     return (
@@ -101,16 +150,23 @@ export default function RecipeDetail() {
               Back to Archive
             </Button>
             
-            <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                <ChefHat className="h-8 w-8 text-primary" />
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <ChefHat className="h-8 w-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold text-foreground mb-2">{recipe.title}</h1>
+                  {recipe.source && (
+                    <p className="text-lg text-muted-foreground">From: {recipe.source}</p>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-foreground mb-2">{recipe.title}</h1>
-                {recipe.source && (
-                  <p className="text-lg text-muted-foreground">From: {recipe.source}</p>
-                )}
-              </div>
+              
+              <Button variant="outline" onClick={() => navigate(`/collections?tab=recipe&edit=${recipe.id}`)}>
+                <Edit2 className="h-4 w-4 mr-2" />
+                Edit Recipe
+              </Button>
             </div>
 
             <div className="flex items-center gap-6 mb-4">
@@ -143,6 +199,41 @@ export default function RecipeDetail() {
               </div>
             )}
           </div>
+
+          {media.length > 0 && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Photos & Media ({media.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {media.map((item) => (
+                    <div key={item.id} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                      {item.signed_url && (
+                        <>
+                          {item.mime_type.startsWith('image/') ? (
+                            <img
+                              src={item.signed_url}
+                              alt={item.file_name}
+                              className="h-full w-full object-cover transition-transform group-hover:scale-105 cursor-pointer"
+                              onClick={() => openImageViewer(item.signed_url!, item.file_name)}
+                            />
+                          ) : item.mime_type.startsWith('video/') ? (
+                            <div className="flex h-full w-full items-center justify-center cursor-pointer">
+                              <Play className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid gap-8 lg:grid-cols-3">
             <Card className="lg:col-span-1">
@@ -196,6 +287,13 @@ export default function RecipeDetail() {
             Added on {new Date(recipe.created_at).toLocaleDateString()}
           </div>
         </main>
+
+        <ImageViewer
+          isOpen={imageViewerOpen}
+          onClose={() => setImageViewerOpen(false)}
+          imageUrl={currentImageUrl}
+          imageAlt={currentImageAlt}
+        />
       </div>
     </AuthGate>
   );

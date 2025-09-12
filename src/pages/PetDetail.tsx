@@ -18,17 +18,33 @@ import {
   Star,
   FileText,
   Plus,
-  ArrowLeft
+  ArrowLeft,
+  Image as ImageIcon,
+  Play
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
+import { MediaService } from '@/lib/mediaService'
 import { toast } from '@/hooks/use-toast'
+import { ImageViewer } from '@/components/ui/image-viewer'
 import type { Pet } from '@/lib/petTypes'
+
+interface MediaItem {
+  id: string;
+  file_name: string;
+  file_path: string;
+  mime_type: string;
+  signed_url?: string;
+}
 
 export default function PetDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [pet, setPet] = useState<Pet | null>(null)
+  const [media, setMedia] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [imageViewerOpen, setImageViewerOpen] = useState(false)
+  const [currentImageUrl, setCurrentImageUrl] = useState('')
+  const [currentImageAlt, setCurrentImageAlt] = useState('')
 
   useEffect(() => {
     if (id) {
@@ -48,6 +64,31 @@ export default function PetDetail() {
         .single()
 
       if (!member) return
+
+      // Fetch pet media - note: pets might use different media linking
+      // Check if pets link through a junction table or direct foreign key
+      const mediaResponse = await supabase
+        .from('media')
+        .select('id, file_name, file_path, mime_type')
+        .eq('family_id', member.family_id)
+        .order('created_at', { ascending: true })
+
+      if (mediaResponse.data && mediaResponse.data.length > 0) {
+        const mediaWithUrls: MediaItem[] = []
+        for (const item of mediaResponse.data) {
+          const signedUrl = await MediaService.getSignedMediaUrl(item.file_path)
+          if (signedUrl) {
+            mediaWithUrls.push({
+              id: item.id,
+              file_name: item.file_name,
+              file_path: item.file_path,
+              mime_type: item.mime_type,
+              signed_url: signedUrl
+            })
+          }
+        }
+        setMedia(mediaWithUrls)
+      }
 
       const { data: petData, error } = await supabase
         .from('pets')
@@ -168,6 +209,12 @@ export default function PetDetail() {
       default:
         return Heart
     }
+  }
+
+  const openImageViewer = (imageUrl: string, imageAlt: string) => {
+    setCurrentImageUrl(imageUrl)
+    setCurrentImageAlt(imageAlt)
+    setImageViewerOpen(true)
   }
 
   if (loading) {
@@ -427,6 +474,42 @@ export default function PetDetail() {
               </Card>
             </div>
 
+            {/* Media Gallery */}
+            {media.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Photos & Media ({media.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {media.map((item) => (
+                      <div key={item.id} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                        {item.signed_url && (
+                          <>
+                            {item.mime_type.startsWith('image/') ? (
+                              <img
+                                src={item.signed_url}
+                                alt={item.file_name}
+                                className="h-full w-full object-cover transition-transform group-hover:scale-105 cursor-pointer"
+                                onClick={() => openImageViewer(item.signed_url!, item.file_name)}
+                              />
+                            ) : item.mime_type.startsWith('video/') ? (
+                              <div className="flex h-full w-full items-center justify-center cursor-pointer">
+                                <Play className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            ) : null}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Care Instructions */}
             {pet.careInstructions && (
               <Card>
@@ -475,6 +558,13 @@ export default function PetDetail() {
             )}
           </div>
         </main>
+
+        <ImageViewer
+          isOpen={imageViewerOpen}
+          onClose={() => setImageViewerOpen(false)}
+          imageUrl={currentImageUrl}
+          imageAlt={currentImageAlt}
+        />
       </div>
     </AuthGate>
   )
