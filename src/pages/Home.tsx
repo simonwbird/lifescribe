@@ -145,7 +145,7 @@ export default function HomeV2() {
   useEffect(() => {
     loadHomeData()
     track('home_v2_load')
-  }, [track])
+  }, []) // Remove track dependency to prevent re-renders
 
   const loadHomeData = async () => {
     try {
