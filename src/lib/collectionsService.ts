@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { MediaService } from './mediaService'
 import type { 
   Content, 
   ContentFilter, 
@@ -130,7 +131,14 @@ export class CollectionsService {
   ): Promise<RecipeContent[]> {
     let query = supabase
       .from('recipes')
-      .select(`*`)
+      .select(`
+        *,
+        media (
+          id,
+          file_path,
+          file_name
+        )
+      `)
       .eq('family_id', familyId)
 
     if (filter.search) {
@@ -143,30 +151,37 @@ export class CollectionsService {
 
     const { data: recipes } = await query.range(offset, offset + limit - 1)
 
-    return (recipes || []).map(recipe => ({
-      id: recipe.id,
-      type: 'recipe' as const,
-      title: recipe.title,
-      occurredAt: null,
-      addedAt: recipe.created_at,
-      location: null,
-      peopleIds: [], // Recipe person links would need separate query
-      tags: Array.isArray(recipe.dietary_tags) ? recipe.dietary_tags : [],
-      coverUrl: null,
-      visibility: 'family',
-      status: 'published',
-      authorId: recipe.created_by,
-      authorName: 'Unknown',
-      familyId: recipe.family_id,
-      fields: {
-        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients as string[] : [],
-        steps: Array.isArray(recipe.steps) ? recipe.steps as string[] : [],
-        source: recipe.source,
-        serves: recipe.serves,
-        cookTime: recipe.time_cook_minutes,
-        prepTime: recipe.time_prep_minutes
-      }
-    }))
+    // Map recipes and add cover URLs
+    const recipesWithUrls = await Promise.all(
+      (recipes || []).map(async recipe => ({
+        id: recipe.id,
+        type: 'recipe' as const,
+        title: recipe.title,
+        occurredAt: null,
+        addedAt: recipe.created_at,
+        location: null,
+        peopleIds: [], // Recipe person links would need separate query
+        tags: Array.isArray(recipe.dietary_tags) ? recipe.dietary_tags : [],
+        coverUrl: recipe.media?.[0]?.file_path 
+          ? await MediaService.getMediaUrl(recipe.media[0].file_path)
+          : null,
+        visibility: 'family' as const,
+        status: 'published' as const,
+        authorId: recipe.created_by,
+        authorName: 'Unknown',
+        familyId: recipe.family_id,
+        fields: {
+          ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients as string[] : [],
+          steps: Array.isArray(recipe.steps) ? recipe.steps as string[] : [],
+          source: recipe.source,
+          serves: recipe.serves,
+          cookTime: recipe.time_cook_minutes,
+          prepTime: recipe.time_prep_minutes
+        }
+      }))
+    )
+
+    return recipesWithUrls
   }
 
   private static async getObjects(
