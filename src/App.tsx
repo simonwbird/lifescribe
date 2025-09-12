@@ -20,14 +20,17 @@ import { PersonTimeline } from "./pages/PersonTimeline";
 import RecipeWizard from "./components/recipe/RecipeWizard";
 import ObjectsNew from "./pages/ObjectsNew";
 import RecipeDetail from "./pages/RecipeDetail";
+import RecipeEdit from "./pages/RecipeEdit";
 import CookMode from "./pages/CookMode";
 import ThingDetail from "./pages/ThingDetail";
+import ThingEdit from "./pages/ThingEdit";
 import PropertyDetail from "./pages/PropertyDetail";
 import PetDetail from "./pages/PetDetail";
 import PetNew from "./pages/PetNew";
 import PetEdit from "./pages/PetEdit";
 import PropertyNew from "./pages/PropertyNew";
 import PropertyEdit from "./pages/PropertyEdit";
+import StoryEdit from "./pages/StoryEdit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +49,7 @@ const App = () => (
           <Route path="/feed" element={<Feed />} />
           <Route path="/stories/new" element={<NewStory />} />
           <Route path="/stories/:id" element={<StoryDetail />} />
+          <Route path="/stories/:id/edit" element={<StoryEdit />} />
           <Route path="/prompts" element={<Prompts />} />
           <Route path="/prompts/browse" element={<PromptsBrowse />} />
           <Route path="/family/members" element={<FamilyMembers />} />
@@ -59,9 +63,11 @@ const App = () => (
           <Route path="/archive" element={<Collections />} />
           <Route path="/recipes/new" element={<RecipeWizard />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
+          <Route path="/recipes/:id/edit" element={<RecipeEdit />} />
           <Route path="/recipes/:id/cook" element={<CookMode />} />
           <Route path="/objects/new" element={<ObjectsNew />} />
           <Route path="/things/:id" element={<ThingDetail />} />
+          <Route path="/things/:id/edit" element={<ThingEdit />} />
           <Route path="/properties/new" element={<PropertyNew />} />
           <Route path="/properties/:id/edit" element={<PropertyEdit />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
