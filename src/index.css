@@ -38,18 +38,41 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    /* Brand colors for LifeScribe family theme */
-    --brand-primary: 344 84% 62%;     /* Rose-500 */
-    --brand-primary-foreground: 0 0% 100%;
-    --brand-secondary: 43 96% 56%;    /* Amber-500 */
-    --brand-secondary-foreground: 0 0% 100%;
-    --brand-muted: 344 25% 95%;       /* Rose-50 */
-    --brand-accent: 43 15% 95%;       /* Amber-50 */
+    /* LifeScribe scrapbook color palette - muted, warm, nostalgic */
+    --scrapbook-cream: 45 25% 92%;        /* Soft cream background */
+    --scrapbook-beige: 42 20% 85%;        /* Warm beige */
+    --scrapbook-sage: 120 15% 70%;        /* Muted sage green */
+    --scrapbook-blue: 210 25% 75%;        /* Soft dusty blue */
+    --scrapbook-charcoal: 220 15% 25%;    /* Deep charcoal for text */
+    --scrapbook-brown: 25 30% 45%;        /* Rich brown accent */
+    --scrapbook-paper: 42 15% 96%;        /* Paper white */
+    --scrapbook-shadow: 220 10% 10%;      /* Soft shadow */
     
-    /* Gradients using brand colors */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-primary)), hsl(var(--brand-secondary)));
-    --gradient-background: linear-gradient(to bottom right, hsl(var(--brand-muted) / 0.8), hsl(var(--background)), hsl(var(--brand-accent) / 0.6));
-    --gradient-subtle: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--muted) / 0.5));
+    /* Override brand colors with scrapbook palette */
+    --brand-primary: var(--scrapbook-brown);
+    --brand-primary-foreground: var(--scrapbook-paper);
+    --brand-secondary: var(--scrapbook-sage);
+    --brand-secondary-foreground: var(--scrapbook-charcoal);
+    --brand-muted: var(--scrapbook-beige);
+    --brand-accent: var(--scrapbook-blue);
+    
+    /* Scrapbook-inspired gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--scrapbook-brown)), hsl(var(--scrapbook-sage)));
+    --gradient-paper: linear-gradient(to bottom right, hsl(var(--scrapbook-paper)), hsl(var(--scrapbook-cream)));
+    --gradient-subtle: linear-gradient(to bottom, hsl(var(--scrapbook-paper)), hsl(var(--scrapbook-beige) / 0.3));
+    
+    /* Paper texture and shadows */
+    --shadow-photo: 0 4px 12px hsl(var(--scrapbook-shadow) / 0.15);
+    --shadow-frame: 0 2px 8px hsl(var(--scrapbook-shadow) / 0.1);
+    --border-photo: 1px solid hsl(var(--scrapbook-beige));
+    
+    /* Override main colors with scrapbook theme */
+    --background: var(--scrapbook-paper);
+    --foreground: var(--scrapbook-charcoal);
+    --muted: var(--scrapbook-beige);
+    --muted-foreground: 220 12% 45%;
+    --card: var(--scrapbook-paper);
+    --border: var(--scrapbook-beige);
 
     --sidebar-background: 0 0% 98%;
 
