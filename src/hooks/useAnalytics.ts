@@ -57,6 +57,8 @@ export type AnalyticsEvent =
   | 'quick_capture_open'
   | 'quick_capture_voice_start'
   | 'quick_capture_voice_stop'
+  | 'quick_capture_video_start'
+  | 'quick_capture_video_stop'
   | 'quick_capture_save'
   | 'quick_capture_save_draft'
   | 'prompt_quick_capture_clicked';

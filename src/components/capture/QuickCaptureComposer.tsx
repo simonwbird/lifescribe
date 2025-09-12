@@ -77,6 +77,8 @@ export default function QuickCaptureComposer({
     privacy: 'family'
   })
   const [isRecording, setIsRecording] = useState(false)
+  const [isVideoRecording, setIsVideoRecording] = useState(false)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
   const [showPrompt, setShowPrompt] = useState(!!prompt)
@@ -89,8 +91,11 @@ export default function QuickCaptureComposer({
   const [properties, setProperties] = useState<Array<{id: string, name: string}>>([])
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const videoRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const videoChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const videoTimerRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const navigate = useNavigate()
   
@@ -270,7 +275,8 @@ export default function QuickCaptureComposer({
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
-      setIsRecording(false)
+    setIsRecording(false)
+    setIsVideoRecording(false)
       
       if (timerRef.current) {
         clearInterval(timerRef.current)
@@ -279,6 +285,83 @@ export default function QuickCaptureComposer({
       
       track('quick_capture_voice_stop', { duration: recordingTime })
     }
+  }
+
+  const startVideoRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }, 
+        audio: true 
+      })
+      
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8,opus'
+      })
+      
+      videoRecorderRef.current = mediaRecorder
+      videoChunksRef.current = []
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          videoChunksRef.current.push(event.data)
+        }
+      }
+      
+      mediaRecorder.onstop = () => {
+        const videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' })
+        const videoUrl = URL.createObjectURL(videoBlob)
+        setVideoUrl(videoUrl)
+        setData(prev => ({ ...prev, videoBlob }))
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      mediaRecorder.start(1000)
+      setIsVideoRecording(true)
+      setRecordingTime(0)
+      
+      // Start timer
+      videoTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+
+      track('quick_capture_video_start')
+    } catch (error) {
+      console.error('Error starting video recording:', error)
+      toast({
+        title: 'Recording Error',
+        description: 'Could not access camera/microphone. Please check permissions.',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const stopVideoRecording = () => {
+    if (videoRecorderRef.current && isVideoRecording) {
+      videoRecorderRef.current.stop()
+      setIsVideoRecording(false)
+      
+      if (videoTimerRef.current) {
+        clearInterval(videoTimerRef.current)
+        videoTimerRef.current = null
+      }
+      
+      track('quick_capture_video_stop', { duration: recordingTime })
+    }
+  }
+
+  const deleteVideoRecording = () => {
+    if (videoUrl) {
+      URL.revokeObjectURL(videoUrl)
+    }
+    setVideoUrl(null)
+    setData(prev => ({ ...prev, videoBlob: undefined }))
+    setRecordingTime(0)
   }
 
   const deleteRecording = () => {
@@ -810,14 +893,80 @@ export default function QuickCaptureComposer({
               )}
 
               {selectedMode === 'video' && (
-                <div className="text-center p-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-                  <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Video recording will be available soon
-                  </p>
-                  <Button variant="outline" disabled>
-                    Record Video
-                  </Button>
+                <div className="space-y-4">
+                  {!videoUrl ? (
+                    <div className="text-center p-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                      <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {isVideoRecording ? 'Recording video...' : 'Record a video story'}
+                      </p>
+                      
+                      {isVideoRecording && (
+                        <div className="mb-4">
+                          <div className="text-2xl font-mono text-red-500 mb-2">
+                            {formatTime(recordingTime)}
+                          </div>
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm text-red-500">Recording</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-center gap-3">
+                        {!isVideoRecording ? (
+                          <Button 
+                            onClick={startVideoRecording}
+                            className="gap-2"
+                          >
+                            <Video className="h-4 w-4" />
+                            Start Recording
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={stopVideoRecording}
+                            variant="destructive"
+                            className="gap-2"
+                          >
+                            <Square className="h-4 w-4 fill-current" />
+                            Stop Recording
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="border rounded-lg overflow-hidden">
+                        <video 
+                          src={videoUrl} 
+                          controls 
+                          className="w-full"
+                          preload="metadata"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <span>Duration: {formatTime(recordingTime)}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={deleteVideoRecording}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recording Tips */}
+                  {!isVideoRecording && !videoUrl && (
+                    <div className="text-center text-xs text-muted-foreground space-y-1 mt-4">
+                      <p>📹 Record in good lighting for best quality</p>
+                      <p>🎬 Keep videos under 2 minutes for easier sharing</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
