@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, ArrowRight, Home, MapPin } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Home, MapPin, Upload, X } from 'lucide-react'
 import { PropertyService } from '@/lib/propertyService'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
@@ -19,7 +19,8 @@ const steps = [
   { id: 1, title: 'Property Details', description: 'Basic information about your property' },
   { id: 2, title: 'Address & Privacy', description: 'Location and visibility settings' },
   { id: 3, title: 'Timeline', description: 'Important dates and history' },
-  { id: 4, title: 'Review', description: 'Final review and save' }
+  { id: 4, title: 'Photos & Documents', description: 'Upload images and documents' },
+  { id: 5, title: 'Review', description: 'Final review and save' }
 ]
 
 interface PropertyData {
@@ -37,6 +38,8 @@ interface PropertyData {
   last_known_circa: boolean
   status: PropertyStatus
   tags: string[]
+  cover_media_id?: string
+  media_files: File[]
 }
 
 export function PropertyWizard() {
@@ -57,7 +60,8 @@ export function PropertyWizard() {
     first_known_circa: false,
     last_known_circa: false,
     status: 'current',
-    tags: []
+    tags: [],
+    media_files: []
   })
 
   // Get family ID on component mount
@@ -84,7 +88,7 @@ export function PropertyWizard() {
   })
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -154,6 +158,25 @@ export function PropertyWizard() {
     setPropertyData(prev => ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }))
+  }
+
+  const handleFileUpload = (files: FileList | null) => {
+    if (files) {
+      const newFiles = Array.from(files).filter(file => 
+        file.type.startsWith('image/') || file.type === 'application/pdf'
+      )
+      setPropertyData(prev => ({
+        ...prev,
+        media_files: [...prev.media_files, ...newFiles]
+      }))
+    }
+  }
+
+  const removeFile = (index: number) => {
+    setPropertyData(prev => ({
+      ...prev,
+      media_files: prev.media_files.filter((_, i) => i !== index)
     }))
   }
 
@@ -405,6 +428,83 @@ export function PropertyWizard() {
       case 4:
         return (
           <div className="space-y-6">
+            <div>
+              <Label>Cover Photo & Gallery</Label>
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                  id="media-upload"
+                />
+                <label htmlFor="media-upload" className="cursor-pointer">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Drop files here or click to upload
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Upload photos, floorplans, deeds, or other documents
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {propertyData.media_files.length > 0 && (
+              <div>
+                <Label>Uploaded Files ({propertyData.media_files.length})</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                  {propertyData.media_files.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                        {file.type.startsWith('image/') ? (
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center">
+                            <div className="text-2xl mb-1">📄</div>
+                            <div className="text-xs text-muted-foreground truncate px-2">
+                              {file.name}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                      <div className="mt-1 text-xs text-muted-foreground truncate">
+                        {file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Media Types</h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p><strong>Cover Photo:</strong> Main image for the property card</p>
+                <p><strong>Then & Now:</strong> Historical vs current photos</p>
+                <p><strong>Floorplans:</strong> Layout and room diagrams</p>
+                <p><strong>Documents:</strong> Deeds, mortgages, surveys, receipts</p>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 5:
+        return (
+          <div className="space-y-6">
             <div className="bg-muted/50 p-4 rounded-lg">
               <h3 className="font-medium mb-4">Property Summary</h3>
               <div className="space-y-2 text-sm">
@@ -416,6 +516,9 @@ export function PropertyWizard() {
                 )}
                 {propertyData.built_year && (
                   <div><strong>Built:</strong> {propertyData.built_year}{propertyData.built_year_circa ? ' (circa)' : ''}</div>
+                )}
+                {propertyData.media_files.length > 0 && (
+                  <div><strong>Media:</strong> {propertyData.media_files.length} file{propertyData.media_files.length !== 1 ? 's' : ''}</div>
                 )}
               </div>
             </div>
@@ -491,7 +594,7 @@ export function PropertyWizard() {
           Previous
         </Button>
 
-        {currentStep < 4 ? (
+        {currentStep < 5 ? (
           <Button onClick={handleNext} disabled={!propertyData.display_title}>
             Next
             <ArrowRight className="h-4 w-4 ml-2" />
