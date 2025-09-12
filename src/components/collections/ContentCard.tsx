@@ -14,6 +14,7 @@ import {
   ChefHat, 
   Package, 
   Home, 
+  Heart,
   MoreHorizontal, 
   Eye, 
   Edit, 
@@ -46,6 +47,8 @@ export default function ContentCard({
         return <FileText className="h-4 w-4" />
       case 'recipe':
         return <ChefHat className="h-4 w-4" />
+      case 'pet':
+        return <Heart className="h-4 w-4" />
       case 'object':
         return <Package className="h-4 w-4" />
       case 'property':
@@ -59,6 +62,8 @@ export default function ContentCard({
         return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'recipe':
         return 'bg-orange-100 text-orange-700 border-orange-200'
+      case 'pet':
+        return 'bg-pink-100 text-pink-700 border-pink-200'
       case 'object':
         return 'bg-purple-100 text-purple-700 border-purple-200'
       case 'property':
@@ -72,6 +77,8 @@ export default function ContentCard({
         return `/stories/${content.id}`
       case 'recipe':
         return `/recipes/${content.id}`
+      case 'pet':
+        return `/pets/${content.id}`
       case 'object':
         return `/things/${content.id}`
       case 'property':

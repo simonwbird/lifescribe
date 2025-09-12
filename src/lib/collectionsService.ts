@@ -12,7 +12,8 @@ import type {
   StoryContent,
   RecipeContent,
   ObjectContent,
-  PropertyContent
+  PropertyContent,
+  PetContent
 } from './collectionsTypes'
 
 const sampleRecipeImageForTitle = (title: string): string | null => {
@@ -26,24 +27,27 @@ const sampleRecipeImageForTitle = (title: string): string | null => {
 
 export class CollectionsService {
   static async getContentCounts(familyId: string): Promise<ContentCounts> {
-    const [storiesResult, recipesResult, objectsResult, propertiesResult] = await Promise.all([
+    const [storiesResult, recipesResult, objectsResult, propertiesResult, petsResult] = await Promise.all([
       supabase.from('stories').select('id', { count: 'exact' }).eq('family_id', familyId),
       supabase.from('recipes').select('id', { count: 'exact' }).eq('family_id', familyId),
       supabase.from('things').select('id', { count: 'exact' }).eq('family_id', familyId),
-      supabase.from('properties').select('id', { count: 'exact' }).eq('family_id', familyId)
+      supabase.from('properties').select('id', { count: 'exact' }).eq('family_id', familyId),
+      supabase.from('pets').select('id', { count: 'exact' }).eq('family_id', familyId)
     ])
 
     const stories = storiesResult.count || 0
     const recipes = recipesResult.count || 0
     const objects = objectsResult.count || 0
     const properties = propertiesResult.count || 0
+    const pets = petsResult.count || 0
 
     return {
-      all: stories + recipes + objects + properties,
+      all: stories + recipes + objects + properties + pets,
       stories,
       recipes,
       objects,
-      properties
+      properties,
+      pets
     }
   }
 
@@ -72,6 +76,12 @@ export class CollectionsService {
     if (!filter.types || filter.types.includes('object')) {
       const objects = await this.getObjects(familyId, filter, limit, offset)
       content.push(...objects)
+    }
+
+    // Get pets if included in filter
+    if (!filter.types || filter.types.includes('pet')) {
+      const pets = await this.getPets(familyId, filter, limit, offset)
+      content.push(...pets)
     }
 
     // Get properties if included in filter
@@ -286,6 +296,72 @@ export class CollectionsService {
         description: property.description
       }
     }))
+  }
+
+  private static async getPets(
+    familyId: string,
+    filter: ContentFilter,
+    limit: number,
+    offset: number
+  ): Promise<PetContent[]> {
+    let query = supabase
+      .from('pets')
+      .select(`*`)
+      .eq('family_id', familyId)
+
+    if (filter.search) {
+      query = query.or(`name.ilike.%${filter.search}%,breed.ilike.%${filter.search}%,species.ilike.%${filter.search}%`)
+    }
+
+    if (filter.tags?.length) {
+      query = query.overlaps('tags', filter.tags)
+    }
+
+    const { data: pets } = await query.range(offset, offset + limit - 1)
+
+    return (pets || []).map(pet => {
+      // Calculate age from dob_approx if available
+      let age = ''
+      if (pet.dob_approx) {
+        try {
+          const dobDate = new Date(pet.dob_approx)
+          const today = new Date()
+          const years = today.getFullYear() - dobDate.getFullYear()
+          age = years > 0 ? `${years} years` : 'Under 1 year'
+        } catch {
+          age = pet.dob_approx // Use the approx string as-is
+        }
+      }
+
+      return {
+        id: pet.id,
+        type: 'pet' as const,
+        title: pet.name,
+        occurredAt: pet.gotcha_date || pet.dob_approx,
+        addedAt: pet.created_at,
+        location: pet.room,
+        peopleIds: [], // Will add person links later
+        tags: Array.isArray(pet.tags) ? pet.tags : [],
+        coverUrl: pet.cover_url,
+        visibility: 'family' as const,
+        status: 'published' as const,
+        authorId: pet.created_by,
+        authorName: 'Unknown',
+        familyId: pet.family_id,
+        fields: {
+          species: pet.species,
+          breed: pet.breed,
+          sex: pet.sex,
+          age,
+          status: pet.status as 'current' | 'past',
+          microchipped: !!pet.microchip_number,
+          vaccinesStatus: 'unknown' as const,
+          insuranceStatus: pet.insurance_provider ? 'active' : 'none' as const,
+          nextReminderDate: undefined,
+          guardianNames: []
+        }
+      }
+    })
   }
 
   private static sortContent(content: Content[], sort: ContentSort): Content[] {

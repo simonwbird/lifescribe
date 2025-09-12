@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { FileText, ChefHat, Package, Home } from 'lucide-react'
+import { FileText, ChefHat, Package, Home, Heart } from 'lucide-react'
 import type { ContentType, ContentCounts } from '@/lib/collectionsTypes'
 
 interface CollectionsTabsProps {
@@ -30,6 +30,12 @@ export default function CollectionsTabs({ activeTab, onTabChange, counts }: Coll
       count: counts.recipes 
     },
     { 
+      id: 'pet' as const, 
+      label: 'Pets', 
+      icon: Heart, 
+      count: counts.pets 
+    },
+    { 
       id: 'object' as const, 
       label: 'Objects', 
       icon: Package, 
@@ -45,7 +51,7 @@ export default function CollectionsTabs({ activeTab, onTabChange, counts }: Coll
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-5 h-auto p-1">
+      <TabsList className="grid w-full grid-cols-6 h-auto p-1">
         {tabs.map((tab) => (
           <TabsTrigger
             key={tab.id}

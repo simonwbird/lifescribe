@@ -2,7 +2,7 @@ import { useState } from 'react'
 import ContentCard from './ContentCard'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { FileText, ChefHat, Package, Home, Plus } from 'lucide-react'
+import { FileText, ChefHat, Package, Home, Plus, Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Content, ContentType } from '@/lib/collectionsTypes'
 
@@ -38,7 +38,7 @@ export default function ContentGrid({
       all: {
         icon: <Plus className="h-12 w-12 text-muted-foreground" />,
         title: "Nothing here yet",
-        description: "Start with a story or add a recipe, object, or property.",
+        description: "Start with a story or add a recipe, pet, object, or property.",
         cta: { text: "Add Content", href: "/stories/new" }
       },
       story: {
@@ -52,6 +52,12 @@ export default function ContentGrid({
         title: "No recipes yet",
         description: "Preserve your family's favorite recipes.",
         cta: { text: "Add your first recipe", href: "/recipes/new" }
+      },
+      pet: {
+        icon: <Heart className="h-12 w-12 text-muted-foreground" />,
+        title: "No pets yet",
+        description: "Add your beloved family companions.",
+        cta: { text: "Add your first pet", href: "/pets/new" }
       },
       object: {
         icon: <Package className="h-12 w-12 text-muted-foreground" />,

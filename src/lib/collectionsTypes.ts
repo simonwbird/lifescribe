@@ -1,6 +1,6 @@
 // Unified content types for Collections page
 
-export type ContentType = 'story' | 'recipe' | 'object' | 'property'
+export type ContentType = 'story' | 'recipe' | 'object' | 'property' | 'pet'
 
 export type ContentBase = {
   id: string
@@ -61,7 +61,23 @@ export type PropertyContent = ContentBase & {
   }
 }
 
-export type Content = StoryContent | RecipeContent | ObjectContent | PropertyContent
+export type PetContent = ContentBase & {
+  type: 'pet'
+  fields: {
+    species: string
+    breed?: string
+    sex?: string
+    age?: string
+    status: 'current' | 'past'
+    microchipped?: boolean
+    vaccinesStatus?: 'up-to-date' | 'overdue' | 'unknown'
+    insuranceStatus?: 'active' | 'expired' | 'none'
+    nextReminderDate?: string
+    guardianNames?: string[]
+  }
+}
+
+export type Content = StoryContent | RecipeContent | ObjectContent | PropertyContent | PetContent
 
 export type ContentFilter = {
   search?: string
@@ -102,4 +118,5 @@ export type ContentCounts = {
   recipes: number
   objects: number
   properties: number
+  pets: number
 }

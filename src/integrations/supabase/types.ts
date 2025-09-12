@@ -726,6 +726,291 @@ export type Database = {
           },
         ]
       }
+      pet_person_links: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          person_id: string
+          pet_id: string
+          relationship: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          person_id: string
+          pet_id: string
+          relationship?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          pet_id?: string
+          relationship?: string | null
+        }
+        Relationships: []
+      }
+      pet_reminders: {
+        Row: {
+          created_at: string | null
+          due_date: string
+          family_id: string
+          id: string
+          notes: string | null
+          pet_id: string
+          status: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          due_date: string
+          family_id: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+          status?: string
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          due_date?: string
+          family_id?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          status?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      pet_vaccines: {
+        Row: {
+          created_at: string | null
+          date_given: string | null
+          due_date: string | null
+          family_id: string
+          id: string
+          name: string
+          notes: string | null
+          pet_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_given?: string | null
+          due_date?: string | null
+          family_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          pet_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date_given?: string | null
+          due_date?: string | null
+          family_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          pet_id?: string
+        }
+        Relationships: []
+      }
+      pet_visits: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          notes: string | null
+          pet_id: string
+          reason: string | null
+          visit_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+          reason?: string | null
+          visit_date: string
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          reason?: string | null
+          visit_date?: string
+        }
+        Relationships: []
+      }
+      pets: {
+        Row: {
+          allergies: string | null
+          awards: string[] | null
+          bedtime_routine: string | null
+          breed: string | null
+          breeder_rescue: string | null
+          care_instructions: string | null
+          color: string | null
+          conditions: string[] | null
+          cover_url: string | null
+          created_at: string
+          created_by: string
+          diet: string | null
+          dna_test_provider: string | null
+          dna_test_url: string | null
+          dob_approx: string | null
+          family_id: string
+          favorites: string[] | null
+          feeding_routine: string | null
+          gotcha_date: string | null
+          id: string
+          insurance_policy: string | null
+          insurance_provider: string | null
+          insurance_renews: string | null
+          license_authority: string | null
+          license_expires: string | null
+          license_number: string | null
+          markings: string | null
+          medications: string | null
+          microchip_date: string | null
+          microchip_number: string | null
+          microchip_provider: string | null
+          name: string
+          neutered: boolean | null
+          passed_at: string | null
+          property_id: string | null
+          registry_id: string | null
+          registry_org: string | null
+          roles: string[] | null
+          room: string | null
+          sex: string | null
+          species: string
+          status: string
+          tags: string[] | null
+          temperament: string | null
+          updated_at: string
+          vet_email: string | null
+          vet_name: string | null
+          vet_phone: string | null
+          walks_routine: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          allergies?: string | null
+          awards?: string[] | null
+          bedtime_routine?: string | null
+          breed?: string | null
+          breeder_rescue?: string | null
+          care_instructions?: string | null
+          color?: string | null
+          conditions?: string[] | null
+          cover_url?: string | null
+          created_at?: string
+          created_by: string
+          diet?: string | null
+          dna_test_provider?: string | null
+          dna_test_url?: string | null
+          dob_approx?: string | null
+          family_id: string
+          favorites?: string[] | null
+          feeding_routine?: string | null
+          gotcha_date?: string | null
+          id?: string
+          insurance_policy?: string | null
+          insurance_provider?: string | null
+          insurance_renews?: string | null
+          license_authority?: string | null
+          license_expires?: string | null
+          license_number?: string | null
+          markings?: string | null
+          medications?: string | null
+          microchip_date?: string | null
+          microchip_number?: string | null
+          microchip_provider?: string | null
+          name: string
+          neutered?: boolean | null
+          passed_at?: string | null
+          property_id?: string | null
+          registry_id?: string | null
+          registry_org?: string | null
+          roles?: string[] | null
+          room?: string | null
+          sex?: string | null
+          species: string
+          status?: string
+          tags?: string[] | null
+          temperament?: string | null
+          updated_at?: string
+          vet_email?: string | null
+          vet_name?: string | null
+          vet_phone?: string | null
+          walks_routine?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          allergies?: string | null
+          awards?: string[] | null
+          bedtime_routine?: string | null
+          breed?: string | null
+          breeder_rescue?: string | null
+          care_instructions?: string | null
+          color?: string | null
+          conditions?: string[] | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string
+          diet?: string | null
+          dna_test_provider?: string | null
+          dna_test_url?: string | null
+          dob_approx?: string | null
+          family_id?: string
+          favorites?: string[] | null
+          feeding_routine?: string | null
+          gotcha_date?: string | null
+          id?: string
+          insurance_policy?: string | null
+          insurance_provider?: string | null
+          insurance_renews?: string | null
+          license_authority?: string | null
+          license_expires?: string | null
+          license_number?: string | null
+          markings?: string | null
+          medications?: string | null
+          microchip_date?: string | null
+          microchip_number?: string | null
+          microchip_provider?: string | null
+          name?: string
+          neutered?: boolean | null
+          passed_at?: string | null
+          property_id?: string | null
+          registry_id?: string | null
+          registry_org?: string | null
+          roles?: string[] | null
+          room?: string | null
+          sex?: string | null
+          species?: string
+          status?: string
+          tags?: string[] | null
+          temperament?: string | null
+          updated_at?: string
+          vet_email?: string | null
+          vet_name?: string | null
+          vet_phone?: string | null
+          walks_routine?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

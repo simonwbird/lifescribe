@@ -33,7 +33,8 @@ export default function Collections() {
     stories: 0,
     recipes: 0,
     objects: 0,
-    properties: 0
+    properties: 0,
+    pets: 0
   })
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState(initialSearch)
