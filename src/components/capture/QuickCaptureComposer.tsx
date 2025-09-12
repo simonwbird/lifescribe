@@ -145,12 +145,20 @@ export default function QuickCaptureComposer({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen])
 
-  // Focus text area when switching to write mode
+  // Cleanup on unmount
   useEffect(() => {
-    if (selectedMode === 'write' && textareaRef.current) {
-      textareaRef.current.focus()
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl)
+      }
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop()
+      }
     }
-  }, [selectedMode])
+  }, [])
 
   const startRecording = async () => {
     try {
@@ -214,6 +222,29 @@ export default function QuickCaptureComposer({
       }
       
       track('quick_capture_voice_stop', { duration: recordingTime })
+    }
+  }
+
+  const deleteRecording = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl)
+      setAudioUrl(null)
+    }
+    setData(prev => ({ ...prev, audioBlob: undefined }))
+    setRecordingTime(0)
+  }
+
+  const playRecording = () => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl)
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error)
+        toast({
+          title: 'Playback Error',
+          description: 'Could not play the recording.',
+          variant: 'destructive'
+        })
+      })
     }
   }
 
@@ -443,15 +474,32 @@ export default function QuickCaptureComposer({
 
               {selectedMode === 'voice' && (
                 <div className="space-y-4">
+                  {/* Recording Status */}
+                  {isRecording && (
+                    <div className="text-center mb-4">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-full border border-red-200 dark:border-red-800">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                          Recording... {formatTime(recordingTime)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-center">
                     {!isRecording && !audioUrl && (
-                      <Button
-                        onClick={startRecording}
-                        size="lg"
-                        className="h-16 w-16 rounded-full"
-                      >
-                        <Mic className="h-6 w-6" />
-                      </Button>
+                      <div className="text-center space-y-4">
+                        <Button
+                          onClick={startRecording}
+                          size="lg"
+                          className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl transition-all"
+                        >
+                          <Mic className="h-6 w-6" />
+                        </Button>
+                        <p className="text-sm text-muted-foreground">
+                          Tap to start recording
+                        </p>
+                      </div>
                     )}
 
                     {isRecording && (
@@ -460,32 +508,81 @@ export default function QuickCaptureComposer({
                           onClick={stopRecording}
                           size="lg"
                           variant="destructive"
-                          className="h-16 w-16 rounded-full animate-pulse"
+                          className="h-16 w-16 rounded-full animate-pulse shadow-lg"
                         >
                           <Square className="h-6 w-6" />
                         </Button>
-                        <div className="text-lg font-mono" aria-live="polite">
-                          Recording... {formatTime(recordingTime)}
+                        <div className="space-y-2">
+                          <div className="text-lg font-mono" aria-live="polite">
+                            {formatTime(recordingTime)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Maximum 5 minutes
+                          </p>
                         </div>
                       </div>
                     )}
 
                     {audioUrl && (
-                      <div className="space-y-4 text-center">
-                        <audio controls src={audioUrl} className="w-full" />
-                        <Button
-                          onClick={() => {
-                            setAudioUrl(null)
-                            setData(prev => ({ ...prev, audioBlob: undefined }))
-                          }}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Record again
-                        </Button>
+                      <div className="space-y-4 text-center w-full max-w-md">
+                        <div className="flex items-center justify-center gap-2 mb-4">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                            Recording complete ({formatTime(recordingTime)})
+                          </span>
+                        </div>
+                        
+                        <audio 
+                          controls 
+                          src={audioUrl} 
+                          className="w-full max-w-sm mx-auto"
+                          preload="metadata"
+                        />
+                        
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            onClick={playRecording}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Play className="h-3 w-3" />
+                            Play
+                          </Button>
+                          <Button
+                            onClick={deleteRecording}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 text-red-600 hover:text-red-700"
+                          >
+                            <X className="h-3 w-3" />
+                            Delete
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setAudioUrl(null)
+                              setData(prev => ({ ...prev, audioBlob: undefined }))
+                              setRecordingTime(0)
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Mic className="h-3 w-3" />
+                            Record again
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
+
+                  {/* Recording Tips */}
+                  {!isRecording && !audioUrl && (
+                    <div className="text-center text-xs text-muted-foreground space-y-1 mt-4">
+                      <p>💡 Find a quiet space for best quality</p>
+                      <p>🎤 Speak clearly and at normal volume</p>
+                    </div>
+                  )}
                 </div>
               )}
 
