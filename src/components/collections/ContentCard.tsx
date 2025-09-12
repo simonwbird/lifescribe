@@ -176,43 +176,43 @@ export default function ContentCard({
           </div>
 
           {/* Actions menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-8 w-8 ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link to={getDetailUrl()}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
-                </Link>
-              </DropdownMenuItem>
-              {getEditUrl() ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-8 w-8 ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem asChild>
-                  <Link to={getEditUrl()!}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
+                  <Link to={getDetailUrl()} onClick={(e) => e.stopPropagation()}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
                   </Link>
                 </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem disabled>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit (Coming Soon)
+                {getEditUrl() ? (
+                  <DropdownMenuItem asChild>
+                    <Link to={getEditUrl()!} onClick={(e) => e.stopPropagation()}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Link>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem disabled>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit (Coming Soon)
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuItem>
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
         {/* Metadata */}
