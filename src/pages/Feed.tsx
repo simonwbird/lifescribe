@@ -123,7 +123,7 @@ export default function Feed() {
           .from('stories')
           .select(`
             *,
-            profiles (*)
+            profiles:profile_id (*)
           `)
           .eq('family_id', member.family_id)
           .order('created_at', { ascending: false })
@@ -134,7 +134,7 @@ export default function Feed() {
           .from('answers')
           .select(`
             *,
-            profiles (*),
+            profiles:profile_id (*),
             questions (*)
           `)
           .eq('family_id', member.family_id)
