@@ -19,6 +19,8 @@ import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/use-toast'
 import type { Pet, PetSpecies, PetSex } from '@/lib/petTypes'
 import { SPECIES_GROUPS, VACCINE_TEMPLATES } from '@/lib/petTypes'
+import EnhancedMediaUploader from '@/components/story-wizard/EnhancedMediaUploader'
+import type { MediaItem } from '@/components/story-wizard/StoryWizardTypes'
 
 interface PetFormProps {
   isEditing?: boolean
@@ -57,7 +59,8 @@ export default function PetForm({ isEditing = false }: PetFormProps) {
     careInstructions: '',
     room: '',
     tags: [] as string[],
-    favorites: [] as string[]
+    favorites: [] as string[],
+    media: [] as MediaItem[]
   })
   
   const [newTag, setNewTag] = useState('')
@@ -130,7 +133,8 @@ export default function PetForm({ isEditing = false }: PetFormProps) {
         careInstructions: pet.care_instructions || '',
         room: pet.room || '',
         tags: pet.tags || [],
-        favorites: pet.favorites || []
+        favorites: pet.favorites || [],
+        media: [] // Media will be loaded separately if needed
       })
     }
   }
@@ -454,6 +458,20 @@ export default function PetForm({ isEditing = false }: PetFormProps) {
                       placeholder="Current medications and dosages"
                     />
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Photos & Media */}
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Photos & Videos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EnhancedMediaUploader
+                    media={formData.media}
+                    onChange={(media) => setFormData(prev => ({ ...prev, media }))}
+                    maxFiles={10}
+                  />
                 </CardContent>
               </Card>
 
