@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Camera, Upload, Loader2, ChevronDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { getSignedMediaUrl, uploadMediaFile } from '@/lib/media'
@@ -33,7 +34,11 @@ export default function ProfilePhotoUploader({
 }: ProfilePhotoUploaderProps) {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [cameraOpen, setCameraOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const { toast } = useToast()
 
   const sizeClasses = {
@@ -72,20 +77,8 @@ export default function ProfilePhotoUploader({
   const capturePhoto = async () => {
     try {
       if (!Capacitor.isNativePlatform()) {
-        // For web, we'll use the native camera input
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = 'image/*'
-        input.capture = 'environment' // Use rear camera
-        
-        input.onchange = (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0]
-          if (file) {
-            handleFileSelect({ target: { files: [file] } } as any)
-          }
-        }
-        
-        input.click()
+        // Open in-app camera for web
+        setCameraOpen(true)
         return
       }
 
@@ -146,6 +139,91 @@ export default function ProfilePhotoUploader({
       })
     }
   }
+
+  // Web camera control (for desktop/mobile web)
+  const openFileCamera = () => {
+    // Fallback to file input with camera hint (mobile browsers)
+    const input = fileInputRef.current
+    if (input) {
+      try {
+        input.setAttribute('capture', 'environment')
+      } catch {}
+      input.click()
+    }
+  }
+
+  const startWebCamera = async () => {
+    try {
+      if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported in this browser')
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      })
+      streamRef.current = stream
+      const video = videoRef.current
+      if (video) {
+        ;(video as any).srcObject = stream
+        await (video as HTMLVideoElement).play().catch(() => {})
+      }
+    } catch (err) {
+      console.error('Error starting camera', err)
+      toast({
+        title: 'Camera error',
+        description: 'Unable to access your camera. Please check permissions.',
+        variant: 'destructive'
+      })
+      setCameraOpen(false)
+    }
+  }
+
+  const stopWebCamera = () => {
+    const stream = streamRef.current
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+    }
+    const video = videoRef.current
+    if (video) {
+      ;(video as any).srcObject = null
+    }
+  }
+
+  const handleCapture = async () => {
+    try {
+      const video = videoRef.current
+      if (!video) return
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth || 720
+      canvas.height = video.videoHeight || 960
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Canvas not supported')
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      const blob: Blob = await new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Capture failed'))), 'image/jpeg', 0.9)
+      )
+      const file = new File([blob], 'captured-photo.jpg', { type: 'image/jpeg' })
+      await uploadPhoto(file)
+      setCameraOpen(false)
+    } catch (error) {
+      console.error('Capture error', error)
+      toast({ title: 'Capture failed', description: 'Please try again.', variant: 'destructive' })
+    } finally {
+      stopWebCamera()
+    }
+  }
+
+  useEffect(() => {
+    if (cameraOpen) {
+      startWebCamera()
+    } else {
+      stopWebCamera()
+    }
+    // Cleanup on unmount
+    return () => stopWebCamera()
+  }, [cameraOpen])
 
   const uploadPhoto = async (file: File) => {
     setUploading(true)
@@ -282,6 +360,29 @@ export default function ProfilePhotoUploader({
         accept="image/*"
         className="hidden"
       />
+
+      {/* In-app camera for web */}
+      <Dialog open={cameraOpen} onOpenChange={setCameraOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Take a photo</DialogTitle>
+            <DialogDescription>
+              Allow camera access to capture a profile photo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full aspect-[3/4] bg-black rounded-lg overflow-hidden">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCameraOpen(false)}>Cancel</Button>
+            <Button onClick={handleCapture}>
+              <Camera className="h-4 w-4 mr-2" />
+              Capture
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }
