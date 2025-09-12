@@ -1058,7 +1058,7 @@ export default function QuickCaptureComposer({
                         <video 
                           src={videoUrl} 
                           controls 
-                          className="w-full"
+                          className="w-full scale-x-[-1]"
                           preload="metadata"
                           onLoadedMetadata={(e) => {
                             const video = e.target as HTMLVideoElement
