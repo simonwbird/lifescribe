@@ -12,8 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useNavigate } from 'react-router-dom'
 import EnhancedMediaUploader from '@/components/story-wizard/EnhancedMediaUploader'
 import type { MediaItem } from '@/components/story-wizard/StoryWizardTypes'
 
@@ -81,6 +83,7 @@ export default function QuickCaptureComposer({
   const audioChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const navigate = useNavigate()
   
   const { track } = useAnalytics()
 
@@ -282,8 +285,161 @@ export default function QuickCaptureComposer({
     setIsSaving(true)
     
     try {
-      // Simulate save operation
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get user's family ID
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+
+      if (!member) {
+        throw new Error('No family membership found')
+      }
+
+      const familyId = member.family_id
+
+      // Handle voice recordings
+      if (data.audioBlob) {
+        // Upload audio file to storage
+        const fileExt = 'webm' // or detect from blob type
+        const fileName = `voice-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `${familyId}/${user.id}/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, data.audioBlob)
+
+        if (uploadError) throw uploadError
+
+        // If we have a prompt, create an answer
+        if (prompt) {
+          const { data: answerData, error: answerError } = await supabase
+            .from('answers')
+            .insert({
+              question_id: prompt.id,
+              profile_id: user.id,
+              family_id: familyId,
+              answer_text: data.text.trim() || 'Voice recording'
+            })
+            .select()
+            .single()
+
+          if (answerError) throw answerError
+
+          // Link media to answer
+          await supabase
+            .from('media')
+            .insert({
+              answer_id: answerData.id,
+              profile_id: user.id,
+              family_id: familyId,
+              file_path: filePath,
+              file_name: fileName,
+              file_size: data.audioBlob.size,
+              mime_type: data.audioBlob.type || 'audio/webm'
+            })
+        } else {
+          // Create a voice story
+          const { data: storyData, error: storyError } = await supabase
+            .from('stories')
+            .insert({
+              family_id: familyId,
+              profile_id: user.id,
+              title: data.text.trim() || 'Voice Recording',
+              content: data.text.trim() || 'Voice recording',
+              tags: data.tags.length > 0 ? data.tags : ['voice-note']
+            })
+            .select()
+            .single()
+
+          if (storyError) throw storyError
+
+          // Link media to story
+          await supabase
+            .from('media')
+            .insert({
+              story_id: storyData.id,
+              profile_id: user.id,
+              family_id: familyId,
+              file_path: filePath,
+              file_name: fileName,
+              file_size: data.audioBlob.size,
+              mime_type: data.audioBlob.type || 'audio/webm'
+            })
+        }
+      }
+
+      // Handle text content (write mode)
+      else if (data.text.trim()) {
+        if (prompt) {
+          // Create prompt answer
+          await supabase
+            .from('answers')
+            .insert({
+              question_id: prompt.id,
+              profile_id: user.id,
+              family_id: familyId,
+              answer_text: data.text.trim()
+            })
+        } else {
+          // Create text story
+          await supabase
+            .from('stories')
+            .insert({
+              family_id: familyId,
+              profile_id: user.id,
+              title: data.text.split('\n')[0].substring(0, 100) || 'Quick Capture',
+              content: data.text.trim(),
+              tags: data.tags.length > 0 ? data.tags : []
+            })
+        }
+      }
+
+      // Handle photo uploads
+      else if (data.media.length > 0) {
+        // Create story for photos
+        const { data: storyData, error: storyError } = await supabase
+          .from('stories')
+          .insert({
+            family_id: familyId,
+            profile_id: user.id,
+            title: data.text.trim() || 'Photo Memories',
+            content: data.text.trim() || 'Photo album',
+            tags: data.tags.length > 0 ? data.tags : ['photos']
+          })
+          .select()
+          .single()
+
+        if (storyError) throw storyError
+
+        // Upload and link each photo
+        for (const mediaItem of data.media) {
+          const fileExt = mediaItem.file.name.split('.').pop()
+          const fileName = `photo-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+          const filePath = `${familyId}/${user.id}/${fileName}`
+
+          const { error: uploadError } = await supabase.storage
+            .from('media')
+            .upload(filePath, mediaItem.file)
+
+          if (uploadError) throw uploadError
+
+          await supabase
+            .from('media')
+            .insert({
+              story_id: storyData.id,
+              profile_id: user.id,
+              family_id: familyId,
+              file_path: filePath,
+              file_name: mediaItem.file.name,
+              file_size: mediaItem.file.size,
+              mime_type: mediaItem.file.type
+            })
+        }
+      }
       
       track('quick_capture_save', { 
         mode: selectedMode,
@@ -291,12 +447,23 @@ export default function QuickCaptureComposer({
         has_context: !!context
       })
 
+      const savedType = prompt ? 'answer' : selectedMode === 'voice' ? 'voice story' : selectedMode === 'photo' ? 'photo story' : 'story'
+
       toast({
         title: 'Captured!',
-        description: 'Your memory was saved.',
+        description: `Your ${savedType} was saved to your family archive.`,
         action: (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline" onClick={() => {
+              // Navigate to appropriate view
+              if (prompt) {
+                navigate('/feed')
+              } else {
+                navigate('/collections?tab=story')
+              }
+            }}>
+              View
+            </Button>
             <Button size="sm" variant="outline" onClick={() => {
               // Reset form for another capture
               setData({
