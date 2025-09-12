@@ -103,6 +103,44 @@ export default function HomeV2() {
   const navigate = useNavigate()
   const { track } = useAnalytics()
 
+  // Helper functions for time formatting
+  const getRelativeTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    
+    if (diffInHours < 1) return 'Just now'
+    if (diffInHours < 24) return `${diffInHours} hours ago`
+    
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays < 7) return `${diffInDays} days ago`
+    
+    const diffInWeeks = Math.floor(diffInDays / 7)
+    if (diffInWeeks < 4) return `${diffInWeeks} weeks ago`
+    
+    return date.toLocaleDateString()
+  }
+
+  const isRecent = (dateString: string): boolean => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    return diffInHours <= 24 // Consider anything within 24 hours as recent/unread
+  }
+
+  const parseTimeAgo = (timeStr: string): number => {
+    // Simple parser for "X hours ago" format - returns milliseconds
+    if (timeStr.includes('hours ago')) {
+      const hours = parseInt(timeStr)
+      return hours * 60 * 60 * 1000
+    }
+    if (timeStr.includes('days ago')) {
+      const days = parseInt(timeStr)
+      return days * 24 * 60 * 60 * 1000
+    }
+    return 0
+  }
+
   // Load user preferences and data
   useEffect(() => {
     loadHomeData()
@@ -204,39 +242,189 @@ export default function HomeV2() {
   }
 
   const loadActivities = async (familyId: string, userId: string) => {
-    // Mock data for now - would be replaced with real query
-    const mockActivities: ActivityItem[] = [
-      {
-        id: '1',
-        type: 'story',
-        actor: 'Sarah',
-        action: 'shared a story',
-        target: 'Summer Vacation 2024',
-        snippet: 'The best family trip we\\\'ve ever taken...',
-        time: '2 hours ago',
-        unread: true
-      },
-      {
-        id: '2',
-        type: 'comment',
-        actor: 'Mike',
-        action: 'commented on',
-        target: 'Grandma\\\'s Apple Pie Recipe',
-        snippet: 'This brings back so many memories!',
-        time: '5 hours ago',
-        unread: true
-      },
-      {
-        id: '3',
-        type: 'photo',
-        actor: 'Emma',
-        action: 'added photos to',
-        target: 'Family BBQ',
-        time: '1 day ago',
-        unread: false
+    try {
+      const activities: ActivityItem[] = []
+
+      // Get recent stories
+      const { data: stories } = await supabase
+        .from('stories')
+        .select(`
+          id,
+          title,
+          content,
+          created_at,
+          profiles:profile_id (full_name)
+        `)
+        .eq('family_id', familyId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (stories) {
+        stories.forEach(story => {
+          activities.push({
+            id: `story-${story.id}`,
+            type: 'story',
+            actor: story.profiles?.full_name || 'Someone',
+            action: 'shared a story',
+            target: story.title,
+            snippet: story.content?.substring(0, 100) + '...',
+            time: getRelativeTime(story.created_at),
+            unread: isRecent(story.created_at)
+          })
+        })
       }
-    ]
-    setActivities(mockActivities)
+
+      // Get recent recipes  
+      const { data: recipes } = await supabase
+        .from('recipes')
+        .select(`
+          id,
+          title,
+          notes,
+          created_at,
+          created_by
+        `)
+        .eq('family_id', familyId)
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      if (recipes) {
+        for (const recipe of recipes) {
+          // Get creator profile separately
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', recipe.created_by)
+            .single()
+
+          activities.push({
+            id: `recipe-${recipe.id}`,
+            type: 'photo',
+            actor: profile?.full_name || 'Someone',
+            action: 'added a recipe',
+            target: recipe.title,
+            snippet: recipe.notes?.substring(0, 100),
+            time: getRelativeTime(recipe.created_at),
+            unread: isRecent(recipe.created_at)
+          })
+        }
+      }
+
+      // Get recent pets
+      const { data: pets } = await supabase
+        .from('pets')
+        .select(`
+          id,
+          name,
+          species,
+          created_at,
+          created_by
+        `)
+        .eq('family_id', familyId)
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      if (pets) {
+        for (const pet of pets) {
+          // Get creator profile separately
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', pet.created_by)
+            .single()
+
+          activities.push({
+            id: `pet-${pet.id}`,
+            type: 'photo',
+            actor: profile?.full_name || 'Someone',
+            action: 'added a pet',
+            target: `${pet.name} (${pet.species})`,
+            time: getRelativeTime(pet.created_at),
+            unread: isRecent(pet.created_at)
+          })
+        }
+      }
+
+      // Get recent properties
+      const { data: properties } = await supabase
+        .from('properties')
+        .select(`
+          id,
+          name,
+          description,
+          created_at,
+          created_by
+        `)
+        .eq('family_id', familyId)
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      if (properties) {
+        for (const property of properties) {
+          // Get creator profile separately
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', property.created_by)
+            .single()
+
+          activities.push({
+            id: `property-${property.id}`,
+            type: 'photo',
+            actor: profile?.full_name || 'Someone',
+            action: 'added a property',
+            target: property.name,
+            snippet: property.description?.substring(0, 100),
+            time: getRelativeTime(property.created_at),
+            unread: isRecent(property.created_at)
+          })
+        }
+      }
+
+      // Get recent comments
+      const { data: comments } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          story_id,
+          profiles:profile_id (full_name),
+          stories:story_id (title)
+        `)
+        .eq('family_id', familyId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (comments) {
+        comments.forEach(comment => {
+          activities.push({
+            id: `comment-${comment.id}`,
+            type: 'comment',
+            actor: comment.profiles?.full_name || 'Someone',
+            action: 'commented on',
+            target: comment.stories?.title || 'a story',
+            snippet: comment.content?.substring(0, 100),
+            time: getRelativeTime(comment.created_at),
+            unread: isRecent(comment.created_at)
+          })
+        })
+      }
+
+      // Sort all activities by created_at timestamp and take the most recent
+      activities.sort((a, b) => {
+        // Extract timestamp from the time string or use a proper timestamp field
+        const timeA = new Date(a.time.includes('ago') ? Date.now() - parseTimeAgo(a.time) : a.time).getTime()
+        const timeB = new Date(b.time.includes('ago') ? Date.now() - parseTimeAgo(b.time) : b.time).getTime()
+        return timeB - timeA
+      })
+      setActivities(activities.slice(0, 15))
+      
+    } catch (error) {
+      console.error('Error loading activities:', error)
+      // Fallback to empty array
+      setActivities([])
+    }
   }
 
   const loadResumeItems = async (userId: string) => {
