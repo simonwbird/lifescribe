@@ -38,20 +38,30 @@ const Hero = () => (
               Where your family stories live forever.
             </p>
             <h1 className="text-hero lg:text-6xl font-serif font-bold leading-tight text-foreground">
-              Some stories live in photo albums.{" "}
+              Some memories fade.{" "}
               <span className="text-brand-primary">
-                Others only live in our hearts.
+                Yours don't have to.
               </span>
             </h1>
           </div>
           <p className="text-xl font-sans text-muted-foreground leading-relaxed max-w-2xl">
             LifeScribe is a private home for the memories that matter most — the voices, photos, recipes, and adventures you never want to lose.
           </p>
-          <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">
-            <Link to="/onboarding">
-              Begin Your Family Story <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
+            <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">
+              <Link to="/onboarding">
+                Begin Your Family Album <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="lg" className="text-lg px-8 py-6 text-muted-foreground hover:text-foreground">
+              <a href="#how-it-works">
+                See how it works
+              </a>
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground text-center lg:text-left">
+            Private by default · Family-only access
+          </p>
         </div>
         <div className="relative">
           <div className="relative rounded-lg overflow-hidden shadow-photo bg-card border border-border">
@@ -91,8 +101,8 @@ const ExperienceSection = () => (
                 <TreePine className="h-6 w-6 text-brand-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">A tree that grows with your family</h3>
-                <p className="text-muted-foreground font-sans leading-relaxed">Navigate through generations with stories and photos that bring names to life.</p>
+                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Tree that grows with your family</h3>
+                <p className="text-muted-foreground font-sans leading-relaxed">"+3 new relatives added this week"</p>
               </div>
             </div>
             
@@ -101,8 +111,8 @@ const ExperienceSection = () => (
                 <Clock className="h-6 w-6 text-brand-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">A timeline you can wander through</h3>
-                <p className="text-muted-foreground font-sans leading-relaxed">Watch your family's history unfold through beautifully organized moments.</p>
+                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Timelines you can wander</h3>
+                <p className="text-muted-foreground font-sans leading-relaxed">"Stories grouped by decade & place"</p>
               </div>
             </div>
             
@@ -111,8 +121,8 @@ const ExperienceSection = () => (
                 <BookHeart className="h-6 w-6 text-brand-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Recipes and heirlooms paired with their stories</h3>
-                <p className="text-muted-foreground font-sans leading-relaxed">Preserve not just the objects, but the love and memories behind them.</p>
+                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Recipes & heirlooms with their stories</h3>
+                <p className="text-muted-foreground font-sans leading-relaxed">"Photo + origin + who it came from"</p>
               </div>
             </div>
             
@@ -121,8 +131,8 @@ const ExperienceSection = () => (
                 <Heart className="h-6 w-6 text-brand-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Voices and laughter you can replay whenever you miss them</h3>
-                <p className="text-muted-foreground font-sans leading-relaxed">Capture the sounds that make memories truly come alive.</p>
+                <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Voices you can replay</h3>
+                <p className="text-muted-foreground font-sans leading-relaxed">"1-tap voice notes, auto-transcribed"</p>
               </div>
             </div>
           </div>
@@ -261,16 +271,44 @@ const TestimonialsSection = () => (
         <div className="grid md:grid-cols-3 gap-8">
           <TestimonialCard
             quote="I never thought my mum would love technology — but she records little stories for the grandkids every week. They can't wait to listen."
-            author="Sarah J."
+            author="Sarah A., granddaughter"
           />
           <TestimonialCard
             quote="Our family tree used to be just names. Now it's voices, recipes, and photos. It feels alive."
-            author="Daniel B."
+            author="Daniel B., father"
           />
           <TestimonialCard
             quote="It's like a private scrapbook that everyone can add to. But safer, and it will never get lost."
-            author="Priya M."
+            author="Priya M., daughter"
           />
+        </div>
+      </div>
+    </div>
+  </section>
+)
+
+const PrivacySection = () => (
+  <section className="py-16 bg-muted/20">
+    <div className="container mx-auto px-4">
+      <div className="max-w-4xl mx-auto text-center">
+        <h2 className="text-2xl font-serif font-semibold mb-8 text-foreground">Why it's safe</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="space-y-2">
+            <Lock className="h-8 w-8 text-brand-primary mx-auto" />
+            <p className="font-sans text-sm text-muted-foreground">Private by default</p>
+          </div>
+          <div className="space-y-2">
+            <Users className="h-8 w-8 text-brand-primary mx-auto" />
+            <p className="font-sans text-sm text-muted-foreground">Invite-only</p>
+          </div>
+          <div className="space-y-2">
+            <ArrowRight className="h-8 w-8 text-brand-primary mx-auto" />
+            <p className="font-sans text-sm text-muted-foreground">Export anytime</p>
+          </div>
+          <div className="space-y-2">
+            <Home className="h-8 w-8 text-brand-primary mx-auto" />
+            <p className="font-sans text-sm text-muted-foreground">You own your data</p>
+          </div>
         </div>
       </div>
     </div>
@@ -279,7 +317,7 @@ const TestimonialsSection = () => (
 
 // HOW IT WORKS
 const HowItWorksSection = () => (
-  <section className="py-20 bg-muted/30">
+  <section className="py-20 bg-muted/30" id="how-it-works">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
@@ -301,8 +339,8 @@ const HowItWorksSection = () => (
             <div className="mx-auto w-16 h-16 bg-brand-primary rounded-lg flex items-center justify-center text-brand-primary-foreground text-2xl font-serif font-bold shadow-frame">
               2
             </div>
-            <h3 className="text-2xl font-serif font-semibold text-foreground">Add a photo, recipe, or short voice note</h3>
-            <p className="text-lg font-sans text-muted-foreground leading-relaxed">Share the pictures, sounds, and details that make the story complete.</p>
+            <h3 className="text-2xl font-serif font-semibold text-foreground">Snap a photo or scan a document</h3>
+            <p className="text-lg font-sans text-muted-foreground leading-relaxed">No scanning skills needed—snap a photo. We clean it up.</p>
           </div>
           
           <div className="text-center space-y-6">
@@ -369,10 +407,15 @@ const Footer = () => (
           </ul>
         </div>
         <div>
-          <h3 className="font-serif font-semibold mb-4 text-foreground">Get Started</h3>
-          <Button asChild variant="ghost" className="justify-start p-0 text-muted-foreground hover:text-foreground font-sans">
-            <Link to="/onboarding">Create Family Account</Link>
-          </Button>
+          <h3 className="font-serif font-semibold mb-4 text-foreground">Examples</h3>
+          <div className="space-y-3">
+            <Button asChild variant="ghost" className="justify-start p-0 text-muted-foreground hover:text-foreground font-sans">
+              <Link to="/demo">Family Examples</Link>
+            </Button>
+            <Button asChild variant="ghost" className="justify-start p-0 text-muted-foreground hover:text-foreground font-sans">
+              <Link to="/elder-resources">For Elders</Link>
+            </Button>
+          </div>
         </div>
       </div>
       <div className="border-t mt-12 pt-8 text-center text-muted-foreground">
@@ -512,6 +555,7 @@ export default function Landing() {
       <BenefitsSection />
       <EmotionalSection />
       <TestimonialsSection />
+      <PrivacySection />
       <HowItWorksSection />
       <FinalCallToAction />
       <Footer />
