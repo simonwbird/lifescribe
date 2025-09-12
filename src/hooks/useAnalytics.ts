@@ -21,7 +21,28 @@ export type AnalyticsEvent =
   | 'mobile_create_clicked'
   | 'notification_clicked'
   | 'notifications_mark_all_read'
-  | 'notifications_view_all_clicked';
+  | 'notifications_view_all_clicked'
+  | 'nav_click_home'
+  | 'nav_click_create'
+  | 'create_select_story'
+  | 'create_select_photo'
+  | 'create_select_voice'
+  | 'create_select_recipe'
+  | 'create_select_object'
+  | 'create_select_property'
+  | 'create_select_pet'
+  | 'create_select_prompt'
+  | 'search_open'
+  | 'search_result_click'
+  | 'collections_open'
+  | 'family_open'
+  | 'prompts_open'
+  | 'streak_open'
+  | 'profile_open'
+  | 'switch_family_success'
+  | 'help_open'
+  | 'command_palette_open'
+  | 'keyboard_shortcut_help';
 
 export const useAnalytics = () => {
   const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {
