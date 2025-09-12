@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, ArrowRight, Save, Home, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Save, Home, X, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { PropertyService } from '@/lib/propertyService'
 import type { PropertyStatus, PropertyWithDetails, PropertyType, PropertyAddress } from '@/lib/propertyTypes'
@@ -49,7 +49,8 @@ export default function PropertyEdit() {
     first_known_circa: false,
     last_known_date: '',
     last_known_circa: false,
-    tags: [] as string[]
+    tags: [] as string[],
+    media_files: [] as File[]
   })
 
   useEffect(() => {
@@ -75,7 +76,8 @@ export default function PropertyEdit() {
             first_known_circa: data.first_known_circa || false,
             last_known_date: data.last_known_date || '',
             last_known_circa: data.last_known_circa || false,
-            tags: data.tags || []
+            tags: data.tags || [],
+            media_files: []
           })
           document.title = `Edit Property · ${data.display_title || 'Property'}`
         }
@@ -117,6 +119,25 @@ export default function PropertyEdit() {
 
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }))
+  }
+
+  const handleFileUpload = (files: FileList | null) => {
+    if (files) {
+      const newFiles = Array.from(files).filter(file => 
+        file.type.startsWith('image/') || file.type === 'application/pdf'
+      )
+      setFormData(prev => ({
+        ...prev,
+        media_files: [...prev.media_files, ...newFiles]
+      }))
+    }
+  }
+
+  const removeFile = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      media_files: prev.media_files.filter((_, i) => i !== index)
+    }))
   }
 
   const handleSave = async () => {
@@ -417,11 +438,70 @@ export default function PropertyEdit() {
       case 4:
         return (
           <div className="space-y-6">
+            <div>
+              <Label>Upload Photos & Documents</Label>
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                  id="media-upload"
+                />
+                <label htmlFor="media-upload" className="cursor-pointer">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Drop files here or click to upload
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Upload photos, floorplans, deeds, or other documents
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {formData.media_files.length > 0 && (
+              <div>
+                <Label>New Files ({formData.media_files.length})</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                  {formData.media_files.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                        {file.type.startsWith('image/') ? (
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center">
+                            <div className="text-2xl mb-1">📄</div>
+                            <div className="text-xs text-muted-foreground truncate px-2">
+                              {file.name}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                      <div className="mt-1 text-xs text-muted-foreground truncate">
+                        {file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-muted/50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Media Management</h4>
-              <p className="text-sm text-muted-foreground mb-4">
-                Media upload and management will be available in a future update. You can currently view and organize existing media from the property detail page.
-              </p>
+              <h4 className="font-medium mb-2">Media Types</h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p><strong>Cover Photo:</strong> Main image for the property card</p>
                 <p><strong>Then & Now:</strong> Historical vs current photos</p>
@@ -429,6 +509,16 @@ export default function PropertyEdit() {
                 <p><strong>Documents:</strong> Deeds, mortgages, surveys, receipts</p>
               </div>
             </div>
+
+            {property?.media_count && property.media_count > 0 && (
+              <div className="bg-blue-50 p-4 rounded-lg border">
+                <h4 className="font-medium mb-2">Existing Media</h4>
+                <p className="text-sm text-muted-foreground">
+                  This property has {property.media_count} existing media file{property.media_count !== 1 ? 's' : ''}. 
+                  View and manage them from the <strong>property detail page</strong> after saving your changes.
+                </p>
+              </div>
+            )}
           </div>
         )
 
@@ -449,6 +539,9 @@ export default function PropertyEdit() {
                 )}
                 {formData.tags.length > 0 && (
                   <div><strong>Tags:</strong> {formData.tags.join(', ')}</div>
+                )}
+                {formData.media_files.length > 0 && (
+                  <div><strong>New Media:</strong> {formData.media_files.length} file{formData.media_files.length !== 1 ? 's' : ''} ready to upload</div>
                 )}
               </div>
             </div>
