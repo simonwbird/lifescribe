@@ -578,7 +578,7 @@ export default function QuickCaptureComposer({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 lg:max-w-md lg:ml-auto lg:mr-4 lg:h-[calc(100vh-2rem)] lg:my-4">
+      <DialogContent hideClose className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 lg:max-w-md lg:ml-auto lg:mr-4 lg:h-[calc(100vh-2rem)] lg:my-4">
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <div className="flex items-center justify-between">
