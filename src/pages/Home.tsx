@@ -1,167 +1,748 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
-import AuthGate from '@/components/AuthGate';
-import Header from '@/components/Header';
-import WelcomeHeader from '@/components/home/WelcomeHeader';
-import WhatsNew from '@/components/home/WhatsNew';
-import ContinueSection from '@/components/home/ContinueSection';
-import QuickStart from '@/components/home/QuickStart';
-import FamilySpaces from '@/components/home/FamilySpaces';
-import RightRail from '@/components/home/RightRail';
-import CreateModal from '@/components/home/CreateModal';
-import FirstLoginHero from '@/components/home/FirstLoginHero';
-import { supabase } from '@/lib/supabase';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import AuthGate from '@/components/AuthGate'
+import Header from '@/components/Header'
+import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Separator } from '@/components/ui/separator'
+import { supabase } from '@/lib/supabase'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { 
+  FileText, 
+  Camera, 
+  Mic, 
+  Video,
+  Users,
+  Gift,
+  MessageCircle,
+  Heart,
+  Calendar,
+  TreePine,
+  TrendingUp,
+  ChevronRight,
+  Play,
+  Pause,
+  Edit,
+  Trash2,
+  Eye,
+  ChefHat,
+  Package,
+  Home as HomeIcon,
+  Heart as PetIcon,
+  Settings,
+  MoreHorizontal,
+  Bell,
+  Plus,
+  Star,
+  Clock
+} from 'lucide-react'
 
-export default function Home() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
-  const [simpleMode, setSimpleMode] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastSeen, setLastSeen] = useState<string>();
-  const { track } = useAnalytics();
+// Types
+interface FamilySpace {
+  id: string
+  type: 'stories' | 'photos' | 'recipes' | 'objects' | 'properties' | 'pets' | 'private'
+  title: string
+  count: number
+  lastUpdated: string | null
+  icon: React.ComponentType<any>
+  href: string
+  addHref: string
+}
 
+interface ActivityItem {
+  id: string
+  type: 'story' | 'comment' | 'invite' | 'photo'
+  actor: string
+  action: string
+  target: string
+  snippet?: string
+  time: string
+  unread: boolean
+}
+
+interface ResumeItem {
+  id: string
+  type: 'story' | 'voice' | 'video' | 'photo' | 'property' | 'object'
+  title: string
+  progress: number
+  lastEdited: string
+}
+
+interface Suggestion {
+  id: string
+  title: string
+  description: string
+  type: 'story' | 'photo' | 'voice' | 'recipe'
+  action: string
+}
+
+interface UpcomingEvent {
+  id: string
+  title: string
+  date: string
+  type: 'birthday' | 'anniversary'
+  person?: string
+}
+
+export default function HomeV2() {
+  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
+  const [familySpaces, setFamilySpaces] = useState<FamilySpace[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [resumeItems, setResumeItems] = useState<ResumeItem[]>([])
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([])
+  const [streak, setStreak] = useState({ current: 4, target: 7 })
+  const [simpleMode, setSimpleMode] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [selectedCaptureMode, setSelectedCaptureMode] = useState<'write' | 'photo' | 'voice' | 'video'>('write')
+  
+  const navigate = useNavigate()
+  const { track } = useAnalytics()
+
+  // Load user preferences and data
   useEffect(() => {
-    const checkFirstLogin = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+    loadHomeData()
+    track('home_v2_load')
+  }, [track])
 
-        // Get last visit timestamp
-        const lastVisitKey = `last_visit_${user.id}`;
-        const storedLastVisit = localStorage.getItem(lastVisitKey);
-        setLastSeen(storedLastVisit || undefined);
-        
-        // Update last visit timestamp for next time
-        localStorage.setItem(lastVisitKey, new Date().toISOString());
+  const loadHomeData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-        // Check if user has any content (stories, etc.)
-        const [storiesResult, answersResult] = await Promise.all([
-          supabase.from('stories').select('id').eq('profile_id', user.id).limit(1),
-          supabase.from('answers').select('id').eq('profile_id', user.id).limit(1)
-        ]);
+      // Get user's family
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
 
-        const hasContent = (storiesResult.data?.length || 0) > 0 || (answersResult.data?.length || 0) > 0;
-        setIsFirstLogin(!hasContent);
+      if (!member) return
 
-        // Get completed setup steps from localStorage
-        const stepsKey = `setup_steps_${user.id}`;
-        const stored = localStorage.getItem(stepsKey);
-        if (stored) {
-          setCompletedSteps(JSON.parse(stored));
-        }
+      await Promise.all([
+        loadFamilySpaces(member.family_id),
+        loadActivities(member.family_id, user.id),
+        loadResumeItems(user.id),
+        loadSuggestions(),
+        loadUpcomingEvents(member.family_id),
+        loadStreak(user.id)
+      ])
+    } catch (error) {
+      console.error('Error loading home data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-        // Get simple mode preference
-        const simpleModeKey = `simple_mode_${user.id}`;
-        const simpleModePref = localStorage.getItem(simpleModeKey) === 'true';
-        setSimpleMode(simpleModePref);
-      } catch (error) {
-        console.error('Error checking first login:', error);
-      } finally {
-        setLoading(false);
+  const loadFamilySpaces = async (familyId: string) => {
+    // Get counts for each collection type
+    const [storiesRes, recipesRes, petsRes, propertiesRes] = await Promise.all([
+      supabase.from('stories').select('id', { count: 'exact' }).eq('family_id', familyId),
+      supabase.from('recipes').select('id', { count: 'exact' }).eq('family_id', familyId),
+      supabase.from('pets').select('id', { count: 'exact' }).eq('family_id', familyId),
+      supabase.from('properties').select('id', { count: 'exact' }).eq('family_id', familyId)
+    ])
+
+    const spaces: FamilySpace[] = [
+      {
+        id: 'stories',
+        type: 'stories',
+        title: 'Family Stories',
+        count: storiesRes.count || 0,
+        lastUpdated: '2 hours ago',
+        icon: FileText,
+        href: '/collections?tab=story',
+        addHref: '/stories/new'
+      },
+      {
+        id: 'recipes',
+        type: 'recipes', 
+        title: 'Recipes',
+        count: recipesRes.count || 0,
+        lastUpdated: '1 day ago',
+        icon: ChefHat,
+        href: '/collections?tab=recipe',
+        addHref: '/recipes/new'
+      },
+      {
+        id: 'objects',
+        type: 'objects',
+        title: 'Heirlooms',
+        count: 12, // Mock count since we don't have things table
+        lastUpdated: '3 days ago',
+        icon: Package,
+        href: '/collections?tab=object',
+        addHref: '/objects/new'
+      },
+      {
+        id: 'properties',
+        type: 'properties',
+        title: 'Homes',
+        count: propertiesRes.count || 0,
+        lastUpdated: '1 week ago',
+        icon: HomeIcon,
+        href: '/collections?tab=property',
+        addHref: '/properties/new'
+      },
+      {
+        id: 'pets',
+        type: 'pets',
+        title: 'Pets',
+        count: petsRes.count || 0,
+        lastUpdated: '2 days ago',
+        icon: PetIcon,
+        href: '/collections?tab=pet',
+        addHref: '/pets/new'
       }
-    };
+    ]
 
-    checkFirstLogin();
-  }, []);
+    setFamilySpaces(spaces)
+  }
 
-  const toggleSimpleMode = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const loadActivities = async (familyId: string, userId: string) => {
+    // Mock data for now - would be replaced with real query
+    const mockActivities: ActivityItem[] = [
+      {
+        id: '1',
+        type: 'story',
+        actor: 'Sarah',
+        action: 'shared a story',
+        target: 'Summer Vacation 2024',
+        snippet: 'The best family trip we\\\'ve ever taken...',
+        time: '2 hours ago',
+        unread: true
+      },
+      {
+        id: '2',
+        type: 'comment',
+        actor: 'Mike',
+        action: 'commented on',
+        target: 'Grandma\\\'s Apple Pie Recipe',
+        snippet: 'This brings back so many memories!',
+        time: '5 hours ago',
+        unread: true
+      },
+      {
+        id: '3',
+        type: 'photo',
+        actor: 'Emma',
+        action: 'added photos to',
+        target: 'Family BBQ',
+        time: '1 day ago',
+        unread: false
+      }
+    ]
+    setActivities(mockActivities)
+  }
 
-    const newSimpleMode = !simpleMode;
-    setSimpleMode(newSimpleMode);
-    
-    const simpleModeKey = `simple_mode_${user.id}`;
-    localStorage.setItem(simpleModeKey, newSimpleMode.toString());
+  const loadResumeItems = async (userId: string) => {
+    // Mock data for drafts/resumables
+    const mockResume: ResumeItem[] = [
+      {
+        id: '1',
+        type: 'story',
+        title: 'Dad\\\'s Workshop Memories',
+        progress: 60,
+        lastEdited: '3 hours ago'
+      },
+      {
+        id: '2',
+        type: 'photo',
+        title: 'Birthday Photos Upload',
+        progress: 30,
+        lastEdited: '1 day ago'
+      }
+    ]
+    setResumeItems(mockResume)
+  }
 
-    track('simple_mode_toggled', { enabled: newSimpleMode });
-  };
+  const loadSuggestions = async () => {
+    const mockSuggestions: Suggestion[] = [
+      {
+        id: '1',
+        title: 'Share a memory about your first pet',
+        description: 'Tell the story of how you met your first furry friend',
+        type: 'story',
+        action: 'Write Story'
+      },
+      {
+        id: '2',
+        title: 'Upload photos from last weekend',
+        description: 'Add those family gathering photos to your collection',
+        type: 'photo',
+        action: 'Add Photos'
+      },
+      {
+        id: '3',
+        title: 'Record Grandma\\\'s secret recipe',
+        description: 'Capture her cooking tips in her own voice',
+        type: 'voice',
+        action: 'Record Voice'
+      }
+    ]
+    setSuggestions(mockSuggestions)
+  }
+
+  const loadUpcomingEvents = async (familyId: string) => {
+    const mockEvents: UpcomingEvent[] = [
+      {
+        id: '1',
+        title: 'Mom\\\'s Birthday',
+        date: '2024-01-25',
+        type: 'birthday',
+        person: 'Mom'
+      },
+      {
+        id: '2',
+        title: 'Parents\\\' Anniversary',
+        date: '2024-02-14',
+        type: 'anniversary'
+      }
+    ]
+    setUpcomingEvents(mockEvents)
+  }
+
+  const loadStreak = async (userId: string) => {
+    // Would calculate from actual capture data
+    setStreak({ current: 4, target: 7 })
+  }
+
+  const handleQuickCapture = (mode: 'write' | 'photo' | 'voice' | 'video') => {
+    setSelectedCaptureMode(mode)
+    setQuickCaptureOpen(true)
+    track('home_quick_capture_open', { mode })
+  }
+
+  const handleMarkAllRead = () => {
+    setActivities(prev => prev.map(item => ({ ...item, unread: false })))
+    track('home_mark_all_read')
+  }
+
+  const handleResumeItem = (item: ResumeItem) => {
+    track('home_resume_click', { type: item.type })
+    // Navigate to appropriate editor
+    if (item.type === 'story') {
+      navigate('/stories/new')
+    }
+    // Add other resume actions...
+  }
+
+  const handleSuggestionClick = (suggestion: Suggestion) => {
+    track('home_suggestion_click', { type: suggestion.type })
+    if (suggestion.type === 'story') {
+      navigate('/stories/new')
+    } else if (suggestion.type === 'photo') {
+      handleQuickCapture('photo')
+    } else if (suggestion.type === 'voice') {
+      handleQuickCapture('voice')
+    }
+  }
 
   if (loading) {
     return (
       <AuthGate>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header />
-          <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage"></div>
+          <div className="container mx-auto px-4 py-8">
+            <div className="animate-pulse space-y-6">
+              <div className="h-32 bg-muted rounded-lg"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-3 space-y-6">
+                  <div className="h-24 bg-muted rounded-lg"></div>
+                  <div className="h-40 bg-muted rounded-lg"></div>
+                  <div className="h-60 bg-muted rounded-lg"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-20 bg-muted rounded-lg"></div>
+                  <div className="h-32 bg-muted rounded-lg"></div>
+                  <div className="h-40 bg-muted rounded-lg"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </AuthGate>
-    );
+    )
   }
 
   return (
     <AuthGate>
-      <div className="min-h-screen bg-background pb-16 sm:pb-0">
+      <div className="min-h-screen bg-background">
         <Header />
         
-        {/* Simple Mode Toggle */}
-        <div className="container mx-auto px-4 pt-4">
-          <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSimpleMode}
-              className="text-warm-gray hover:text-sage"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {simpleMode ? 'Full Mode' : 'Simple Mode'}
-            </Button>
+        <div className="container mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Primary Column */}
+            <div className="lg:col-span-3 space-y-6 max-w-4xl">
+              
+              {/* Quick Capture Hero */}
+              <Card className="border-2 border-dashed border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl">What would you like to capture today?</CardTitle>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                      {streak.current}/{streak.target} streak
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Primary capture modes */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button 
+                      onClick={() => handleQuickCapture('write')}
+                      variant="outline"
+                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                    >
+                      <FileText className="h-6 w-6" />
+                      <span className="font-medium">Write</span>
+                    </Button>
+                    <Button 
+                      onClick={() => handleQuickCapture('photo')}
+                      variant="outline"
+                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                    >
+                      <Camera className="h-6 w-6" />
+                      <span className="font-medium">Photo</span>
+                    </Button>
+                    <Button 
+                      onClick={() => handleQuickCapture('voice')}
+                      variant="outline"
+                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                    >
+                      <Mic className="h-6 w-6" />
+                      <span className="font-medium">Voice</span>
+                    </Button>
+                    <Button 
+                      onClick={() => handleQuickCapture('video')}
+                      variant="outline"
+                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                    >
+                      <Video className="h-6 w-6" />
+                      <span className="font-medium">Video</span>
+                    </Button>
+                  </div>
+
+                  {/* Secondary actions */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/prompts')}>
+                      Answer today's prompt
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/family/members')}>
+                      Invite family
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      Upload a batch
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* What's New */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>What's New</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={handleMarkAllRead}>
+                        Mark all as read
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        View activity
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="all" className="w-full">
+                    <TabsList className="grid w-full grid-cols-5">
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="stories">Stories</TabsTrigger>
+                      <TabsTrigger value="photos">Photos</TabsTrigger>
+                      <TabsTrigger value="comments">Comments</TabsTrigger>
+                      <TabsTrigger value="invites">Invites</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="all" className="space-y-3 mt-4">
+                      {activities.map((activity) => (
+                        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors">
+                          <div className={`w-2 h-2 rounded-full mt-2 ${activity.unread ? 'bg-primary' : 'bg-muted'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm">
+                              <span className="font-medium">{activity.actor}</span>{' '}
+                              <span className="text-muted-foreground">{activity.action}</span>{' '}
+                              <span className="font-medium">{activity.target}</span>
+                            </p>
+                            {activity.snippet && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                {activity.snippet}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm">View</Button>
+                            <Button variant="ghost" size="sm">
+                              <Heart className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <MessageCircle className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </TabsContent>
+                    
+                    {/* Other tabs would show filtered content */}
+                    <TabsContent value="stories">Stories activity...</TabsContent>
+                    <TabsContent value="photos">Photos activity...</TabsContent>
+                    <TabsContent value="comments">Comments activity...</TabsContent>
+                    <TabsContent value="invites">Invites activity...</TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+
+              {/* Continue Where You Left Off */}
+              {resumeItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Continue Where You Left Off</CardTitle>
+                    <CardDescription>Pick up where you paused</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {resumeItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                        <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+                          {item.type === 'story' && <FileText className="h-5 w-5" />}
+                          {item.type === 'photo' && <Camera className="h-5 w-5" />}
+                          {item.type === 'voice' && <Mic className="h-5 w-5" />}
+                          {item.type === 'video' && <Video className="h-5 w-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.title}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Progress value={item.progress} className="flex-1 h-2" />
+                            <span className="text-xs text-muted-foreground">{item.progress}%</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{item.lastEdited}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleResumeItem(item)}
+                          >
+                            Resume
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Your Family Spaces / Collections */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Family Spaces</CardTitle>
+                  <CardDescription>Collections of your family's memories and stories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {familySpaces.map((space) => {
+                      const IconComponent = space.icon
+                      return (
+                        <div key={space.id} className="group border rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <IconComponent className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="font-medium">{space.title}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {space.count} {space.count === 1 ? 'item' : 'items'}
+                                </p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" asChild>
+                              <a href={space.href}>
+                                <ChevronRight className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              Last updated {space.lastUpdated}
+                            </p>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="outline" size="sm" asChild>
+                                <a href={space.href}>Open</a>
+                              </Button>
+                              <Button size="sm" asChild>
+                                <a href={space.addHref}>Add</a>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Rail */}
+            <div className={`space-y-4 ${simpleMode ? 'hidden lg:block' : ''}`}>
+              
+              {/* This Week's Captures (Streak) */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">This Week's Captures</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="relative w-16 h-16 mx-auto">
+                    <div className="w-full h-full rounded-full border-4 border-muted">
+                      <div 
+                        className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-none"
+                        style={{
+                          clipPath: `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.cos(2 * Math.PI * (streak.current / streak.target) - Math.PI/2)}% ${50 + 50 * Math.sin(2 * Math.PI * (streak.current / streak.target) - Math.PI/2)}%, 50% 50%)`
+                        }}
+                      />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-lg font-bold">{streak.current}</span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium">{streak.current} of {streak.target} days</p>
+                    <p className="text-xs text-muted-foreground">Keep it up!</p>
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    size="sm"
+                    onClick={() => handleQuickCapture('write')}
+                  >
+                    Capture now
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Suggestions */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Suggestions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {suggestions.slice(0, 3).map((suggestion) => (
+                    <div key={suggestion.id} className="p-3 border rounded-lg">
+                      <h4 className="text-sm font-medium mb-1">{suggestion.title}</h4>
+                      <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion.action}
+                      </Button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Upcoming Events */}
+              {upcomingEvents.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {upcomingEvents.map((event) => (
+                      <div key={event.id} className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+                          {event.type === 'birthday' ? (
+                            <Gift className="h-4 w-4" />
+                          ) : (
+                            <Heart className="h-4 w-4" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{event.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(event.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="sm">
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Tree Peek */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Tree Peek</CardTitle>
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href="/family/tree">View tree</a>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>2 new people added this week</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span>3 new relationships linked</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Simple Mode Toggle */}
+              <div className="pt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    setSimpleMode(!simpleMode)
+                    track('home_simple_mode_toggle', { enabled: !simpleMode })
+                  }}
+                >
+                  <Settings className="h-3 w-3 mr-2" />
+                  {simpleMode ? 'Show all modules' : 'Simple mode'}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
-          {isFirstLogin ? (
-            <FirstLoginHero 
-              completedSteps={completedSteps}
-              onStepComplete={() => {}} // Mock for now
-            />
-          ) : (
-            <>
-              <WelcomeHeader 
-                lastSeen={lastSeen}
-                onCreateClick={() => setShowCreateModal(true)} 
-              />
-
-              <div className={`grid gap-8 ${simpleMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
-                {/* Main Content */}
-                <div className={simpleMode ? 'space-y-8' : 'lg:col-span-3 space-y-8'}>
-                  {simpleMode ? (
-                    // Simple Mode: Only essential sections
-                    <>
-                      <WhatsNew />
-                      <QuickStart simpleMode={true} />
-                    </>
-                  ) : (
-                    // Full Mode: All sections
-                    <>
-                      <WhatsNew />
-                      <ContinueSection />
-                      <QuickStart />
-                      <FamilySpaces />
-                    </>
-                  )}
-                </div>
-
-                {/* Right Rail - Only in full mode */}
-                {!simpleMode && (
-                  <div className="lg:col-span-1">
-                    <RightRail />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-
-        <CreateModal 
-          open={showCreateModal} 
-          onClose={() => setShowCreateModal(false)} 
+        {/* Quick Capture Composer */}
+        <QuickCaptureComposer
+          isOpen={quickCaptureOpen}
+          onClose={() => setQuickCaptureOpen(false)}
+          onSave={() => {
+            setQuickCaptureOpen(false)
+            // Update streak
+            track('home_streak_capture')
+            setStreak(prev => ({ ...prev, current: Math.min(prev.current + 1, prev.target) }))
+          }}
         />
       </div>
     </AuthGate>
-  );
+  )
 }

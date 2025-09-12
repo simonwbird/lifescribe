@@ -61,7 +61,14 @@ export type AnalyticsEvent =
   | 'quick_capture_video_stop'
   | 'quick_capture_save'
   | 'quick_capture_save_draft'
-  | 'prompt_quick_capture_clicked';
+  | 'prompt_quick_capture_clicked'
+  // Home v2 events
+  | 'home_v2_load'
+  | 'home_quick_capture_open'
+  | 'home_suggestion_click'
+  | 'home_resume_click'
+  | 'home_streak_capture'
+  | 'home_simple_mode_toggle';
 
 export const useAnalytics = () => {
   const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {
