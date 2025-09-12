@@ -21,6 +21,7 @@ interface Property {
   first_known_date?: string;
   last_known_date?: string;
   built_year?: number;
+  built_year_circa?: boolean;
   status?: string;
 }
 
@@ -105,12 +106,19 @@ export default function PropertyDetail() {
     try {
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select(`
+          *,
+          property_occupancy(
+            id, role, start_date, end_date, primary_home, notes,
+            people(id, full_name)
+          )
+        `)
         .eq('id', propertyId)
         .single();
 
       if (error) throw error;
       setProperty(data);
+      setOccupancy(data.property_occupancy || []);
     } catch (error) {
       console.error('Error fetching property:', error);
     }
@@ -284,19 +292,35 @@ export default function PropertyDetail() {
             </div>
 
             <div className="flex items-center gap-6 mb-6">
-              {property.acquired_year && (
+              {(property.acquired_year || property.first_known_date) && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <span>
-                    {property.acquired_year}
+                    {property.first_known_date 
+                      ? `Moved in: ${new Date(property.first_known_date).toLocaleDateString()}`
+                      : `Acquired: ${property.acquired_year}`
+                    }
                     {property.sold_year && ` - ${property.sold_year}`}
                   </span>
+                </div>
+              )}
+              
+              {property.built_year && (
+                <div className="flex items-center gap-2">
+                  <Home className="h-4 w-4 text-muted-foreground" />
+                  <span>Built {property.built_year}{property.built_year_circa ? ' (circa)' : ''}</span>
                 </div>
               )}
               
               {property.sold_year && (
                 <Badge variant="secondary">
                   Sold
+                </Badge>
+              )}
+              
+              {property.status && (
+                <Badge variant={property.status === 'current' ? 'default' : 'secondary'}>
+                  {property.status}
                 </Badge>
               )}
             </div>
@@ -342,15 +366,15 @@ export default function PropertyDetail() {
             </Card>
           )}
 
-          {occupancy.length > 0 && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Who Lived Here ({occupancy.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Who Lived Here
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {occupancy.length > 0 ? (
                 <div className="space-y-4">
                   {occupancy.map((occ) => (
                     <div key={occ.id} className="p-4 rounded-lg border bg-muted/30">
@@ -379,9 +403,14 @@ export default function PropertyDetail() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No occupancy records yet.</p>
+                  <p className="text-sm mt-2">Add family members and their move-in dates to track who lived here.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {events.length > 0 && (
             <Card className="mb-6">
