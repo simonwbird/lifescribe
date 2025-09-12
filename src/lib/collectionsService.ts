@@ -4,6 +4,12 @@ import cookiesImg from '@/assets/grandma-cookies.jpg'
 import potRoastImg from '@/assets/sunday-pot-roast.jpg'
 import applePieImg from '@/assets/moms-apple-pie.jpg'
 import ribsImg from '@/assets/bbq-ribs.jpg'
+import familyDinnerImg from '@/assets/stories/family-dinner.jpg'
+import familyVacationImg from '@/assets/stories/family-vacation.jpg'
+import birthdayCelebrationImg from '@/assets/stories/birthday-celebration.jpg'
+import weddingCeremonyImg from '@/assets/stories/wedding-ceremony.jpg'
+import holidayGatheringImg from '@/assets/stories/holiday-gathering.jpg'
+import graduationImg from '@/assets/stories/graduation.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -22,6 +28,20 @@ const sampleRecipeImageForTitle = (title: string): string | null => {
   if (t.includes('pot roast')) return potRoastImg
   if (t.includes('apple pie')) return applePieImg
   if (t.includes('ribs')) return ribsImg
+  return null
+}
+
+const sampleStoryImageForTitle = (title: string, content?: string): string | null => {
+  const t = title.toLowerCase()
+  const c = (content || '').toLowerCase()
+  
+  if (t.includes('dinner') || t.includes('meal') || c.includes('dinner') || c.includes('eating')) return familyDinnerImg
+  if (t.includes('vacation') || t.includes('trip') || t.includes('travel') || c.includes('vacation')) return familyVacationImg
+  if (t.includes('birthday') || c.includes('birthday') || c.includes('cake')) return birthdayCelebrationImg
+  if (t.includes('wedding') || c.includes('wedding') || c.includes('married')) return weddingCeremonyImg
+  if (t.includes('holiday') || t.includes('christmas') || t.includes('thanksgiving') || c.includes('holiday')) return holidayGatheringImg
+  if (t.includes('graduation') || t.includes('graduate') || c.includes('graduation')) return graduationImg
+  
   return null
 }
 
@@ -133,7 +153,7 @@ export class CollectionsService {
       location: null, // Stories don't have location in current schema
       peopleIds: story.person_story_links?.map((link: any) => link.person_id) || [],
       tags: story.tags || [],
-      coverUrl: null, // Would need to get from media
+      coverUrl: sampleStoryImageForTitle(story.title, story.content),
       visibility: 'family', // Default for now
       status: 'published', // Default for now  
       authorId: story.profile_id,
