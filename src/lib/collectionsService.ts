@@ -200,7 +200,7 @@ export class CollectionsService {
           person_id,
           people (full_name)
         ),
-        media (id)
+        media (id, file_path, mime_type)
       `)
       .eq('family_id', familyId)
 
@@ -215,24 +215,40 @@ export class CollectionsService {
 
     const { data: stories } = await query.range(offset, offset + limit - 1)
 
-    return (stories || []).map(story => ({
-      id: story.id,
-      type: 'story' as const,
-      title: story.title,
-      occurredAt: story.occurred_on,
-      addedAt: story.created_at,
-      location: null, // Stories don't have location in current schema
-      peopleIds: story.person_story_links?.map((link: any) => link.person_id) || [],
-      tags: story.tags || [],
-      coverUrl: sampleStoryImageForTitle(story.title, story.content),
-      visibility: 'family', // Default for now
-      status: 'published', // Default for now  
-      authorId: story.profile_id,
-      authorName: story.profiles?.full_name || 'Unknown',
-      familyId: story.family_id,
-      fields: {
-        content: story.content,
-        mediaCount: story.media?.length || 0
+    return await Promise.all((stories || []).map(async story => {
+      // Get first photo for cover image
+      const firstPhoto = story.media?.find((item: any) => 
+        item.mime_type?.startsWith('image/')
+      )
+      
+      let coverUrl = sampleStoryImageForTitle(story.title, story.content)
+      if (firstPhoto?.file_path) {
+        try {
+          coverUrl = await MediaService.getMediaUrl(firstPhoto.file_path) || coverUrl
+        } catch (error) {
+          console.error('Failed to get media URL:', error)
+        }
+      }
+      
+      return {
+        id: story.id,
+        type: 'story' as const,
+        title: story.title,
+        occurredAt: story.occurred_on,
+        addedAt: story.created_at,
+        location: null, // Stories don't have location in current schema
+        peopleIds: story.person_story_links?.map((link: any) => link.person_id) || [],
+        tags: story.tags || [],
+        coverUrl,
+        visibility: 'family', // Default for now
+        status: 'published', // Default for now  
+        authorId: story.profile_id,
+        authorName: story.profiles?.full_name || 'Unknown',
+        familyId: story.family_id,
+        fields: {
+          content: story.content,
+          mediaCount: story.media?.length || 0
+        }
       }
     }))
   }
