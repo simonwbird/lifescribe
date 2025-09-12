@@ -24,7 +24,7 @@ import {
   MapPin,
   Users
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Content } from '@/lib/collectionsTypes'
 
 interface ContentCardProps {
@@ -42,6 +42,11 @@ export default function ContentCard({
 }: ContentCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [showImageViewer, setShowImageViewer] = useState(false)
+  const navigate = useNavigate()
+
+  const handleCardClick = () => {
+    navigate(getDetailUrl())
+  }
 
   const getTypeIcon = () => {
     switch (content.type) {
@@ -116,13 +121,14 @@ export default function ContentCard({
 
   return (
     <Card 
-      className="group hover:shadow-lg transition-all duration-200 relative overflow-hidden"
+      className="group hover:shadow-lg transition-all duration-200 relative overflow-hidden cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       {/* Selection checkbox */}
       {showSelection && (
-        <div className="absolute top-3 left-3 z-10">
+        <div className="absolute top-3 left-3 z-10" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={isSelected}
             onCheckedChange={(checked) => onSelect?.(content.id, checked === true)}
@@ -176,6 +182,7 @@ export default function ContentCard({
                 variant="ghost" 
                 size="icon" 
                 className={`h-8 w-8 ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}
+                onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
