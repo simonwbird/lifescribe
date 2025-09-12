@@ -872,15 +872,8 @@ export default function QuickCaptureComposer({
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                   <div className="bg-background rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
                     <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="mb-4">
                         <h3 className="text-lg font-semibold">Select Place</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowPlacePicker(false)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
                       </div>
                       
                       <div className="space-y-4">
@@ -1030,15 +1023,8 @@ export default function QuickCaptureComposer({
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                   <div className="bg-background rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
                     <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="mb-4">
                         <h3 className="text-lg font-semibold">Select People</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowPeoplePicker(false)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
                       </div>
                       <PeoplePicker
                         selectedPeople={data.people}
