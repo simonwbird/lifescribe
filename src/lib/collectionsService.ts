@@ -370,31 +370,57 @@ export class CollectionsService {
 
     const { data: properties } = await query.range(offset, offset + limit - 1)
 
-    return (properties || []).map(property => ({
-      id: property.id,
-      type: 'property' as const,
-      title: property.display_title || property.name,
-      occurredAt: property.first_known_date || (property.acquired_year ? `${property.acquired_year}-01-01` : null),
-      addedAt: property.created_at,
-      location: (property.address_json as any)?.city || property.address,
-      peopleIds: [],
-      tags: Array.isArray(property.tags) ? property.tags : [],
-      coverUrl: samplePropertyImageForTitle(property.display_title || property.name, property.address_json),
-      visibility: 'family',
-      status: 'published',
-      authorId: property.created_by,
-      authorName: 'Unknown',
-      familyId: property.family_id,
-      fields: {
-        address: (property.address_json as any)?.line1 || property.address,
-        acquiredYear: property.acquired_year,
-        soldYear: property.sold_year,
-        description: property.description,
-        propertyTypes: property.property_types || [],
-        builtYear: property.built_year,
-        propertyStatus: property.status
-      }
-    }))
+    // Map properties and get cover URLs
+    const propertiesWithUrls = await Promise.all(
+      (properties || []).map(async property => {
+        let coverUrl = samplePropertyImageForTitle(property.display_title || property.name, property.address_json)
+        
+        // Try to get actual cover media if cover_media_id is set
+        if (property.cover_media_id) {
+          try {
+            const { data: coverMedia } = await supabase
+              .from('media')
+              .select('file_path')
+              .eq('id', property.cover_media_id)
+              .single()
+            
+            if (coverMedia?.file_path) {
+              coverUrl = await MediaService.getMediaUrl(coverMedia.file_path)
+            }
+          } catch (e) {
+            console.log('Could not load cover media for property', property.id)
+          }
+        }
+        
+        return {
+          id: property.id,
+          type: 'property' as const,
+          title: property.display_title || property.name,
+          occurredAt: property.first_known_date || (property.acquired_year ? `${property.acquired_year}-01-01` : null),
+          addedAt: property.created_at,
+          location: (property.address_json as any)?.city || property.address,
+          peopleIds: [],
+          tags: Array.isArray(property.tags) ? property.tags : [],
+          coverUrl,
+          visibility: 'family' as const,
+          status: 'published' as const,
+          authorId: property.created_by,
+          authorName: 'Unknown',
+          familyId: property.family_id,
+          fields: {
+            address: (property.address_json as any)?.line1 || property.address,
+            acquiredYear: property.acquired_year,
+            soldYear: property.sold_year,
+            description: property.description,
+            propertyTypes: property.property_types || [],
+            builtYear: property.built_year,
+            propertyStatus: property.status
+          }
+        }
+      })
+    )
+
+    return propertiesWithUrls
   }
 
   private static async getPets(

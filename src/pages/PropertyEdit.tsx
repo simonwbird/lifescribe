@@ -159,6 +159,7 @@ export default function PropertyEdit() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user || !property?.family_id) throw new Error('Missing user or family context')
 
+        const mediaRecords: any[] = []
         const uploads = await Promise.all(
           formData.media_files.map(async (file, idx) => {
             const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -172,7 +173,7 @@ export default function PropertyEdit() {
             if (uploadErr) throw uploadErr
             if (!uploadData?.path) throw new Error('Upload failed: no path returned')
 
-            const { error: insertErr } = await supabase.from('media').insert({
+            const { data: mediaData, error: insertErr } = await supabase.from('media').insert({
               file_path: uploadData.path,
               file_name: file.name,
               mime_type: file.type,
@@ -180,11 +181,21 @@ export default function PropertyEdit() {
               profile_id: user.id,
               family_id: property.family_id,
               property_id: id,
-              property_media_role: 'general'
-            })
+              property_media_role: idx === 0 ? 'cover' : 'general'
+            }).select().single()
+            
             if (insertErr) throw insertErr
+            if (mediaData) mediaRecords.push(mediaData)
           })
         )
+
+        // Set first uploaded image as cover if no cover exists
+        if (mediaRecords.length > 0 && !property.cover_media_id) {
+          const firstImage = mediaRecords.find(media => media.mime_type.startsWith('image/'))
+          if (firstImage) {
+            await PropertyService.updateProperty(id, { cover_media_id: firstImage.id })
+          }
+        }
 
         // Clear local queue
         setFormData(prev => ({ ...prev, media_files: [] }))
