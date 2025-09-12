@@ -51,7 +51,7 @@ export default function ContentGrid({
         icon: <ChefHat className="h-12 w-12 text-muted-foreground" />,
         title: "No recipes yet",
         description: "Preserve your family's favorite recipes.",
-        cta: { text: "Add your first recipe", href: "/archive?tab=recipes&first-action=add-recipe" }
+        cta: { text: "Add your first recipe", href: "/recipes/new" }
       },
       object: {
         icon: <Package className="h-12 w-12 text-muted-foreground" />,
