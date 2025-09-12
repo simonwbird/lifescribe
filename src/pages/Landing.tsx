@@ -29,8 +29,8 @@ import familySelfie from '@/assets/family-selfie.jpg'
 
 // HERO SECTION
 const Hero = () => (
-  <section className="relative bg-gradient-paper min-h-[90vh] flex items-center">
-    <div className="container mx-auto px-4 py-16">
+  <section className="relative bg-gradient-paper min-h-[60vh] flex items-center">
+    <div className="container mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
