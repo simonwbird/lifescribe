@@ -455,6 +455,7 @@ export default function QuickCaptureComposer({
         action: (
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => {
+              onClose()
               // Navigate to appropriate view
               if (prompt) {
                 navigate('/feed')
