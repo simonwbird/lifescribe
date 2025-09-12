@@ -223,6 +223,7 @@ export default function Collections() {
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               emptyStateType={activeTab}
+              viewMode={viewMode}
             />
           </div>
         </main>

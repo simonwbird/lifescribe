@@ -2,9 +2,10 @@ import { useState } from 'react'
 import ContentCard from './ContentCard'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { FileText, ChefHat, Package, Home, Plus, Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { Content, ContentType } from '@/lib/collectionsTypes'
+import type { Content, ContentType, ViewMode } from '@/lib/collectionsTypes'
 
 interface ContentGridProps {
   content: Content[]
@@ -13,6 +14,7 @@ interface ContentGridProps {
   selectedIds?: string[]
   onSelectionChange?: (ids: string[]) => void
   emptyStateType?: ContentType | 'all'
+  viewMode?: ViewMode
 }
 
 export default function ContentGrid({
@@ -21,7 +23,8 @@ export default function ContentGrid({
   showSelection = false,
   selectedIds = [],
   onSelectionChange,
-  emptyStateType = 'all'
+  emptyStateType = 'all',
+  viewMode = 'grid'
 }: ContentGridProps) {
   const handleSelect = (id: string, selected: boolean) => {
     if (!onSelectionChange) return
@@ -137,18 +140,99 @@ export default function ContentGrid({
         </div>
       )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {content.map((item) => (
-          <ContentCard
-            key={item.id}
-            content={item}
-            isSelected={selectedIds.includes(item.id)}
-            onSelect={handleSelect}
-            showSelection={showSelection}
-          />
-        ))}
-      </div>
+      {/* Content */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {content.map((item) => (
+            <ContentCard
+              key={item.id}
+              content={item}
+              isSelected={selectedIds.includes(item.id)}
+              onSelect={handleSelect}
+              showSelection={showSelection}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border divide-y">
+          {content.map((item) => {
+            const getDetailUrl = () => {
+              switch (item.type) {
+                case 'story':
+                  return `/stories/${item.id}`
+                case 'recipe':
+                  return `/recipes/${item.id}`
+                case 'pet':
+                  return `/pets/${item.id}`
+                case 'object':
+                  return `/things/${item.id}`
+                case 'property':
+                  return `/properties/${item.id}`
+              }
+            }
+
+            const renderTypeIcon = () => {
+              switch (item.type) {
+                case 'story':
+                  return <FileText className="h-5 w-5 text-muted-foreground" />
+                case 'recipe':
+                  return <ChefHat className="h-5 w-5 text-muted-foreground" />
+                case 'pet':
+                  return <Heart className="h-5 w-5 text-muted-foreground" />
+                case 'object':
+                  return <Package className="h-5 w-5 text-muted-foreground" />
+                case 'property':
+                  return <Home className="h-5 w-5 text-muted-foreground" />
+              }
+            }
+
+            return (
+              <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-accent/50">
+                {showSelection && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.includes(item.id)}
+                      onCheckedChange={(checked) => handleSelect(item.id, checked === true)}
+                      aria-label={`Select ${item.title}`}
+                    />
+                  </div>
+                )}
+
+                <Link to={getDetailUrl()} className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="h-14 w-14 rounded-md bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                    {item.coverUrl ? (
+                      <img
+                        src={item.coverUrl}
+                        alt={`${item.title} ${item.type} cover image`}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null
+                          e.currentTarget.src = '/placeholder.svg'
+                        }}
+                      />
+                    ) : (
+                      renderTypeIcon()
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium truncate">{item.title}</h3>
+                      <Badge variant="outline" className="capitalize">{item.type}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {item.occurredAt ? new Date(item.occurredAt).toLocaleDateString() : new Date(item.addedAt).toLocaleDateString()}
+                      {item.location ? ` • ${item.location}` : ''}
+                      {item.peopleIds.length ? ` • ${item.peopleIds.length} people` : ''}
+                    </p>
+                  </div>
+                </Link>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
