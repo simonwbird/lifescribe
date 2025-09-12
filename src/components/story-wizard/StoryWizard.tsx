@@ -10,6 +10,7 @@ import {
   type AIAssist,
   WIZARD_STEPS 
 } from './StoryWizardTypes'
+import { MediaService } from '@/lib/mediaService'
 import StoryWizardProgress from './StoryWizardProgress'
 import StoryWizardSidebar from './StoryWizardSidebar'
 import StoryWizardStep1 from './steps/StoryWizardStep1'
@@ -107,6 +108,37 @@ export default function StoryWizard() {
             date: data.occurred_on || '',
             dateType: data.is_approx ? 'approximate' : 'exact'
           }))
+
+          // Load existing media for this story
+          const { data: mediaRows } = await supabase
+            .from('media')
+            .select('id, file_path, file_name, mime_type, file_size')
+            .eq('story_id', editingIdParam)
+            .order('created_at', { ascending: true })
+
+          if (mediaRows && mediaRows.length > 0) {
+            const mediaItems = await Promise.all(mediaRows.map(async (row, index) => {
+              const url = await MediaService.getMediaUrl(row.file_path)
+              let file: File
+              if (url) {
+                const resp = await fetch(url)
+                const blob = await resp.blob()
+                file = new File([blob], row.file_name, { type: row.mime_type || 'application/octet-stream' })
+              } else {
+                file = new File([new Blob()], row.file_name, { type: row.mime_type || 'application/octet-stream' })
+              }
+              return {
+                id: row.id,
+                file,
+                caption: '',
+                isCover: index === 0,
+                order: index,
+                preview: url || undefined
+              }
+            }))
+
+            setFormData(prev => ({ ...prev, media: mediaItems }))
+          }
         }
       } catch (e) {
         console.error('Error loading story for edit:', e)
@@ -179,6 +211,7 @@ export default function StoryWizard() {
 
   // Load draft on mount
   useEffect(() => {
+    if (editingIdParam) return // don't load drafts when editing existing story
     const loadDraft = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
