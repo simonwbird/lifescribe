@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ImageViewer } from '@/components/ui/image-viewer'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,7 @@ export default function ContentCard({
   showSelection = false 
 }: ContentCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [showImageViewer, setShowImageViewer] = useState(false)
 
   const getTypeIcon = () => {
     switch (content.type) {
@@ -113,12 +115,15 @@ export default function ContentCard({
       )}
 
       {/* Cover image placeholder */}
-      <div className="h-32 bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center">
+      <div 
+        className="h-32 bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center cursor-pointer group/image"
+        onClick={() => content.coverUrl && setShowImageViewer(true)}
+      >
         {content.coverUrl ? (
           <img 
             src={content.coverUrl} 
             alt={`${content.title} ${content.type} cover image`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover/image:scale-105 transition-transform duration-200"
             loading="lazy"
             onError={(e) => {
               e.currentTarget.onerror = null
@@ -225,6 +230,17 @@ export default function ContentCard({
           </div>
         </div>
       </CardContent>
+
+      {/* Image Viewer Modal */}
+      {content.coverUrl && (
+        <ImageViewer
+          isOpen={showImageViewer}
+          onClose={() => setShowImageViewer(false)}
+          imageUrl={content.coverUrl}
+          imageAlt={`${content.title} cover image`}
+          title={content.title}
+        />
+      )}
     </Card>
   )
 }
