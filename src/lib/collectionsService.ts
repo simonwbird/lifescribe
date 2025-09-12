@@ -130,10 +130,7 @@ export class CollectionsService {
   ): Promise<RecipeContent[]> {
     let query = supabase
       .from('recipes')
-      .select(`
-        *,
-        profiles:created_by (full_name)
-      `)
+      .select(`*`)
       .eq('family_id', familyId)
 
     if (filter.search) {
@@ -159,7 +156,7 @@ export class CollectionsService {
       visibility: 'family',
       status: 'published',
       authorId: recipe.created_by,
-      authorName: (recipe.profiles as any)?.full_name || 'Unknown',
+      authorName: 'Unknown',
       familyId: recipe.family_id,
       fields: {
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients as string[] : [],
@@ -228,10 +225,7 @@ export class CollectionsService {
   ): Promise<PropertyContent[]> {
     let query = supabase
       .from('properties')
-      .select(`
-        *,
-        profiles:created_by (full_name)
-      `)
+      .select(`*`)
       .eq('family_id', familyId)
 
     if (filter.search) {
@@ -253,7 +247,7 @@ export class CollectionsService {
       visibility: 'family',
       status: 'published',
       authorId: property.created_by,
-      authorName: (property.profiles as any)?.full_name || 'Unknown',
+      authorName: 'Unknown',
       familyId: property.family_id,
       fields: {
         address: property.address,
