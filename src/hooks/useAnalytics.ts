@@ -42,7 +42,13 @@ export type AnalyticsEvent =
   | 'switch_family_success'
   | 'help_open'
   | 'command_palette_open'
-  | 'keyboard_shortcut_help';
+  | 'keyboard_shortcut_help'
+  | 'quick_capture_open'
+  | 'quick_capture_voice_start'
+  | 'quick_capture_voice_stop'
+  | 'quick_capture_save'
+  | 'quick_capture_save_draft'
+  | 'prompt_quick_capture_clicked';
 
 export const useAnalytics = () => {
   const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {

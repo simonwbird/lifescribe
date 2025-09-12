@@ -10,7 +10,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { Shuffle, Sparkles, Grid3x3, ArrowLeft } from 'lucide-react'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { Shuffle, Sparkles, Grid3x3, ArrowLeft, Zap } from 'lucide-react'
+import QuickCaptureComposer, { type QuickCapturePrompt } from '@/components/capture/QuickCaptureComposer'
 import type { Question } from '@/lib/types'
 
 export default function Prompts() {
@@ -21,9 +23,11 @@ export default function Prompts() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [shownQuestionIds, setShownQuestionIds] = useState<Set<string>>(new Set())
   const [showingEditor, setShowingEditor] = useState(false)
+  const [showQuickCapture, setShowQuickCapture] = useState(false)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { toast } = useToast()
+  const { track } = useAnalytics()
 
   useEffect(() => {
     const initializePrompts = async () => {
@@ -130,6 +134,11 @@ export default function Prompts() {
     }
   }
 
+  const handleQuickCapture = () => {
+    track('prompt_quick_capture_clicked')
+    setShowQuickCapture(true)
+  }
+
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentQuestion || !answer.trim() || !familyId) return
@@ -205,6 +214,13 @@ export default function Prompts() {
     }
   }
 
+  const currentPrompt: QuickCapturePrompt | undefined = currentQuestion ? {
+    id: currentQuestion.id,
+    category: currentQuestion.category || 'Memory',
+    question: currentQuestion.question_text,
+    subcopy: 'Share your thoughts and memories with your family'
+  } : undefined
+
   if (!currentQuestion) {
     return (
       <AuthGate>
@@ -253,11 +269,12 @@ export default function Prompts() {
                 {!showingEditor ? (
                   <div className="space-y-4">
                     <Button 
-                      onClick={() => setShowingEditor(true)} 
+                      onClick={handleQuickCapture}
                       className="w-full py-6 text-lg font-medium"
                       size="lg"
                     >
-                      Answer This Question
+                      <Zap className="w-5 h-5 mr-2" />
+                      Answer with Quick Capture
                     </Button>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -278,6 +295,12 @@ export default function Prompts() {
                         <Grid3x3 className="w-4 h-4 mr-2" />
                         Browse Categories
                       </Button>
+                    </div>
+
+                    <div className="text-center pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        💡 Any capture counts toward your streak
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -350,16 +373,19 @@ export default function Prompts() {
                 )}
               </CardContent>
             </Card>
-
-            {!showingEditor && (
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  💡 Answer prompts regularly to build your family's story archive
-                </p>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Quick Capture Composer */}
+        <QuickCaptureComposer
+          isOpen={showQuickCapture}
+          onClose={() => setShowQuickCapture(false)}
+          prompt={currentPrompt}
+          onSave={() => {
+            // Handle successful save
+            handleShowAnother() // Load another question
+          }}
+        />
       </div>
     </AuthGate>
   )

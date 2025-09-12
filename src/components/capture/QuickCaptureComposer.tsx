@@ -1,0 +1,614 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { X, Mic, Square, Play, Pause, Camera, Video, FileText, Users, MapPin, Tag, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { toast } from '@/hooks/use-toast'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import EnhancedMediaUploader from '@/components/story-wizard/EnhancedMediaUploader'
+import type { MediaItem } from '@/components/story-wizard/StoryWizardTypes'
+
+export interface QuickCapturePrompt {
+  id: string
+  category: string
+  question: string
+  subcopy: string
+}
+
+export interface QuickCaptureContext {
+  personId?: string
+  personName?: string
+  propertyId?: string
+  propertyName?: string
+}
+
+interface QuickCaptureComposerProps {
+  isOpen: boolean
+  onClose: () => void
+  prompt?: QuickCapturePrompt
+  context?: QuickCaptureContext
+  onSave?: () => void
+}
+
+type CaptureMode = 'write' | 'photo' | 'voice' | 'video'
+type Privacy = 'family' | 'private' | 'custom'
+
+interface CaptureData {
+  mode: CaptureMode
+  text: string
+  media: MediaItem[]
+  audioBlob?: Blob
+  videoBlob?: Blob
+  people: string[]
+  places: string[]
+  tags: string[]
+  privacy: Privacy
+}
+
+export default function QuickCaptureComposer({ 
+  isOpen, 
+  onClose, 
+  prompt, 
+  context,
+  onSave 
+}: QuickCaptureComposerProps) {
+  const [selectedMode, setSelectedMode] = useState<CaptureMode>('write')
+  const [data, setData] = useState<CaptureData>({
+    mode: 'write',
+    text: '',
+    media: [],
+    people: [],
+    places: [],
+    tags: [],
+    privacy: 'family'
+  })
+  const [isRecording, setIsRecording] = useState(false)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [showPrompt, setShowPrompt] = useState(!!prompt)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  const { track } = useAnalytics()
+
+  // Initialize context data
+  useEffect(() => {
+    if (context) {
+      setData(prev => ({
+        ...prev,
+        people: context.personId ? [context.personName || ''] : prev.people,
+        places: context.propertyId ? [context.propertyName || ''] : prev.places
+      }))
+    }
+  }, [context])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
+          handleSave()
+        }
+        return
+      }
+
+      switch (e.key) {
+        case 'w':
+        case 'W':
+          e.preventDefault()
+          setSelectedMode('write')
+          break
+        case 'p':
+        case 'P':
+          e.preventDefault()
+          setSelectedMode('photo')
+          break
+        case 'v':
+        case 'V':
+          e.preventDefault()
+          if (e.shiftKey) {
+            setSelectedMode('video')
+          } else {
+            setSelectedMode('voice')
+          }
+          break
+        case 'Enter':
+          if (!e.ctrlKey && !e.metaKey) {
+            e.preventDefault()
+            handleSave()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          onClose()
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
+  // Focus text area when switching to write mode
+  useEffect(() => {
+    if (selectedMode === 'write' && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [selectedMode])
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          sampleRate: 44100,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true 
+        } 
+      })
+      
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      })
+      audioChunksRef.current = []
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        setData(prev => ({ ...prev, audioBlob }))
+        setAudioUrl(URL.createObjectURL(audioBlob))
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      mediaRecorderRef.current.start(1000) // Collect data every second
+      setIsRecording(true)
+      setRecordingTime(0)
+      
+      // Start timer
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+
+      track('quick_capture_voice_start')
+    } catch (error) {
+      console.error('Error starting recording:', error)
+      toast({
+        title: 'Recording Error',
+        description: 'Could not access microphone. Please check permissions.',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      
+      track('quick_capture_voice_stop', { duration: recordingTime })
+    }
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const addTag = (tag: string) => {
+    if (!tag.trim()) return
+    setData(prev => ({
+      ...prev,
+      tags: [...new Set([...prev.tags, tag.trim()])]
+    }))
+  }
+
+  const removeTag = (tag: string) => {
+    setData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tag)
+    }))
+  }
+
+  const handleSave = async () => {
+    if (!data.text.trim() && data.media.length === 0 && !data.audioBlob && !data.videoBlob) {
+      toast({
+        title: 'Nothing to save',
+        description: 'Please add some content before saving.',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setIsSaving(true)
+    
+    try {
+      // Simulate save operation
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      track('quick_capture_save', { 
+        mode: selectedMode,
+        has_prompt: !!prompt,
+        has_context: !!context
+      })
+
+      toast({
+        title: 'Captured!',
+        description: 'Your memory was saved.',
+        action: (
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline">View</Button>
+            <Button size="sm" variant="outline" onClick={() => {
+              // Reset form for another capture
+              setData({
+                mode: 'write',
+                text: '',
+                media: [],
+                people: context?.personId ? [context.personName || ''] : [],
+                places: context?.propertyId ? [context.propertyName || ''] : [],
+                tags: [],
+                privacy: 'family'
+              })
+              setSelectedMode('write')
+              setAudioUrl(null)
+            }}>
+              Add another
+            </Button>
+          </div>
+        )
+      })
+
+      onSave?.()
+      onClose()
+    } catch (error) {
+      console.error('Error saving capture:', error)
+      toast({
+        title: 'Save failed',
+        description: 'There was an error saving your capture. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    // Save as draft logic
+    track('quick_capture_save_draft', { mode: selectedMode })
+    toast({
+      title: 'Draft saved',
+      description: 'Your capture has been saved as a draft.'
+    })
+  }
+
+  const captureModeTiles = [
+    {
+      mode: 'write' as const,
+      icon: FileText,
+      label: 'Write',
+      subtitle: 'Write a memory',
+      shortcut: 'W'
+    },
+    {
+      mode: 'photo' as const,
+      icon: Camera,
+      label: 'Photo',
+      subtitle: 'Add photos',
+      shortcut: 'P'
+    },
+    {
+      mode: 'voice' as const,
+      icon: Mic,
+      label: 'Voice',
+      subtitle: 'Record voice',
+      shortcut: 'V'
+    },
+    {
+      mode: 'video' as const,
+      icon: Video,
+      label: 'Video',
+      subtitle: 'Record short video',
+      shortcut: 'Shift+V'
+    }
+  ]
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 lg:max-w-md lg:ml-auto lg:mr-4 lg:h-[calc(100vh-2rem)] lg:my-4">
+        {/* Header */}
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-3">
+              Quick Capture
+              <Badge variant="secondary" className="text-xs">
+                4/7 streak
+              </Badge>
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Prompt Section */}
+            {prompt && showPrompt && (
+              <Card className="border-brand-primary/20 bg-brand-primary/5">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <Badge variant="outline" className="text-xs">
+                        {prompt.category}
+                      </Badge>
+                      <p className="font-medium text-sm">{prompt.question}</p>
+                      <p className="text-xs text-muted-foreground">{prompt.subcopy}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="text-xs h-7">
+                        Show another
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowPrompt(false)}
+                        className="text-xs h-7"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Capture Mode Tiles */}
+            <div className="grid grid-cols-2 gap-3">
+              {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, shortcut }) => (
+                <Button
+                  key={mode}
+                  variant={selectedMode === mode ? "default" : "outline"}
+                  className="h-20 flex-col gap-2 text-center p-4"
+                  onClick={() => setSelectedMode(mode)}
+                >
+                  <Icon className="h-5 w-5" />
+                  <div>
+                    <div className="font-medium text-sm">{label}</div>
+                    <div className="text-xs opacity-70">{subtitle}</div>
+                  </div>
+                  <Badge variant="secondary" className="text-xs h-5">
+                    {shortcut}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+
+            {/* Capture Content */}
+            <div className="space-y-4">
+              {selectedMode === 'write' && (
+                <div>
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="Tell the memory..."
+                    value={data.text}
+                    onChange={(e) => setData(prev => ({ ...prev, text: e.target.value }))}
+                    className="min-h-[120px] resize-none"
+                    rows={5}
+                  />
+                </div>
+              )}
+
+              {selectedMode === 'photo' && (
+                <div>
+                  <EnhancedMediaUploader
+                    media={data.media}
+                    onChange={(media) => setData(prev => ({ ...prev, media }))}
+                    maxFiles={10}
+                  />
+                </div>
+              )}
+
+              {selectedMode === 'voice' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center">
+                    {!isRecording && !audioUrl && (
+                      <Button
+                        onClick={startRecording}
+                        size="lg"
+                        className="h-16 w-16 rounded-full"
+                      >
+                        <Mic className="h-6 w-6" />
+                      </Button>
+                    )}
+
+                    {isRecording && (
+                      <div className="text-center space-y-4">
+                        <Button
+                          onClick={stopRecording}
+                          size="lg"
+                          variant="destructive"
+                          className="h-16 w-16 rounded-full animate-pulse"
+                        >
+                          <Square className="h-6 w-6" />
+                        </Button>
+                        <div className="text-lg font-mono" aria-live="polite">
+                          Recording... {formatTime(recordingTime)}
+                        </div>
+                      </div>
+                    )}
+
+                    {audioUrl && (
+                      <div className="space-y-4 text-center">
+                        <audio controls src={audioUrl} className="w-full" />
+                        <Button
+                          onClick={() => {
+                            setAudioUrl(null)
+                            setData(prev => ({ ...prev, audioBlob: undefined }))
+                          }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Record again
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedMode === 'video' && (
+                <div className="text-center p-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                  <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Video recording will be available soon
+                  </p>
+                  <Button variant="outline" disabled>
+                    Record Video
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Attach & Link */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Attach & Link</h4>
+              
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Users className="h-3 w-3" />
+                  People
+                  {data.people.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">
+                      {data.people.length}
+                    </Badge>
+                  )}
+                </Button>
+                
+                <Button variant="outline" size="sm" className="gap-2">
+                  <MapPin className="h-3 w-3" />
+                  Place
+                  {data.places.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">
+                      {data.places.length}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Add tags..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addTag(e.currentTarget.value)
+                        e.currentTarget.value = ''
+                      }
+                    }}
+                    className="text-sm"
+                  />
+                  <Button size="sm" variant="outline">
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+                
+                {data.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {data.tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="text-xs cursor-pointer"
+                        onClick={() => removeTag(tag)}
+                      >
+                        {tag} <X className="h-2 w-2 ml-1" />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Privacy */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Privacy</label>
+                <Select
+                  value={data.privacy}
+                  onValueChange={(value) => setData(prev => ({ ...prev, privacy: value as Privacy }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="family">Family</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t px-6 py-4 flex gap-3 shrink-0">
+          <Button
+            onClick={handleSaveDraft}
+            variant="outline"
+            disabled={isSaving}
+          >
+            Save draft
+          </Button>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="ml-auto"
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
