@@ -55,7 +55,7 @@ export default function Header() {
 
   const navItems = [
     { label: 'Feed', href: '/home' },
-    { label: 'Library', href: '/archive' },
+    { label: 'Collections', href: '/collections' },
     { label: 'Prompts', href: '/prompts' }
   ]
 

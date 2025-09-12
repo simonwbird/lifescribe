@@ -6,7 +6,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 const navItems = [
   { icon: Home, label: 'Home', href: '/home' },
   { icon: Users, label: 'Family', href: '/family/members' },
-  { icon: Library, label: 'Library', href: '/archive' },
+  { icon: Library, label: 'Collections', href: '/collections' },
   { icon: MessageSquare, label: 'Prompts', href: '/prompts' }
 ]
 
