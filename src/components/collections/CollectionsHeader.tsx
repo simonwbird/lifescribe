@@ -56,7 +56,7 @@ export default function CollectionsHeader({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search titles, people, places, tags…"
+              placeholder="Filter collections by title, people, places, tags…"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10"
