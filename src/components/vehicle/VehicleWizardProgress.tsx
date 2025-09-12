@@ -28,8 +28,7 @@ export default function VehicleWizardProgress({
                   className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-medium",
                     {
-                      "border-primary bg-primary text-primary-foreground": isCurrent,
-                      "border-primary bg-primary text-primary-foreground": isCompleted,
+                      "border-primary bg-primary text-primary-foreground": isCurrent || isCompleted,
                       "border-muted-foreground bg-background text-muted-foreground": !isCurrent && !isCompleted && !isPast,
                       "border-muted bg-muted text-muted-foreground": isPast && !isCompleted
                     }
@@ -47,8 +46,7 @@ export default function VehicleWizardProgress({
                   <p className={cn(
                     "text-sm font-medium",
                     {
-                      "text-foreground": isCurrent,
-                      "text-foreground": isCompleted,
+                      "text-foreground": isCurrent || isCompleted,
                       "text-muted-foreground": !isCurrent && !isCompleted
                     }
                   )}>
