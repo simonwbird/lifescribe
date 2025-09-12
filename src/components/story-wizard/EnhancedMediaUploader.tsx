@@ -31,7 +31,10 @@ export default function EnhancedMediaUploader({
 }: EnhancedMediaUploaderProps) {
   const [dragActive, setDragActive] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const generateId = () => Math.random().toString(36).substr(2, 9)
 
@@ -113,58 +116,74 @@ export default function EnhancedMediaUploader({
           handleFiles([file])
         }
       } else {
-        // Use web camera API as fallback
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-              facingMode: 'environment',
-              width: { ideal: 1920 },
-              height: { ideal: 1080 }
-            } 
-          })
-          
-          // Create a video element to capture the stream
-          const video = document.createElement('video')
-          video.srcObject = stream
-          video.play()
-          
-          // Wait for video to load
-          await new Promise(resolve => {
-            video.onloadedmetadata = resolve
-          })
-          
-          // Create canvas and capture frame
-          const canvas = document.createElement('canvas')
-          canvas.width = video.videoWidth
-          canvas.height = video.videoHeight
-          const ctx = canvas.getContext('2d')
-          ctx?.drawImage(video, 0, 0)
-          
-          // Stop the stream
-          stream.getTracks().forEach(track => track.stop())
-          
-          // Convert to blob and file
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const fileName = `camera-${Date.now()}.jpg`
-              const file = new File([blob], fileName, { type: 'image/jpeg' })
-              handleFiles([file])
-            }
-          }, 'image/jpeg', 0.9)
-          
-        } catch (webCameraError) {
-          console.log('Web camera not available, falling back to file picker')
-          // Final fallback to file picker
-          fileInputRef.current?.click()
-        }
+        // Open camera interface for web
+        await openCameraInterface()
       }
     } catch (error) {
-      console.error('Error capturing photo:', error)
+      console.error('Error accessing camera:', error)
       // Fallback to file picker if camera fails
       fileInputRef.current?.click()
     } finally {
       setIsCapturing(false)
     }
+  }
+
+  const openCameraInterface = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
+      })
+      
+      setStream(mediaStream)
+      setShowCamera(true)
+      
+      // Set video source when component renders
+      setTimeout(() => {
+        if (videoRef.current && mediaStream) {
+          videoRef.current.srcObject = mediaStream
+        }
+      }, 100)
+      
+    } catch (error) {
+      console.error('Error accessing camera:', error)
+      fileInputRef.current?.click()
+    }
+  }
+
+  const takePicture = () => {
+    if (!videoRef.current || !stream) return
+
+    // Create canvas and capture frame
+    const canvas = document.createElement('canvas')
+    const video = videoRef.current
+    
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    
+    const ctx = canvas.getContext('2d')
+    ctx?.drawImage(video, 0, 0)
+    
+    // Convert to blob and file
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const fileName = `camera-${Date.now()}.jpg`
+        const file = new File([blob], fileName, { type: 'image/jpeg' })
+        handleFiles([file])
+        closeCameraInterface()
+      }
+    }, 'image/jpeg', 0.9)
+  }
+
+  const closeCameraInterface = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+    setShowCamera(false)
   }
 
   const removeMedia = (id: string) => {
@@ -369,6 +388,46 @@ export default function EnhancedMediaUploader({
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Camera Interface Modal */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black z-50 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-black/80 text-white">
+            <h3 className="text-lg font-semibold">Take Photo</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeCameraInterface}
+              className="text-white hover:bg-white/20"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Camera Preview */}
+          <div className="flex-1 flex items-center justify-center bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+
+          {/* Controls */}
+          <div className="p-6 bg-black/80 flex justify-center">
+            <Button
+              onClick={takePicture}
+              size="lg"
+              className="bg-white text-black hover:bg-gray-200 rounded-full h-16 w-16 p-0"
+            >
+              <Camera className="h-6 w-6" />
+            </Button>
+          </div>
         </div>
       )}
 
