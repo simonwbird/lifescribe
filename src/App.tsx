@@ -31,7 +31,7 @@ import PetEdit from "./pages/PetEdit";
 import PropertyNew from "./pages/PropertyNew";
 import PropertyEdit from "./pages/PropertyEdit";
 import StoryEdit from "./pages/StoryEdit";
-import NotFound from "./pages/NotFound";
+import SearchPage from "./pages/Search";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +74,7 @@ const App = () => (
           <Route path="/pets/new" element={<PetNew />} />
           <Route path="/pets/:id" element={<PetDetail />} />
           <Route path="/pets/:id/edit" element={<PetEdit />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
