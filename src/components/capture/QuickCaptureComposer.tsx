@@ -81,6 +81,7 @@ export default function QuickCaptureComposer({
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
+  const [liveVideoStream, setLiveVideoStream] = useState<MediaStream | null>(null)
   const [showPrompt, setShowPrompt] = useState(!!prompt)
   const [isSaving, setIsSaving] = useState(false)
   const [showPeoplePicker, setShowPeoplePicker] = useState(false)
@@ -97,6 +98,7 @@ export default function QuickCaptureComposer({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const videoTimerRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const liveVideoRef = useRef<HTMLVideoElement>(null)
   const navigate = useNavigate()
   
   const { track } = useAnalytics()
@@ -298,6 +300,13 @@ export default function QuickCaptureComposer({
         audio: true 
       })
       
+      // Set up live video preview
+      setLiveVideoStream(stream)
+      if (liveVideoRef.current) {
+        liveVideoRef.current.srcObject = stream
+        liveVideoRef.current.play()
+      }
+      
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'video/webm;codecs=vp8,opus'
       })
@@ -317,7 +326,8 @@ export default function QuickCaptureComposer({
         setVideoUrl(videoUrl)
         setData(prev => ({ ...prev, videoBlob }))
         
-        // Stop all tracks
+        // Stop live stream
+        setLiveVideoStream(null)
         stream.getTracks().forEach(track => track.stop())
       }
 
@@ -895,43 +905,55 @@ export default function QuickCaptureComposer({
               {selectedMode === 'video' && (
                 <div className="space-y-4">
                   {!videoUrl ? (
-                    <div className="text-center p-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-                      <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {isVideoRecording ? 'Recording video...' : 'Record a video story'}
-                      </p>
-                      
-                      {isVideoRecording && (
-                        <div className="mb-4">
-                          <div className="text-2xl font-mono text-red-500 mb-2">
-                            {formatTime(recordingTime)}
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm text-red-500">Recording</span>
+                    <div className="space-y-4">
+                      {/* Live Video Preview */}
+                      {isVideoRecording && liveVideoStream && (
+                        <div className="border rounded-lg overflow-hidden bg-black">
+                          <video 
+                            ref={liveVideoRef}
+                            autoPlay
+                            muted
+                            playsInline
+                            className="w-full aspect-video object-cover"
+                          />
+                          <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500/90 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            REC {formatTime(recordingTime)}
                           </div>
                         </div>
                       )}
                       
-                      <div className="flex justify-center gap-3">
-                        {!isVideoRecording ? (
-                          <Button 
-                            onClick={startVideoRecording}
-                            className="gap-2"
-                          >
-                            <Video className="h-4 w-4" />
-                            Start Recording
-                          </Button>
-                        ) : (
-                          <Button 
-                            onClick={stopVideoRecording}
-                            variant="destructive"
-                            className="gap-2"
-                          >
-                            <Square className="h-4 w-4 fill-current" />
-                            Stop Recording
-                          </Button>
+                      {/* Recording Controls */}
+                      <div className="text-center p-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                        {!isVideoRecording && (
+                          <>
+                            <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Record a video story
+                            </p>
+                          </>
                         )}
+                        
+                        <div className="flex justify-center gap-3">
+                          {!isVideoRecording ? (
+                            <Button 
+                              onClick={startVideoRecording}
+                              className="gap-2"
+                            >
+                              <Video className="h-4 w-4" />
+                              Start Recording
+                            </Button>
+                          ) : (
+                            <Button 
+                              onClick={stopVideoRecording}
+                              variant="destructive"
+                              className="gap-2"
+                            >
+                              <Square className="h-4 w-4 fill-current" />
+                              Stop Recording
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ) : (
