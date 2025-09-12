@@ -14,10 +14,8 @@ import type {
   ContentFilter, 
   ContentSort, 
   ViewMode, 
-  ContentCounts,
-  PetContent
+  ContentCounts 
 } from '@/lib/collectionsTypes'
-import PetMemoryArea from '@/components/collections/PetMemoryArea'
 
 export default function Collections() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -218,14 +216,6 @@ export default function Collections() {
             />
 
             {/* Content Grid */}
-            {/* Show pet memory area when viewing pets */}
-            {activeTab === 'pet' && content.length > 0 && (
-              <PetMemoryArea 
-                pets={content as PetContent[]} 
-                familyId={familyId || ''} 
-              />
-            )}
-            
             <ContentGrid
               content={content}
               loading={loading}
