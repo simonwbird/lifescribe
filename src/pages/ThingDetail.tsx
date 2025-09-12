@@ -43,7 +43,7 @@ export default function ThingDetail() {
         .from('things')
         .select(`
           *,
-          properties(name)
+          properties!current_property_id(name)
         `)
         .eq('id', thingId)
         .single();

@@ -52,7 +52,7 @@ export function ThingsList() {
           *,
           media!inner(id),
           thing_story_links!inner(id),
-          properties(name)
+          properties!current_property_id(name)
         `)
         .eq('family_id', memberData.family_id)
         .order('created_at', { ascending: false });

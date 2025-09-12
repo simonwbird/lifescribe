@@ -123,12 +123,17 @@ export class PropertyService {
         *,
         property_occupancy (
           id,
+          property_id,
           person_id,
           role,
           start_date,
+          start_date_circa,
           end_date,
+          end_date_circa,
           primary_home,
           notes,
+          family_id,
+          created_at,
           people (
             id,
             full_name,
@@ -137,15 +142,20 @@ export class PropertyService {
         ),
         property_visits (
           id,
+          property_id,
           people_ids,
           start_date,
           end_date,
           recurring_pattern,
           occasion,
-          notes
+          notes,
+          family_id,
+          created_by,
+          created_at
         ),
         property_events (
           id,
+          property_id,
           event_type,
           event_date,
           event_date_circa,
@@ -153,12 +163,19 @@ export class PropertyService {
           notes,
           media_ids,
           story_id,
-          people_ids
+          people_ids,
+          family_id,
+          created_by,
+          created_at
         ),
         property_rooms (
           id,
+          property_id,
           name,
-          notes
+          notes,
+          family_id,
+          created_by,
+          created_at
         )
       `)
       .eq('id', propertyId)
@@ -171,6 +188,8 @@ export class PropertyService {
 
     return {
       ...property,
+      address_json: property.address_json as any,
+      geocode: property.geocode as any,
       occupancy: property.property_occupancy || [],
       visits: property.property_visits || [],
       events: property.property_events || [],
@@ -184,14 +203,29 @@ export class PropertyService {
   /**
    * Create a new property
    */
-  static async createProperty(propertyData: Partial<Property>): Promise<Property | null> {
+  static async createProperty(propertyData: Partial<Property> & { family_id: string }): Promise<Property | null> {
     const user = await supabase.auth.getUser()
     const { data: property, error } = await supabase
       .from('properties')
       .insert({
-        ...propertyData,
+        display_title: propertyData.display_title || 'Property',
+        name: propertyData.display_title || 'Property', // Database requires name field
+        property_types: propertyData.property_types || [],
         address_json: propertyData.address_json as any,
         geocode: propertyData.geocode as any,
+        address_visibility: propertyData.address_visibility || 'exact',
+        map_visibility: propertyData.map_visibility || true,
+        built_year: propertyData.built_year,
+        built_year_circa: propertyData.built_year_circa || false,
+        first_known_date: propertyData.first_known_date,
+        first_known_circa: propertyData.first_known_circa || false,
+        last_known_date: propertyData.last_known_date,
+        last_known_circa: propertyData.last_known_circa || false,
+        status: propertyData.status || 'current',
+        tags: propertyData.tags || [],
+        description: propertyData.description,
+        cover_media_id: propertyData.cover_media_id,
+        family_id: propertyData.family_id,
         created_by: user.data.user?.id
       })
       .select()
@@ -208,13 +242,27 @@ export class PropertyService {
   /**
    * Update a property
    */
-  static async updateProperty(propertyId: string, updates: Partial<Property>): Promise<Property | null> {
+  static async updateProperty(propertyId: string, updates: Partial<Omit<Property, 'id' | 'created_at' | 'updated_at'>>): Promise<Property | null> {
     const { data: property, error } = await supabase
       .from('properties')
       .update({
-        ...updates,
+        display_title: updates.display_title,
+        name: updates.display_title, // Keep name in sync with display_title
+        property_types: updates.property_types,
         address_json: updates.address_json as any,
         geocode: updates.geocode as any,
+        address_visibility: updates.address_visibility,
+        map_visibility: updates.map_visibility,
+        built_year: updates.built_year,
+        built_year_circa: updates.built_year_circa,
+        first_known_date: updates.first_known_date,
+        first_known_circa: updates.first_known_circa,
+        last_known_date: updates.last_known_date,
+        last_known_circa: updates.last_known_circa,
+        status: updates.status,
+        tags: updates.tags,
+        description: updates.description,
+        cover_media_id: updates.cover_media_id
       })
       .eq('id', propertyId)
       .select()
