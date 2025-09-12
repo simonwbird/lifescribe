@@ -57,7 +57,7 @@ export default function ContentGrid({
         icon: <Package className="h-12 w-12 text-muted-foreground" />,
         title: "No objects yet",
         description: "Document your family's treasured items.",
-        cta: { text: "Add your first object", href: "/vehicles/new" }
+        cta: { text: "Add your first object", href: "/objects/new" }
       },
       property: {
         icon: <Home className="h-12 w-12 text-muted-foreground" />,

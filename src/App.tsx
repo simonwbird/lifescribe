@@ -18,7 +18,7 @@ import PersonProfile from "./pages/PersonProfile";
 import Collections from "./pages/Collections";
 import { PersonTimeline } from "./pages/PersonTimeline";
 import RecipeWizard from "./components/recipe/RecipeWizard";
-import VehicleWizard from "./components/vehicle/VehicleWizard";
+import ObjectsNew from "./pages/ObjectsNew";
 import RecipeDetail from "./pages/RecipeDetail";
 import CookMode from "./pages/CookMode";
 import ThingDetail from "./pages/ThingDetail";
@@ -55,7 +55,7 @@ const App = () => (
           <Route path="/recipes/new" element={<RecipeWizard />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/cook" element={<CookMode />} />
-          <Route path="/vehicles/new" element={<VehicleWizard />} />
+          <Route path="/objects/new" element={<ObjectsNew />} />
           <Route path="/things/:id" element={<ThingDetail />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
           <Route path="*" element={<NotFound />} />
