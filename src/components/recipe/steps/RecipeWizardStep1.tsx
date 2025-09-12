@@ -15,6 +15,7 @@ import { X, Plus } from 'lucide-react'
 import { useState } from 'react'
 import type { RecipeFormData } from '@/lib/recipeTypes'
 import { CUISINES, OCCASIONS } from '@/lib/recipeTypes'
+import FamilyMemberSelector from '../FamilyMemberSelector'
 
 interface RecipeWizardStep1Props {
   data: RecipeFormData
@@ -80,16 +81,14 @@ export default function RecipeWizardStep1({ data, onChange }: RecipeWizardStep1P
           />
         </div>
 
-        {/* Source */}
-        <div className="space-y-2">
-          <Label htmlFor="source">Recipe Source</Label>
-          <Input
-            id="source"
-            placeholder="From Grandma Helen"
-            value={data.source || ''}
-            onChange={(e) => onChange({ source: e.target.value })}
-          />
-        </div>
+        {/* Source - Family Member Selector */}
+        <FamilyMemberSelector
+          value={data.source || ''}
+          onChange={(value) => onChange({ source: value })}
+          label="Recipe Source"
+          placeholder="Select family member or add custom source"
+          allowCustom={true}
+        />
 
         {/* Cuisine and Difficulty */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
