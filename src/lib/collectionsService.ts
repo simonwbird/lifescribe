@@ -24,6 +24,16 @@ import newPetImg from '@/assets/stories/new-pet.jpg'
 import waterfallAdventureImg from '@/assets/stories/waterfall-adventure.jpg'
 import dadsWorkshopImg from '@/assets/stories/dads-workshop.jpg'
 import treehouseBuildingImg from '@/assets/stories/treehouse-building.jpg'
+import antiqueFurnitureImg from '@/assets/objects/antique-furniture.jpg'
+import familyJewelryImg from '@/assets/objects/family-jewelry.jpg'
+import vintageBooksImg from '@/assets/objects/vintage-books.jpg'
+import musicalInstrumentsImg from '@/assets/objects/musical-instruments.jpg'
+import vintagePhotosImg from '@/assets/objects/vintage-photos.jpg'
+import fineChinaImg from '@/assets/objects/fine-china.jpg'
+import vintageToolsImg from '@/assets/objects/vintage-tools.jpg'
+import vintageTextilesImg from '@/assets/objects/vintage-textiles.jpg'
+import familyArtworkImg from '@/assets/objects/family-artwork.jpg'
+import kitchenCollectiblesImg from '@/assets/objects/kitchen-collectibles.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -42,6 +52,24 @@ const sampleRecipeImageForTitle = (title: string): string | null => {
   if (t.includes('pot roast')) return potRoastImg
   if (t.includes('apple pie')) return applePieImg
   if (t.includes('ribs')) return ribsImg
+  return null
+}
+
+const sampleObjectImageForTitle = (title: string, description?: string): string | null => {
+  const t = title.toLowerCase()
+  const d = (description || '').toLowerCase()
+  
+  if (t.includes('furniture') || t.includes('chair') || t.includes('table') || t.includes('dresser') || d.includes('furniture')) return antiqueFurnitureImg
+  if (t.includes('jewelry') || t.includes('watch') || t.includes('ring') || t.includes('necklace') || d.includes('jewelry')) return familyJewelryImg
+  if (t.includes('book') || t.includes('bible') || t.includes('diary') || t.includes('letter') || d.includes('book')) return vintageBooksImg
+  if (t.includes('piano') || t.includes('guitar') || t.includes('violin') || t.includes('instrument') || d.includes('music')) return musicalInstrumentsImg
+  if (t.includes('photo') || t.includes('picture') || t.includes('album') || t.includes('portrait') || d.includes('photograph')) return vintagePhotosImg
+  if (t.includes('china') || t.includes('dishes') || t.includes('plate') || t.includes('tea set') || d.includes('porcelain')) return fineChinaImg
+  if (t.includes('tool') || t.includes('hammer') || t.includes('saw') || t.includes('drill') || d.includes('tool')) return vintageToolsImg
+  if (t.includes('quilt') || t.includes('fabric') || t.includes('clothing') || t.includes('textile') || d.includes('cloth')) return vintageTextilesImg
+  if (t.includes('painting') || t.includes('art') || t.includes('frame') || t.includes('canvas') || d.includes('artwork')) return familyArtworkImg
+  if (t.includes('pot') || t.includes('pan') || t.includes('kitchen') || t.includes('cooking') || d.includes('cookware')) return kitchenCollectiblesImg
+  
   return null
 }
 
@@ -288,7 +316,7 @@ export class CollectionsService {
       location: null,
       peopleIds: [],
       tags: Array.isArray(object.tags) ? object.tags : [],
-      coverUrl: null,
+      coverUrl: sampleObjectImageForTitle(object.title, object.description),
       visibility: 'family',
       status: 'published',
       authorId: object.created_by,
