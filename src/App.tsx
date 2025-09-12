@@ -26,6 +26,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import PetDetail from "./pages/PetDetail";
 import PetNew from "./pages/PetNew";
 import PetEdit from "./pages/PetEdit";
+import PropertyNew from "./pages/PropertyNew";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/recipes/:id/cook" element={<CookMode />} />
           <Route path="/objects/new" element={<ObjectsNew />} />
           <Route path="/things/:id" element={<ThingDetail />} />
+          <Route path="/properties/new" element={<PropertyNew />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
           <Route path="/pets/new" element={<PetNew />} />
           <Route path="/pets/:id" element={<PetDetail />} />
