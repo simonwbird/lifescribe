@@ -131,8 +131,11 @@ export default function StoryWizardStep4({
                     <Users className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <div className="flex flex-wrap gap-1">
                       {formData.people.map((person, index) => (
-                        <Badge key={index} variant="secondary">
-                          {person}
+                        <Badge key={index} variant={typeof person === 'object' && person.isExisting ? "default" : "secondary"}>
+                          {typeof person === 'string' ? person : person.name}
+                          {typeof person === 'object' && !person.isExisting && (
+                            <span className="ml-1 text-xs opacity-75">(new)</span>
+                          )}
                         </Badge>
                       ))}
                     </div>

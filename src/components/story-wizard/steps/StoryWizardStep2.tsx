@@ -4,24 +4,33 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Calendar, MapPin, Users, Hash, X, Plus } from 'lucide-react'
-import { type StoryFormData } from '../StoryWizardTypes'
+import { Calendar, MapPin, Hash, X, Plus } from 'lucide-react'
+import { type StoryFormData, type SelectedPerson } from '../StoryWizardTypes'
+import PeoplePicker from '../PeoplePicker'
 
 interface StoryWizardStep2Props {
   formData: StoryFormData
   onChange: (updates: Partial<StoryFormData>) => void
   onNext: () => void
   onPrevious: () => void
+  familyId: string | null
 }
 
 export default function StoryWizardStep2({ 
   formData, 
   onChange, 
   onNext, 
-  onPrevious 
+  onPrevious,
+  familyId 
 }: StoryWizardStep2Props) {
   const [newTag, setNewTag] = useState('')
-  const [newPerson, setNewPerson] = useState('')
+
+  // Ensure people is always SelectedPerson[] for type safety
+  const selectedPeople: SelectedPerson[] = formData.people || []
+
+  const handlePeopleChange = (people: SelectedPerson[]) => {
+    onChange({ people })
+  }
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && newTag.trim()) {
@@ -36,21 +45,6 @@ export default function StoryWizardStep2({
 
   const handleRemoveTag = (tagToRemove: string) => {
     onChange({ tags: formData.tags.filter(tag => tag !== tagToRemove) })
-  }
-
-  const handleAddPerson = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && newPerson.trim()) {
-      e.preventDefault()
-      const person = newPerson.trim()
-      if (!formData.people.includes(person)) {
-        onChange({ people: [...formData.people, person] })
-      }
-      setNewPerson('')
-    }
-  }
-
-  const handleRemovePerson = (personToRemove: string) => {
-    onChange({ people: formData.people.filter(person => person !== personToRemove) })
   }
 
   const suggestedTags = ['family', 'childhood', 'tradition', 'wartime', 'school', 'recipe', 'celebration', 'work', 'travel', 'holiday']
@@ -122,42 +116,11 @@ export default function StoryWizardStep2({
       </div>
 
       {/* People */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Who's in this story?
-        </Label>
-        <div className="space-y-2">
-          <Input
-            value={newPerson}
-            onChange={(e) => setNewPerson(e.target.value)}
-            onKeyDown={handleAddPerson}
-            placeholder="Type a name and press Enter to add..."
-            aria-describedby="people-help"
-          />
-          <p id="people-help" className="text-xs text-muted-foreground">
-            Add family members, friends, or anyone mentioned in your story
-          </p>
-          {formData.people.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.people.map((person, index) => (
-                <Badge key={index} variant="secondary" className="gap-1">
-                  {person}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => handleRemovePerson(person)}
-                    aria-label={`Remove ${person}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <PeoplePicker
+        selectedPeople={selectedPeople}
+        onPeopleChange={handlePeopleChange}
+        familyId={familyId}
+      />
 
       {/* Tags */}
       <div className="space-y-3">

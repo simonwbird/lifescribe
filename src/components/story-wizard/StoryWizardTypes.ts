@@ -7,7 +7,7 @@ export interface StoryFormData {
   date: string
   dateType: 'exact' | 'approximate'
   location: string
-  people: string[]
+  people: SelectedPerson[]
   tags: string[]
   
   // Step 3 - Media
@@ -16,6 +16,12 @@ export interface StoryFormData {
   // Step 4 - Publishing
   visibility: 'family' | 'branch' | 'private'
   collection: 'none' | 'recipe' | 'object' | 'property'
+}
+
+export interface SelectedPerson {
+  id?: string // undefined for new people not yet in database
+  name: string
+  isExisting: boolean
 }
 
 export interface MediaItem {

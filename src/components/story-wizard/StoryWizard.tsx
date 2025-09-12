@@ -69,7 +69,7 @@ export default function StoryWizard() {
       setFormData(prev => ({
         ...prev,
         title: `Story about ${decodeURIComponent(personName)}`,
-        people: [decodeURIComponent(personName)]
+        people: [{ name: decodeURIComponent(personName), isExisting: false }]
       }))
     }
 
@@ -154,6 +154,17 @@ export default function StoryWizard() {
       if (saved && !searchParams.get('person') && !searchParams.get('prompt')) {
         try {
           const draft = JSON.parse(saved)
+          
+          // Convert legacy people format if needed
+          if (draft.people && Array.isArray(draft.people) && draft.people.length > 0) {
+            if (typeof draft.people[0] === 'string') {
+              draft.people = draft.people.map((name: string) => ({
+                name,
+                isExisting: false
+              }))
+            }
+          }
+          
           setFormData(draft)
           setCurrentStep(draft.currentStep || 1)
           setAutosaveStatus({
@@ -196,15 +207,7 @@ export default function StoryWizard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Prepare tags including people (store as tags for now since we don't have a people table)
-      // In production, this would link to actual person records
-      const updatedTags = [...formData.tags]
-      if (formData.people.length > 0) {
-        const peopleWithPrefix = formData.people.map(person => `person:${person}`)
-        updatedTags.push(...peopleWithPrefix)
-      }
-
-      // Create story
+      // Create story first
       const { data: story, error: storyError } = await supabase
         .from('stories')
         .insert({
@@ -212,7 +215,7 @@ export default function StoryWizard() {
           profile_id: user.id,
           title: formData.title.trim(),
           content: formData.content.trim(),
-          tags: updatedTags.length > 0 ? updatedTags : null,
+          tags: formData.tags.length > 0 ? formData.tags : null,
           date: formData.date || null,
           location: formData.location || null,
           visibility: formData.visibility,
@@ -222,6 +225,44 @@ export default function StoryWizard() {
         .single()
 
       if (storyError) throw storyError
+
+      // Handle people - create new people records and link to story
+      if (formData.people.length > 0 && story) {
+        for (const person of formData.people) {
+          let personId = person.id
+
+          // Create new person record if they don't exist
+          if (!person.isExisting && !personId) {
+            const { data: newPerson, error: personError } = await supabase
+              .from('people')
+              .insert({
+                family_id: familyId,
+                full_name: person.name,
+                created_by: user.id
+              })
+              .select('id')
+              .single()
+
+            if (personError) {
+              console.error('Error creating person:', personError)
+              continue // Skip this person if creation fails
+            }
+
+            personId = newPerson.id
+          }
+
+          // Link person to story
+          if (personId) {
+            await supabase
+              .from('person_story_links')
+              .insert({
+                person_id: personId,
+                story_id: story.id,
+                family_id: familyId
+              })
+          }
+        }
+      }
 
       // Upload media
       if (formData.media.length > 0 && story) {
@@ -309,11 +350,17 @@ export default function StoryWizard() {
   }
 
   const handlePeopleSuggestions = (people: string[]) => {
-    const newPeople = [...new Set([...formData.people, ...people])]
-    updateFormData({ people: newPeople })
+    const existingNames = formData.people.map(p => typeof p === 'string' ? p : p.name)
+    const newPeopleObjects = people
+      .filter(name => !existingNames.includes(name))
+      .map(name => ({ name, isExisting: false }))
+    
+    updateFormData({ 
+      people: [...formData.people, ...newPeopleObjects]
+    })
     toast({
       title: "People suggested",
-      description: `Added ${people.length} suggested people.`,
+      description: `Added ${newPeopleObjects.length} suggested people.`,
     })
   }
 
@@ -329,12 +376,13 @@ export default function StoryWizard() {
         )
       case 2:
         return (
-          <StoryWizardStep2
-            formData={formData}
-            onChange={updateFormData}
-            onNext={() => goToStep(3)}
-            onPrevious={() => goToStep(1)}
-          />
+        <StoryWizardStep2
+          formData={formData}
+          onChange={updateFormData}
+          onNext={() => goToStep(3)}
+          onPrevious={() => goToStep(1)}
+          familyId={familyId}
+        />
         )
       case 3:
         return (
