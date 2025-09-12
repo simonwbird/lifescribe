@@ -16,7 +16,16 @@ import {
   Camera,
   MessageCircle,
   Shield,
-  Quote
+  Quote,
+  Globe,
+  BookOpen,
+  Clock,
+  Star,
+  Play,
+  ChevronRight,
+  Image,
+  Mic,
+  Video
 } from 'lucide-react'
 
 // Import family photos
@@ -25,24 +34,24 @@ import familyTechnology from '@/assets/family-technology.jpg'
 import grandfatherGranddaughter from '@/assets/grandfather-granddaughter.jpg'
 import familySelfie from '@/assets/family-selfie.jpg'
 
+// 1. HERO SECTION
 const Hero = () => (
-  <section className="relative bg-[var(--gradient-background)] py-12 lg:py-16">
+  <section className="relative bg-gradient-to-br from-background via-muted/20 to-background py-16 lg:py-24">
     <div className="container mx-auto px-4">
-      <div className="grid lg:grid-cols-2 gap-8 items-center max-w-7xl mx-auto">
-        <div className="text-center lg:text-left">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-            Preserve your family's{" "}
+      <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+        <div className="text-center lg:text-left space-y-8">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight text-foreground">
+            Memories fade.{" "}
             <span className="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
-              stories for generations
+              LifeScribe makes sure your family's story never does.
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-6 leading-relaxed">
-            LifeScribe is a private family memory book where everyone can share stories, photos, and wisdom — 
-            safely kept for the future.
+          <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">
+            A private place for your family's photos, recipes, voices, and stories — preserved and shared for generations.
           </p>
           <Button asChild size="lg" className="text-lg px-10 py-6 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 shadow-lg hover:shadow-xl transition-all">
             <Link to="/onboarding">
-              Start Your Family Archive <ArrowRight className="ml-2 h-5 w-5" />
+              Start Your Family Story <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
         </div>
@@ -53,7 +62,7 @@ const Hero = () => (
               alt="Multi-generational family sharing stories and memories together"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
           </div>
         </div>
       </div>
@@ -61,90 +70,150 @@ const Hero = () => (
   </section>
 )
 
-const PositioningSection = () => (
-  <section className="py-8 bg-card">
+// 2. EXPERIENCE SECTION
+const ExperienceSection = () => (
+  <section className="py-16 lg:py-20 bg-muted/30">
     <div className="container mx-auto px-4">
-      <div className="max-w-4xl mx-auto text-center">
-        <blockquote className="text-2xl md:text-3xl font-medium text-muted-foreground italic leading-relaxed">
-          "If Ancestry is your family's skeleton, LifeScribe is the heartbeat and voice."
-        </blockquote>
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+            Bring your family story to life
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            LifeScribe turns moments into a living archive your whole family can explore.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <div className="p-3 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl">
+                <Users className="h-6 w-6 text-brand-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">Build a family tree you can zoom through</h3>
+                <p className="text-muted-foreground leading-relaxed">Navigate through generations with an interactive family tree filled with photos and stories.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-4">
+              <div className="p-3 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl">
+                <Clock className="h-6 w-6 text-brand-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">See timelines filled with stories, photos, and milestones</h3>
+                <p className="text-muted-foreground leading-relaxed">Watch your family's history unfold through beautifully organized timelines.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-4">
+              <div className="p-3 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl">
+                <BookOpen className="h-6 w-6 text-brand-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">Keep recipes and heirlooms alive with their stories</h3>
+                <p className="text-muted-foreground leading-relaxed">Preserve the stories behind your family's treasures, not just the objects themselves.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-4">
+              <div className="p-3 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl">
+                <Video className="h-6 w-6 text-brand-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">Hear voices and laughter through audio and video clips</h3>
+                <p className="text-muted-foreground leading-relaxed">Capture the sounds and emotions that make memories truly come alive.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-[4/3]">
+              <img 
+                src={familyTechnology} 
+                alt="Family using LifeScribe to explore their family tree together"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 )
 
-const FeatureCard = ({ 
-  title, 
-  description, 
-  icon: Icon
-}: {
-  title: string
-  description: string
-  icon: React.ComponentType<any>
-}) => (
-  <Card className="bg-card rounded-3xl shadow-lg border-0 hover:shadow-xl transition-all p-8 h-full">
-    <CardContent className="p-0 text-center">
-      <div className="mb-6 flex justify-center">
-        <div className="p-4 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl">
-          <Icon className="h-8 w-8 text-brand-primary" />
-        </div>
-      </div>
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed">{description}</p>
-    </CardContent>
-  </Card>
-)
-
-const FeaturesSection = () => (
-  <section className="py-12 lg:py-16 bg-[var(--gradient-subtle)]">
+// 3. SOCIAL PROOF ROW
+const SocialProofSection = () => (
+  <section className="py-12 bg-card border-y">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Everything your family needs to stay connected
+        <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="flex text-brand-primary">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-5 w-5 fill-current" />
+              ))}
+            </div>
+            <p className="text-lg font-medium text-foreground">"The easiest way I've ever captured my dad's stories."</p>
+          </div>
+          
+          <div className="flex flex-col items-center space-y-3">
+            <Users className="h-8 w-8 text-brand-primary" />
+            <p className="text-lg font-medium text-foreground">Trusted by families in 20+ countries</p>
+          </div>
+          
+          <div className="flex flex-col items-center space-y-3">
+            <Shield className="h-8 w-8 text-brand-primary" />
+            <p className="text-lg font-medium text-foreground">Private, safe, and secure by design</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+)
+
+// 4. BENEFITS SECTION
+const BenefitsSection = () => (
+  <section className="py-16 lg:py-20">
+    <div className="container mx-auto px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+            Why families choose LifeScribe
           </h2>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8">
-          <FeatureCard
-            title="Capture Memories"
-            description="Answer fun prompts about your life, upload photos and videos, and create lasting memories that your family will treasure forever."
-            icon={Camera}
-          />
-          <FeatureCard
-            title="Private & Secure"
-            description="Your family's stories are protected with bank-level security. Only invited family members can access your memories — no ads, no data mining."
-            icon={Lock}
-          />
-          <FeatureCard
-            title="Connect Generations"
-            description="Bring children, parents, and grandparents together in one shared space where everyone can contribute to your family's story."
-            icon={Heart}
-          />
-        </div>
-        
-        {/* Photo showcase section */}
-        <div className="mt-12 grid md:grid-cols-3 gap-8">
-          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
-            <img 
-              src={familyTechnology} 
-              alt="Family using technology together to share memories"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl flex items-center justify-center">
+              <Globe className="h-8 w-8 text-brand-primary" />
+            </div>
+            <h3 className="text-xl font-bold">Stay connected across generations and continents</h3>
+            <p className="text-muted-foreground leading-relaxed">Bridge distances and decades with shared family stories.</p>
           </div>
-          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
-            <img 
-              src={grandfatherGranddaughter} 
-              alt="Grandfather and granddaughter looking through photo albums"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
+          
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl flex items-center justify-center">
+              <BookOpen className="h-8 w-8 text-brand-primary" />
+            </div>
+            <h3 className="text-xl font-bold">Make it easy for everyone to share stories, photos, and memories</h3>
+            <p className="text-muted-foreground leading-relaxed">Simple tools that encourage every family member to contribute.</p>
           </div>
-          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/3]">
-            <img 
-              src={familySelfie} 
-              alt="Multi-generational family taking a happy selfie together"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
+          
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl flex items-center justify-center">
+              <Clock className="h-8 w-8 text-brand-primary" />
+            </div>
+            <h3 className="text-xl font-bold">Create an archive that lasts forever</h3>
+            <p className="text-muted-foreground leading-relaxed">Built to preserve your family's legacy for future generations.</p>
+          </div>
+          
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-brand-muted to-brand-accent rounded-2xl flex items-center justify-center">
+              <Lock className="h-8 w-8 text-brand-primary" />
+            </div>
+            <h3 className="text-xl font-bold">Safe, private, family-only space</h3>
+            <p className="text-muted-foreground leading-relaxed">Your memories are protected and shared only with who you choose.</p>
           </div>
         </div>
       </div>
@@ -152,6 +221,28 @@ const FeaturesSection = () => (
   </section>
 )
 
+// 5. EMOTIONAL SECTION
+const EmotionalSection = () => (
+  <section className="py-16 lg:py-20 bg-gradient-to-br from-muted/40 via-background to-muted/40">
+    <div className="container mx-auto px-4">
+      <div className="max-w-5xl mx-auto text-center space-y-8">
+        <h2 className="text-4xl md:text-6xl font-bold leading-tight text-foreground">
+          Imagine your grandchildren knowing your voice, your favourite recipe, your adventures.
+        </h2>
+        <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-4xl mx-auto">
+          With LifeScribe, your family's story isn't lost — it's alive, shared, and cherished.
+        </p>
+        <Button asChild size="lg" className="text-lg px-10 py-6 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 shadow-lg hover:shadow-xl transition-all">
+          <Link to="/onboarding">
+            Preserve a Memory Today <Heart className="ml-2 h-5 w-5" />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  </section>
+)
+
+// 6. TESTIMONIALS
 const TestimonialCard = ({ quote, author }: { quote: string, author: string }) => (
   <Card className="bg-card rounded-3xl shadow-lg border-0 p-8 h-full">
     <CardContent className="p-0">
@@ -165,30 +256,27 @@ const TestimonialCard = ({ quote, author }: { quote: string, author: string }) =
 )
 
 const TestimonialsSection = () => (
-  <section className="py-12 lg:py-16">
+  <section className="py-16 lg:py-20">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Families love LifeScribe
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+            What families are saying
           </h2>
-          <p className="text-lg text-muted-foreground">
-            See what families are saying about preserving their memories together
-          </p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8">
           <TestimonialCard
-            quote="It feels like having a digital family book we can all write in."
-            author="Sarah M."
+            quote="I never thought my mum would love technology — but now she records little stories for the grandkids every week."
+            author="Sarah J."
           />
           <TestimonialCard
-            quote="My kids love asking grandma questions and seeing her answers."
-            author="Michael R."
+            quote="Our family tree used to be just names. Now it's full of voices, photos, and recipes. It feels alive."
+            author="Daniel B."
           />
           <TestimonialCard
-            quote="LifeScribe made us laugh and cry together — in the best way."
-            author="Jennifer L."
+            quote="It's like a private Facebook, but only for the people who really matter."
+            author="Priya M."
           />
         </div>
       </div>
@@ -196,24 +284,64 @@ const TestimonialsSection = () => (
   </section>
 )
 
-const CallToAction = () => (
-  <section className="py-12 lg:py-16 bg-[var(--gradient-background)]">
+// 7. HOW IT WORKS
+const HowItWorksSection = () => (
+  <section className="py-16 lg:py-20 bg-muted/30">
+    <div className="container mx-auto px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+            Simple, joyful, meaningful.
+          </h2>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              1
+            </div>
+            <h3 className="text-2xl font-bold">Answer a guided prompt</h3>
+            <p className="text-lg text-muted-foreground leading-relaxed">Like "What was your first job?" or "Tell us about your wedding day."</p>
+          </div>
+          
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              2
+            </div>
+            <h3 className="text-2xl font-bold">Add photos, recipes, or voice notes</h3>
+            <p className="text-lg text-muted-foreground leading-relaxed">Share the pictures, sounds, and details that make the story complete.</p>
+          </div>
+          
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              3
+            </div>
+            <h3 className="text-2xl font-bold">Invite family to join the story</h3>
+            <p className="text-lg text-muted-foreground leading-relaxed">Watch as your family archive grows with everyone's contributions.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+)
+
+// 8. FINAL CTA
+const FinalCallToAction = () => (
+  <section className="py-16 lg:py-20 bg-gradient-to-br from-background via-muted/20 to-background">
     <div className="container mx-auto px-4 text-center">
-      <h2 className="text-4xl md:text-6xl font-bold mb-4">
-        Start your family archive{" "}
-        <span className="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
-          today
-        </span>
-      </h2>
-      <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-        Join families worldwide who are preserving their stories for future generations. 
-        Create your private family space in just minutes.
-      </p>
-      <Button asChild size="lg" className="text-xl px-12 py-8 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 shadow-2xl hover:shadow-3xl transition-all">
-        <Link to="/onboarding">
-          Start Your Family Archive <ArrowRight className="ml-3 h-6 w-6" />
-        </Link>
-      </Button>
+      <div className="max-w-5xl mx-auto space-y-8">
+        <h2 className="text-4xl md:text-6xl font-bold leading-tight text-foreground">
+          Your family story matters.
+        </h2>
+        <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+          Already trusted by thousands of families building their living archives.
+        </p>
+        <Button asChild size="lg" className="text-xl px-12 py-8 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 text-brand-primary-foreground border-0 shadow-2xl hover:shadow-3xl transition-all">
+          <Link to="/onboarding">
+            Begin Today with LifeScribe <ArrowRight className="ml-3 h-6 w-6" />
+          </Link>
+        </Button>
+      </div>
     </div>
   </section>
 )
@@ -378,10 +506,13 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <LandingHeader />
       <Hero />
-      <PositioningSection />
-      <FeaturesSection />
+      <ExperienceSection />
+      <SocialProofSection />
+      <BenefitsSection />
+      <EmotionalSection />
       <TestimonialsSection />
-      <CallToAction />
+      <HowItWorksSection />
+      <FinalCallToAction />
       <Footer />
     </div>
   )
