@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Menu } from 'lucide-react'
+import { Search, Menu, BookHeart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
@@ -170,11 +170,12 @@ export default function Header() {
             {/* Logo */}
             <Link 
               to="/home" 
-              className="text-xl font-serif text-foreground hover:text-primary transition-colors"
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
               onClick={handleLogoClick}
               aria-label="LifeScribe — go to Home"
             >
-              LifeScribe
+              <BookHeart className="h-8 w-8 text-brand-primary" />
+              <span className="text-2xl font-serif font-bold text-foreground">LifeScribe</span>
             </Link>
             
             {/* Desktop Navigation */}
