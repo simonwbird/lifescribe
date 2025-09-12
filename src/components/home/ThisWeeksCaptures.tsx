@@ -1,0 +1,45 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Flame, X } from 'lucide-react';
+
+export default function ThisWeeksCaptures() {
+  const capturesThisWeek = 4;
+  const weeklyGoal = 7;
+  const currentStreak = 12;
+  const progressPercentage = (capturesThisWeek / weeklyGoal) * 100;
+
+  return (
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-serif">This Week's Captures</CardTitle>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+            Turn off streaks
+          </Button>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium">{capturesThisWeek} / {weeklyGoal}</span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" />
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-1">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-medium">{currentStreak} day streak!</span>
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Keep sharing to maintain your streak. Great job staying connected with your family!
+        </p>
+      </CardContent>
+    </Card>
+  );
+}

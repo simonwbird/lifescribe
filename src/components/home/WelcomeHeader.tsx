@@ -1,84 +1,54 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import type { Profile } from '@/lib/types';
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 interface WelcomeHeaderProps {
-  onCreateClick: () => void;
+  firstName?: string;
+  lastSeen?: string;
+  onCreateClick: () => void
 }
 
-export default function WelcomeHeader({ onCreateClick }: WelcomeHeaderProps) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [lastVisit, setLastVisit] = useState<string>('');
+const formatLastSeen = (timestamp?: string) => {
+  if (!timestamp) return 'Welcome back!';
+  
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
 
-  useEffect(() => {
-    const getProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  if (diffDays > 7) {
+    return `Last seen ${date.toLocaleDateString()}`;
+  } else if (diffDays > 0) {
+    return `Last seen ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  } else if (diffHours > 0) {
+    return `Last seen ${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  } else {
+    return 'Last seen recently';
+  }
+};
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setProfile(profile);
-        
-        // Get last visit from localStorage
-        const lastVisitKey = `last_visit_${user.id}`;
-        const storedLastVisit = localStorage.getItem(lastVisitKey);
-        
-        if (storedLastVisit) {
-          const lastVisitDate = new Date(storedLastVisit);
-          const daysAgo = Math.floor((Date.now() - lastVisitDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysAgo === 0) {
-            setLastVisit('Earlier today');
-          } else if (daysAgo === 1) {
-            setLastVisit('Yesterday');
-          } else if (daysAgo < 7) {
-            setLastVisit(`${daysAgo} days ago`);
-          } else {
-            setLastVisit(lastVisitDate.toLocaleDateString());
-          }
-        }
-        
-        // Update last visit timestamp
-        localStorage.setItem(lastVisitKey, new Date().toISOString());
-      }
-    };
-
-    getProfile();
-  }, []);
-
-  const firstName = profile?.full_name?.split(' ')[0] || 'there';
-
+export default function WelcomeHeader({ firstName = 'Emily', lastSeen, onCreateClick }: WelcomeHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 className="text-h1 font-serif text-charcoal mb-2">
+        <h1 className="text-h1 font-serif font-semibold text-foreground mb-1">
           Welcome back, {firstName}
         </h1>
-        {lastVisit && (
-          <p className="text-fine text-warm-gray mb-2">
-            Last seen {lastVisit}
-          </p>
-        )}
-        <p className="text-body text-sage italic">
+        <p className="text-sm text-muted-foreground mb-1">
+          {formatLastSeen(lastSeen)}
+        </p>
+        <p className="text-body text-muted-foreground italic">
           Where your family stories live forever.
         </p>
       </div>
-      
       <Button 
         onClick={onCreateClick}
-        className="bg-sage hover:bg-sage/90 text-cream"
         size="lg"
+        className="bg-sage hover:bg-sage/90 text-cream px-8 font-serif"
       >
         <Plus className="w-5 h-5 mr-2" />
         Create
       </Button>
     </div>
-  );
+  )
 }

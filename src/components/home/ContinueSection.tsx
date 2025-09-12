@@ -15,21 +15,21 @@ export default function ContinueSection() {
         id: '1',
         kind: 'story',
         title: 'Summer at Grandma\'s house',
-        progress: 'Add photos',
-        updatedAt: '2 hours ago'
+        progress: 'Tag people',
+        updatedAt: '2025-01-10T14:30:00Z'
       },
       {
         id: '2',
         kind: 'photos',
         title: 'Family reunion 2024',
-        progress: 'Tag people',
-        updatedAt: '1 day ago'
+        progress: 'Add date',
+        updatedAt: '2025-01-09T16:45:00Z'
       },
       {
         id: '3',
         kind: 'audio',
-        progress: 'Add a title',
-        updatedAt: '3 days ago'
+        progress: 'Needs title',
+        updatedAt: '2025-01-08T11:20:00Z'
       }
     ];
 
@@ -48,6 +48,18 @@ export default function ContinueSection() {
 
   const getDraftTitle = (draft: DraftItem) => {
     return draft.title || `Untitled ${draft.kind}`;
+  };
+
+  const formatRelativeTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffHours < 1) return 'just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
   };
 
   if (drafts.length === 0) {
@@ -82,7 +94,7 @@ export default function ContinueSection() {
                     </Badge>
                     <span className="text-fine text-warm-gray flex items-center">
                       <Clock className="w-3 h-3 mr-1" />
-                      {draft.updatedAt}
+                      Saved {formatRelativeTime(draft.updatedAt)}
                     </span>
                   </div>
                 </div>

@@ -1,29 +1,46 @@
-// Types for Home Hub functionality
+// Types for Home Hub functionality v2
 
-export type ActivityItem = 
-  | { type: 'story_published'; id: string; title: string; author: string; when: string; unread?: boolean }
-  | { type: 'comment_added'; id: string; storyTitle: string; author: string; when: string; unread?: boolean }
-  | { type: 'photo_uploaded'; id: string; count: number; by: string; when: string; unread?: boolean }
-  | { type: 'tag_request'; id: string; personName?: string; when: string; unread?: boolean }
-  | { type: 'invite_accepted'; id: string; name: string; when: string; unread?: boolean }
-  | { type: 'profile_updated'; id: string; name: string; when: string; unread?: boolean };
+export type LastVisit = { 
+  lastLoginAt: string; 
+};
+
+export type ActivityKind = 'story' | 'photo' | 'comment' | 'invite';
+
+export type ActivityItem = {
+  id: string;
+  kind: ActivityKind;
+  title: string;
+  actor: string;
+  when: string; // ISO
+  read: boolean;
+  targetUrl: string;
+};
+
+export type DraftKind = 'story' | 'photos' | 'audio' | 'scan';
 
 export type DraftItem = { 
   id: string; 
-  kind: 'story' | 'photos' | 'scan' | 'audio'; 
+  kind: DraftKind; 
   title?: string; 
-  progress: string; 
-  updatedAt: string;
+  progress: 'Needs title' | 'Tag people' | 'Add date' | 'Ready to publish'; 
+  updatedAt: string; // ISO
 };
 
-export type ActivityFilter = 'all' | 'my-family' | 'about-me';
+export type ActivityFilter = 'all' | 'stories' | 'photos' | 'comments' | 'invites';
 
 export type QuickAction = {
   id: string;
   title: string;
   description: string;
   icon: string;
+  shortcut: string;
   action: () => void;
+};
+
+export type SpaceSummary = { 
+  name: string; 
+  count: number; 
+  updatedAt: string; 
 };
 
 export type SpaceCard = {
@@ -31,11 +48,26 @@ export type SpaceCard = {
   title: string;
   description: string;
   count?: number;
-  lastAdded?: string;
+  updatedAt?: string;
   href: string;
   thumbnail?: string;
 };
 
+export type Suggestion = { 
+  id: string; 
+  text: string; 
+  actionLabel: string; 
+  href: string; 
+};
+
+export type UpcomingItem = { 
+  id: string; 
+  person: string; 
+  type: 'Birthday' | 'Anniversary'; 
+  when: string; 
+};
+
+// Legacy types for backward compatibility
 export type UpcomingMoment = {
   id: string;
   type: 'birthday' | 'anniversary';

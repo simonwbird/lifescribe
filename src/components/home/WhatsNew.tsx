@@ -1,203 +1,252 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MessageCircle, Image, UserPlus, User, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import type { ActivityItem, ActivityFilter } from '@/lib/homeTypes';
+import { 
+  FileText, 
+  Image, 
+  MessageCircle, 
+  UserPlus, 
+  Pin, 
+  VolumeX, 
+  Check,
+  MoreHorizontal,
+  Activity
+} from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ActivityItem, ActivityFilter } from '@/lib/homeTypes';
+import { useAnalytics } from '@/hooks/useAnalytics';
+
+// Mock data
+const mockActivities: ActivityItem[] = [
+  {
+    id: '1',
+    kind: 'story',
+    title: 'My First Day of School',
+    actor: 'Sarah Johnson',
+    when: '2025-01-10T14:30:00Z',
+    read: false,
+    targetUrl: '/story/1'
+  },
+  {
+    id: '2', 
+    kind: 'photo',
+    title: 'Added 5 photos to Christmas 2024',
+    actor: 'Mike Chen',
+    when: '2025-01-09T09:15:00Z',
+    read: false,
+    targetUrl: '/photos/christmas-2024'
+  },
+  {
+    id: '3',
+    kind: 'comment',
+    title: 'Commented on "Wedding Day Memories"',
+    actor: 'Emma Davis',
+    when: '2025-01-08T16:45:00Z',
+    read: true,
+    targetUrl: '/story/wedding-memories#comment-3'
+  },
+  {
+    id: '4',
+    kind: 'invite',
+    title: 'Joined the family',
+    actor: 'David Wilson',
+    when: '2025-01-07T11:20:00Z',
+    read: false,
+    targetUrl: '/people/david-wilson'
+  }
+];
+
+const getActivityIcon = (kind: ActivityItem['kind']) => {
+  const iconProps = { className: "h-4 w-4" };
+  switch (kind) {
+    case 'story': return <FileText {...iconProps} />;
+    case 'photo': return <Image {...iconProps} />;
+    case 'comment': return <MessageCircle {...iconProps} />;
+    case 'invite': return <UserPlus {...iconProps} />;
+  }
+};
+
+const formatRelativeTime = (timestamp: string) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) {
+    return `${diffDays}d ago`;
+  } else if (diffHours > 0) {
+    return `${diffHours}h ago`;
+  } else {
+    return 'Just now';
+  }
+};
 
 export default function WhatsNew() {
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [filter, setFilter] = useState<ActivityFilter>('all');
-  const [loading, setLoading] = useState(true);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const { track } = useAnalytics();
 
-  useEffect(() => {
-    const getActivities = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const filteredActivities = useMemo(() => {
+    let filtered = mockActivities;
 
-        // Get user's family
-        const { data: member } = await supabase
-          .from('members')
-          .select('family_id')
-          .eq('profile_id', user.id)
-          .single();
-
-        if (!member) return;
-
-        // Mock activities for now - in real app would fetch from database
-        const mockActivities: ActivityItem[] = [
-          {
-            type: 'story_published',
-            id: '1',
-            title: 'Childhood memories from the farm',
-            author: 'Sarah Johnson',
-            when: '2 hours ago',
-            unread: true
-          },
-          {
-            type: 'comment_added',
-            id: '2',
-            storyTitle: 'Our wedding day',
-            author: 'Michael Chen',
-            when: '4 hours ago',
-            unread: true
-          },
-          {
-            type: 'photo_uploaded',
-            id: '3',
-            count: 5,
-            by: 'Emma Davis',
-            when: '1 day ago',
-            unread: false
-          },
-          {
-            type: 'invite_accepted',
-            id: '4',
-            name: 'David Wilson',
-            when: '2 days ago',
-            unread: false
-          }
-        ];
-
-        setActivities(mockActivities);
-      } catch (error) {
-        console.error('Error fetching activities:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getActivities();
-  }, []);
-
-  const handleMarkAllSeen = () => {
-    setActivities(prev => prev.map(activity => ({ ...activity, unread: false })));
-  };
-
-  const getActivityIcon = (type: ActivityItem['type']) => {
-    switch (type) {
-      case 'story_published': return <MessageCircle className="w-4 h-4" />;
-      case 'comment_added': return <MessageCircle className="w-4 h-4" />;
-      case 'photo_uploaded': return <Image className="w-4 h-4" />;
-      case 'invite_accepted': return <UserPlus className="w-4 h-4" />;
-      case 'profile_updated': return <User className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+    if (showUnreadOnly) {
+      filtered = filtered.filter(item => !item.read);
     }
-  };
 
-  const getActivityText = (activity: ActivityItem) => {
-    switch (activity.type) {
-      case 'story_published':
-        return `${activity.author} shared "${activity.title}"`;
-      case 'comment_added':
-        return `${activity.author} commented on "${activity.storyTitle}"`;
-      case 'photo_uploaded':
-        return `${activity.by} uploaded ${activity.count} new photos`;
-      case 'invite_accepted':
-        return `${activity.name} joined your family`;
-      case 'profile_updated':
-        return `${activity.name} updated their profile`;
-      default:
-        return 'New activity';
+    if (filter !== 'all') {
+      filtered = filtered.filter(item => {
+        switch (filter) {
+          case 'stories': return item.kind === 'story';
+          case 'photos': return item.kind === 'photo';
+          case 'comments': return item.kind === 'comment';
+          case 'invites': return item.kind === 'invite';
+          default: return true;
+        }
+      });
     }
+
+    return filtered;
+  }, [filter, showUnreadOnly]);
+
+  const unreadCount = mockActivities.filter(item => !item.read).length;
+
+  const handleFilterChange = (newFilter: ActivityFilter) => {
+    setFilter(newFilter);
+    track('home_filter_changed', { filter: newFilter });
   };
 
-  const filteredActivities = activities.filter(activity => {
-    if (filter === 'all') return true;
-    // Add filter logic based on activity type/content
-    return true;
-  });
+  const handleMarkAllRead = () => {
+    track('home_mark_all_read');
+    // In real app, would update backend
+    console.log('Marking all as read');
+  };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-h3 font-serif text-charcoal">What's New</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-12 bg-warm-beige/50 rounded-lg"></div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleActivityClick = (item: ActivityItem) => {
+    track('home_activity_open', { activityId: item.id, kind: item.kind });
+    // In real app, would navigate to target URL
+    console.log('Opening activity:', item.targetUrl);
+  };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-h3 font-serif text-charcoal">What's New</CardTitle>
-          <Button 
-            variant="ghost" 
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-h3 font-serif">What's New</CardTitle>
+            {unreadCount > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                Since last visit: {unreadCount}
+              </Badge>
+            )}
+          </div>
+          <Button
+            variant="ghost"
             size="sm"
-            onClick={handleMarkAllSeen}
-            className="text-sage hover:text-sage/80"
+            onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+            className="text-sm"
           >
-            <CheckCircle className="w-4 h-4 mr-1" />
-            Mark all seen
+            {showUnreadOnly ? 'Show all' : 'Show unread only'}
           </Button>
         </div>
-        
-        <div className="flex space-x-2 mt-4">
-          {(['all', 'my-family', 'about-me'] as ActivityFilter[]).map(filterOption => (
+
+        {/* Filter chips */}
+        <div className="flex gap-2 flex-wrap">
+          {(['all', 'stories', 'photos', 'comments', 'invites'] as ActivityFilter[]).map((filterType) => (
             <Button
-              key={filterOption}
-              variant={filter === filterOption ? 'default' : 'outline'}
+              key={filterType}
+              variant={filter === filterType ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFilter(filterOption)}
-              className={filter === filterOption ? 'bg-sage text-cream' : 'text-sage border-sage/30'}
+              onClick={() => handleFilterChange(filterType)}
+              className="text-xs h-8 capitalize"
             >
-              {filterOption === 'all' ? 'All' : 
-               filterOption === 'my-family' ? 'My Family' : 'About Me'}
+              {filterType}
             </Button>
           ))}
         </div>
       </CardHeader>
-      
-      <CardContent>
+
+      <CardContent className="space-y-4">
         {filteredActivities.length === 0 ? (
-          <p className="text-warm-gray text-center py-8">
-            No recent activity. Check back later!
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {filteredActivities.slice(0, 8).map((activity) => (
-              <div 
-                key={activity.id}
-                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-warm-beige/30 transition-colors cursor-pointer"
-              >
-                <div className={`p-2 rounded-full ${activity.unread ? 'bg-sage/20' : 'bg-warm-gray/10'}`}>
-                  {getActivityIcon(activity.type)}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <p className="text-body text-charcoal truncate">
-                    {getActivityText(activity)}
-                  </p>
-                  <p className="text-fine text-warm-gray">
-                    {activity.when}
-                  </p>
-                </div>
-                
-                {activity.unread && (
-                  <Badge variant="secondary" className="bg-sage/20 text-sage">
-                    New
-                  </Badge>
-                )}
-              </div>
-            ))}
-            
-            {filteredActivities.length > 8 && (
-              <Button variant="ghost" className="w-full text-sage hover:text-sage/80">
-                View all activity
-              </Button>
-            )}
+          <div className="text-center py-8">
+            <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-serif text-lg mb-2">All caught up!</h3>
+            <p className="text-muted-foreground mb-4">No new activity since your last visit.</p>
+            <Button>Share a story</Button>
           </div>
+        ) : (
+          <>
+            <div className="space-y-3">
+              {filteredActivities.map((item) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
+                    !item.read ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' : ''
+                  }`}
+                  onClick={() => handleActivityClick(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleActivityClick(item);
+                    }
+                  }}
+                >
+                  <div className="flex-shrink-0">
+                    {getActivityIcon(item.kind)}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <p className="font-medium text-sm truncate">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      by {item.actor} • {formatRelativeTime(item.when)}
+                    </p>
+                  </div>
+                  {!item.read && (
+                    <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0" />
+                  )}
+                  
+                  {/* Overflow menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Pin className="h-4 w-4 mr-2" />
+                        Pin
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <VolumeX className="h-4 w-4 mr-2" />
+                        Mute updates for this
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Check className="h-4 w-4 mr-2" />
+                        Mark as read
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button variant="ghost" size="sm" onClick={handleMarkAllRead}>
+                Mark all as read
+              </Button>
+              <Button variant="ghost" size="sm">
+                View activity
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

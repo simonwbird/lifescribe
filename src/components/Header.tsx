@@ -42,28 +42,44 @@ export default function Header() {
           <Link to="/home" className="text-xl font-serif text-charcoal hover:text-sage transition-colors">
             LifeScribe
           </Link>
-            <nav className="flex space-x-4">
-            <Link to="/home" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              Home
-            </Link>
-            <Link to="/stories/new" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              Create +
-            </Link>
-            <Link to="/family/members" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              People
-            </Link>
-            <Link to="/family/tree" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              Tree
-            </Link>
-            <Link to="/archive" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              Library
-            </Link>
-            <Link to="/prompts" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              Prompts
-            </Link>
-            <Link to="/feed" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
-              Feed
-            </Link>
+          <nav className="flex space-x-4">
+            <Button asChild variant="ghost">
+              <Link to="/home" className="text-muted-foreground hover:text-foreground">
+                Home
+              </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/stories/new" className="text-muted-foreground hover:text-foreground">
+                Create +
+              </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/family/members" className="text-muted-foreground hover:text-foreground">
+                People
+              </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/family/tree" className="text-muted-foreground hover:text-foreground">
+                Tree
+              </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/archive" className="text-muted-foreground hover:text-foreground">
+                Library
+              </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/prompts" className="text-muted-foreground hover:text-foreground">
+                Prompts
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="relative">
+              <Link to="/inbox" className="text-muted-foreground hover:text-foreground">
+                Inbox
+                {/* Unread indicator dot */}
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full opacity-0" id="inbox-unread-dot" />
+              </Link>
+            </Button>
           </nav>
         </div>
 

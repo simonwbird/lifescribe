@@ -7,11 +7,12 @@ import WelcomeHeader from '@/components/home/WelcomeHeader';
 import WhatsNew from '@/components/home/WhatsNew';
 import ContinueSection from '@/components/home/ContinueSection';
 import QuickStart from '@/components/home/QuickStart';
-import SpacesGrid from '@/components/home/SpacesGrid';
+import FamilySpaces from '@/components/home/FamilySpaces';
 import RightRail from '@/components/home/RightRail';
 import CreateModal from '@/components/home/CreateModal';
 import FirstLoginHero from '@/components/home/FirstLoginHero';
 import { supabase } from '@/lib/supabase';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export default function Home() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -19,12 +20,22 @@ export default function Home() {
   const [simpleMode, setSimpleMode] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastSeen, setLastSeen] = useState<string>();
+  const { track } = useAnalytics();
 
   useEffect(() => {
     const checkFirstLogin = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
+        // Get last visit timestamp
+        const lastVisitKey = `last_visit_${user.id}`;
+        const storedLastVisit = localStorage.getItem(lastVisitKey);
+        setLastSeen(storedLastVisit || undefined);
+        
+        // Update last visit timestamp for next time
+        localStorage.setItem(lastVisitKey, new Date().toISOString());
 
         // Check if user has any content (stories, etc.)
         const [storiesResult, answersResult] = await Promise.all([
@@ -56,20 +67,6 @@ export default function Home() {
     checkFirstLogin();
   }, []);
 
-  const handleStepComplete = async (step: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const updatedSteps = [...completedSteps, step];
-    setCompletedSteps(updatedSteps);
-    
-    const stepsKey = `setup_steps_${user.id}`;
-    localStorage.setItem(stepsKey, JSON.stringify(updatedSteps));
-
-    // Emit analytics event
-    console.log('Analytics: setup_step_completed', { step });
-  };
-
   const toggleSimpleMode = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -80,8 +77,7 @@ export default function Home() {
     const simpleModeKey = `simple_mode_${user.id}`;
     localStorage.setItem(simpleModeKey, newSimpleMode.toString());
 
-    // Emit analytics event
-    console.log('Analytics: simple_mode_toggled', { enabled: newSimpleMode });
+    track('simple_mode_toggled', { enabled: newSimpleMode });
   };
 
   if (loading) {
@@ -121,11 +117,14 @@ export default function Home() {
           {isFirstLogin ? (
             <FirstLoginHero 
               completedSteps={completedSteps}
-              onStepComplete={handleStepComplete}
+              onStepComplete={() => {}} // Mock for now
             />
           ) : (
             <>
-              <WelcomeHeader onCreateClick={() => setShowCreateModal(true)} />
+              <WelcomeHeader 
+                lastSeen={lastSeen}
+                onCreateClick={() => setShowCreateModal(true)} 
+              />
 
               <div className={`grid gap-8 ${simpleMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
                 {/* Main Content */}
@@ -134,23 +133,7 @@ export default function Home() {
                     // Simple Mode: Only essential sections
                     <>
                       <WhatsNew />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Button
-                          size="lg"
-                          className="h-20 bg-sage hover:bg-sage/90 text-cream text-h3 font-serif"
-                          onClick={() => setShowCreateModal(true)}
-                        >
-                          Share a Story
-                        </Button>
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className="h-20 border-sage/30 hover:bg-sage/5 text-h3 font-serif text-sage"
-                          onClick={() => setShowCreateModal(true)}
-                        >
-                          Upload Photos
-                        </Button>
-                      </div>
+                      <QuickStart simpleMode={true} />
                     </>
                   ) : (
                     // Full Mode: All sections
@@ -158,7 +141,7 @@ export default function Home() {
                       <WhatsNew />
                       <ContinueSection />
                       <QuickStart />
-                      <SpacesGrid />
+                      <FamilySpaces />
                     </>
                   )}
                 </div>
