@@ -428,24 +428,67 @@ export default function HomeV2() {
   }
 
   const loadResumeItems = async (userId: string) => {
-    // Mock data for drafts/resumables
-    const mockResume: ResumeItem[] = [
-      {
-        id: '1',
-        type: 'story',
-        title: 'Dad\\\'s Workshop Memories',
-        progress: 60,
-        lastEdited: '3 hours ago'
-      },
-      {
-        id: '2',
-        type: 'photo',
-        title: 'Birthday Photos Upload',
-        progress: 30,
-        lastEdited: '1 day ago'
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+
+      if (!member) return
+
+      const resumeItems: ResumeItem[] = []
+
+      // Get recently updated stories
+      const { data: stories } = await supabase
+        .from('stories')
+        .select('id, title, updated_at')
+        .eq('family_id', member.family_id)
+        .eq('profile_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(3)
+
+      if (stories) {
+        stories.forEach(story => {
+          resumeItems.push({
+            id: story.id,
+            type: 'story',
+            title: story.title,
+            progress: Math.floor(Math.random() * 40) + 60, // Mock progress for now
+            lastEdited: getRelativeTime(story.updated_at)
+          })
+        })
       }
-    ]
-    setResumeItems(mockResume)
+
+      // Get recently updated recipes
+      const { data: recipes } = await supabase
+        .from('recipes')
+        .select('id, title, updated_at')
+        .eq('family_id', member.family_id)
+        .eq('created_by', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(2)
+
+      if (recipes) {
+        recipes.forEach(recipe => {
+          resumeItems.push({
+            id: recipe.id,
+            type: 'property',
+            title: recipe.title,
+            progress: Math.floor(Math.random() * 30) + 70,
+            lastEdited: getRelativeTime(recipe.updated_at)
+          })
+        })
+      }
+
+      setResumeItems(resumeItems.slice(0, 4))
+    } catch (error) {
+      console.error('Error loading resume items:', error)
+      setResumeItems([])
+    }
   }
 
   const loadSuggestions = async () => {
@@ -514,9 +557,10 @@ export default function HomeV2() {
     track('home_resume_click', { type: item.type })
     // Navigate to appropriate editor
     if (item.type === 'story') {
-      navigate('/stories/new')
+      navigate(`/stories/${item.id}/edit`)
+    } else if (item.type === 'property') {
+      navigate(`/recipes/${item.id}/edit`)
     }
-    // Add other resume actions...
   }
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
