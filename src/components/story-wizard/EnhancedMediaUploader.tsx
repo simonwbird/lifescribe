@@ -242,7 +242,7 @@ export default function EnhancedMediaUploader({
           multiple
           accept="image/*,video/*"
           onChange={handleFileInput}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
           disabled={media.length >= maxFiles}
           aria-label="Upload media files"
         />
