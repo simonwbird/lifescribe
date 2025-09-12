@@ -42,7 +42,7 @@ export default function Header() {
           <Link to="/home" className="text-xl font-serif text-charcoal hover:text-sage transition-colors">
             LifeScribe
           </Link>
-          <nav className="flex space-x-4">
+            <nav className="flex space-x-4">
             <Link to="/home" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
               Home
             </Link>
@@ -60,6 +60,9 @@ export default function Header() {
             </Link>
             <Link to="/prompts" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
               Prompts
+            </Link>
+            <Link to="/feed" className="text-body font-medium text-charcoal hover:text-sage transition-colors">
+              Feed
             </Link>
           </nav>
         </div>
