@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
@@ -50,6 +50,8 @@ export default function StoryWizard() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const [searchParams] = useSearchParams()
+  const { id: editingIdParam } = useParams<{ id?: string }>()
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   // Mock AI assist data
   const [aiAssist] = useState<AIAssist>({
@@ -82,6 +84,39 @@ export default function StoryWizard() {
       }))
     }
   }, [searchParams])
+
+  // Load existing story when editing
+  useEffect(() => {
+    if (!editingIdParam) return
+    setEditingId(editingIdParam)
+    const load = async () => {
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('stories')
+          .select('*')
+          .eq('id', editingIdParam)
+          .single()
+        if (error) throw error
+        if (data) {
+          setFormData(prev => ({
+            ...prev,
+            title: data.title || '',
+            content: data.content || '',
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            date: data.occurred_on || '',
+            dateType: data.is_approx ? 'approximate' : 'exact'
+          }))
+        }
+      } catch (e) {
+        console.error('Error loading story for edit:', e)
+        toast({ title: 'Error', description: 'Failed to load story for editing', variant: 'destructive' })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+  }, [editingIdParam, toast])
 
   // Get family ID
   useEffect(() => {
@@ -206,6 +241,28 @@ export default function StoryWizard() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      // If editing, update existing story
+      if (editingId) {
+        const { data: updated, error: updateError } = await supabase
+          .from('stories')
+          .update({
+            title: formData.title.trim(),
+            content: formData.content.trim(),
+            tags: formData.tags.length > 0 ? formData.tags : null,
+            occurred_on: formData.date || null,
+            is_approx: formData.dateType === 'approximate'
+          })
+          .eq('id', editingId)
+          .select()
+          .single()
+
+        if (updateError) throw updateError
+
+        toast({ title: 'Story updated!', description: 'Your changes have been saved.' })
+        navigate(`/stories/${editingId}`)
+        return
+      }
 
       // Create story first
       const { data: story, error: storyError } = await supabase
@@ -471,7 +528,7 @@ export default function StoryWizard() {
                   className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground px-4 py-2 rounded-lg text-sm font-medium"
                   disabled={!formData.title.trim() || !formData.content.trim() || isLoading}
                 >
-                  {isLoading ? 'Publishing...' : 'Publish'}
+                  {isLoading ? (editingId ? 'Saving...' : 'Publishing...') : (editingId ? 'Save changes' : 'Publish')}
                 </button>
               </>
             )}
