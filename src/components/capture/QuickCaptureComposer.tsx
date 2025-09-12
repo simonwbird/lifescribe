@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Mic, Square, Play, Pause, Camera, Video, FileText, Users, MapPin, Tag, Plus } from 'lucide-react'
+import { X, Mic, Square, Play, Pause, Camera, Video, FileText, Users, MapPin, Tag, Plus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,7 +17,8 @@ import { toast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
 import EnhancedMediaUploader from '@/components/story-wizard/EnhancedMediaUploader'
-import type { MediaItem } from '@/components/story-wizard/StoryWizardTypes'
+import PeoplePicker from '@/components/story-wizard/PeoplePicker'
+import type { MediaItem, SelectedPerson } from '@/components/story-wizard/StoryWizardTypes'
 
 export interface QuickCapturePrompt {
   id: string
@@ -50,7 +51,7 @@ interface CaptureData {
   media: MediaItem[]
   audioBlob?: Blob
   videoBlob?: Blob
-  people: string[]
+  people: SelectedPerson[]
   places: string[]
   tags: string[]
   privacy: Privacy
@@ -78,6 +79,8 @@ export default function QuickCaptureComposer({
   const [recordingTime, setRecordingTime] = useState(0)
   const [showPrompt, setShowPrompt] = useState(!!prompt)
   const [isSaving, setIsSaving] = useState(false)
+  const [showPeoplePicker, setShowPeoplePicker] = useState(false)
+  const [familyId, setFamilyId] = useState<string | null>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -92,11 +95,31 @@ export default function QuickCaptureComposer({
     if (context) {
       setData(prev => ({
         ...prev,
-        people: context.personId ? [context.personName || ''] : prev.people,
+        people: context.personId && context.personName ? 
+          [{ name: context.personName, isExisting: true }] : prev.people,
         places: context.propertyId ? [context.propertyName || ''] : prev.places
       }))
     }
   }, [context])
+
+  // Get family ID
+  useEffect(() => {
+    const getFamilyId = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: member } = await supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .maybeSingle()
+        
+        if (member) {
+          setFamilyId(member.family_id)
+        }
+      }
+    }
+    getFamilyId()
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -471,7 +494,8 @@ export default function QuickCaptureComposer({
                 mode: 'write',
                 text: '',
                 media: [],
-                people: context?.personId ? [context.personName || ''] : [],
+                people: context?.personId && context?.personName ? 
+                  [{ name: context.personName, isExisting: true }] : [],
                 places: context?.propertyId ? [context.propertyName || ''] : [],
                 tags: [],
                 privacy: 'family'
@@ -772,7 +796,12 @@ export default function QuickCaptureComposer({
               <h4 className="text-sm font-medium">Attach & Link</h4>
               
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => setShowPeoplePicker(true)}
+                >
                   <Users className="h-3 w-3" />
                   People
                   {data.people.length > 0 && (
@@ -845,6 +874,66 @@ export default function QuickCaptureComposer({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Selected People */}
+              {data.people.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {data.people.map((person, index) => (
+                    <Badge 
+                      key={index} 
+                      variant={person.isExisting ? "default" : "secondary"} 
+                      className="flex items-center gap-1 pr-1"
+                    >
+                      <User className="h-3 w-3" />
+                      {person.name}
+                      {!person.isExisting && <span className="text-xs opacity-75">(new)</span>}
+                      <button
+                        onClick={() => {
+                          setData(prev => ({
+                            ...prev,
+                            people: prev.people.filter((_, i) => i !== index)
+                          }))
+                        }}
+                        className="ml-1 hover:bg-destructive/20 rounded-sm p-0.5"
+                      >
+                        <X className="h-2 w-2" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* People Picker Dialog */}
+              {showPeoplePicker && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                  <div className="bg-background rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">Select People</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPeoplePicker(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <PeoplePicker
+                        selectedPeople={data.people}
+                        onPeopleChange={(people) => {
+                          setData(prev => ({ ...prev, people }))
+                        }}
+                        familyId={familyId}
+                      />
+                      <div className="mt-4 flex justify-end">
+                        <Button onClick={() => setShowPeoplePicker(false)}>
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
