@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, FileText, Images, ChefHat, Package, Heart, Home, Archive } from 'lucide-react'
+import { ChevronDown, FileText, ChefHat, Package, Heart, Home, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -15,32 +15,27 @@ const collectionItems = [
   {
     icon: FileText,
     label: 'Stories',
-    href: '/collections?tab=stories'
-  },
-  {
-    icon: Images,
-    label: 'Photos',
-    href: '/collections?tab=photos'
+    href: '/collections?tab=story'
   },
   {
     icon: ChefHat,
     label: 'Recipes',
-    href: '/collections?tab=recipes'
+    href: '/collections?tab=recipe'
   },
   {
     icon: Package,
     label: 'Objects',
-    href: '/collections?tab=objects'
+    href: '/collections?tab=object'
   },
   {
     icon: Heart,
     label: 'Pets',
-    href: '/collections?tab=pets'
+    href: '/collections?tab=pet'
   },
   {
     icon: Home,
     label: 'Properties',
-    href: '/collections?tab=properties'
+    href: '/collections?tab=property'
   }
 ]
 
