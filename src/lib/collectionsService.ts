@@ -10,6 +10,12 @@ import birthdayCelebrationImg from '@/assets/stories/birthday-celebration.jpg'
 import weddingCeremonyImg from '@/assets/stories/wedding-ceremony.jpg'
 import holidayGatheringImg from '@/assets/stories/holiday-gathering.jpg'
 import graduationImg from '@/assets/stories/graduation.jpg'
+import familyReunionImg from '@/assets/stories/family-reunion.jpg'
+import newBabyImg from '@/assets/stories/new-baby.jpg'
+import movingDayImg from '@/assets/stories/moving-day.jpg'
+import anniversaryImg from '@/assets/stories/anniversary.jpg'
+import schoolDayImg from '@/assets/stories/school-day.jpg'
+import familyCookingImg from '@/assets/stories/family-cooking.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -41,6 +47,12 @@ const sampleStoryImageForTitle = (title: string, content?: string): string | nul
   if (t.includes('wedding') || c.includes('wedding') || c.includes('married')) return weddingCeremonyImg
   if (t.includes('holiday') || t.includes('christmas') || t.includes('thanksgiving') || c.includes('holiday')) return holidayGatheringImg
   if (t.includes('graduation') || t.includes('graduate') || c.includes('graduation')) return graduationImg
+  if (t.includes('reunion') || c.includes('reunion') || c.includes('extended family')) return familyReunionImg
+  if (t.includes('baby') || t.includes('birth') || t.includes('born') || c.includes('newborn') || c.includes('hospital')) return newBabyImg
+  if (t.includes('moving') || t.includes('new house') || t.includes('moved') || c.includes('moving') || c.includes('new home')) return movingDayImg
+  if (t.includes('anniversary') || c.includes('anniversary') || c.includes('years together')) return anniversaryImg
+  if (t.includes('school') || t.includes('first day') || c.includes('school') || c.includes('teacher')) return schoolDayImg
+  if (t.includes('cooking') || t.includes('baking') || t.includes('recipe') || c.includes('kitchen') || c.includes('cooking')) return familyCookingImg
   
   return null
 }
