@@ -216,10 +216,9 @@ export default function StoryWizard() {
           title: formData.title.trim(),
           content: formData.content.trim(),
           tags: formData.tags.length > 0 ? formData.tags : null,
-          date: formData.date || null,
+          occurred_on: formData.date || null,
           location: formData.location || null,
-          visibility: formData.visibility,
-          collection_type: formData.collection !== 'none' ? formData.collection : null
+          visibility: formData.visibility
         })
         .select()
         .single()
