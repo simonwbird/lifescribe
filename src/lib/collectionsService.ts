@@ -392,6 +392,22 @@ export class CollectionsService {
           }
         }
         
+        // If still no cover, fall back to the most recent image for this property
+        if (!coverUrl) {
+          try {
+            const { data: recentMedia } = await supabase
+              .from('media')
+              .select('file_path, mime_type')
+              .eq('property_id', property.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+            if (recentMedia && recentMedia[0]?.file_path) {
+              coverUrl = await MediaService.getMediaUrl(recentMedia[0].file_path)
+            }
+          } catch (e) {
+            console.log('Could not load recent media for property', property.id)
+          }
+        }
         return {
           id: property.id,
           type: 'property' as const,
