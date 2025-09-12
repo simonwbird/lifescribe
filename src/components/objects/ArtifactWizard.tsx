@@ -92,14 +92,32 @@ export default function ArtifactWizard({ categoryId, onComplete, onCancel }: Art
     try {
       const dataToSave = { ...formData, ...updates }
       
-      if (!dataToSave.title) {
+      if (!dataToSave.title || !userProfile || !familyId) {
         setAutosaveStatus('saved')
         return
       }
 
-      // Implementation would save to Supabase here
-      console.log('Saving draft:', dataToSave)
-      setAutosaveStatus('saved')
+      // Save draft to Supabase
+      const { error } = await supabase
+        .from('things')
+        .insert({
+          title: dataToSave.title,
+          description: dataToSave.description || '',
+          family_id: familyId,
+          created_by: userProfile.id,
+          tags: dataToSave.tags || [],
+          object_type: (getFieldValue('type') as string) || categoryId,
+          maker: (getFieldValue('maker') as string) || (getFieldValue('artist') as string) || (getFieldValue('author') as string),
+          condition: dataToSave.condition,
+          provenance: JSON.stringify(dataToSave.categorySpecific)
+        })
+
+      if (error) {
+        console.error('Draft save error:', error)
+        setAutosaveStatus('error')
+      } else {
+        setAutosaveStatus('saved')
+      }
     } catch (error) {
       console.error('Error saving draft:', error)
       setAutosaveStatus('error')
@@ -167,8 +185,27 @@ export default function ArtifactWizard({ categoryId, onComplete, onCancel }: Art
         familyId: familyId
       } as ArtifactBase
 
-      // Implementation would save to Supabase here
-      console.log('Publishing artifact:', artifactData)
+      // Save to Supabase - using things table for now
+      const { error } = await supabase
+        .from('things')
+        .insert({
+          title: artifactData.title,
+          description: artifactData.description || '',
+          family_id: familyId,
+          created_by: userProfile.id,
+          tags: artifactData.tags || [],
+          object_type: (getFieldValue('type') as string) || categoryId,
+          // Map category-specific data to existing fields where possible
+          maker: (getFieldValue('maker') as string) || (getFieldValue('artist') as string) || (getFieldValue('author') as string),
+          condition: artifactData.condition,
+          provenance: JSON.stringify(artifactData.categorySpecific),
+          year_estimated: getFieldValue('year') || getFieldValue('estimatedAge') ? 
+            parseInt((getFieldValue('year') as string) || (getFieldValue('estimatedAge') as string)) : null
+        })
+
+      if (error) {
+        throw error
+      }
       
       toast({
         title: "Artifact published",
