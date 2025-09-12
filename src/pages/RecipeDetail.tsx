@@ -64,9 +64,10 @@ export default function RecipeDetail() {
         const mediaWithUrls = await Promise.all(
           mediaData.map(async (item) => {
             const signedUrl = await MediaService.getSignedMediaUrl(item.file_path);
+            const resolvedUrl = signedUrl || `/src/assets/${item.file_path}`;
             return {
               ...item,
-              signed_url: signedUrl
+              signed_url: resolvedUrl
             };
           })
         );
