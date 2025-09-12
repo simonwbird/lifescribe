@@ -129,16 +129,26 @@ export default function CollectionsHeader({
           <Button
             variant={viewMode === 'grid' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewModeChange('grid')}
+            onClick={() => {
+              console.log('Switching to grid view')
+              onViewModeChange('grid')
+            }}
             className="h-8 w-8 p-0"
+            aria-label="Grid view"
+            title="Grid view"
           >
             <Grid3x3 className="h-4 w-4" />
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => onViewModeChange('list')}
+            onClick={() => {
+              console.log('Switching to list view')
+              onViewModeChange('list')
+            }}
             className="h-8 w-8 p-0"
+            aria-label="List view"
+            title="List view"
           >
             <List className="h-4 w-4" />
           </Button>
