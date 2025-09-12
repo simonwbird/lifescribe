@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast'
 import { PropertyService } from '@/lib/propertyService'
 import type { PropertyStatus, PropertyWithDetails, PropertyType, PropertyAddress } from '@/lib/propertyTypes'
 import { PROPERTY_STATUS_LABELS, PROPERTY_TYPE_LABELS } from '@/lib/propertyTypes'
+import { supabase } from '@/lib/supabase'
 
 const steps = [
   { id: 1, title: 'Property Details', description: 'Basic information about your property' },
@@ -144,13 +145,51 @@ export default function PropertyEdit() {
     if (!id) return
     setSaving(true)
     try {
+      // 1) Update property core fields first
       const updated = await PropertyService.updateProperty(id, formData)
-      if (updated) {
-        toast({ title: 'Saved', description: 'Property updated successfully.' })
-        navigate(`/properties/${id}`)
-      } else {
-        throw new Error('Update failed')
+      if (!updated) throw new Error('Update failed')
+
+      // 2) Upload any new media files and create media records
+      if (formData.media_files && formData.media_files.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || !property?.family_id) throw new Error('Missing user or family context')
+
+        const uploads = await Promise.all(
+          formData.media_files.map(async (file, idx) => {
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+            const path = `${property.family_id}/${user.id}/${Date.now()}-${idx}-${safeName}`
+
+            const { data: uploadData, error: uploadErr } = await supabase
+              .storage
+              .from('media')
+              .upload(path, file, { contentType: file.type })
+
+            if (uploadErr) throw uploadErr
+            if (!uploadData?.path) throw new Error('Upload failed: no path returned')
+
+            const { error: insertErr } = await supabase.from('media').insert({
+              file_path: uploadData.path,
+              file_name: file.name,
+              mime_type: file.type,
+              file_size: file.size,
+              profile_id: user.id,
+              family_id: property.family_id,
+              property_id: id,
+              property_media_role: 'general'
+            })
+            if (insertErr) throw insertErr
+          })
+        )
+
+        // Clear local queue
+        setFormData(prev => ({ ...prev, media_files: [] }))
+        
+        // Toast uploaded
+        toast({ title: 'Files uploaded', description: `Uploaded ${uploads.length} file(s).` })
       }
+
+      toast({ title: 'Saved', description: 'Property updated successfully.' })
+      navigate(`/properties/${id}`)
     } catch (e) {
       console.error(e)
       toast({ title: 'Error', description: 'Could not save changes.', variant: 'destructive' })
