@@ -216,9 +216,8 @@ export default function StoryWizard() {
           title: formData.title.trim(),
           content: formData.content.trim(),
           tags: formData.tags.length > 0 ? formData.tags : null,
-          occurred_on: formData.date || null,
-          location: formData.location || null,
-          visibility: formData.visibility
+          occurred_on: null,
+          is_approx: formData.dateType === 'approximate'
         })
         .select()
         .single()
@@ -285,10 +284,7 @@ export default function StoryWizard() {
               file_path: filePath,
               file_name: mediaItem.file.name,
               file_size: mediaItem.file.size,
-              mime_type: mediaItem.file.type,
-              caption: mediaItem.caption || null,
-              is_cover: mediaItem.isCover,
-              display_order: mediaItem.order
+              mime_type: mediaItem.file.type
             })
         }
       }
