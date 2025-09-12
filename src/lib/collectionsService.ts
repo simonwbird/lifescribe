@@ -16,6 +16,11 @@ import movingDayImg from '@/assets/stories/moving-day.jpg'
 import anniversaryImg from '@/assets/stories/anniversary.jpg'
 import schoolDayImg from '@/assets/stories/school-day.jpg'
 import familyCookingImg from '@/assets/stories/family-cooking.jpg'
+import sportsAchievementImg from '@/assets/stories/sports-achievement.jpg'
+import beachVacationImg from '@/assets/stories/beach-vacation.jpg'
+import campingTripImg from '@/assets/stories/camping-trip.jpg'
+import firstCarImg from '@/assets/stories/first-car.jpg'
+import newPetImg from '@/assets/stories/new-pet.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -53,6 +58,11 @@ const sampleStoryImageForTitle = (title: string, content?: string): string | nul
   if (t.includes('anniversary') || c.includes('anniversary') || c.includes('years together')) return anniversaryImg
   if (t.includes('school') || t.includes('first day') || c.includes('school') || c.includes('teacher')) return schoolDayImg
   if (t.includes('cooking') || t.includes('baking') || t.includes('recipe') || c.includes('kitchen') || c.includes('cooking')) return familyCookingImg
+  if (t.includes('sports') || t.includes('game') || t.includes('trophy') || c.includes('baseball') || c.includes('soccer') || c.includes('victory')) return sportsAchievementImg
+  if (t.includes('beach') || t.includes('ocean') || t.includes('sand') || c.includes('beach') || c.includes('swimming')) return beachVacationImg
+  if (t.includes('camping') || t.includes('tent') || t.includes('campfire') || c.includes('camping') || c.includes('outdoors')) return campingTripImg
+  if (t.includes('car') || t.includes('driving') || t.includes('license') || c.includes('first car') || c.includes('driving')) return firstCarImg
+  if (t.includes('pet') || t.includes('dog') || t.includes('cat') || c.includes('puppy') || c.includes('kitten') || c.includes('adopted')) return newPetImg
   
   return null
 }
