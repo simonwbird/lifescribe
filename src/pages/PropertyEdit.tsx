@@ -511,46 +511,7 @@ export default function PropertyEdit() {
                 />
               </div>
             </div>
-            </div>
-
-            /*
-              <div>
-                <Label>Existing Files ({existingMedia.length})</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                  {existingMedia.map((m) => (
-                    <div key={m.id} className="relative group">
-                      <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
-                        {m.mime_type.startsWith('image/') && m.signedUrl ? (
-                          <img
-                            src={m.signedUrl || undefined}
-                            alt={m.file_name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              // @ts-ignore
-                              e.currentTarget.onerror = null
-                              // @ts-ignore
-                              e.currentTarget.src = '/placeholder.svg'
-                            }}
-                          />
-                        ) : (
-                          <div className="text-center px-2">
-                            <div className="text-2xl mb-1">📄</div>
-                            <div className="text-xs text-muted-foreground truncate">{m.file_name}</div>
-                          </div>
-                        )}
-                      </div>
-                      {property?.cover_media_id === m.id && (
-                        <Badge className="absolute top-1 left-1">Cover</Badge>
-                      )}
-                      <div className="mt-1 text-xs text-muted-foreground truncate">
-                        {m.file_name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            */
+          </div>
         )
 
       case 4:
@@ -578,6 +539,42 @@ export default function PropertyEdit() {
                 </label>
               </div>
             </div>
+
+            {existingMedia.length > 0 && (
+              <div>
+                <Label>Existing Files ({existingMedia.length})</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                  {existingMedia.map((m) => (
+                    <div key={m.id} className="relative group">
+                      <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                        {m.mime_type.startsWith('image/') && m.signedUrl ? (
+                          <img
+                            src={m.signedUrl}
+                            alt={m.file_name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder.svg'
+                            }}
+                          />
+                        ) : (
+                          <div className="text-center px-2">
+                            <div className="text-2xl mb-1">📄</div>
+                            <div className="text-xs text-muted-foreground truncate">{m.file_name}</div>
+                          </div>
+                        )}
+                      </div>
+                      {property?.cover_media_id === m.id && (
+                        <Badge className="absolute top-1 left-1">Cover</Badge>
+                      )}
+                      <div className="mt-1 text-xs text-muted-foreground truncate">
+                        {m.file_name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {formData.media_files.length > 0 && (
               <div>
@@ -627,16 +624,6 @@ export default function PropertyEdit() {
                 <p><strong>Documents:</strong> Deeds, mortgages, surveys, receipts</p>
               </div>
             </div>
-
-            {property?.media_count && property.media_count > 0 && (
-              <div className="bg-blue-50 p-4 rounded-lg border">
-                <h4 className="font-medium mb-2">Existing Media</h4>
-                <p className="text-sm text-muted-foreground">
-                  This property has {property.media_count} existing media file{property.media_count !== 1 ? 's' : ''}. 
-                  View and manage them from the <strong>property detail page</strong> after saving your changes.
-                </p>
-              </div>
-            )}
           </div>
         )
 
