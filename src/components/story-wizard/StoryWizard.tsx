@@ -196,6 +196,14 @@ export default function StoryWizard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // Prepare tags including people (store as tags for now since we don't have a people table)
+      // In production, this would link to actual person records
+      const updatedTags = [...formData.tags]
+      if (formData.people.length > 0) {
+        const peopleWithPrefix = formData.people.map(person => `person:${person}`)
+        updatedTags.push(...peopleWithPrefix)
+      }
+
       // Create story
       const { data: story, error: storyError } = await supabase
         .from('stories')
@@ -214,14 +222,6 @@ export default function StoryWizard() {
         .single()
 
       if (storyError) throw storyError
-
-      // Link people - store as tags for now since we don't have a people table
-      // In production, this would link to actual person records
-      const updatedTags = [...formData.tags]
-      if (formData.people.length > 0) {
-        const peopleWithPrefix = formData.people.map(person => `person:${person}`)
-        updatedTags.push(...peopleWithPrefix)
-      }
 
       // Upload media
       if (formData.media.length > 0 && story) {
