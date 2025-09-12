@@ -21,6 +21,7 @@ import beachVacationImg from '@/assets/stories/beach-vacation.jpg'
 import campingTripImg from '@/assets/stories/camping-trip.jpg'
 import firstCarImg from '@/assets/stories/first-car.jpg'
 import newPetImg from '@/assets/stories/new-pet.jpg'
+import waterfallAdventureImg from '@/assets/stories/waterfall-adventure.jpg'
 import type { 
   Content, 
   ContentFilter, 
@@ -63,6 +64,7 @@ const sampleStoryImageForTitle = (title: string, content?: string): string | nul
   if (t.includes('camping') || t.includes('tent') || t.includes('campfire') || c.includes('camping') || c.includes('outdoors')) return campingTripImg
   if (t.includes('car') || t.includes('driving') || t.includes('license') || c.includes('first car') || c.includes('driving')) return firstCarImg
   if (t.includes('pet') || t.includes('dog') || t.includes('cat') || c.includes('puppy') || c.includes('kitten') || c.includes('adopted')) return newPetImg
+  if (t.includes('waterfall') || t.includes('hiking') || t.includes('nature') || c.includes('waterfall') || c.includes('falls')) return waterfallAdventureImg
   
   return null
 }
