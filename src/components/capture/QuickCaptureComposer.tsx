@@ -989,6 +989,10 @@ export default function QuickCaptureComposer({
                           controls 
                           className="w-full"
                           preload="metadata"
+                          onLoadedMetadata={(e) => {
+                            const video = e.target as HTMLVideoElement
+                            video.currentTime = Math.min(2, video.duration || 0)
+                          }}
                         />
                       </div>
                       
