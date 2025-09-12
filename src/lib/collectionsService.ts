@@ -180,11 +180,9 @@ export class CollectionsService {
   ): Promise<ObjectContent[]> {
     let query = supabase
       .from('things')
-      .select(`
-        *,
-        profiles:created_by (full_name)
-      `)
+      .select(`*`)
       .eq('family_id', familyId)
+      .order('created_at', { ascending: false })
 
     if (filter.search) {
       query = query.or(`title.ilike.%${filter.search}%,description.ilike.%${filter.search}%`)
@@ -203,13 +201,13 @@ export class CollectionsService {
       occurredAt: object.year_estimated ? `${object.year_estimated}-01-01` : null,
       addedAt: object.created_at,
       location: null,
-      peopleIds: [], // Object person links would need separate query
+      peopleIds: [],
       tags: Array.isArray(object.tags) ? object.tags : [],
       coverUrl: null,
       visibility: 'family',
       status: 'published',
       authorId: object.created_by,
-      authorName: (object.profiles as any)?.full_name || 'Unknown',
+      authorName: 'Unknown',
       familyId: object.family_id,
       fields: {
         description: object.description,
