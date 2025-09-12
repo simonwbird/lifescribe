@@ -166,6 +166,7 @@ export default function GlobalSearch() {
 
   const handleFocus = () => {
     track('search_focus', { method: 'click' })
+    track('search_open', { source: 'header' })
     if (suggestions.length > 0) {
       setShowSuggestions(true)
     }
@@ -176,6 +177,7 @@ export default function GlobalSearch() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          data-search-input
           ref={inputRef}
           type="text"
           placeholder="Search people, stories, places…"

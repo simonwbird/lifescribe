@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Search, Menu, BookHeart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import GlobalSearch from '@/components/search/GlobalSearch'
 
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -236,26 +237,7 @@ export default function Header() {
 
           {/* Center - Search */}
           <div className="hidden md:block max-w-md mx-4 flex-1">
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                data-search-input
-                type="search"
-                placeholder="Search people, stories, places..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => {
-                  setSearchFocused(true)
-                  track('search_open', { source: 'header' })
-                }}
-                onBlur={() => setSearchFocused(false)}
-                className="pl-10 pr-4 py-2 w-full"
-                aria-label="Search your family content"
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground">
-                Press / to focus
-              </div>
-            </form>
+            <GlobalSearch />
           </div>
 
           {/* Right side - Actions */}
