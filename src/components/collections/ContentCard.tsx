@@ -22,8 +22,12 @@ import {
   Share2,
   Calendar,
   MapPin,
-  Users
+  Users,
+  Play,
+  Mic
 } from 'lucide-react'
+import { MediaService } from '@/lib/mediaService'
+import { supabase } from '@/lib/supabase'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Content } from '@/lib/collectionsTypes'
 
@@ -42,6 +46,7 @@ export default function ContentCard({
 }: ContentCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [showImageViewer, setShowImageViewer] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
   const navigate = useNavigate()
 
   const handleCardClick = () => {
@@ -119,6 +124,57 @@ export default function ContentCard({
     }
   }
 
+  // Check if this is a voice recording
+  const isVoiceRecording = content.type === 'story' && 
+    content.tags.some(tag => tag.includes('voice') || tag.includes('audio'))
+
+  const handlePlayVoice = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isPlaying) return
+
+    try {
+      setIsPlaying(true)
+      // Get the audio file from the story's media
+      // This would need to be implemented based on your media structure
+      const audioUrl = await getVoiceRecordingUrl(content.id)
+      if (audioUrl) {
+        const audio = new Audio(audioUrl)
+        audio.play()
+        audio.onended = () => setIsPlaying(false)
+        audio.onerror = () => setIsPlaying(false)
+      }
+    } catch (error) {
+      console.error('Error playing voice recording:', error)
+      setIsPlaying(false)
+    }
+  }
+
+  const getVoiceRecordingUrl = async (storyId: string): Promise<string | null> => {
+    try {
+      // Fetch audio media for this story
+      const { data: media, error } = await supabase
+        .from('media')
+        .select('file_path')
+        .eq('story_id', storyId)
+        .like('mime_type', 'audio%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error || !media) {
+        console.error('No audio media found for story:', storyId)
+        return null
+      }
+
+      // Get signed URL for the audio file
+      const audioUrl = await MediaService.getMediaUrl(media.file_path)
+      return audioUrl
+    } catch (error) {
+      console.error('Error fetching voice recording:', error)
+      return null
+    }
+  }
+
   return (
     <Card 
       className="group hover:shadow-lg transition-all duration-200 relative overflow-hidden cursor-pointer"
@@ -139,7 +195,7 @@ export default function ContentCard({
 
       {/* Cover image placeholder */}
       <div 
-        className="h-32 bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center cursor-pointer group/image"
+        className="h-32 bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center cursor-pointer group/image relative"
         onClick={() => content.coverUrl && setShowImageViewer(true)}
       >
         {content.coverUrl ? (
@@ -155,7 +211,24 @@ export default function ContentCard({
           />
         ) : (
           <div className="text-muted-foreground">
-            {getTypeIcon()}
+            {isVoiceRecording ? <Mic className="h-8 w-8" /> : getTypeIcon()}
+          </div>
+        )}
+        
+        {/* Play button for voice recordings */}
+        {isVoiceRecording && (
+          <div 
+            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handlePlayVoice}
+          >
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-12 w-12 rounded-full shadow-lg"
+              disabled={isPlaying}
+            >
+              <Play className="h-6 w-6" fill="currentColor" />
+            </Button>
           </div>
         )}
       </div>
