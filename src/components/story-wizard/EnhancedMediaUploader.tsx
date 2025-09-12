@@ -132,7 +132,7 @@ export default function EnhancedMediaUploader({
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: 'environment',
+          facingMode: 'user', // Use front camera by default
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         } 
@@ -165,7 +165,10 @@ export default function EnhancedMediaUploader({
     canvas.height = video.videoHeight
     
     const ctx = canvas.getContext('2d')
-    ctx?.drawImage(video, 0, 0)
+    
+    // Flip the canvas horizontally to match the preview
+    ctx?.scale(-1, 1)
+    ctx?.drawImage(video, -canvas.width, 0)
     
     // Convert to blob and file
     canvas.toBlob((blob) => {
@@ -414,7 +417,7 @@ export default function EnhancedMediaUploader({
               autoPlay
               playsInline
               muted
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain transform scale-x-[-1]"
             />
           </div>
 
