@@ -15,6 +15,7 @@ import {
   Plus
 } from 'lucide-react'
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera'
+import { Capacitor } from '@capacitor/core'
 import { type MediaItem } from './StoryWizardTypes'
 
 interface EnhancedMediaUploaderProps {
@@ -90,26 +91,76 @@ export default function EnhancedMediaUploader({
     try {
       setIsCapturing(true)
       
-      const image = await CapacitorCamera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
-        saveToGallery: false
-      })
+      // Check if we're on a mobile device or web
+      const isNative = Capacitor.isNativePlatform()
+      
+      if (isNative) {
+        // Use native camera on mobile
+        const image = await CapacitorCamera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          saveToGallery: false
+        })
 
-      if (image.dataUrl) {
-        // Convert data URL to blob/file
-        const response = await fetch(image.dataUrl)
-        const blob = await response.blob()
-        const fileName = `camera-${Date.now()}.jpg`
-        const file = new File([blob], fileName, { type: 'image/jpeg' })
-        
-        handleFiles([file])
+        if (image.dataUrl) {
+          const response = await fetch(image.dataUrl)
+          const blob = await response.blob()
+          const fileName = `camera-${Date.now()}.jpg`
+          const file = new File([blob], fileName, { type: 'image/jpeg' })
+          
+          handleFiles([file])
+        }
+      } else {
+        // Use web camera API as fallback
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              facingMode: 'environment',
+              width: { ideal: 1920 },
+              height: { ideal: 1080 }
+            } 
+          })
+          
+          // Create a video element to capture the stream
+          const video = document.createElement('video')
+          video.srcObject = stream
+          video.play()
+          
+          // Wait for video to load
+          await new Promise(resolve => {
+            video.onloadedmetadata = resolve
+          })
+          
+          // Create canvas and capture frame
+          const canvas = document.createElement('canvas')
+          canvas.width = video.videoWidth
+          canvas.height = video.videoHeight
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(video, 0, 0)
+          
+          // Stop the stream
+          stream.getTracks().forEach(track => track.stop())
+          
+          // Convert to blob and file
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const fileName = `camera-${Date.now()}.jpg`
+              const file = new File([blob], fileName, { type: 'image/jpeg' })
+              handleFiles([file])
+            }
+          }, 'image/jpeg', 0.9)
+          
+        } catch (webCameraError) {
+          console.log('Web camera not available, falling back to file picker')
+          // Final fallback to file picker
+          fileInputRef.current?.click()
+        }
       }
     } catch (error) {
       console.error('Error capturing photo:', error)
-      // Fallback to file picker on web or if camera access fails
+      // Fallback to file picker if camera fails
       fileInputRef.current?.click()
     } finally {
       setIsCapturing(false)
