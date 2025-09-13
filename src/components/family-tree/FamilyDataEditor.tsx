@@ -56,19 +56,19 @@ export function FamilyDataEditor({ open, onOpenChange, familyId, onDataChange }:
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Family Data</DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <Tabs defaultValue="people" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="people">People</TabsTrigger>
-              <TabsTrigger value="relationships">Relationships</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 shrink-0">
+              <TabsTrigger value="people">People ({people.length})</TabsTrigger>
+              <TabsTrigger value="relationships">Relationships ({relationships.length})</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="people" className="flex-1 overflow-auto">
+            <TabsContent value="people" className="flex-1 overflow-auto mt-4 pr-2">
               <PeopleTable 
                 people={people} 
                 familyId={familyId} 
@@ -76,7 +76,7 @@ export function FamilyDataEditor({ open, onOpenChange, familyId, onDataChange }:
               />
             </TabsContent>
             
-            <TabsContent value="relationships" className="flex-1 overflow-auto">
+            <TabsContent value="relationships" className="flex-1 overflow-auto mt-4 pr-2">
               <RelationshipsTable 
                 relationships={relationships} 
                 people={people}

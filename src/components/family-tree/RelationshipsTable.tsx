@@ -107,14 +107,14 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Relationships ({relationships.length})</h3>
+        <h3 className="text-lg font-semibold">All Relationships ({relationships.length})</h3>
         <Button onClick={handleAddNew} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Add Relationship
         </Button>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>

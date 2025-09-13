@@ -102,14 +102,14 @@ export function PeopleTable({ people, familyId, onUpdate }: PeopleTableProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">People ({people.length})</h3>
+        <h3 className="text-lg font-semibold">All People ({people.length})</h3>
         <Button onClick={handleAddNew} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Add Person
         </Button>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>
