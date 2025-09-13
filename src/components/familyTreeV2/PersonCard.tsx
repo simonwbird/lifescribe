@@ -36,7 +36,7 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
   const lastName = nameParts.slice(1).join(' ') || '';
 
   const handleClick = () => {
-    navigate(`/person/${person.id}`);
+    navigate(`/people/${person.id}`);
   };
 
   return (
