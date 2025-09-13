@@ -413,6 +413,25 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   const renderConnections = () => {
+    // Simple debug - if this renders, function is being called
+    console.log('renderConnections called with:', { unionsCount: unions.length, nodesCount: nodes.length })
+    
+    if (unions.length === 0) {
+      return (
+        <g>
+          <text x="400" y="50" fill="red" fontSize="16">NO UNIONS FOUND</text>
+        </g>
+      )
+    }
+
+    if (nodes.length === 0) {
+      return (
+        <g>
+          <text x="400" y="100" fill="red" fontSize="16">NO NODES FOUND</text>
+        </g>
+      )
+    }
+
     // Build union connections with proper Ancestry-style routing
     const unionConnections: Array<{
       unionId: string
@@ -467,11 +486,18 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     })
 
     return (
-      <ConnectionRenderer 
-        parentConnections={parentConnections}
-        spouseConnections={[]} // Using unionConnections instead
-        unionConnections={unionConnections}
-      />
+      <>
+        {/* Debug info */}
+        <text x="400" y="150" fill="green" fontSize="14">
+          Unions: {unionConnections.length}, Parents: {parentConnections.length}
+        </text>
+        
+        <ConnectionRenderer 
+          parentConnections={parentConnections}
+          spouseConnections={[]} // Using unionConnections instead
+          unionConnections={unionConnections}
+        />
+      </>
     )
   }
 
@@ -549,9 +575,20 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         </defs>
         
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+          {/* DEBUG: Test if SVG rendering works at all */}
+          <rect x="0" y="0" width="200" height="100" fill="red" opacity="0.5" />
+          <text x="100" y="50" fill="white" fontSize="16" textAnchor="middle">DEBUG SVG</text>
+          
+          {/* Render connections FIRST (behind cards) */}
           {renderConnections()}
+          
+          {/* Then render union nodes */}
           {unions.map(renderUnionNode)}
+          
+          {/* Then render person cards on top */}
           {nodes.map(renderPersonNode)}
+          
+          {/* Finally captions */}
           {renderGenerationCaptions()}
         </g>
       </svg>

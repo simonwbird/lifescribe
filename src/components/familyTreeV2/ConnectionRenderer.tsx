@@ -37,23 +37,51 @@ export const ConnectionRenderer: React.FC<ConnectionRendererProps> = ({
   spouseConnections,
   unionConnections = []
 }) => {
+  console.log('ConnectionRenderer rendering with:', {
+    parentConnections: parentConnections.length,
+    spouseConnections: spouseConnections.length, 
+    unionConnections: unionConnections.length
+  })
+
   return (
     <g>
+      {/* DEBUG: Highly visible test lines */}
+      <path d="M100,100 L300,100" stroke="red" strokeWidth="5" />
+      <path d="M100,200 L300,200" stroke="blue" strokeWidth="5" />
+      
       {/* Union bars and stems (drawn first, behind cards) */}
       {unionConnections.map((union, i) => {
+        console.log(`Rendering union ${i}:`, union)
         const { x1, x2, y, ax, bx } = unionBar(union.spouse1, union.spouse2, union.rowY)
         const xm = Math.round((x1 + x2) / 2)
         
+        console.log(`Union ${i} coords:`, { x1, x2, y, ax, bx, xm })
+        
         return (
           <g key={`union-${union.unionId}-${i}`}>
-            {/* Stems from spouse centers to bar */}
-            <path d={`M${ax},${y - STEM_LEN} V${y}`} className="fe-stem" />
-            <path d={`M${bx},${y - STEM_LEN} V${y}`} className="fe-stem" />
+            {/* Highly visible stems */}
+            <path 
+              d={`M${ax},${y - STEM_LEN} V${y}`} 
+              stroke="red" 
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <path 
+              d={`M${bx},${y - STEM_LEN} V${y}`} 
+              stroke="red" 
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
             
-            {/* Horizontal bar between spouses */}
-            <path d={`M${x1},${y} L${x2},${y}`} className="fe-bar" />
+            {/* Highly visible bar */}
+            <path 
+              d={`M${x1},${y} L${x2},${y}`} 
+              stroke="blue" 
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
             
-            {/* Children connections from bar midpoint */}
+            {/* Children connections */}
             {union.children.map((child, ci) => {
               const tp = topPort(child)
               const midY = Math.round((y + tp.y) / 2)
@@ -65,11 +93,16 @@ export const ConnectionRenderer: React.FC<ConnectionRendererProps> = ({
               ]
               const d = roundedOrthogonal(points, CORNER_RAD)
               
+              console.log(`Child ${ci} connection:`, { child, tp, midY, points, d })
+              
               return (
                 <path
                   key={`union-child-${union.unionId}-${ci}`}
                   d={d}
-                  className="fe-link"
+                  stroke="green"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
                 />
               )
             })}
@@ -77,8 +110,9 @@ export const ConnectionRenderer: React.FC<ConnectionRendererProps> = ({
         )
       })}
 
-      {/* Fallback parent-child connections (for single parents) */}
+      {/* Parent-child connections with bright colors */}
       {parentConnections.map((conn, i) => {
+        console.log(`Rendering parent connection ${i}:`, conn)
         const parentBottom = bottomPort({ x: conn.parentX, y: conn.parentY })
         const childTop = topPort({ x: conn.childX, y: conn.childY })
         const midY = Math.round((parentBottom.y + childTop.y) / 2)
@@ -91,21 +125,27 @@ export const ConnectionRenderer: React.FC<ConnectionRendererProps> = ({
         ]
         const d = roundedOrthogonal(points, CORNER_RAD)
         
+        console.log(`Parent connection ${i} coords:`, { parentBottom, childTop, midY, points, d })
+        
         return (
           <path
             key={`parent-${i}`}
             d={d}
-            className="fe-link"
+            stroke="orange"
+            strokeWidth="3"
+            fill="none"
+            strokeLinecap="round"
           />
         )
       })}
 
-      {/* Simple spouse connection bars (fallback) */}
+      {/* Spouse connection bars */}
       {spouseConnections.map((conn, i) => (
         <path
           key={`spouse-${i}`}
           d={`M${conn.spouse1X},${conn.spouse1Y} L${conn.spouse2X},${conn.spouse2Y}`}
-          className="fe-bar"
+          stroke="purple"
+          strokeWidth="5"
         />
       ))}
     </g>
