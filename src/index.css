@@ -342,17 +342,17 @@ small, .overline {
   }
   
   .fe-stem { 
-    stroke: var(--fe-line-strong); 
+    stroke: #777777; 
     stroke-width: 2; 
   }
   
   .fe-bar { 
-    stroke: var(--fe-line-strong); 
+    stroke: #777777; 
     stroke-width: 3; 
   }
   
   .fe-link { 
-    stroke: var(--fe-line); 
+    stroke: #777777; 
     stroke-width: 2; 
   }
 }
