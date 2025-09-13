@@ -1,20 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { 
   ZoomIn, 
   ZoomOut, 
   Maximize, 
-  MoreHorizontal, 
-  UserPlus, 
-  Baby, 
-  Users2,
-  Edit,
-  Trash2,
   Heart,
   Settings
 } from 'lucide-react'
@@ -23,6 +13,8 @@ import { FamilyTreeService } from '@/lib/familyTreeV2Service'
 import type { TreePerson, TreeFamily, TreeFamilyChild } from '@/lib/familyTreeV2Types'
 import { QuickAddModal } from './QuickAddModal'
 import { PersonDrawer } from './PersonDrawer'
+import { PersonCard, CARD_W, CARD_H } from './PersonCard'
+import { ConnectionRenderer } from './ConnectionRenderer'
 import { toast } from 'sonner'
 
 interface FamilyExplorerProps {
@@ -273,111 +265,66 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   const renderPersonNode = (node: LayoutNode) => {
-    const displayName = `${node.given_name || ''} ${node.surname || ''}`.trim()
-    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase()
-    const years = node.birth_date || node.death_date ? 
-      `${node.birth_date?.split('-')[0] || '?'}–${node.death_date?.split('-')[0] || ''}` : ''
+    const displayName = `${node.given_name || ''} ${node.surname || ''}`.trim() || 'Unknown'
+    
+    const person = {
+      id: node.id,
+      full_name: displayName,
+      birth_date: node.birth_date,
+      death_date: node.death_date,
+      gender: node.gender,
+      avatar_url: node.avatar_url
+    }
 
     return (
-      <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
-        {/* Person Card */}
-        <rect
-          x={-node.width / 2}
-          y={-node.height / 2}
-          width={node.width}
-          height={node.height}
-          rx={8}
-          className="fill-background stroke-border stroke-2 cursor-pointer hover:stroke-primary transition-colors"
-          onClick={() => handlePersonClick(node.id)}
-        />
-        
-        {/* Avatar */}
-        <circle
-          cx={0}
-          cy={-15}
-          r={20}
-          className="fill-muted stroke-border stroke-1"
-        />
-        
-        {/* Avatar text */}
-        <text
-          x={0}
-          y={-10}
-          textAnchor="middle"
-          className="fill-foreground text-sm font-medium"
-        >
-          {initials}
-        </text>
-        
-        {/* Name */}
-        <text
-          x={0}
-          y={15}
-          textAnchor="middle"
-          className="fill-foreground text-sm font-semibold"
-        >
-          {displayName}
-        </text>
-        
-        {/* Years */}
-        {years && (
-          <text
-            x={0}
-            y={30}
-            textAnchor="middle"
-            className="fill-muted-foreground text-xs"
-          >
-            {years}
-          </text>
-        )}
-
-        {/* Action buttons */}
-        <g transform={`translate(${node.width / 2 - 15}, ${-node.height / 2 + 5})`}>
-          <circle r={8} className="fill-background stroke-border cursor-pointer hover:fill-muted" />
-          <MoreHorizontal size={10} x={-5} y={-5} className="fill-foreground pointer-events-none" />
-        </g>
-
-        {/* Quick add zones */}
-        {/* Add partner */}
-        <circle
-          cx={node.width / 2 + 20}
-          cy={0}
-          r={12}
-          className="fill-primary/20 stroke-primary stroke-2 cursor-pointer hover:fill-primary/40 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleQuickAdd('partner', node.id)
-          }}
-        />
-        <UserPlus size={14} x={node.width / 2 + 20 - 7} y={-7} className="fill-primary pointer-events-none" />
-
-        {/* Add child */}
-        <circle
-          cx={0}
-          cy={node.height / 2 + 20}
-          r={12}
-          className="fill-primary/20 stroke-primary stroke-2 cursor-pointer hover:fill-primary/40 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleQuickAdd('child', node.id)
-          }}
-        />
-        <Baby size={14} x={-7} y={node.height / 2 + 20 - 7} className="fill-primary pointer-events-none" />
-
-        {/* Add parent */}
-        <circle
-          cx={0}
-          cy={-node.height / 2 - 20}
-          r={12}
-          className="fill-primary/20 stroke-primary stroke-2 cursor-pointer hover:fill-primary/40 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleQuickAdd('parent', node.id)
-          }}
-        />
-        <Users2 size={14} x={-7} y={-node.height / 2 - 20 - 7} className="fill-primary pointer-events-none" />
-      </g>
+      <PersonCard
+        key={node.id}
+        x={node.x - CARD_W / 2}
+        y={node.y - CARD_H / 2}
+        person={person}
+        onClick={() => handlePersonClick(node.id)}
+        onQuickAdd={(type) => handleQuickAdd(type, node.id)}
+      />
     )
+  }
+
+  const captionForDepth = (depth: number, focusName: string) => {
+    switch(depth) {
+      case 0: return `${focusName}'s children`
+      case 1: return `${focusName}'s parents`  
+      case 2: return `${focusName}'s grandparents`
+      case 3: return `${focusName}'s great-grandparents`
+      default: return ''
+    }
+  }
+
+  const renderGenerationCaptions = () => {
+    if (!nodes.length) return null
+    
+    const focusPerson = people.find(p => p.id === focusPersonId) || people[0]
+    const focusName = focusPerson ? 
+      `${focusPerson.given_name || ''} ${focusPerson.surname || ''}`.trim() : 'Focus'
+    
+    // Group nodes by their Y position to identify generations
+    const generationYs = new Set(nodes.map(n => n.y))
+    const sortedYs = Array.from(generationYs).sort((a, b) => a - b)
+    
+    return sortedYs.map((y, index) => {
+      const caption = captionForDepth(index, focusName)
+      if (!caption) return null
+      
+      const canvasWidth = svgRef.current?.clientWidth || 800
+      return (
+        <text 
+          key={`caption-${y}`}
+          x={0} 
+          y={y + CARD_H / 2 + 40} 
+          className="fe-caption"
+        >
+          {caption}
+        </text>
+      )
+    })
   }
 
   const renderUnionNode = (union: UnionNode) => {
@@ -445,59 +392,54 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   const renderConnections = () => {
-    const connections: JSX.Element[] = []
+    const parentConnections: Array<{
+      parentX: number;
+      parentY: number; 
+      childX: number;
+      childY: number;
+    }> = []
+    
+    const spouseConnections: Array<{
+      spouse1X: number;
+      spouse1Y: number;
+      spouse2X: number;
+      spouse2Y: number;
+    }> = []
 
     // Connect parents to children through unions
     unions.forEach(union => {
       union.children.forEach(child => {
         const childNode = nodes.find(n => n.id === child.id)
         if (childNode) {
-          connections.push(
-            <line
-              key={`${union.id}-${child.id}`}
-              x1={union.x}
-              y1={union.y + union.height / 2}
-              x2={childNode.x}
-              y2={childNode.y - childNode.height / 2}
-              className="stroke-border stroke-2"
-            />
-          )
+          parentConnections.push({
+            parentX: union.x,
+            parentY: union.y + union.height / 2,
+            childX: childNode.x,
+            childY: childNode.y - CARD_H / 2
+          })
         }
       })
 
-      // Connect partners to union
+      // Connect spouses
       const partner1Node = nodes.find(n => n.id === union.partner1.id)
-      if (partner1Node) {
-        connections.push(
-          <line
-            key={`${union.partner1.id}-${union.id}`}
-            x1={partner1Node.x}
-            y1={partner1Node.y}
-            x2={union.x - 30}
-            y2={union.y}
-            className="stroke-primary stroke-2"
-          />
-        )
-      }
-
-      if (union.partner2) {
-        const partner2Node = nodes.find(n => n.id === union.partner2!.id)
-        if (partner2Node) {
-          connections.push(
-            <line
-              key={`${union.partner2.id}-${union.id}`}
-              x1={partner2Node.x}
-              y1={partner2Node.y}
-              x2={union.x + 30}
-              y2={union.y}
-              className="stroke-primary stroke-2"
-            />
-          )
-        }
+      const partner2Node = union.partner2 ? nodes.find(n => n.id === union.partner2!.id) : null
+      
+      if (partner1Node && partner2Node) {
+        spouseConnections.push({
+          spouse1X: partner1Node.x + CARD_W / 2,
+          spouse1Y: partner1Node.y,
+          spouse2X: partner2Node.x - CARD_W / 2,
+          spouse2Y: partner2Node.y
+        })
       }
     })
 
-    return connections
+    return (
+      <ConnectionRenderer 
+        parentConnections={parentConnections}
+        spouseConnections={spouseConnections}
+      />
+    )
   }
 
   return (
@@ -564,23 +506,60 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
 
       {/* Tree Canvas */}
       <div className="flex-1 overflow-hidden relative">
+        <style>{`
+          /* Family Explorer "Ancestry" skin */
+          :root {
+            /* Canvas + grid */
+            --fe-canvas: #3B3C41;
+            --fe-grid: rgba(255,255,255,.04);
+
+            /* Cards */
+            --fe-card: #FFFFFF;
+            --fe-card-border: #D9D9DF;
+            --fe-shadow: rgba(0,0,0,.20);
+
+            /* Text */
+            --fe-ink: #1F2328;
+            --fe-ink-muted: #6B7280;
+
+            /* Gender tiles */
+            --fe-male: #8DA9C4;
+            --fe-female: #E6B0A0;
+            --fe-unknown: #C3C7CF;
+
+            /* Lines */
+            --fe-line: #C9CCD4;
+            --fe-line-strong: #AEB3BE;
+          }
+          
+          .fe-canvas{
+            background: var(--fe-canvas);
+            background-image:
+              radial-gradient(var(--fe-grid) 1px, transparent 1px),
+              radial-gradient(var(--fe-grid) 1px, transparent 1px);
+            background-size: 24px 24px, 24px 24px;
+            background-position: 0 0, 12px 12px;
+          }
+          .fe-caption{ font:600 12px/1.1 Inter, system-ui; fill:rgba(255,255,255,.85); text-anchor:middle; }
+          .fe-name{ font:600 13px/1.2 Inter, system-ui; fill:var(--fe-ink); }
+          .fe-dates{ font:12px/1.2 Inter, system-ui; fill:var(--fe-ink-muted); }
+        `}</style>
+        
         <svg
           ref={svgRef}
-          className="w-full h-full cursor-grab active:cursor-grabbing"
+          className="w-full h-full cursor-grab active:cursor-grabbing fe-canvas"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
+          <defs>
+            <filter id="feCardShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="black" floodOpacity="0.20"/>
+            </filter>
+          </defs>
+          
           <g transform={`scale(${zoom}) translate(${pan.x}, ${pan.y})`}>
-            {/* Grid background */}
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.1"/>
-              </pattern>
-            </defs>
-            <rect x="-2000" y="-2000" width="4000" height="4000" fill="url(#grid)" />
-
             {/* Connections */}
             {renderConnections()}
 
@@ -589,6 +568,9 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
 
             {/* Person nodes */}
             {nodes.map(renderPersonNode)}
+            
+            {/* Generation captions */}
+            {renderGenerationCaptions()}
           </g>
         </svg>
       </div>
