@@ -13,12 +13,13 @@ const BG: React.CSSProperties = {
 };
 
 export default function FamilyExplorer({
-  people, relationships, focusPersonId, showCaptions = false,
+  people, relationships, focusPersonId, showCaptions = false, onAddRequested,
 }:{
   people: Person[];
   relationships: Relationship[];
   focusPersonId: string;
   showCaptions?: boolean;
+  onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void;
 }) {
   const graph: FamilyGraph = useMemo(()=>buildGraph(people, relationships, focusPersonId),[people,relationships,focusPersonId]);
   const layout = useMemo(()=>layoutGraph(graph, focusPersonId),[graph,focusPersonId]);
@@ -57,7 +58,9 @@ export default function FamilyExplorer({
         {/* edges behind cards */}
         <ConnectionRenderer graph={graph} layout={layout} />
         {/* cards */}
-        <g>{Array.from(layout.rects.values()).map(r => <PersonCard key={r.id} rect={r} person={graph.peopleById.get(r.id)!} />)}</g>
+        <g>{Array.from(layout.rects.values()).map(r => (
+          <PersonCard key={r.id} rect={r} person={graph.peopleById.get(r.id)!} onAddRequested={onAddRequested} />
+        ))}</g>
         {/* captions */}
         <g>{captions}</g>
       </svg>

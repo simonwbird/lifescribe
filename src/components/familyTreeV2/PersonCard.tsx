@@ -24,7 +24,7 @@ const genderFill = (s?: "M"|"F"|"X") => s==="M" ? TOKENS.male : s==="F" ? TOKENS
 const yr = (v?: string|number|null) => v==null ? "" : String(v).slice(0,4);
 const fullName = (p: Person) => (p.given_name + " " + (p.surname ?? "")).trim();
 
-export function PersonCard({ rect, person }: { rect: NodeRect; person: Person }) {
+export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; person: Person; onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void }) {
   const navigate = useNavigate();
   const b = yr(person.birth_date), d = yr(person.death_date);
   const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
@@ -44,8 +44,7 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
 
   const handleAddRelation = (e: React.MouseEvent, type: 'parent' | 'sibling' | 'child' | 'spouse') => {
     e.stopPropagation();
-    // TODO: Open modal/dialog to add new family member with this relationship
-    console.log(`Add ${type} for ${name}`);
+    onAddRequested?.(type, person.id);
   };
 
   return (

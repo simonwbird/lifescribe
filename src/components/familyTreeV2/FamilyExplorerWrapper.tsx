@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FamilyTreeService } from '@/lib/familyTreeV2Service'
 import FamilyExplorer from './FamilyExplorer'
+import { QuickAddModal } from './QuickAddModal'
 import type { Person, Relationship } from '@/lib/familyTreeV2Types'
 
 interface Props {
@@ -13,6 +14,9 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
   const [people, setPeople] = useState<Person[]>([])
   const [relationships, setRelationships] = useState<Relationship[]>([])
   const [loading, setLoading] = useState(true)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [relType, setRelType] = useState<'partner' | 'child' | 'parent'>('child')
+  const [targetId, setTargetId] = useState<string>('')
 
   useEffect(() => {
     loadData()
@@ -92,12 +96,35 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
     )
   }
 
+  const handleAddRequested = (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => {
+    const mapped: Record<string, 'partner'|'child'|'parent'> = {
+      parent: 'parent',
+      child: 'child',
+      spouse: 'partner',
+      sibling: 'parent', // adding a sibling usually implies adding a parent first
+    };
+    setRelType(mapped[type]);
+    setTargetId(personId);
+    setModalOpen(true);
+  };
+
   return (
-    <FamilyExplorer
-      people={people}
-      relationships={relationships}
-      focusPersonId={focusPersonId || people[0]?.id || ''}
-      showCaptions={false}
-    />
+    <>
+      <FamilyExplorer
+        people={people}
+        relationships={relationships}
+        focusPersonId={focusPersonId || people[0]?.id || ''}
+        showCaptions={false}
+        onAddRequested={handleAddRequested}
+      />
+      <QuickAddModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        familyId={familyId}
+        relationshipType={relType}
+        targetPersonId={targetId}
+        onSuccess={async () => { setModalOpen(false); await loadData(); }}
+      />
+    </>
   )
 }
