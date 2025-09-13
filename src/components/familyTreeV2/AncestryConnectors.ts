@@ -12,6 +12,8 @@ export const CORNER_RAD = 12;
 export const EDGE_W = 2;
 export const BAR_W  = 3;
 
+export const RAIL_GAP_ABOVE_CHILD = 18; // px above child card top for the shared rail
+
 export const COLORS = {
   link:   "#C9CCD4",  // rails + child links
   strong: "#AEB3BE",  // stems + union bar + bar→rail drop
