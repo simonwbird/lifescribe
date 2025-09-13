@@ -69,6 +69,7 @@ export class FamilyTreeLayoutEngine {
   }
 
   // Build layout for focus person and surrounding family
+  // Build layout for focus person with configurable generations in both directions
   calculateLayout(focusPersonId: string, generations = 3): {
     nodes: LayoutNode[]
     unions: UnionNode[]
@@ -79,23 +80,124 @@ export class FamilyTreeLayoutEngine {
 
     const nodes: LayoutNode[] = []
     const unions: UnionNode[] = []
+    const nodeIds = new Set<string>()
+    const unionIds = new Set<string>()
 
-    // Build tree structure around focus person
-    const focusNode = this.createLayoutNode(focusPerson, 0, 0, 0)
-    nodes.push(focusNode)
+    const getOrCreateNode = (person: TreePerson, x: number, y: number, level: number) => {
+      if (nodeIds.has(person.id)) {
+        return nodes.find(n => n.id === person.id)!
+      }
+      const n = this.createLayoutNode(person, x, y, level)
+      nodes.push(n)
+      nodeIds.add(person.id)
+      return n
+    }
 
-    // Add parents (generation -1)
-    this.addParentGeneration(focusNode, nodes, unions, -1)
+    const addAncestors = (target: LayoutNode, level: number, remaining: number) => {
+      if (remaining <= 0) return
+      const parents = this.getParents(target.id)
+      if (parents.length === 0) return
 
-    // Add children (generation +1)  
-    this.addChildrenGeneration(focusNode, nodes, unions, 1)
+      const created: LayoutNode[] = []
+      parents.forEach((p, idx) => {
+        const px = idx * (this.config.nodeWidth + this.config.horizontalSpacing)
+        const py = level * this.config.generationHeight
+        const parentNode = getOrCreateNode(p, px, py, level)
+        created.push(parentNode)
+      })
 
-    // Position everything
+      if (created.length === 2) {
+        const family = this.families.find(f =>
+          (f.partner1_id === created[0].id && f.partner2_id === created[1].id) ||
+          (f.partner1_id === created[1].id && f.partner2_id === created[0].id)
+        )
+        if (family && !unionIds.has(family.id)) {
+          unions.push({
+            id: family.id,
+            family,
+            partner1: created[0],
+            partner2: created[1],
+            children: [target],
+            x: 0,
+            y: level * this.config.generationHeight,
+            width: this.config.unionWidth,
+            height: this.config.unionHeight,
+            level
+          })
+          unionIds.add(family.id)
+        }
+      }
+
+      created.forEach((parent) => addAncestors(parent, level - 1, remaining - 1))
+    }
+
+    const addDescendants = (target: LayoutNode, level: number, remaining: number) => {
+      if (remaining <= 0) return
+
+      const partners = this.getPartners(target.id)
+      if (partners.length === 0 && target.children.length > 0) {
+        // Single parent
+        const singleFamily = this.families.find(f => f.partner1_id === target.id && !f.partner2_id)
+        if (singleFamily && !unionIds.has(singleFamily.id)) {
+          unions.push({
+            id: singleFamily.id,
+            family: singleFamily,
+            partner1: target,
+            children: target.children,
+            x: 0,
+            y: level * this.config.generationHeight,
+            width: this.config.unionWidth,
+            height: this.config.unionHeight,
+            level
+          })
+          unionIds.add(singleFamily.id)
+        }
+      } else {
+        partners.forEach(partner => {
+          const family = this.families.find(f =>
+            (f.partner1_id === target.id && f.partner2_id === partner.id) ||
+            (f.partner1_id === partner.id && f.partner2_id === target.id)
+          )
+          if (family && !unionIds.has(family.id)) {
+            const familyChildren = this.children
+              .filter(fc => fc.family_id === family.id)
+              .map(fc => this.personMap.get(fc.child_id))
+              .filter(Boolean) as TreePerson[]
+
+            unions.push({
+              id: family.id,
+              family,
+              partner1: target,
+              partner2: partner,
+              children: familyChildren,
+              x: 0,
+              y: level * this.config.generationHeight,
+              width: this.config.unionWidth,
+              height: this.config.unionHeight,
+              level
+            })
+            unionIds.add(family.id)
+          }
+        })
+      }
+
+      // Create child nodes and recurse
+      target.children.forEach((child, idx) => {
+        const cx = idx * (this.config.nodeWidth + this.config.siblingSpacing)
+        const cy = level * this.config.generationHeight
+        const childNode = getOrCreateNode(child, cx, cy, level)
+        addDescendants(childNode, level + 1, remaining - 1)
+      })
+    }
+
+    // Build around focus
+    const focusNode = getOrCreateNode(focusPerson, 0, 0, 0)
+    addAncestors(focusNode, -1, generations)
+    addDescendants(focusNode, 1, generations)
+
+    // Position and bounds
     this.positionGenerations(nodes, unions)
-
-    // Calculate bounds
     const bounds = this.calculateBounds(nodes, unions)
-
     return { nodes, unions, bounds }
   }
 

@@ -81,10 +81,11 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     people: TreePerson[],
     families: TreeFamily[],
     children: TreeFamilyChild[],
-    focusId: string
+    focusId: string,
+    gen: number = generations
   ) => {
     const engine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
-    const layout = engine.calculateLayout(focusId, generations)
+    const layout = engine.calculateLayout(focusId, gen)
     setNodes(layout.nodes)
     setUnions(layout.unions)
     
@@ -424,7 +425,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
                 const newGen = parseInt(e.target.value)
                 setGenerations(newGen)
                 if (people.length > 0 && (focusPersonId || people[0])) {
-                  calculateLayout(people, families, children, focusPersonId || people[0].id)
+                  calculateLayout(people, families, children, focusPersonId || people[0].id, newGen)
                 }
               }}
               className="text-sm border rounded px-2 py-1 bg-background"
