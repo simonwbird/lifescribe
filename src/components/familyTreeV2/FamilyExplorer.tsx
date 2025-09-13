@@ -12,23 +12,6 @@ const BG: React.CSSProperties = {
   backgroundPosition: "0 0, 12px 12px",
 };
 
-function DebugHUD({ people, relationships, graph, layout, focusId }:{
-  people:any[], relationships:any[], graph:any, layout:any, focusId:string
-}){
-  const ids = new Set(people.map((p:any)=>String(p.id)));
-  const bad = relationships.filter((r:any)=>{
-    if (r.type==='parent') return !ids.has(String(r.parent_id)) || !ids.has(String(r.child_id));
-    return !ids.has(String(r.a)) || !ids.has(String(r.b));
-  });
-  const line = `people:${people.length}  rects:${layout.rects.size}  rels:${relationships.length}  unions:${layout.unions.length}  focusOk:${ids.has(String(focusId))}  badRels:${bad.length}`;
-  return (
-    <g>
-      <rect x={16} y={16} width={760} height={40} rx={8} fill="rgba(0,0,0,.55)"/>
-      <text x={28} y={42} fontFamily="ui-monospace, SFMono-Regular" fontSize="13" fill="#fff">{line}</text>
-    </g>
-  );
-}
-
 export default function FamilyExplorer({
   people, relationships, focusPersonId, showCaptions = true,
 }:{
@@ -65,9 +48,6 @@ export default function FamilyExplorer({
   return (
     <div style={{ width:"100%", height:"100%", ...BG }}>
       <svg ref={svgRef} width="100%" height="100%" role="img" aria-label="Family tree">
-        <text x={24} y={28} fill="#ff77ff" fontSize="22" fontFamily="ui-monospace">USING: FamilyExplorer.tsx</text>
-        <path d={`M0,40 L${layout.bounds.width},40`} stroke="#ff00ff" strokeWidth={6} vectorEffect="non-scaling-stroke" />
-        <text x={24} y={70} fill="#77ff77" fontSize="18" fontFamily="ui-monospace">CR: rails-fixed v1</text>
         <defs>
           <filter id="feCardShadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="black" floodOpacity="0.20" />
@@ -80,8 +60,6 @@ export default function FamilyExplorer({
         <g>{Array.from(layout.rects.values()).map(r => <PersonCard key={r.id} rect={r} person={graph.peopleById.get(r.id)!} />)}</g>
         {/* captions */}
         <g>{captions}</g>
-        {/* debug HUD - leave on until IDs are verified */}
-        <DebugHUD people={people} relationships={relationships} graph={graph} layout={layout} focusId={focusPersonId}/>
       </svg>
     </div>
   );

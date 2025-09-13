@@ -92,9 +92,6 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
 
   return (
     <g>
-      {/* Canary to confirm this renderer is mounted */}
-      <text x={24} y={100} fill="#ffff77" fontSize="16" fontFamily="ui-monospace">ConnectionRenderer: rails-fixed</text>
-
       {/* ===== unions ===== */}
       {unionGroups.map(g => (
         <Fragment key={g.key}>
