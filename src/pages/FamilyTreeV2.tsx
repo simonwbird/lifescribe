@@ -288,12 +288,6 @@ const FamilyTreeV2 = () => {
                 Import CSV
               </Button>
             </div>
-            <Button variant="outline" onClick={() => navigate('/family-tree/explorer')}>
-              Family Explorer
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/family-tree/fan')}>
-              Ancestor Fan
-            </Button>
           </div>
         </div>
         
