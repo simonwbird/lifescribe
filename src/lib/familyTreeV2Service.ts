@@ -254,18 +254,18 @@ export class FamilyTreeService {
     form: QuickAddForm,
     familyId: string,
     userId: string
-  ): Promise<TreePerson> {
-    // Create the new person
+  ): Promise<any> {
+    // Create the new person in the main people table
     const { data: newPerson, error: personError } = await supabase
-      .from('tree_people')
+      .from('people')
       .insert({
         family_id: familyId,
         given_name: form.given_name,
-        surname: form.surname,
-        sex: form.sex,
-        birth_date: form.birth_date,
-        is_living: form.is_living,
-        created_by: userId
+        surname: form.surname || null,
+        gender: form.sex === 'M' ? 'male' : form.sex === 'F' ? 'female' : 'other',
+        birth_date: form.birth_date || null,
+        created_by: userId,
+        full_name: `${form.given_name} ${form.surname || ''}`.trim()
       })
       .select()
       .single()
@@ -274,14 +274,50 @@ export class FamilyTreeService {
 
     // Create relationship based on type
     if (form.relationship_type === 'partner') {
-      await this.addPartner(form.target_person_id, newPerson.id, familyId, userId)
+      await this.addSpouseRelationship(form.target_person_id, newPerson.id, familyId, userId)
     } else if (form.relationship_type === 'child') {
-      await this.addChild(form.target_person_id, newPerson.id, familyId, userId)
+      await this.addParentChildRelationship(form.target_person_id, newPerson.id, familyId, userId)
     } else if (form.relationship_type === 'parent') {
-      await this.addParent(form.target_person_id, newPerson.id, familyId, userId)
+      await this.addParentChildRelationship(newPerson.id, form.target_person_id, familyId, userId)
     }
 
     return newPerson
+  }
+
+  // Add spouse relationship
+  static async addSpouseRelationship(
+    personId: string, 
+    spouseId: string, 
+    familyId: string, 
+    userId: string
+  ): Promise<void> {
+    await supabase
+      .from('relationships')
+      .insert({
+        family_id: familyId,
+        from_person_id: personId,
+        to_person_id: spouseId,
+        relationship_type: 'spouse',
+        created_by: userId
+      })
+  }
+
+  // Add parent-child relationship  
+  static async addParentChildRelationship(
+    parentId: string,
+    childId: string,
+    familyId: string,
+    userId: string
+  ): Promise<void> {
+    await supabase
+      .from('relationships')
+      .insert({
+        family_id: familyId,
+        from_person_id: parentId,
+        to_person_id: childId,
+        relationship_type: 'parent',
+        created_by: userId
+      })
   }
 
   // Add partner relationship
