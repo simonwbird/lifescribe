@@ -233,6 +233,7 @@ const FamilyTreeV2 = () => {
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Family Tree</h1>
+          <p className="text-muted-foreground mt-1">Have a memory, story or photo? Click on any person to add it to their profile</p>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
