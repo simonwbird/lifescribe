@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 interface ConnectionLineProps {
   from: { x: number; y: number }
   to: { x: number; y: number }
-  type: 'parent' | 'spouse' | 'child'
+  type: 'parent' | 'spouse' | 'child' | 'divorced'
   isHighlighted?: boolean
   relationshipId?: string
   onDelete?: (relationshipId: string) => void
@@ -12,7 +12,7 @@ interface ConnectionLineProps {
     id: string
     from_person_id: string
     to_person_id: string
-    relationship_type: 'parent' | 'spouse' | 'child'
+    relationship_type: 'parent' | 'spouse' | 'child' | 'divorced'
   }>
   allPositions?: Record<string, { x: number; y: number }>
 }
@@ -78,9 +78,9 @@ export default function ConnectionLine({
     const parentId = currentRel.from_person_id
     const childId = currentRel.to_person_id
     
-    // Find if this parent has a spouse
+    // Find if this parent has a spouse or ex-spouse
     const spouseRel = allRelationships.find(r => 
-      r.relationship_type === 'spouse' && 
+      (r.relationship_type === 'spouse' || r.relationship_type === 'divorced') && 
       (r.from_person_id === parentId || r.to_person_id === parentId)
     )
     
@@ -110,9 +110,9 @@ export default function ConnectionLine({
     const parentId = currentRel.from_person_id
     const childId = currentRel.to_person_id
     
-    // Find spouse
+    // Find spouse or ex-spouse
     const spouseRel = allRelationships.find(r => 
-      r.relationship_type === 'spouse' && 
+      (r.relationship_type === 'spouse' || r.relationship_type === 'divorced') && 
       (r.from_person_id === parentId || r.to_person_id === parentId)
     )
     
@@ -185,6 +185,12 @@ export default function ConnectionLine({
           ...baseStyle,
           stroke: isHighlighted ? '#ec4899' : '#f59e0b',
           strokeDasharray: '8 4'
+        }
+      case 'divorced':
+        return {
+          ...baseStyle,
+          stroke: isHighlighted ? '#9ca3af' : '#6b7280',
+          strokeDasharray: '12 6 2 6'
         }
       default:
         return {
@@ -278,7 +284,7 @@ export default function ConnectionLine({
             ...getLineStyle(),
             transform: `translate(${-minX}px, ${-minY}px)`,
             filter: isHighlighted ? `url(#glow-${type})` : 'none',
-            markerEnd: type !== 'spouse' ? `url(#arrow-${type})` : 'none'
+            markerEnd: type !== 'spouse' && type !== 'divorced' ? `url(#arrow-${type})` : 'none'
           }}
           className={`transition-all duration-200 ${isHighlighted ? 'drop-shadow-lg' : ''} pointer-events-none`}
         />
@@ -292,7 +298,7 @@ export default function ConnectionLine({
             className="fill-gray-700 text-xs font-medium pointer-events-none"
             style={{ transform: `translate(${-minX}px, ${-minY}px)` }}
           >
-            {type === 'parent' ? 'parent' : type === 'spouse' ? 'married' : type}
+            {type === 'parent' ? 'parent' : type === 'spouse' ? 'married' : type === 'divorced' ? 'divorced' : type}
           </text>
         )}
       </svg>

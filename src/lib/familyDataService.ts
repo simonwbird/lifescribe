@@ -20,7 +20,7 @@ export interface RelationshipData {
   family_id: string
   from_person_id: string
   to_person_id: string
-  relationship_type: 'parent' | 'spouse'
+  relationship_type: 'parent' | 'spouse' | 'divorced'
   created_at: string
   created_by: string | null
 }

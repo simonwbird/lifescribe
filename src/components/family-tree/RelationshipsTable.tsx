@@ -17,7 +17,7 @@ interface RelationshipsTableProps {
 interface EditingRelationship extends Partial<RelationshipData> {
   id?: string
   isNew?: boolean
-  relationship_type?: 'parent' | 'spouse'
+  relationship_type?: 'parent' | 'spouse' | 'divorced'
 }
 
 export function RelationshipsTable({ relationships, people, familyId, onUpdate }: RelationshipsTableProps) {
@@ -148,18 +148,19 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
                 </TableCell>
                 <TableCell>
                   {editingRelationship?.id === relationship.id ? (
-                    <Select 
-                      value={editingRelationship.relationship_type || ''} 
-                      onValueChange={(value: 'parent' | 'spouse') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="parent">Parent</SelectItem>
-                        <SelectItem value="spouse">Spouse</SelectItem>
-                      </SelectContent>
-                    </Select>
+                     <Select 
+                       value={editingRelationship.relationship_type || ''} 
+                       onValueChange={(value: 'parent' | 'spouse' | 'divorced') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
+                     >
+                       <SelectTrigger>
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="parent">Parent</SelectItem>
+                         <SelectItem value="spouse">Spouse</SelectItem>
+                         <SelectItem value="divorced">Divorced</SelectItem>
+                       </SelectContent>
+                     </Select>
                   ) : relationship.relationship_type}
                 </TableCell>
                 <TableCell>
@@ -226,18 +227,19 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Select 
-                    value={editingRelationship.relationship_type || ''} 
-                    onValueChange={(value: 'parent' | 'spouse') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="parent">Parent</SelectItem>
-                      <SelectItem value="spouse">Spouse</SelectItem>
-                    </SelectContent>
-                  </Select>
+                   <Select 
+                     value={editingRelationship.relationship_type || ''} 
+                     onValueChange={(value: 'parent' | 'spouse' | 'divorced') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
+                   >
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="parent">Parent</SelectItem>
+                       <SelectItem value="spouse">Spouse</SelectItem>
+                       <SelectItem value="divorced">Divorced</SelectItem>
+                     </SelectContent>
+                   </Select>
                 </TableCell>
                 <TableCell>
                   <Select 
