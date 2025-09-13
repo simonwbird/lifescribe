@@ -97,7 +97,7 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
       people={people}
       relationships={relationships}
       focusPersonId={focusPersonId || people[0]?.id || ''}
-      showCaptions={true}
+      showCaptions={false}
     />
   )
 }
