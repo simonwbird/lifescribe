@@ -25,7 +25,19 @@ export default function FamilyExplorer({
   const layout = useMemo(()=>layoutGraph(graph, focusPersonId),[graph,focusPersonId]);
 
   const svgRef = useRef<SVGSVGElement|null>(null);
-  useEffect(()=>{ const svg=svgRef.current; if(!svg) return; svg.setAttribute("viewBox",`0 0 ${layout.bounds.width} ${layout.bounds.height}`); },[layout.bounds]);
+  useEffect(()=>{ 
+    const svg=svgRef.current; if(!svg) return; 
+    // Ensure a reasonable zoom level when there are very few nodes
+    const PADDING = 80; 
+    const MIN_W = 1200; 
+    const MIN_H = 800; 
+    const viewW = Math.max(layout.bounds.width + PADDING * 2, MIN_W);
+    const viewH = Math.max(layout.bounds.height + PADDING * 2, MIN_H);
+    const startX = -((viewW - layout.bounds.width) / 2);
+    const startY = -((viewH - layout.bounds.height) / 2);
+    svg.setAttribute("viewBox",`${startX} ${startY} ${viewW} ${viewH}`);
+    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+  },[layout.bounds]);
 
   const font = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial';
   const captions = showCaptions ? (() => {
