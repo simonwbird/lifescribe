@@ -340,4 +340,12 @@ small, .overline {
     shape-rendering: geometricPrecision;
     fill: none;
   }
+
+/* Family Explorer line rendering (Ancestry) */
+.fe-link, .fe-stem, .fe-bar {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
 }

@@ -1,5 +1,48 @@
-// New Family Tree Types - Union/Family Node Pattern
+// Shared types for Family Explorer (Ancestry style)
 
+export type Sex = "M" | "F" | "X" | undefined;
+
+export type Person = {
+  id: string;
+  given_name: string;
+  surname?: string;
+  birth_date?: string | number | null;
+  death_date?: string | number | null;
+  sex?: Sex;
+  avatar_url?: string | null;
+};
+
+export type Relationship =
+  | { type: "parent"; parent_id: string; child_id: string }
+  | { type: "spouse"; a: string; b: string };
+
+export type NodeRect = { id: string; x: number; y: number; w: number; h: number; depth: number };
+
+export type Union = {
+  id: string;
+  a: string;
+  b: string;
+  children: string[];
+  depth: number;
+  y: number;
+};
+
+export type FamilyGraph = {
+  peopleById: Map<string, Person>;
+  childrenOf: Map<string, string[]>;
+  parentsOf: Map<string, string[]>;
+  spouses: Map<string, Set<string>>;
+  unions: Union[];
+};
+
+export type TreeLayout = {
+  rects: Map<string, NodeRect>;
+  unions: Union[];
+  rows: Map<number, number>;
+  bounds: { width: number; height: number };
+};
+
+// Legacy types for backward compatibility
 export interface TreePerson {
   id: string
   family_id: string
@@ -13,18 +56,16 @@ export interface TreePerson {
   death_place?: string | null
   profile_photo_url?: string | null
   notes?: string | null
-  source_xref?: string | null // for GED imports like @I1@
+  source_xref?: string | null
   created_by?: string | null
   created_at: string
   updated_at: string
-  // Additional compatibility fields
   full_name?: string
   birth_year?: number
   death_year?: number
   gender?: 'male' | 'female' | 'other' | 'unknown'
   avatar_url?: string
   middle_name?: string
-  // Relationship arrays for graph building
   spouses?: TreePerson[]
   children?: TreePerson[]
   parents?: TreePerson[]
@@ -38,7 +79,7 @@ export interface TreeFamily {
   relationship_type: string
   start_date?: string | null
   end_date?: string | null
-  source_xref?: string | null // for GED imports like @F1@
+  source_xref?: string | null
   created_by?: string | null
   created_at: string
 }
@@ -46,48 +87,17 @@ export interface TreeFamily {
 export interface TreeFamilyChild {
   family_id: string
   child_id: string
-  relationship_note?: string // for adoption, step-children, etc.
+  relationship_note?: string
   created_at: string
 }
 
-export interface TreePersonAlias {
-  id: string
-  person_id: string
-  alias: string
-  alias_type: string
-  created_at: string
-}
-
-export interface TreePreference {
-  user_id: string
-  family_id: string
-  root_person_id?: string | null
-  updated_at: string
-}
-
-export interface TreeImport {
-  id: string
-  family_id: string
-  imported_by: string
-  import_type: string
-  file_name?: string | null
-  file_path?: string | null
-  status: string
-  people_count: number | null
-  families_count: number | null
-  errors_log: any
-  created_at: string | null
-  completed_at?: string | null
-}
-
-// Enhanced TreeGraph with full relationship data and metadata
 export interface TreeGraph {
   focusPersonId: string
   people: TreePerson[]
   families: TreeFamily[]
   children: TreeFamilyChild[]
-  relationships?: any[] // From main relationships table
-  components?: TreePerson[][] // Connected components
+  relationships?: any[]
+  components?: TreePerson[][]
   meta?: {
     source: string
     count_people: number
@@ -95,27 +105,6 @@ export interface TreeGraph {
   }
 }
 
-export interface TreeNode extends TreePerson {
-  partners: TreePerson[]
-  unions: TreeUnion[]
-  children: TreePerson[]
-  parents: TreePerson[]
-  x?: number
-  y?: number
-  level?: number
-}
-
-export interface TreeUnion {
-  id: string
-  family: TreeFamily
-  partner1: TreePerson
-  partner2?: TreePerson
-  children: TreePerson[]
-  x?: number
-  y?: number
-}
-
-// Import types
 export interface GedcomPerson {
   person_id: string
   given_name?: string
@@ -126,8 +115,8 @@ export interface GedcomPerson {
   death_date?: string
   death_place?: string
   is_living: 'Y' | 'N'
-  fams?: string // family as spouse
-  famc?: string // family as child
+  fams?: string
+  famc?: string
   raw_name: string
 }
 
@@ -157,33 +146,38 @@ export interface PersonMatch {
   matchReasons: string[]
 }
 
-// Layout types
-export interface LayoutConfig {
-  nodeWidth: number
-  nodeHeight: number
-  horizontalSpacing: number
-  verticalSpacing: number
-  unionSpacing: number
-  generationHeight: number
+export interface TreeImport {
+  id: string
+  family_id: string
+  imported_by: string
+  import_type: string
+  file_name?: string | null
+  file_path?: string | null
+  status: string
+  people_count: number | null
+  families_count: number | null
+  errors_log: any
+  created_at: string | null
+  completed_at?: string | null
 }
 
-// Connection rendering types
-export interface FamilyGraph {
-  peopleById: Map<string, Person>
-  childrenOf: Map<string, string[]>
-  parentsOf: Map<string, string[]>
-  spouses: Map<string, Set<string>>
-  unions: Union[]
+export interface TreePreference {
+  user_id: string
+  family_id: string
+  root_person_id?: string | null
+  updated_at: string
 }
 
-export interface TreeLayout {
-  rects: Map<string, NodeRect>
-  unions: Union[]
-  rows: Map<number, number>
-  bounds: { width: number; height: number }
+export interface QuickAddForm {
+  given_name: string
+  surname: string
+  sex: 'M' | 'F' | 'X'
+  birth_date?: string
+  is_living: boolean
+  relationship_type: 'parent' | 'partner' | 'child'
+  target_person_id: string
 }
 
-// UI state types
 export interface TreeViewState {
   view: 'explorer' | 'fan'
   focusPersonId?: string
@@ -196,46 +190,4 @@ export interface TreeViewState {
   autoLayout: boolean
   zoom: number
   pan: { x: number; y: number }
-}
-
-// Additional layout types for the new layout engine
-export interface Person {
-  id: string
-  [key: string]: any // Allow other properties
-}
-
-export interface Relationship {
-  type: 'parent' | 'spouse'
-  parent_id?: string
-  child_id?: string
-  a?: string
-  b?: string
-}
-
-export interface NodeRect {
-  id: string
-  x: number
-  y: number
-  w: number
-  h: number
-  depth: number
-}
-
-export interface Union {
-  id: string
-  a: string
-  b: string
-  children: string[]
-  depth: number
-  y: number
-}
-
-export interface QuickAddForm {
-  given_name: string
-  surname: string
-  sex: 'M' | 'F' | 'X'
-  birth_date?: string
-  is_living: boolean
-  relationship_type: 'parent' | 'partner' | 'child'
-  target_person_id: string
 }

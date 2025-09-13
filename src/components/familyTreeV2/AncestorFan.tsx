@@ -217,7 +217,8 @@ export const AncestorFan: React.FC<AncestorFanProps> = ({
       <g key={person.id}>
         <path
           d={path}
-          className="fill-primary/20 stroke-primary stroke-1 cursor-pointer hover:fill-primary/40 transition-colors"
+          className="fill-primary/20 cursor-pointer hover:fill-primary/40 transition-colors"
+          stroke="#8B5CF6" strokeWidth="1"
           onClick={() => onPersonClick?.(person.id)}
         />
         
@@ -311,7 +312,8 @@ export const AncestorFan: React.FC<AncestorFanProps> = ({
             <g transform={`translate(${centerX}, ${centerY})`}>
               <circle
                 r={70}
-                className="fill-primary/30 stroke-primary stroke-2"
+                className="fill-primary/30"
+                stroke="#8B5CF6" strokeWidth="2"
               />
               <text
                 textAnchor="middle"

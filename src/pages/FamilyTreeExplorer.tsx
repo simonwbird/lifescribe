@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, TreePine } from 'lucide-react'
-import { FamilyExplorer } from '@/components/familyTreeV2/FamilyExplorer'
+import FamilyExplorerWrapper from '@/components/familyTreeV2/FamilyExplorerWrapper'
 import { supabase } from '@/integrations/supabase/client'
 
 const FamilyTreeExplorer = () => {
@@ -57,7 +57,7 @@ const FamilyTreeExplorer = () => {
       </div>
       
       <div className="flex-1 fe-canvas">
-        <FamilyExplorer 
+        <FamilyExplorerWrapper 
           familyId={familyId}
           focusPersonId={focusPersonId}
           onPersonFocus={(personId) => navigate(`?focus=${personId}`)}
