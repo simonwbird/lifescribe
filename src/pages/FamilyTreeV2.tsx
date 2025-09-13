@@ -271,13 +271,22 @@ const FamilyTreeV2 = () => {
               className="hidden"
               id="csv-upload-existing"
             />
-            <Button 
-              variant="outline" 
-              onClick={() => document.getElementById('csv-upload-existing')?.click()}
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Import CSV
-            </Button>
+            <div className="flex gap-1">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => CsvImportService.downloadCombinedTemplate()}
+              >
+                📥 Template
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => document.getElementById('csv-upload-existing')?.click()}
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Import CSV
+              </Button>
+            </div>
             <Button variant="outline" onClick={() => navigate('/family-tree/explorer')}>
               Family Explorer
             </Button>
