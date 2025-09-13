@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import React, { useEffect, useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,10 +38,32 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
     target_person_id: targetPersonId
   })
 
+  // Reset/sync form whenever the modal opens or target/type changes
+  useEffect(() => {
+    if (!open) return
+    setForm({
+      given_name: '',
+      surname: '',
+      sex: 'M',
+      birth_date: '',
+      is_living: true,
+      relationship_type: relationshipType,
+      target_person_id: targetPersonId
+    })
+  }, [open, relationshipType, targetPersonId])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.given_name) {
       toast.error('Given name is required')
+      return
+    }
+    if (!familyId) {
+      toast.error('Missing family. Please reload and try again.')
+      return
+    }
+    if (!form.target_person_id) {
+      toast.error('Missing target person. Please select a person to add a relation to.')
       return
     }
 
@@ -53,9 +75,9 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       await FamilyTreeService.quickAddPerson(form, familyId, user.id)
       toast.success(`${form.given_name} added successfully`)
       onSuccess()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding person:', error)
-      toast.error('Failed to add person: ' + error.message)
+      toast.error('Failed to add person: ' + (error?.message || 'Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -72,6 +94,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{relationshipLabels[relationshipType]}</DialogTitle>
+          <DialogDescription>Enter details to quickly add a related person.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
