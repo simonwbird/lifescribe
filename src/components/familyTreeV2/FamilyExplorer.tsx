@@ -87,10 +87,30 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   ) => {
     const engine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
     const layout = engine.calculateLayout(focusId, gen)
+    // Fallback: if too few nodes, include all people so the canvas reflects DB
+    const nodeIds = new Set(layout.nodes.map(n => n.id))
+    if (layout.nodes.length < Math.min(people.length, 5)) {
+      const extra: LayoutNode[] = []
+      people.forEach((p, idx) => {
+        if (!nodeIds.has(p.id)) {
+          extra.push({
+            ...(p as any),
+            x: (idx % 8) * (defaultLayoutConfig.nodeWidth + defaultLayoutConfig.siblingSpacing),
+            y: Math.floor(idx / 8) * defaultLayoutConfig.generationHeight,
+            level: 0,
+            width: defaultLayoutConfig.nodeWidth,
+            height: defaultLayoutConfig.nodeHeight,
+            partners: [],
+            children: [],
+            parents: []
+          })
+        }
+      })
+      layout.nodes = [...layout.nodes, ...extra]
+    }
+    console.debug('Layout nodes:', layout.nodes.length)
     setNodes(layout.nodes)
     setUnions(layout.unions)
-    
-    // Center view on focus person
     const focusNode = layout.nodes.find(n => n.id === focusId)
     if (focusNode && svgRef.current) {
       const svgWidth = svgRef.current.clientWidth || 800
