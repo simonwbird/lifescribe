@@ -291,7 +291,7 @@ export class FamilyTreeService {
     familyId: string, 
     userId: string
   ): Promise<void> {
-    await supabase
+    const { error } = await supabase
       .from('relationships')
       .insert({
         family_id: familyId,
@@ -300,6 +300,8 @@ export class FamilyTreeService {
         relationship_type: 'spouse',
         created_by: userId
       })
+    
+    if (error) throw error
   }
 
   // Add parent-child relationship  
@@ -309,7 +311,7 @@ export class FamilyTreeService {
     familyId: string,
     userId: string
   ): Promise<void> {
-    await supabase
+    const { error } = await supabase
       .from('relationships')
       .insert({
         family_id: familyId,
@@ -318,6 +320,8 @@ export class FamilyTreeService {
         relationship_type: 'parent',
         created_by: userId
       })
+    
+    if (error) throw error
   }
 
   // Add partner relationship
