@@ -11,6 +11,7 @@ import type { Profile } from '@/lib/types'
 
 export default function Profile() {
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [linkedPerson, setLinkedPerson] = useState<any>(null)
   const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -18,15 +19,39 @@ export default function Profile() {
     const getProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data } = await supabase
+        // Get user profile
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
         
-        if (data) {
-          setProfile(data)
-          setFullName(data.full_name || '')
+        if (profileData) {
+          setProfile(profileData)
+          setFullName(profileData.full_name || '')
+        }
+
+        // Get linked family tree person
+        const { data: familyMembership } = await supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .single()
+
+        if (familyMembership) {
+          const { data: linkedPersonData } = await supabase
+            .from('person_user_links')
+            .select(`
+              person_id,
+              people (*)
+            `)
+            .eq('user_id', user.id)
+            .eq('family_id', familyMembership.family_id)
+            .single()
+
+          if (linkedPersonData?.people) {
+            setLinkedPerson(linkedPersonData.people)
+          }
         }
       }
     }
@@ -56,8 +81,22 @@ export default function Profile() {
     }
   }
 
-  const handlePhotoUploaded = (newPhotoUrl: string) => {
+  const handlePhotoUploaded = async (newPhotoUrl: string) => {
     setProfile(prev => prev ? { ...prev, avatar_url: newPhotoUrl } : null)
+    
+    // Sync photo to linked family tree person
+    if (linkedPerson) {
+      try {
+        await supabase
+          .from('people')
+          .update({ avatar_url: newPhotoUrl })
+          .eq('id', linkedPerson.id)
+        
+        setLinkedPerson(prev => prev ? { ...prev, avatar_url: newPhotoUrl } : null)
+      } catch (error) {
+        console.error('Error syncing photo to family tree:', error)
+      }
+    }
   }
 
   return (
@@ -69,13 +108,20 @@ export default function Profile() {
             <Card>
               <CardHeader className="text-center">
                 <ProfilePhotoUploader
-                  currentPhotoUrl={profile?.avatar_url || ''}
+                  currentPhotoUrl={linkedPerson?.avatar_url || profile?.avatar_url || ''}
                   fallbackText={profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
                   onPhotoUploaded={handlePhotoUploaded}
                   isUserProfile={true}
                   size="lg"
                 />
-                <CardTitle>Your Profile</CardTitle>
+                <CardTitle>
+                  Your Profile
+                  {linkedPerson && (
+                    <div className="text-sm font-normal text-muted-foreground mt-1">
+                      Linked to: {linkedPerson.full_name}
+                    </div>
+                  )}
+                </CardTitle>
                 <CardDescription>Manage your account information</CardDescription>
               </CardHeader>
               <CardContent>
