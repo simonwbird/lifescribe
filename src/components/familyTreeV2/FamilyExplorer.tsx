@@ -94,6 +94,58 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   ) => {
     const engine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
     const layout = engine.calculateLayout(focusId, gen)
+
+    // When showing All generations, include every disconnected component with relationships
+    if (gen >= 999) {
+      const processed = new Set(layout.nodes.map(n => n.id))
+      const addedUnionIds = new Set(layout.unions.map(u => u.id))
+
+      // Start placing additional components to the right of current bounds
+      let xOffset = 0
+      if (layout.nodes.length > 0) {
+        const maxX = Math.max(...layout.nodes.map(n => n.x))
+        xOffset = maxX + 200
+      }
+
+      // Helper to compute bounds
+      const getBounds = (nodes: LayoutNode[]) => {
+        if (nodes.length === 0) return { minX: 0, maxX: 0, minY: 0, maxY: 0 }
+        const minX = Math.min(...nodes.map(n => n.x))
+        const maxX = Math.max(...nodes.map(n => n.x))
+        const minY = Math.min(...nodes.map(n => n.y))
+        const maxY = Math.max(...nodes.map(n => n.y))
+        return { minX, maxX, minY, maxY }
+      }
+
+      // Place each remaining connected component side-by-side preserving relationships
+      for (const person of people) {
+        if (processed.has(person.id)) continue
+
+        const subEngine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
+        const sub = subEngine.calculateLayout(person.id, gen)
+
+        // Offset this component so it doesn't overlap the current layout
+        const { minX: sMinX, maxX: sMaxX, minY: sMinY } = getBounds(sub.nodes)
+        const dx = xOffset - sMinX
+        const dy = 0 - sMinY
+
+        sub.nodes.forEach(sn => {
+          if (!processed.has(sn.id)) {
+            layout.nodes.push({ ...sn, x: sn.x + dx, y: sn.y + dy })
+            processed.add(sn.id)
+          }
+        })
+        sub.unions.forEach(su => {
+          if (!addedUnionIds.has(su.id)) {
+            layout.unions.push({ ...su, x: su.x + dx, y: su.y + dy })
+            addedUnionIds.add(su.id)
+          }
+        })
+
+        xOffset += (sMaxX - sMinX) + 200
+      }
+    }
+
     // Fallback: if too few nodes, include all people so the canvas reflects DB
     const nodeIds = new Set(layout.nodes.map(n => n.id))
     // Only show 'everyone in a grid' when Auto Layout is OFF
