@@ -51,6 +51,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     targetPersonId: string
   } | null>(null)
   const [autoLayout, setAutoLayout] = useState(true)
+  const [generations, setGenerations] = useState(5)
 
   const [people, setPeople] = useState<TreePerson[]>([])
   const [families, setFamilies] = useState<TreeFamily[]>([])
@@ -83,7 +84,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     focusId: string
   ) => {
     const engine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
-    const layout = engine.calculateLayout(focusId, 3)
+    const layout = engine.calculateLayout(focusId, generations)
     setNodes(layout.nodes)
     setUnions(layout.unions)
     
@@ -415,6 +416,26 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Generations:</span>
+            <select 
+              value={generations} 
+              onChange={(e) => {
+                const newGen = parseInt(e.target.value)
+                setGenerations(newGen)
+                if (people.length > 0 && (focusPersonId || people[0])) {
+                  calculateLayout(people, families, children, focusPersonId || people[0].id)
+                }
+              }}
+              className="text-sm border rounded px-2 py-1 bg-background"
+            >
+              <option value={3}>3</option>
+              <option value={5}>5</option>
+              <option value={7}>7</option>
+              <option value={10}>10</option>
+              <option value={999}>All</option>
+            </select>
+          </div>
           <Badge variant="outline">
             {nodes.length} people
           </Badge>
