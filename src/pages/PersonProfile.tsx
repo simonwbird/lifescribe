@@ -64,6 +64,8 @@ export default function PersonProfile() {
   const [loading, setLoading] = useState(true)
   const [isLinkStoryOpen, setIsLinkStoryOpen] = useState(false)
   const [selectedStoryId, setSelectedStoryId] = useState('')
+  const [isLinkedToUser, setIsLinkedToUser] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   
   const { toast } = useToast()
 
@@ -77,6 +79,7 @@ export default function PersonProfile() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      setCurrentUserId(user.id)
 
       // Get user's family
       const { data: member } = await supabase
@@ -152,6 +155,17 @@ export default function PersonProfile() {
         .or(`story_id.in.(${storyData.map(s => s.id).join(',')}),answer_id.in.(${answerData.map(a => a.id).join(',')})`)
 
       setPhotos(mediaData || [])
+
+      // Check if this person is linked to current user
+      const { data: userLink } = await supabase
+        .from('person_user_links')
+        .select('id')
+        .eq('person_id', id)
+        .eq('user_id', user.id)
+        .eq('family_id', member.family_id)
+        .single()
+
+      setIsLinkedToUser(!!userLink)
 
     } catch (error) {
       console.error('Error loading person data:', error)
@@ -237,6 +251,50 @@ export default function PersonProfile() {
     return { parents, children, spouses }
   }
 
+  const handleLinkToUser = async () => {
+    if (!person || !familyId || !currentUserId) return
+
+    try {
+      if (isLinkedToUser) {
+        // Unlink
+        await supabase
+          .from('person_user_links')
+          .delete()
+          .eq('person_id', person.id)
+          .eq('user_id', currentUserId)
+          .eq('family_id', familyId)
+
+        setIsLinkedToUser(false)
+        toast({
+          title: "Profile Unlinked",
+          description: "This person is no longer linked to your profile"
+        })
+      } else {
+        // Link
+        await supabase
+          .from('person_user_links')
+          .insert({
+            person_id: person.id,
+            user_id: currentUserId,
+            family_id: familyId
+          })
+
+        setIsLinkedToUser(true)
+        toast({
+          title: "Profile Linked",
+          description: "This person is now linked to your profile"
+        })
+      }
+    } catch (error) {
+      console.error('Error linking profile:', error)
+      toast({
+        title: "Error",
+        description: "Failed to link/unlink profile",
+        variant: "destructive"
+      })
+    }
+  }
+
   if (loading) {
     return (
       <AuthGate>
@@ -300,7 +358,15 @@ export default function PersonProfile() {
                     size="md"
                   />
                   <div>
-                    <h1 className="text-3xl font-bold">{displayName}</h1>
+                    <h1 className="text-3xl font-bold">
+                      {displayName}
+                      {isLinkedToUser && (
+                        <Badge variant="default" className="ml-3">
+                          <User className="h-3 w-3 mr-1" />
+                          This is me
+                        </Badge>
+                      )}
+                    </h1>
                     <div className="flex items-center space-x-4 mt-1">
                       {years && (
                         <Badge variant="outline" className="flex items-center space-x-1">
@@ -319,6 +385,14 @@ export default function PersonProfile() {
               </div>
 
               <div className="flex items-center space-x-2">
+                <Button 
+                  onClick={handleLinkToUser}
+                  variant={isLinkedToUser ? "outline" : "default"}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  {isLinkedToUser ? "Unlink My Profile" : "Link My Profile"}
+                </Button>
+
                 <Dialog open={isLinkStoryOpen} onOpenChange={setIsLinkStoryOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline">
