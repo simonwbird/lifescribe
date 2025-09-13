@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Upload, Users, FileSpreadsheet, TreePine } from 'lucide-react'
 import { FamilyTreeService } from '@/lib/familyTreeV2Service'
 import { GedcomImportService } from '@/lib/gedcomImportService'
+import { CsvImportService } from '@/lib/csvImportService'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
 
@@ -69,6 +70,73 @@ const FamilyTreeV2 = () => {
       toast.error('Import failed: ' + error.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files || files.length === 0 || !familyId || !userId) return
+
+    try {
+      setLoading(true)
+      
+      // Handle single combined CSV or two separate CSVs (people + relationships)
+      if (files.length === 1) {
+        // Assume single file contains people data for now
+        const content = await files[0].text()
+        const people = CsvImportService.parsePeopleCsv(content)
+        
+        if (people.length === 0) {
+          toast.error('No valid people data found in CSV file')
+          return
+        }
+
+        toast.success(`Found ${people.length} people in CSV. Full import with relationships requires separate files.`)
+        
+        // For now, just show what was found - full implementation would need proper import flow
+        console.log('Parsed people:', people)
+        
+      } else if (files.length === 2) {
+        // Two files: people + relationships
+        const file1Content = await files[0].text()
+        const file2Content = await files[1].text()
+        
+        // Try to detect which is which based on headers or filename
+        let peopleContent = '', relationshipsContent = ''
+        
+        if (files[0].name.toLowerCase().includes('people') || files[0].name.toLowerCase().includes('person')) {
+          peopleContent = file1Content
+          relationshipsContent = file2Content
+        } else if (files[1].name.toLowerCase().includes('people') || files[1].name.toLowerCase().includes('person')) {
+          peopleContent = file2Content
+          relationshipsContent = file1Content
+        } else {
+          // Default: assume first is people, second is relationships
+          peopleContent = file1Content
+          relationshipsContent = file2Content
+        }
+        
+        const preview = await CsvImportService.previewCsvImport(peopleContent, relationshipsContent, familyId)
+        
+        if (preview.duplicates.length > 0) {
+          toast.warning(`Found ${preview.duplicates.length} potential duplicates. Review needed.`)
+        }
+
+        toast.success(`Ready to import ${preview.peopleCount} people and ${preview.familiesCount} families from CSV`)
+        console.log('CSV preview:', preview)
+        
+      } else {
+        toast.error('Please select either 1 CSV file (people only) or 2 CSV files (people + relationships)')
+      }
+      
+    } catch (error) {
+      toast.error('CSV import failed: ' + error.message)
+    } finally {
+      setLoading(false)
+      // Reset file input
+      if (event.target) {
+        event.target.value = ''
+      }
     }
   }
 
@@ -156,10 +224,18 @@ const FamilyTreeV2 = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Upload people and relationships from spreadsheets
                 </p>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCsvUpload}
+                  className="hidden"
+                  id="csv-upload"
+                  multiple
+                />
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate('/family-tree/csv-import')}
+                  onClick={() => document.getElementById('csv-upload')?.click()}
                 >
                   Import CSV
                 </Button>
@@ -192,9 +268,17 @@ const FamilyTreeV2 = () => {
               <Upload className="h-4 w-4 mr-2" />
               Import GED
             </Button>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCsvUpload}
+              className="hidden"
+              id="csv-upload-existing"
+              multiple
+            />
             <Button 
               variant="outline" 
-              onClick={() => navigate('/family-tree/csv-import')}
+              onClick={() => document.getElementById('csv-upload-existing')?.click()}
             >
               <FileSpreadsheet className="h-4 w-4 mr-2" />
               Import CSV
