@@ -80,72 +80,40 @@ const FamilyTreeV2 = () => {
     try {
       setLoading(true)
       
-      // Handle single combined CSV or two separate CSVs (people + relationships)
-      if (files.length === 1) {
-        // Single file - assume people only for now
-        const content = await files[0].text()
-        const people = CsvImportService.parsePeopleCsv(content)
-        
-        if (people.length === 0) {
-          toast.error('No valid people data found in CSV file')
-          return
-        }
-
-        // Create a preview with just people (no relationships)
-        const preview = {
-          people,
-          relationships: [],
-          peopleCount: people.length,
-          familiesCount: 0,
-          childrenCount: 0,
-          duplicates: []
-        }
-
-        // Commit the import
-        await CsvImportService.commitCsvImport(preview, familyId, userId)
-        toast.success(`Successfully imported ${people.length} people from CSV`)
-        
-        // Reload tree data
-        const data = await FamilyTreeService.getTreeData(familyId)
-        setTreeData(data)
-        
-      } else if (files.length === 2) {
-        // Two files: people + relationships
-        const file1Content = await files[0].text()
-        const file2Content = await files[1].text()
-        
-        // Try to detect which is which based on headers or filename
-        let peopleContent = '', relationshipsContent = ''
-        
-        if (files[0].name.toLowerCase().includes('people') || files[0].name.toLowerCase().includes('person')) {
-          peopleContent = file1Content
-          relationshipsContent = file2Content
-        } else if (files[1].name.toLowerCase().includes('people') || files[1].name.toLowerCase().includes('person')) {
-          peopleContent = file2Content
-          relationshipsContent = file1Content
-        } else {
-          // Default: assume first is people, second is relationships
-          peopleContent = file1Content
-          relationshipsContent = file2Content
-        }
-        
-        const preview = await CsvImportService.previewCsvImport(peopleContent, relationshipsContent, familyId)
-        
-        if (preview.duplicates.length > 0) {
-          toast.warning(`Found ${preview.duplicates.length} potential duplicates. Importing anyway...`)
-        }
-
-        // Commit the full import
-        await CsvImportService.commitCsvImport(preview, familyId, userId)
-        toast.success(`Successfully imported ${preview.peopleCount} people, ${preview.familiesCount} families, and ${preview.childrenCount} relationships from CSV`)
-        
-        // Reload tree data
-        const data = await FamilyTreeService.getTreeData(familyId)
-        setTreeData(data)
-        
-      } else {
-        toast.error('Please select either 1 CSV file (people only) or 2 CSV files (people + relationships)')
+      // Handle single combined CSV file
+      const file = files[0]
+      const content = await file.text()
+      
+      // Try parsing as combined CSV first
+      const combined = CsvImportService.parseCombinedCsv(content)
+      
+      if (combined.people.length === 0) {
+        toast.error('No valid people data found in CSV file')
+        return
       }
+
+      // Create preview
+      const preview = {
+        people: combined.people,
+        relationships: combined.relationships,
+        peopleCount: combined.people.length,
+        familiesCount: new Set(combined.relationships.map(r => r.family_id)).size,
+        childrenCount: combined.relationships.filter(r => r.rel_type === 'parent').length,
+        duplicates: []
+      }
+
+      // Commit the import
+      await CsvImportService.commitCsvImport(preview, familyId, userId)
+      
+      const relationshipText = combined.relationships.length > 0 
+        ? `, ${preview.familiesCount} families, and ${preview.childrenCount} relationships`
+        : ''
+      
+      toast.success(`Successfully imported ${preview.peopleCount} people${relationshipText} from CSV`)
+      
+      // Reload tree data
+      const data = await FamilyTreeService.getTreeData(familyId)
+      setTreeData(data)
       
     } catch (error) {
       console.error('CSV import error:', error)
@@ -241,32 +209,23 @@ const FamilyTreeV2 = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Upload people and relationships from spreadsheets
+                  Upload people and relationships in one CSV file
                 </p>
                 <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => CsvImportService.downloadTemplate('people')}
-                    >
-                      📥 People Template
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => CsvImportService.downloadTemplate('relationships')}
-                    >
-                      📥 Relationships Template
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => CsvImportService.downloadCombinedTemplate()}
+                    className="w-full"
+                  >
+                    📥 Download CSV Template
+                  </Button>
                   <input
                     type="file"
                     accept=".csv"
                     onChange={handleCsvUpload}
                     className="hidden"
                     id="csv-upload"
-                    multiple
                   />
                   <Button 
                     variant="outline" 
@@ -311,7 +270,6 @@ const FamilyTreeV2 = () => {
               onChange={handleCsvUpload}
               className="hidden"
               id="csv-upload-existing"
-              multiple
             />
             <Button 
               variant="outline" 

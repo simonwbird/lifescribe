@@ -2,7 +2,190 @@ import { supabase } from '@/integrations/supabase/client'
 import type { GedcomPerson, GedcomRelationship, ImportPreview } from './familyTreeV2Types'
 
 export class CsvImportService {
-  // Parse CSV content to people array
+  // Parse combined CSV with people and relationships in one file
+  static parseCombinedCsv(csvContent: string): { people: GedcomPerson[], relationships: GedcomRelationship[] } {
+    const lines = csvContent.trim().split('\n')
+    if (lines.length < 2) return { people: [], relationships: [] }
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+    const people: GedcomPerson[] = []
+    const relationships: GedcomRelationship[] = []
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = this.parseCsvLine(lines[i])
+      if (values.length < headers.length) continue
+
+      const person: Partial<GedcomPerson> = {}
+      let spouseId = ''
+      let parent1Id = ''
+      let parent2Id = ''
+      let familyId = ''
+      let marriageDate = ''
+      
+      headers.forEach((header, index) => {
+        const value = values[index]?.trim().replace(/"/g, '') || ''
+        
+        switch (header.toLowerCase()) {
+          // Person fields
+          case 'person_id':
+            person.person_id = value
+            break
+          case 'given_name':
+            person.given_name = value
+            break
+          case 'surname':
+            person.surname = value
+            break
+          case 'sex':
+            person.sex = value as 'M' | 'F' | 'X'
+            break
+          case 'birth_date':
+            person.birth_date = value
+            break
+          case 'birth_place':
+            person.birth_place = value
+            break
+          case 'death_date':
+            person.death_date = value
+            break
+          case 'death_place':
+            person.death_place = value
+            break
+          case 'is_living':
+            person.is_living = value.toUpperCase() === 'Y' || value.toLowerCase() === 'true' ? 'Y' : 'N'
+            break
+          // Relationship fields
+          case 'spouse_id':
+            spouseId = value
+            break
+          case 'parent1_id':
+            parent1Id = value
+            break
+          case 'parent2_id':
+            parent2Id = value
+            break
+          case 'family_id':
+            familyId = value
+            break
+          case 'marriage_date':
+            marriageDate = value
+            break
+        }
+      })
+
+      if (person.person_id) {
+        // Set defaults
+        person.is_living = person.is_living || 'Y'
+        person.raw_name = person.raw_name || `${person.given_name || ''} /${person.surname || ''}/`
+        people.push(person as GedcomPerson)
+
+        // Create spouse relationship
+        if (spouseId && familyId) {
+          relationships.push({
+            rel_type: 'spouse',
+            a_id: person.person_id,
+            b_id: spouseId,
+            family_id: familyId,
+            marriage_date: marriageDate,
+            divorce_date: '',
+            note: ''
+          })
+        }
+
+        // Create parent-child relationships
+        if (parent1Id && familyId) {
+          relationships.push({
+            rel_type: 'parent',
+            a_id: parent1Id,
+            b_id: person.person_id,
+            family_id: familyId,
+            marriage_date: '',
+            divorce_date: '',
+            note: 'parent->child'
+          })
+        }
+
+        if (parent2Id && familyId) {
+          relationships.push({
+            rel_type: 'parent',
+            a_id: parent2Id,
+            b_id: person.person_id,
+            family_id: familyId,
+            marriage_date: '',
+            divorce_date: '',
+            note: 'parent->child'
+          })
+        }
+      }
+    }
+
+    return { people, relationships }
+  }
+
+  // Parse a single CSV line handling quotes and commas
+  static parseCsvLine(line: string): string[] {
+    const result: string[] = []
+    let current = ''
+    let inQuotes = false
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i]
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          // Escaped quote
+          current += '"'
+          i++ // Skip next quote
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes
+        }
+      } else if (char === ',' && !inQuotes) {
+        // End of field
+        result.push(current)
+        current = ''
+      } else {
+        current += char
+      }
+    }
+    
+    // Add final field
+    result.push(current)
+    return result
+  }
+
+  // Preview CSV import
+  static async previewCsvImport(
+    peopleContent: string,
+    relationshipsContent: string,
+    familyId: string
+  ): Promise<ImportPreview> {
+    const people = this.parsePeopleCsv(peopleContent)
+    const relationships = this.parseRelationshipsCsv(relationshipsContent)
+
+    // Get existing people for duplicate detection
+    const { data: existingPeople } = await supabase
+      .from('tree_people')
+      .select('*')
+      .eq('family_id', familyId)
+
+    const duplicates = existingPeople ? 
+      people.flatMap(person => this.findPotentialMatches(person, existingPeople)) : []
+
+    const uniqueFamilies = new Set(relationships.map(r => r.family_id)).size
+    const childrenCount = relationships.filter(r => r.rel_type === 'parent').length
+
+    return {
+      people,
+      relationships,
+      peopleCount: people.length,
+      familiesCount: uniqueFamilies,
+      childrenCount,
+      duplicates
+    }
+  }
+
+  // Legacy method for backward compatibility
   static parsePeopleCsv(csvContent: string): GedcomPerson[] {
     const lines = csvContent.trim().split('\n')
     if (lines.length < 2) return []
@@ -114,135 +297,11 @@ export class CsvImportService {
     return relationships
   }
 
-  // Parse a single CSV line handling quotes and commas
-  static parseCsvLine(line: string): string[] {
-    const result: string[] = []
-    let current = ''
-    let inQuotes = false
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i]
-      
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          // Escaped quote
-          current += '"'
-          i++ // Skip next quote
-        } else {
-          // Toggle quote state
-          inQuotes = !inQuotes
-        }
-      } else if (char === ',' && !inQuotes) {
-        // End of field
-        result.push(current)
-        current = ''
-      } else {
-        current += char
-      }
-    }
-    
-    // Add final field
-    result.push(current)
-    return result
-  }
-
-  // Preview CSV import
-  static async previewCsvImport(
-    peopleContent: string,
-    relationshipsContent: string,
-    familyId: string
-  ): Promise<ImportPreview> {
-    const people = this.parsePeopleCsv(peopleContent)
-    const relationships = this.parseRelationshipsCsv(relationshipsContent)
-
-    // Get existing people for duplicate detection
-    const { data: existingPeople } = await supabase
-      .from('tree_people')
-      .select('*')
-      .eq('family_id', familyId)
-
-    const duplicates = existingPeople ? 
-      people.flatMap(person => this.findPotentialMatches(person, existingPeople)) : []
-
-    const uniqueFamilies = new Set(relationships.map(r => r.family_id)).size
-    const childrenCount = relationships.filter(r => r.rel_type === 'parent').length
-
-    return {
-      people,
-      relationships,
-      peopleCount: people.length,
-      familiesCount: uniqueFamilies,
-      childrenCount,
-      duplicates
-    }
-  }
-
   // Simple duplicate detection (reuse from GedcomImportService)
   static findPotentialMatches(incoming: GedcomPerson, existing: any[]): any[] {
     // This would reuse the logic from GedcomImportService.findPotentialMatches
     // For brevity, returning empty array - would implement full matching logic
     return []
-  }
-
-  // Generate CSV templates
-  static generatePeopleTemplate(): string {
-    const headers = [
-      'person_id',
-      'given_name', 
-      'surname',
-      'sex',
-      'birth_date',
-      'birth_place',
-      'death_date',
-      'death_place',
-      'is_living',
-      'raw_name'
-    ]
-    
-    const sampleRow = [
-      '@I1@',
-      'John',
-      'Smith',
-      'M',
-      '1970-01-15',
-      'New York, NY',
-      '',
-      '',
-      'Y',
-      'John /Smith/'
-    ]
-
-    return [
-      headers.join(','),
-      sampleRow.join(','),
-      // Empty row for user to fill
-      headers.map(() => '').join(',')
-    ].join('\n')
-  }
-
-  static generateRelationshipsTemplate(): string {
-    const headers = [
-      'rel_type',
-      'a_id',
-      'b_id', 
-      'family_id',
-      'marriage_date',
-      'divorce_date',
-      'note'
-    ]
-    
-    const sampleRows = [
-      ['spouse', '@I1@', '@I2@', '@F1@', '1995-06-12', '', ''],
-      ['parent', '@I1@', '@I3@', '@F1@', '', '', 'father->child'],
-      ['parent', '@I2@', '@I3@', '@F1@', '', '', 'mother->child']
-    ]
-
-    return [
-      headers.join(','),
-      ...sampleRows.map(row => row.join(',')),
-      // Empty row for user to fill
-      headers.map(() => '').join(',')
-    ].join('\n')
   }
 
   // Commit CSV import to database
@@ -283,7 +342,6 @@ export class CsvImportService {
     })
 
     // Process relationships
-    const familiesToInsert = new Set<string>()
     const childrenToInsert: Array<{
       family_id: string
       child_id: string
@@ -389,17 +447,53 @@ export class CsvImportService {
     }
   }
 
-  // Download CSV templates as files
-  static downloadTemplate(type: 'people' | 'relationships'): void {
-    const content = type === 'people' ? 
-      this.generatePeopleTemplate() : 
-      this.generateRelationshipsTemplate()
+  // Generate combined CSV template with all fields
+  static generateCombinedTemplate(): string {
+    const headers = [
+      'person_id',
+      'given_name', 
+      'surname',
+      'sex',
+      'birth_date',
+      'birth_place',
+      'death_date',
+      'death_place',
+      'is_living',
+      'spouse_id',
+      'parent1_id',
+      'parent2_id',
+      'family_id',
+      'marriage_date'
+    ]
+    
+    const sampleRows = [
+      // Parents generation
+      ['@I1@', 'John', 'Smith', 'M', '1950-01-15', 'New York, NY', '', '', 'Y', '@I2@', '', '', '@F1@', '1970-06-12'],
+      ['@I2@', 'Jane', 'Smith', 'F', '1952-03-20', 'Boston, MA', '', '', 'Y', '@I1@', '', '', '@F1@', '1970-06-12'],
+      // Children
+      ['@I3@', 'Michael', 'Smith', 'M', '1975-08-10', 'Chicago, IL', '', '', 'Y', '@I4@', '@I1@', '@I2@', '@F2@', '2000-05-15'],
+      ['@I4@', 'Sarah', 'Smith', 'F', '1977-12-05', 'Chicago, IL', '', '', 'Y', '@I3@', '', '', '@F2@', '2000-05-15'],
+      // Grandchildren
+      ['@I5@', 'Emma', 'Smith', 'F', '2005-04-22', 'Denver, CO', '', '', 'Y', '', '@I3@', '@I4@', '@F3@', ''],
+    ]
+
+    return [
+      headers.join(','),
+      ...sampleRows.map(row => row.join(',')),
+      // Empty row for user to fill
+      headers.map(() => '').join(',')
+    ].join('\n')
+  }
+
+  // Download CSV template
+  static downloadCombinedTemplate(): void {
+    const content = this.generateCombinedTemplate()
     
     const blob = new Blob([content], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `${type}_template.csv`
+    link.download = 'family_tree_template.csv'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
