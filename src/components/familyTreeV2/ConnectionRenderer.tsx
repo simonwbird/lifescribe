@@ -9,10 +9,11 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
   return (
     <g>
       {layout.unions.map(u => {
-        const a = layout.rects.get(u.a)!;
-        const b = layout.rects.get(u.b)!;
-        const rowY = layout.rows.get(u.depth)!;
-        const { x1, x2, y, ax, bx, xm } = unionBar(a, b, rowY);
+        const aRect = layout.rects.get(u.a);
+        const bRect = layout.rects.get(u.b);
+        const rowY = layout.rows.get(u.depth);
+        if (!aRect || !bRect || rowY == null) return null;
+        const { x1, x2, y, ax, bx, xm } = unionBar(aRect, bRect, rowY);
 
         return (
           <g key={`u-${u.id}`}>
