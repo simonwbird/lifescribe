@@ -120,7 +120,6 @@ function VideoPlayer({ content }: VideoPlayerProps) {
         ref={videoRef}
         src={videoUrl}
         className="w-full h-full object-cover"
-        muted
         playsInline
         preload="metadata"
         onLoadedMetadata={(e) => {
