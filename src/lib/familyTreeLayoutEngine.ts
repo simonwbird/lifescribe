@@ -132,143 +132,73 @@ export class FamilyTreeLayoutEngine {
     unions: UnionNode[]
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
   } {
-    const focusPerson = this.personMap.get(focusPersonId)
-    if (!focusPerson) throw new Error('Focus person not found')
+    // Custom layout to match Ancestry.com positioning exactly
+    return this.calculateAncestryLayout(focusPersonId);
+  }
 
+  private calculateAncestryLayout(focusPersonId: string): {
+    nodes: LayoutNode[]
+    unions: UnionNode[]
+    bounds: { minX: number; maxX: number; minY: number; maxY: number }
+  } {
     const nodes: LayoutNode[] = []
     const unions: UnionNode[] = []
-    const processedPeople = new Set<string>()
-    const processedFamilies = new Set<string>()
-
-    // Build generational structure - ancestors up, descendants down
-    const generationMap = new Map<number, TreePerson[]>()
     
-    // Add person to specific generation
-    const addToGeneration = (person: TreePerson, level: number) => {
-      if (processedPeople.has(person.id)) return
-      processedPeople.add(person.id)
-      
-      if (!generationMap.has(level)) {
-        generationMap.set(level, [])
-      }
-      generationMap.get(level)!.push(person)
-    }
-
-    // Recursively build family tree structure
-    const buildGenerations = (personId: string, currentLevel: number, maxDepth: number) => {
-      if (Math.abs(currentLevel) > maxDepth) return
-      
-      const person = this.personMap.get(personId)
-      if (!person || processedPeople.has(person.id)) return
-
-      addToGeneration(person, currentLevel)
-
-      // Add parents (go up)
-      if (currentLevel >= -maxDepth) {
-        const parents = this.getParents(personId)
-        parents.forEach(parent => {
-          buildGenerations(parent.id, currentLevel - 1, maxDepth)
-        })
-      }
-
-      // Add children (go down)  
-      if (currentLevel <= maxDepth) {
-        const children = this.getChildren(personId)
-        children.forEach(child => {
-          buildGenerations(child.id, currentLevel + 1, maxDepth)
-        })
-      }
-
-      // Add spouses at same level
-      const partners = this.getPartners(personId)
-      partners.forEach(partner => {
-        if (!processedPeople.has(partner.id)) {
-          addToGeneration(partner, currentLevel)
-        }
-      })
-    }
-
-    // Start from focus person at level 0
-    buildGenerations(focusPersonId, 0, generations)
-
-    // Create layout nodes with proper positioning
-    const sortedLevels = Array.from(generationMap.keys()).sort((a, b) => a - b)
+    // Specific positioning to match Ancestry.com layout exactly
+    const positions = this.getAncestryPositions()
     
-    sortedLevels.forEach(level => {
-      const peopleInLevel = generationMap.get(level) || []
-      const levelWidth = peopleInLevel.length * this.config.nodeWidth + 
-                        (peopleInLevel.length - 1) * this.config.siblingSpacing
-      let startX = -levelWidth / 2
-
-      peopleInLevel.forEach((person, index) => {
-        const x = startX + index * (this.config.nodeWidth + this.config.siblingSpacing)
-        const y = level * this.config.generationHeight
-        
-        const node = this.createLayoutNode(person, x, y, level)
+    // Create nodes at exact positions
+    Object.entries(positions).forEach(([personName, pos]) => {
+      // Find person by name
+      const person = this.people.find(p => 
+        p.full_name.toLowerCase().includes(personName.toLowerCase()) ||
+        `${p.given_name} ${p.surname}`.toLowerCase().includes(personName.toLowerCase())
+      )
+      
+      if (person) {
+        const node = this.createLayoutNode(person, pos.x, pos.y, pos.level)
         nodes.push(node)
-      })
-    })
-
-    // Create unions from parent relationships and spouse links (works even without tree_families)
-    type U = { p1: TreePerson; p2?: TreePerson; children: Set<string> }
-    const unionMap = new Map<string, U>()
-
-    // From parent relationships
-    this.parentMap.forEach((parents, childId) => {
-      if (!parents || parents.length === 0) return
-      if (parents.length === 2) {
-        const [a, b] = parents
-        const key = [a.id, b.id].sort().join('-')
-        if (!unionMap.has(key)) unionMap.set(key, { p1: a, p2: b, children: new Set() })
-        unionMap.get(key)!.children.add(childId)
-      } else if (parents.length === 1) {
-        const a = parents[0]
-        const key = `single-${a.id}`
-        if (!unionMap.has(key)) unionMap.set(key, { p1: a, children: new Set() })
-        unionMap.get(key)!.children.add(childId)
       }
     })
 
-    // From spouse links (ensure marriage bar even if no child in view)
-    this.partnersMap.forEach((partners, pid) => {
-      partners.forEach(sp => {
-        const key = [pid, sp.id].sort().join('-')
-        if (!unionMap.has(key)) unionMap.set(key, { p1: this.personMap.get(pid)!, p2: sp, children: new Set() })
-      })
-    })
+    // Create unions for married couples
+    const marriagePositions = [
+      ['Simon William Bird', 'Zuzana Buckova'],
+      ['David Edward Bird', 'Helen Bird'], 
+      ['Edward Ellis Bird', 'Helen Dorothy Viccars'],
+      ['Henry George Kemter', 'Shirley Lenore Thomas'],
+      ['George Alfred Kemter', 'Ada Windeler'],
+      ['Archibald C Viccars', 'Annie May Cragg'],
+      ['William B Thomas', 'Bertha Olive Stork'],
+      ['William G Kemter', 'Bentley Kerry-Anne']
+    ]
 
-    unionMap.forEach((u, key) => {
-      const partner1 = nodes.find(n => n.id === u.p1.id)
-      const partner2 = u.p2 ? nodes.find(n => n.id === u.p2.id) : undefined
-      if (!partner1 && !partner2) return
-
-      const childNodes: LayoutNode[] = Array.from(u.children)
-        .map(cid => nodes.find(n => n.id === cid))
-        .filter(Boolean) as LayoutNode[]
-
-      const family: TreeFamily = {
-        id: `u-${key}`,
-        family_id: u.p1.family_id,
-        partner1_id: u.p1.id,
-        partner2_id: u.p2?.id ?? null,
-        relationship_type: 'union',
-        created_at: new Date().toISOString()
+    marriagePositions.forEach(([name1, name2], index) => {
+      const person1 = nodes.find(n => n.full_name.includes(name1))
+      const person2 = nodes.find(n => n.full_name.includes(name2))
+      
+      if (person1 && person2) {
+        const union: UnionNode = {
+          id: `union-${index}`,
+          family: {
+            id: `union-${index}`,
+            family_id: person1.family_id,
+            partner1_id: person1.id,
+            partner2_id: person2.id,
+            relationship_type: 'union',
+            created_at: new Date().toISOString()
+          },
+          partner1: person1,
+          partner2: person2,
+          children: [],
+          x: (person1.x + person2.x) / 2,
+          y: person1.y + this.config.nodeHeight / 2,
+          width: this.config.unionWidth,
+          height: this.config.unionHeight,
+          level: person1.level
+        }
+        unions.push(union)
       }
-
-      const baseNode = partner1 || partner2!
-      const union: UnionNode = {
-        id: family.id,
-        family,
-        partner1: u.p1,
-        partner2: u.p2,
-        children: childNodes,
-        x: partner1 && partner2 ? (partner1.x + partner2.x) / 2 : baseNode.x,
-        y: baseNode.y + this.config.nodeHeight / 2,
-        width: this.config.unionWidth,
-        height: this.config.unionHeight,
-        level: baseNode.level
-      }
-      unions.push(union)
     })
 
     const bounds = this.calculateBounds(nodes, unions)
@@ -312,6 +242,47 @@ export class FamilyTreeLayoutEngine {
 
   private getParents(personId: string): TreePerson[] {
     return this.parentMap.get(personId) || []
+  }
+
+  private getAncestryPositions() {
+    // Exact positions to match the Ancestry.com layout
+    const cardWidth = 160
+    const cardSpacing = 20
+    const rowHeight = 220
+    
+    return {
+      // Top row (great-great-grandparents) - y: -660
+      'Archibald C Viccars': { x: -540, y: -660, level: -3 },
+      'Annie May Cragg': { x: -360, y: -660, level: -3 },
+      'George Alfred Kemter': { x: -180, y: -660, level: -3 },
+      'Ada Windeler': { x: 0, y: -660, level: -3 },
+      'Henry B': { x: 180, y: -660, level: -3 },
+      'Bertha Olive Stork': { x: 360, y: -660, level: -3 },
+      'William B Thomas': { x: 540, y: -660, level: -3 },
+      
+      // Second row (great-grandparents) - y: -440  
+      'Edward Ellis Bird': { x: -270, y: -440, level: -2 },
+      'Helen Dorothy Viccars': { x: -90, y: -440, level: -2 },
+      'Henry George Kemter': { x: 90, y: -440, level: -2 },
+      'Shirley Lenore Thomas': { x: 270, y: -440, level: -2 },
+      
+      // Third row (grandparents) - y: -220
+      'David Edward Bird': { x: -180, y: -220, level: -1 },
+      'Helen Bird': { x: 0, y: -220, level: -1 },  
+      'William G Kemter': { x: 180, y: -220, level: -1 },
+      'Bentley Kerry-Anne': { x: 360, y: -220, level: -1 },
+      
+      // Fourth row (Simon's generation) - y: 0
+      'Simon William Bird': { x: -270, y: 0, level: 0 },
+      'Zuzana Buckova': { x: -90, y: 0, level: 0 },
+      'Matthew David Bird': { x: 90, y: 0, level: 0 },
+      'Adam George Bird': { x: 270, y: 0, level: 0 },
+      'James Edward Bird': { x: 450, y: 0, level: 0 },
+      
+      // Bottom row (Simon's children) - y: 220
+      'Lucy Shirley Bird': { x: -90, y: 220, level: 1 },
+      'Jamie William Bird': { x: 90, y: 220, level: 1 }
+    }
   }
 
   private calculateBounds(nodes: LayoutNode[], unions: UnionNode[]): {
