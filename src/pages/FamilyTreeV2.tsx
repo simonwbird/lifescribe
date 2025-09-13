@@ -243,21 +243,39 @@ const FamilyTreeV2 = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Upload people and relationships from spreadsheets
                 </p>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleCsvUpload}
-                  className="hidden"
-                  id="csv-upload"
-                  multiple
-                />
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => document.getElementById('csv-upload')?.click()}
-                >
-                  Import CSV
-                </Button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => CsvImportService.downloadTemplate('people')}
+                    >
+                      📥 People Template
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => CsvImportService.downloadTemplate('relationships')}
+                    >
+                      📥 Relationships Template
+                    </Button>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCsvUpload}
+                    className="hidden"
+                    id="csv-upload"
+                    multiple
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => document.getElementById('csv-upload')?.click()}
+                  >
+                    Import CSV
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
