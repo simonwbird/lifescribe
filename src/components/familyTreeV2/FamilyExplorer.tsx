@@ -288,15 +288,6 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     )
   }
 
-  const captionForDepth = (depth: number, focusName: string) => {
-    switch(depth) {
-      case 0: return `${focusName}'s children`
-      case 1: return `${focusName}'s parents`  
-      case 2: return `${focusName}'s grandparents`
-      case 3: return `${focusName}'s great-grandparents`
-      default: return ''
-    }
-  }
 
   const renderGenerationCaptions = () => {
     if (!nodes.length) return null
@@ -305,33 +296,49 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     const focusName = focusPerson ? 
       (focusPerson.given_name || focusPerson.full_name || '').split(' ')[0] : 'Focus'
     
-    // Group nodes by their Y position to identify generations
-    const generationGroups = new Map<number, typeof nodes>()
+    // Group nodes by level (from layout engine)
+    const levelGroups = new Map<number, LayoutNode[]>()
     nodes.forEach(node => {
-      const y = Math.round(node.y / 50) * 50 // Group by approximate Y position
-      if (!generationGroups.has(y)) {
-        generationGroups.set(y, [])
+      if (!levelGroups.has(node.level)) {
+        levelGroups.set(node.level, [])
       }
-      generationGroups.get(y)!.push(node)
+      levelGroups.get(node.level)!.push(node)
     })
     
-    const sortedYs = Array.from(generationGroups.keys()).sort((a, b) => a - b)
+    const captionForLevel = (level: number, name: string) => {
+      if (level === 0) return `${name} & siblings`
+      if (level === 1) return `${name}'s children`
+      if (level === -1) return `${name}'s parents`
+      if (level === -2) return `${name}'s grandparents`
+      if (level === -3) return `${name}'s great-grandparents` 
+      if (level === -4) return `${name}'s 2nd great-grandparents`
+      if (level < -4) return `${name}'s ${Math.abs(level) - 2}${getOrdinalSuffix(Math.abs(level) - 2)} great-grandparents`
+      if (level === 2) return `${name}'s grandchildren`
+      if (level > 2) return `${name}'s ${level - 1}${getOrdinalSuffix(level - 1)} great-grandchildren`
+      return ''
+    }
     
-    return sortedYs.map((y, index) => {
-      const nodesInGeneration = generationGroups.get(y) || []
-      const caption = captionForDepth(index, focusName)
-      if (!caption || !nodesInGeneration.length) return null
+    const getOrdinalSuffix = (n: number) => {
+      const s = ['th', 'st', 'nd', 'rd']
+      const v = n % 100
+      return s[(v - 20) % 10] || s[v] || s[0]
+    }
+    
+    return Array.from(levelGroups.entries()).map(([level, levelNodes]) => {
+      const caption = captionForLevel(level, focusName)
+      if (!caption || !levelNodes.length) return null
       
       // Position caption centered under the generation
-      const minX = Math.min(...nodesInGeneration.map(n => n.x))
-      const maxX = Math.max(...nodesInGeneration.map(n => n.x))
+      const minX = Math.min(...levelNodes.map(n => n.x))
+      const maxX = Math.max(...levelNodes.map(n => n.x))
       const centerX = (minX + maxX) / 2
+      const y = levelNodes[0].y + CARD_H / 2 + 30
       
       return (
         <text 
-          key={`caption-${y}`}
+          key={`caption-${level}`}
           x={centerX} 
-          y={y + CARD_H / 2 + 50} 
+          y={y} 
           className="fe-caption"
         >
           {caption}
@@ -433,15 +440,15 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         }
       })
 
-      // Connect spouses
+      // Connect spouses with horizontal bar
       const partner1Node = nodes.find(n => n.id === union.partner1.id)
-      const partner2Node = union.partner2 ? nodes.find(n => n.id === union.partner2!.id) : null
+      const partner2Node = union.partner2 ? nodes.find(n => n.id === union.partner2.id) : null
       
       if (partner1Node && partner2Node) {
         spouseConnections.push({
           spouse1X: partner1Node.x + CARD_W / 2,
           spouse1Y: partner1Node.y,
-          spouse2X: partner2Node.x - CARD_W / 2,
+          spouse2X: partner2Node.x - CARD_W / 2, 
           spouse2Y: partner2Node.y
         })
       }
