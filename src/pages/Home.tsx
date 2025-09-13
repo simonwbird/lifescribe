@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
+import { CaptureHub } from '@/components/home/CaptureHub'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,12 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { supabase } from '@/lib/supabase'
 import { useAnalytics } from '@/hooks/useAnalytics'
-
-// Import capture background images
-import writingPaperBg from '@/assets/capture-backgrounds/writing-paper.jpg'
-import cameraLensBg from '@/assets/capture-backgrounds/camera-lens.jpg'
-import microphoneBg from '@/assets/capture-backgrounds/microphone.jpg'
-import videoCameraBg from '@/assets/capture-backgrounds/video-camera.jpg'
 import { 
   FileText, 
   Camera, 
@@ -95,7 +90,6 @@ interface UpcomingEvent {
 }
 
 export default function HomeV2() {
-  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
   const [familySpaces, setFamilySpaces] = useState<FamilySpace[]>([])
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [resumeItems, setResumeItems] = useState<ResumeItem[]>([])
@@ -106,7 +100,6 @@ export default function HomeV2() {
   const [loading, setLoading] = useState(true)
   const [activitiesPage, setActivitiesPage] = useState(1)
   const activitiesPerPage = 5
-  const [selectedCaptureMode, setSelectedCaptureMode] = useState<'write' | 'photo' | 'voice' | 'video'>('write')
   
   const navigate = useNavigate()
   const { track } = useAnalytics()
@@ -550,12 +543,6 @@ export default function HomeV2() {
     setStreak({ current: 4, target: 7 })
   }
 
-  const handleQuickCapture = (mode: 'write' | 'photo' | 'voice' | 'video') => {
-    setSelectedCaptureMode(mode)
-    setQuickCaptureOpen(true)
-    track('home_quick_capture_open', { mode })
-  }
-
   const handleMarkAllRead = () => {
     setActivities(prev => prev.map(item => ({ ...item, unread: false })))
     track('home_mark_all_read')
@@ -576,9 +563,9 @@ export default function HomeV2() {
     if (suggestion.type === 'story') {
       navigate('/stories/new')
     } else if (suggestion.type === 'photo') {
-      handleQuickCapture('photo')
+      navigate('/create/photo')
     } else if (suggestion.type === 'voice') {
-      handleQuickCapture('voice')
+      navigate('/create/voice')
     }
   }
 
@@ -619,100 +606,8 @@ export default function HomeV2() {
             {/* Primary Column */}
             <div className="lg:col-span-3 space-y-6 max-w-4xl">
               
-              {/* Quick Capture Hero */}
-              <Card className="border-2 border-dashed border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl">What would you like to capture today?</CardTitle>
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                      {streak.current}/{streak.target} streak
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Primary capture modes */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                     <Button 
-                       onClick={() => handleQuickCapture('write')}
-                       variant="outline"
-                       className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group bg-blue-50"
-                       style={{
-                         backgroundImage: `
-                           repeating-linear-gradient(
-                             transparent,
-                             transparent 18px,
-                             rgba(59, 130, 246, 0.1) 18px,
-                             rgba(59, 130, 246, 0.1) 20px
-                           ),
-                           url(${writingPaperBg})
-                         `,
-                         backgroundSize: 'auto, cover',
-                         backgroundPosition: 'center, center',
-                         backgroundBlendMode: 'multiply'
-                       }}
-                     >
-                       <div className="absolute inset-0 group-hover:bg-blue-100/20 transition-all duration-300"></div>
-                       <FileText className="h-7 w-7 relative z-10 text-blue-600" />
-                       <span className="font-semibold relative z-10 text-blue-800">Write</span>
-                     </Button>
-                    <Button 
-                      onClick={() => handleQuickCapture('photo')}
-                      variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
-                      style={{
-                        backgroundImage: `linear-gradient(rgba(236, 253, 245, 0.9), rgba(167, 243, 208, 0.9)), url(${cameraLensBg})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 to-teal-100/30 group-hover:from-emerald-100/50 group-hover:to-teal-200/50 transition-all duration-300"></div>
-                      <Camera className="h-7 w-7 relative z-10 text-emerald-600" />
-                      <span className="font-semibold relative z-10 text-emerald-800">Photo</span>
-                    </Button>
-                    <Button 
-                      onClick={() => handleQuickCapture('voice')}
-                      variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
-                      style={{
-                        backgroundImage: `linear-gradient(rgba(255, 247, 237, 0.9), rgba(254, 215, 170, 0.9)), url(${microphoneBg})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/30 to-amber-100/30 group-hover:from-orange-100/50 group-hover:to-amber-200/50 transition-all duration-300"></div>
-                      <Mic className="h-7 w-7 relative z-10 text-orange-600" />
-                      <span className="font-semibold relative z-10 text-orange-800">Voice</span>
-                    </Button>
-                    <Button 
-                      onClick={() => handleQuickCapture('video')}
-                      variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
-                      style={{
-                        backgroundImage: `linear-gradient(rgba(250, 245, 255, 0.9), rgba(221, 214, 254, 0.9)), url(${videoCameraBg})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 to-violet-100/30 group-hover:from-purple-100/50 group-hover:to-violet-200/50 transition-all duration-300"></div>
-                      <Video className="h-7 w-7 relative z-10 text-purple-600" />
-                      <span className="font-semibold relative z-10 text-purple-800">Video</span>
-                    </Button>
-                  </div>
-
-                  {/* Secondary actions */}
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => navigate('/prompts')}>
-                      Answer today's prompt
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => navigate('/family/members')}>
-                      Invite family
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      Upload a batch
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Capture Hub */}
+              <CaptureHub />
 
               {/* What's New */}
               <Card>
@@ -939,7 +834,7 @@ export default function HomeV2() {
                   <Button 
                     className="w-full" 
                     size="sm"
-                    onClick={() => handleQuickCapture('write')}
+                    onClick={() => navigate('/create/write')}
                   >
                     Capture now
                   </Button>
@@ -1042,18 +937,6 @@ export default function HomeV2() {
             </div>
           </div>
         </div>
-
-        {/* Quick Capture Composer */}
-        <QuickCaptureComposer
-          isOpen={quickCaptureOpen}
-          onClose={() => setQuickCaptureOpen(false)}
-          onSave={() => {
-            setQuickCaptureOpen(false)
-            // Update streak
-            track('home_streak_capture')
-            setStreak(prev => ({ ...prev, current: Math.min(prev.current + 1, prev.target) }))
-          }}
-        />
       </div>
     </AuthGate>
   )
