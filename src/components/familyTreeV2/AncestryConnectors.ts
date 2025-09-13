@@ -1,82 +1,91 @@
-import { CARD_W, CARD_H, PORT_INSET, STEM_LEN, CORNER_RAD, SIB_GAP } from './PersonCard'
+// src/components/familyTreeV2/AncestryConnectors.ts
+import { CARD_W, CARD_H } from "./PersonCard";
 
-type Pt = { x: number; y: number }
-
-function sign(n: number) { 
-  return n < 0 ? -1 : n > 0 ? 1 : 0 
+export interface NodeRect {
+  x: number;
+  y: number;
 }
 
-// Anchor points where lines meet cards
-export function topPort(rect: { x: number; y: number }) {
-  return { x: rect.x + CARD_W / 2, y: rect.y - PORT_INSET }
+/** ======= Pixel constants (Ancestry) ======= */
+export const ROW_HEIGHT = 220;
+export const SIB_GAP = 48;
+export const SPOUSE_GAP = 16;
+
+export const PORT_INSET = 8;   // pull connectors off the card edge
+export const STEM_LEN  = 10;   // short stems into union bar
+export const CORNER_RAD = 12;  // rounded elbow radius
+
+export const EDGE_W = 2;       // connector width
+export const BAR_W  = 3;       // spouse bar width
+
+export const COLORS = {
+  link:   "#C9CCD4",   // parent-child links
+  strong: "#AEB3BE",   // stems + marriage bar
+};
+
+export const unionYForRow = (rowTopY: number) =>
+  Math.round(rowTopY + CARD_H * 0.52); // slightly below mid-card
+
+export const topPort = (r: NodeRect)    =>
+  ({ x: Math.round(r.x + CARD_W / 2), y: Math.round(r.y - PORT_INSET) });
+
+export const bottomPort = (r: NodeRect) =>
+  ({ x: Math.round(r.x + CARD_W / 2), y: Math.round(r.y + CARD_H + PORT_INSET) });
+
+export function unionBar(a: NodeRect, b: NodeRect, rowTopY: number) {
+  const y = unionYForRow(rowTopY);
+  const ax = Math.round(a.x + CARD_W / 2);
+  const bx = Math.round(b.x + CARD_W / 2);
+  const [x1, x2] = ax < bx ? [ax, bx] : [bx, ax];
+  return { x1, x2, y, ax, bx, xm: Math.round((x1 + x2) / 2) };
 }
 
-export function bottomPort(rect: { x: number; y: number }) {
-  return { x: rect.x + CARD_W / 2, y: rect.y + CARD_H + PORT_INSET }
-}
+/** Rounded orthogonal path through H/V points */
+type Pt = { x: number; y: number };
+const s = (n: number) => (n < 0 ? -1 : n > 0 ? 1 : 0);
 
-// Y coordinate for the union bar within the spouse row
-export function unionYForRow(rowY: number) {
-  return rowY + Math.round(CARD_H * 0.52) // ~108px below card top
-}
-
-export function unionBar(a: { x: number; y: number }, b: { x: number; y: number }, rowY: number) {
-  const y = unionYForRow(rowY)
-  const ax = a.x + CARD_W / 2 // center of left card
-  const bx = b.x + CARD_W / 2 // center of right card
-  const [x1, x2] = ax < bx ? [ax, bx] : [bx, ax]
-  return { x1, x2, y, ax, bx }
-}
-
-// Center children under union bar midpoint
-export function layoutChildrenXs(childrenCount: number, centerX: number) {
-  if (childrenCount === 0) return []
-  const totalW = (childrenCount - 1) * SIB_GAP
-  const startX = centerX - totalW / 2
-  return Array.from({ length: childrenCount }, (_, i) => Math.round(startX + i * SIB_GAP))
-}
-
-// Build an orthogonal path through points with rounded corners
 export function roundedOrthogonal(points: Pt[], r: number) {
-  if (points.length < 2) return ''
-  const segs: string[] = []
-  const p0 = points[0]
-  segs.push(`M${p0.x},${p0.y}`)
-
+  if (points.length < 2) return "";
+  const segs: string[] = [];
+  const p0 = points[0];
+  segs.push(`M${Math.round(p0.x)},${Math.round(p0.y)}`);
   for (let i = 1; i < points.length; i++) {
-    const p1 = points[i]
-    const prev = points[i - 1]
-
-    // straight segment unless there is a next point (corner)
-    const isCorner = i < points.length - 1
+    const p1 = points[i];
+    const prev = points[i - 1];
+    const isCorner = i < points.length - 1;
     if (!isCorner) {
-      segs.push(`L${p1.x},${p1.y}`)
-      break
+      segs.push(`L${Math.round(p1.x)},${Math.round(p1.y)}`);
+      break;
     }
+    const next = points[i + 1];
+    const vx = s(p1.x - prev.x);
+    const vy = s(p1.y - prev.y);
+    const nx = s(next.x - p1.x);
+    const ny = s(next.y - p1.y);
+    const pre  = Math.abs(vx ? p1.x - prev.x : p1.y - prev.y);
+    const post = Math.abs(nx ? next.x - p1.x : next.y - p1.y);
+    const rr = Math.min(r, pre / 2, post / 2);
 
-    const next = points[i + 1]
-    const vx = sign(p1.x - prev.x) // -1,0,1
-    const vy = sign(p1.y - prev.y)
-    const nx = sign(next.x - p1.x)
-    const ny = sign(next.y - p1.y)
-
-    // distance available before/after the corner
-    const preLen = Math.abs((vx !== 0 ? p1.x - prev.x : p1.y - prev.y))
-    const postLen = Math.abs((nx !== 0 ? next.x - p1.x : next.y - p1.y))
-    const rr = Math.min(r, preLen / 2, postLen / 2)
-
-    // point before the corner
-    const bx = p1.x - vx * rr
-    const by = p1.y - vy * rr
-    segs.push(`L${bx},${by}`)
-
-    // rounded elbow using a quadratic curve via the corner
-    const ax = p1.x + nx * rr
-    const ay = p1.y + ny * rr
-    segs.push(`Q${p1.x},${p1.y} ${ax},${ay}`)
+    const bx = p1.x - vx * rr, by = p1.y - vy * rr;
+    segs.push(`L${Math.round(bx)},${Math.round(by)}`);
+    const ax = p1.x + nx * rr, ay = p1.y + ny * rr;
+    segs.push(`Q${Math.round(p1.x)},${Math.round(p1.y)} ${Math.round(ax)},${Math.round(ay)}`);
   }
-  return segs.join(' ')
+  return segs.join(" ");
 }
 
-// Re-export constants needed by ConnectionRenderer
-export { STEM_LEN, CORNER_RAD }
+export const pathUnionToChild = (xm: number, yBar: number, childTop: Pt) => {
+  const midY = Math.round((yBar + childTop.y) / 2);
+  return roundedOrthogonal(
+    [{ x: xm, y: yBar }, { x: xm, y: midY }, { x: childTop.x, y: midY }, { x: childTop.x, y: childTop.y }],
+    CORNER_RAD
+  );
+};
+
+export const pathParentToChild = (bp: Pt, childTop: Pt) => {
+  const midY = Math.round((bp.y + childTop.y) / 2);
+  return roundedOrthogonal(
+    [{ x: bp.x, y: bp.y }, { x: bp.x, y: midY }, { x: childTop.x, y: midY }, { x: childTop.x, y: childTop.y }],
+    CORNER_RAD
+  );
+};
