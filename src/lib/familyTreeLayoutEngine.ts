@@ -54,6 +54,7 @@ export class FamilyTreeLayoutEngine {
   private familyMap: Map<string, TreeFamily>
   private childMap: Map<string, TreePerson[]>
   private parentMap: Map<string, TreePerson[]>
+  private partnersMap: Map<string, TreePerson[]>
 
   constructor(people: TreePerson[], families: TreeFamily[], children: TreeFamilyChild[], config = defaultLayoutConfig) {
     this.people = people
@@ -76,15 +77,17 @@ export class FamilyTreeLayoutEngine {
         .map(fc => this.personMap.get(fc.child_id))
         .filter(Boolean) as TreePerson[]
 
-      // Map parents to children
+      // Map parents to children (accumulate across multiple families)
       if (family.partner1_id) {
-        this.childMap.set(family.partner1_id, familyChildren)
+        const prev = this.childMap.get(family.partner1_id) || []
+        this.childMap.set(family.partner1_id, [...prev, ...familyChildren])
       }
       if (family.partner2_id) {
-        this.childMap.set(family.partner2_id, familyChildren)
+        const prev = this.childMap.get(family.partner2_id) || []
+        this.childMap.set(family.partner2_id, [...prev, ...familyChildren])
       }
 
-      // Map children to parents
+      // Map children to parents (overwrite is fine; children typically belong to one union)
       familyChildren.forEach(child => {
         const parents: TreePerson[] = []
         if (family.partner1_id) {
@@ -97,6 +100,30 @@ export class FamilyTreeLayoutEngine {
         }
         this.parentMap.set(child.id, parents)
       })
+    })
+
+    // Enrich maps from person-level relationships (built from main relationships table)
+    this.partnersMap = new Map()
+    people.forEach(p => {
+      // spouses
+      if (p.spouses) {
+        const existing = this.partnersMap.get(p.id) || []
+        const merged = [...existing, ...p.spouses]
+        // de-dupe by id
+        const byId = new Map(merged.map(sp => [sp.id, sp]))
+        this.partnersMap.set(p.id, Array.from(byId.values()))
+      }
+      // children
+      if (p.children && p.children.length) {
+        const prev = this.childMap.get(p.id) || []
+        const merged = [...prev, ...p.children]
+        const byId = new Map(merged.map(ch => [ch.id, ch]))
+        this.childMap.set(p.id, Array.from(byId.values()))
+      }
+      // parents
+      if (p.parents && p.parents.length) {
+        this.parentMap.set(p.id, p.parents)
+      }
     })
   }
 
@@ -182,36 +209,66 @@ export class FamilyTreeLayoutEngine {
       })
     })
 
-    // Create family unions and connections
-    this.families.forEach(family => {
-      if (processedFamilies.has(family.id)) return
+    // Create unions from parent relationships and spouse links (works even without tree_families)
+    type U = { p1: TreePerson; p2?: TreePerson; children: Set<string> }
+    const unionMap = new Map<string, U>()
 
-      const partner1 = nodes.find(n => n.id === family.partner1_id)
-      const partner2 = family.partner2_id ? nodes.find(n => n.id === family.partner2_id) : null
-      
-      if (!partner1) return
+    // From parent relationships
+    this.parentMap.forEach((parents, childId) => {
+      if (!parents || parents.length === 0) return
+      if (parents.length === 2) {
+        const [a, b] = parents
+        const key = [a.id, b.id].sort().join('-')
+        if (!unionMap.has(key)) unionMap.set(key, { p1: a, p2: b, children: new Set() })
+        unionMap.get(key)!.children.add(childId)
+      } else if (parents.length === 1) {
+        const a = parents[0]
+        const key = `single-${a.id}`
+        if (!unionMap.has(key)) unionMap.set(key, { p1: a, children: new Set() })
+        unionMap.get(key)!.children.add(childId)
+      }
+    })
 
-      const familyChildren = this.children
-        .filter(fc => fc.family_id === family.id)
-        .map(fc => nodes.find(n => n.id === fc.child_id))
+    // From spouse links (ensure marriage bar even if no child in view)
+    this.partnersMap.forEach((partners, pid) => {
+      partners.forEach(sp => {
+        const key = [pid, sp.id].sort().join('-')
+        if (!unionMap.has(key)) unionMap.set(key, { p1: this.personMap.get(pid)!, p2: sp, children: new Set() })
+      })
+    })
+
+    unionMap.forEach((u, key) => {
+      const partner1 = nodes.find(n => n.id === u.p1.id)
+      const partner2 = u.p2 ? nodes.find(n => n.id === u.p2.id) : undefined
+      if (!partner1 && !partner2) return
+
+      const childNodes: LayoutNode[] = Array.from(u.children)
+        .map(cid => nodes.find(n => n.id === cid))
         .filter(Boolean) as LayoutNode[]
 
-      if (familyChildren.length > 0 || partner2) {
-        const union: UnionNode = {
-          id: family.id,
-          family,
-          partner1: partner1,
-          partner2: partner2 || undefined,
-          children: familyChildren,
-          x: partner2 ? (partner1.x + partner2.x) / 2 : partner1.x,
-          y: partner1.y + this.config.nodeHeight / 2,
-          width: this.config.unionWidth,
-          height: this.config.unionHeight,
-          level: partner1.level
-        }
-        unions.push(union)
-        processedFamilies.add(family.id)
+      const family: TreeFamily = {
+        id: `u-${key}`,
+        family_id: u.p1.family_id,
+        partner1_id: u.p1.id,
+        partner2_id: u.p2?.id ?? null,
+        relationship_type: 'union',
+        created_at: new Date().toISOString()
       }
+
+      const baseNode = partner1 || partner2!
+      const union: UnionNode = {
+        id: family.id,
+        family,
+        partner1: u.p1,
+        partner2: u.p2,
+        children: childNodes,
+        x: partner1 && partner2 ? (partner1.x + partner2.x) / 2 : baseNode.x,
+        y: baseNode.y + this.config.nodeHeight / 2,
+        width: this.config.unionWidth,
+        height: this.config.unionHeight,
+        level: baseNode.level
+      }
+      unions.push(union)
     })
 
     const bounds = this.calculateBounds(nodes, unions)
@@ -233,17 +290,20 @@ export class FamilyTreeLayoutEngine {
   }
 
   private getPartners(personId: string): TreePerson[] {
-    const partners: TreePerson[] = []
+    // Prefer enriched partners map (from relationships)
+    const enriched = this.partnersMap.get(personId)
+    const fromFamilies: TreePerson[] = []
     this.families.forEach(family => {
       if (family.partner1_id === personId && family.partner2_id) {
         const partner = this.personMap.get(family.partner2_id)
-        if (partner) partners.push(partner)
+        if (partner) fromFamilies.push(partner)
       } else if (family.partner2_id === personId && family.partner1_id) {
         const partner = this.personMap.get(family.partner1_id)
-        if (partner) partners.push(partner)
+        if (partner) fromFamilies.push(partner)
       }
     })
-    return partners
+    if (enriched && enriched.length) return enriched
+    return fromFamilies
   }
 
   private getChildren(personId: string): TreePerson[] {
