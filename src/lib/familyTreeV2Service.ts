@@ -10,42 +10,220 @@ import type {
 } from './familyTreeV2Types'
 
 export class FamilyTreeService {
-  // Get family's tree data
-  static async getTreeData(familyId: string, homePersonId?: string, depth = 4): Promise<TreeGraph> {
-    const { data: people, error: peopleError } = await supabase
-      .from('tree_people')
+  // Get family's tree data - FIXED: Use main people/relationships tables as source of truth
+  static async getTreeData(familyId: string, homePersonId?: string, depth?: number): Promise<TreeGraph> {
+    // 1) Raw source of truth - fetch ALL people and relationships for the family (no limits)
+    const { data: people, error: pErr } = await supabase
+      .from('people')
       .select('*')
       .eq('family_id', familyId)
       .order('surname', { ascending: true })
+    
+    if (pErr) throw pErr
 
-    if (peopleError) throw peopleError
+    const { data: rels, error: rErr } = await supabase
+      .from('relationships')
+      .select('*')
+      .eq('family_id', familyId)
+    
+    if (rErr) throw rErr
 
-    const { data: families, error: familiesError } = await supabase
+    // 2) Optional enrichment from V2 tables (safe if empty)
+    const { data: unions } = await supabase
       .from('tree_families')
       .select('*')
       .eq('family_id', familyId)
 
-    if (familiesError) throw familiesError
-
-    const { data: children, error: childrenError } = await supabase
+    const { data: unionChildren } = await supabase
       .from('tree_family_children')
       .select('*')
-      .in('family_id', families?.map(f => f.id) || [])
+      .in('family_id', unions?.map(f => f.id) || [])
 
-    if (childrenError) throw childrenError
+    // 3) Build a FULL graph from people and relationships (no node caps)
+    const graph = this.buildGraphFromPeopleAndRels(people || [], rels || [], unions || [], unionChildren || [])
 
-    // Determine focus person
+    // 4) If depth is set, filter AFTER building the full graph, never before
+    const pruned = typeof depth === 'number' && depth < 999 ? this.pruneByDepth(graph, homePersonId || graph.focusPersonId, depth) : graph
+
+    // Determine focus person if not provided
     let focusPersonId = homePersonId
     if (!focusPersonId && people && people.length > 0) {
-      // Default to first person or person with most connections
       focusPersonId = people[0].id
     }
 
     return {
+      ...pruned,
       focusPersonId: focusPersonId || '',
-      people: people || [],
-      families: families || [],
-      children: children || []
+      meta: { 
+        source: 'people+relationships', 
+        count_people: people?.length ?? 0, 
+        count_rels: rels?.length ?? 0 
+      }
+    }
+  }
+
+  // Build graph from people and relationships with proper union modeling
+  private static buildGraphFromPeopleAndRels(
+    people: any[], 
+    rels: any[], 
+    unions: any[], 
+    unionChildren: any[]
+  ): TreeGraph {
+    const byId = new Map(people.map(p => [p.id, { 
+      ...p, 
+      spouses: [], 
+      children: [], 
+      parents: [] 
+    }]))
+
+    // Map spouses from relationships
+    for (const r of rels) {
+      if (r.relationship_type === 'spouse') {
+        const person1 = byId.get(r.from_person_id)
+        const person2 = byId.get(r.to_person_id)
+        if (person1 && person2) {
+          if (!person1.spouses.find((s: any) => s.id === person2.id)) {
+            person1.spouses.push(person2)
+          }
+          if (!person2.spouses.find((s: any) => s.id === person1.id)) {
+            person2.spouses.push(person1)
+          }
+        }
+      }
+    }
+
+    // Map parents/children from relationships
+    for (const r of rels) {
+      if (r.relationship_type === 'parent') {
+        const parent = byId.get(r.from_person_id)
+        const child = byId.get(r.to_person_id)
+        if (parent && child) {
+          if (!parent.children.find((c: any) => c.id === child.id)) {
+            parent.children.push(child)
+          }
+          if (!child.parents.find((p: any) => p.id === parent.id)) {
+            child.parents.push(parent)
+          }
+        }
+      }
+    }
+
+    // Optional: strengthen parent–parent unions from V2 tables
+    const unionsById = new Map(unions.map(u => [u.id, u]))
+    for (const link of unionChildren) {
+      const union = unionsById.get(link.family_id)
+      if (!union) continue
+      
+      const p1 = byId.get(union.partner1_id)
+      const p2 = byId.get(union.partner2_id)
+      const ch = byId.get(link.child_id)
+      
+      // Ensure spouses are connected
+      if (p1 && p2) {
+        if (!p1.spouses.find((s: any) => s.id === p2.id)) p1.spouses.push(p2)
+        if (!p2.spouses.find((s: any) => s.id === p1.id)) p2.spouses.push(p1)
+      }
+      
+      // Ensure parent-child relationships
+      if (p1 && ch && !p1.children.find((c: any) => c.id === ch.id)) p1.children.push(ch)
+      if (p2 && ch && !p2.children.find((c: any) => c.id === ch.id)) p2.children.push(ch)
+      if (ch) {
+        if (p1 && !ch.parents.find((pp: any) => pp.id === p1.id)) ch.parents.push(p1)
+        if (p2 && !ch.parents.find((pp: any) => pp.id === p2.id)) ch.parents.push(p2)
+      }
+    }
+
+    // Convert to old format for compatibility
+    const treePeople = Array.from(byId.values())
+    const treeFamilies = unions || []
+    const treeChildren = unionChildren || []
+
+    return {
+      focusPersonId: '',
+      people: treePeople,
+      families: treeFamilies,
+      children: treeChildren,
+      relationships: rels || [],
+      components: this.buildConnectedComponents(treePeople)
+    }
+  }
+
+  // Helper to build connected components
+  private static buildConnectedComponents(people: any[]): any[] {
+    const visited = new Set()
+    const components = []
+
+    for (const person of people) {
+      if (visited.has(person.id)) continue
+      
+      const component = []
+      const stack = [person]
+      
+      while (stack.length > 0) {
+        const current = stack.pop()
+        if (!current || visited.has(current.id)) continue
+        
+        visited.add(current.id)
+        component.push(current)
+        
+        // Add connected people (spouses, parents, children)
+        for (const spouse of current.spouses || []) {
+          if (!visited.has(spouse.id)) stack.push(spouse)
+        }
+        for (const parent of current.parents || []) {
+          if (!visited.has(parent.id)) stack.push(parent)
+        }
+        for (const child of current.children || []) {
+          if (!visited.has(child.id)) stack.push(child)
+        }
+      }
+      
+      components.push(component)
+    }
+    
+    return components
+  }
+
+  // Prune graph by depth (view filter only) - PUBLIC for use in components
+  public static pruneByDepth(graph: TreeGraph, focusPersonId: string, depth: number): TreeGraph {
+    if (!focusPersonId || depth >= 999) return graph
+    
+    const visited = new Set()
+    const queue = [{ personId: focusPersonId, currentDepth: 0 }]
+    
+    while (queue.length > 0) {
+      const { personId, currentDepth } = queue.shift()!
+      
+      if (visited.has(personId) || currentDepth > depth) continue
+      visited.add(personId)
+      
+      const person = graph.people.find(p => p.id === personId)
+      if (!person) continue
+      
+      // Add connected people within depth
+      for (const spouse of person.spouses || []) {
+        if (!visited.has(spouse.id) && currentDepth < depth) {
+          queue.push({ personId: spouse.id, currentDepth: currentDepth })
+        }
+      }
+      for (const parent of person.parents || []) {
+        if (!visited.has(parent.id) && currentDepth < depth) {
+          queue.push({ personId: parent.id, currentDepth: currentDepth + 1 })
+        }
+      }
+      for (const child of person.children || []) {
+        if (!visited.has(child.id) && currentDepth < depth) {
+          queue.push({ personId: child.id, currentDepth: currentDepth + 1 })
+        }
+      }
+    }
+    
+    const prunedPeople = graph.people.filter(p => visited.has(p.id))
+    
+    return {
+      ...graph,
+      people: prunedPeople,
+      components: this.buildConnectedComponents(prunedPeople)
     }
   }
 
@@ -257,14 +435,13 @@ export class FamilyTreeService {
     return data
   }
 
-  // Search people for quick add
+  // Search people for quick add - REMOVED LIMIT
   static async searchPeople(familyId: string, query: string): Promise<TreePerson[]> {
     const { data, error } = await supabase
       .from('tree_people')
       .select('*')
       .eq('family_id', familyId)
       .or(`given_name.ilike.%${query}%,surname.ilike.%${query}%`)
-      .limit(10)
 
     if (error) throw error
     return data || []

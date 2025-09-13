@@ -56,17 +56,29 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   const [people, setPeople] = useState<TreePerson[]>([])
   const [families, setFamilies] = useState<TreeFamily[]>([])
   const [children, setChildren] = useState<TreeFamilyChild[]>([])
+  
+  // Make visibleGraph a view filter using useMemo - Generations control is a view filter only
+  const visibleGraph = React.useMemo(() => {
+    if (!people.length) return { focusPersonId: '', people: [], families: [], children: [] }
+    
+    const baseGraph = { focusPersonId: focusPersonId || people[0]?.id || '', people, families, children }
+    
+    // If generations is "All" (999+) show everything, otherwise use pruneByDepth  
+    if (generations >= 999) return baseGraph
+    
+    return FamilyTreeService.pruneByDepth(baseGraph, focusPersonId || people[0]?.id, generations)
+  }, [people, families, children, generations, focusPersonId])
 
   useEffect(() => {
     loadTreeData()
   }, [familyId, focusPersonId])
 
-  // Recalculate layout when Auto Layout mode changes
+  // Recalculate layout when Auto Layout mode changes or visible graph changes
   useEffect(() => {
-    if (people.length > 0 && (focusPersonId || people[0])) {
-      calculateLayout(people, families, children, focusPersonId || people[0].id, generations)
+    if (visibleGraph.people.length > 0 && (focusPersonId || visibleGraph.people[0])) {
+      calculateLayout(visibleGraph.people, visibleGraph.families, visibleGraph.children, focusPersonId || visibleGraph.people[0].id, generations)
     }
-  }, [autoLayout])
+  }, [autoLayout, visibleGraph])
 
   const loadTreeData = async () => {
     try {
@@ -74,6 +86,17 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       setPeople(data.people)
       setFamilies(data.families)
       setChildren(data.children)
+      
+      // 1) Quick diagnostics - prove where the 3 is coming from
+      console.table({
+        fetched_people: data.people?.length ?? 0,
+        fetched_relationships: data.relationships?.length ?? 0,
+        fetched_families: data.families?.length ?? 0,
+        fetched_children: data.children?.length ?? 0,
+        components: data.components?.length ?? 0,
+        focus_person: focusPersonId ?? 'none',
+        source: data.meta?.source ?? 'unknown'
+      });
       
       if (data.people.length > 0 && data.focusPersonId) {
         console.debug('Tree data:', { people: data.people.length, families: data.families.length, children: data.children.length })
@@ -146,28 +169,9 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       }
     }
 
-    // Fallback: if too few nodes, include all people so the canvas reflects DB
-    const nodeIds = new Set(layout.nodes.map(n => n.id))
-    // Only show 'everyone in a grid' when Auto Layout is OFF
-    if (!autoLayout && layout.nodes.length < Math.min(people.length, 5)) {
-      const extra: LayoutNode[] = []
-      people.forEach((p, idx) => {
-        if (!nodeIds.has(p.id)) {
-          extra.push({
-            ...(p as any),
-            x: (idx % 8) * (defaultLayoutConfig.nodeWidth + defaultLayoutConfig.siblingSpacing),
-            y: Math.floor(idx / 8) * defaultLayoutConfig.generationHeight,
-            level: 0,
-            width: defaultLayoutConfig.nodeWidth,
-            height: defaultLayoutConfig.nodeHeight,
-            partners: [],
-            children: [],
-            parents: []
-          })
-        }
-      })
-      layout.nodes = [...layout.nodes, ...extra]
-    }
+    // REMOVED: Fallback grid layout that was capping nodes at 3-5
+    // Always use the proper generational layout from the engine
+    
     console.debug('Layout nodes:', layout.nodes.length)
     setNodes(layout.nodes)
     setUnions(layout.unions)
@@ -519,13 +523,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
             <span className="text-sm text-muted-foreground">Generations:</span>
             <select 
               value={generations} 
-              onChange={(e) => {
-                const newGen = parseInt(e.target.value)
-                setGenerations(newGen)
-                if (people.length > 0 && (focusPersonId || people[0])) {
-                  calculateLayout(people, families, children, focusPersonId || people[0].id, newGen)
-                }
-              }}
+              onChange={(e) => setGenerations(parseInt(e.target.value))}
               className="text-sm border rounded px-2 py-1 bg-background"
             >
               <option value={3}>3</option>
@@ -535,18 +533,19 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
               <option value={999}>All</option>
             </select>
           </div>
+          {/* Header stats that reflect the same arrays the canvas uses */}
           <Badge variant="outline" title="Nodes shown">
-            {nodes.length} people
+            {visibleGraph.people.length} people
           </Badge>
-          <Badge variant="outline" title="Families in DB">
-            {families.length} families
+          <Badge variant="outline" title="Families in visible graph">
+            {visibleGraph.families.length} families
           </Badge>
-          <Badge variant="outline" title="Parent-child links">
-            {children.length} links
+          <Badge variant="outline" title="Parent-child links in visible graph">
+            {visibleGraph.children.length} links
           </Badge>
           <Button variant="outline" size="sm" onClick={() => {
-            if (people.length > 0) {
-              calculateLayout(people, families, children, focusPersonId || people[0].id, generations)
+            if (visibleGraph.people.length > 0) {
+              calculateLayout(visibleGraph.people, visibleGraph.families, visibleGraph.children, focusPersonId || visibleGraph.people[0].id, generations)
               handleFitView()
             }
           }}>

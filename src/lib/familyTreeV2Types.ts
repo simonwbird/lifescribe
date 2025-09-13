@@ -17,6 +17,17 @@ export interface TreePerson {
   created_by?: string | null
   created_at: string
   updated_at: string
+  // Additional compatibility fields
+  full_name?: string
+  birth_year?: number
+  death_year?: number
+  gender?: 'male' | 'female' | 'other' | 'unknown'
+  avatar_url?: string
+  middle_name?: string
+  // Relationship arrays for graph building
+  spouses?: TreePerson[]
+  children?: TreePerson[]
+  parents?: TreePerson[]
 }
 
 export interface TreeFamily {
@@ -69,12 +80,19 @@ export interface TreeImport {
   completed_at?: string | null
 }
 
-// Graph structures for visualization
+// Enhanced TreeGraph with full relationship data and metadata
 export interface TreeGraph {
   focusPersonId: string
   people: TreePerson[]
   families: TreeFamily[]
   children: TreeFamilyChild[]
+  relationships?: any[] // From main relationships table
+  components?: TreePerson[][] // Connected components
+  meta?: {
+    source: string
+    count_people: number
+    count_rels: number
+  }
 }
 
 export interface TreeNode extends TreePerson {
