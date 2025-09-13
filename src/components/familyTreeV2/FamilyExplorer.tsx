@@ -69,6 +69,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       setChildren(data.children)
       
       if (data.people.length > 0 && data.focusPersonId) {
+        console.debug('Tree data:', { people: data.people.length, families: data.families.length, children: data.children.length })
         calculateLayout(data.people, data.families, data.children, data.focusPersonId)
       }
     } catch (error) {
@@ -437,9 +438,23 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
               <option value={999}>All</option>
             </select>
           </div>
-          <Badge variant="outline">
+          <Badge variant="outline" title="Nodes shown">
             {nodes.length} people
           </Badge>
+          <Badge variant="outline" title="Families in DB">
+            {families.length} families
+          </Badge>
+          <Badge variant="outline" title="Parent-child links">
+            {children.length} links
+          </Badge>
+          <Button variant="outline" size="sm" onClick={() => {
+            if (people.length > 0) {
+              calculateLayout(people, families, children, focusPersonId || people[0].id, generations)
+              handleFitView()
+            }
+          }}>
+            Recalculate
+          </Button>
           <Button
             variant={autoLayout ? "default" : "outline"}
             size="sm"
