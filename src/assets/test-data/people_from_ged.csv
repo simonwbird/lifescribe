@@ -1,0 +1,5 @@
+person_id,given_name,surname,sex,birth_date,birth_place,death_date,death_place,is_living,fams,famc,raw_name
+@I_293219080@,Simon,Bird,M,,,,,Y,,@F1@,Simon /Bird/
+@I_293219078@,David,Bird,M,15/01,"Melbourne, Victoria, Australia",,,Y,@F1@,@F2@,David /Bird/
+@I_293218678@,Helen Shirley,Kemter,F,20/10,"Melbourne, Victoria, Australia",,,Y,@F1@,,Helen Shirley /Kemter/
+@I_293218278@,Helen,Reidy,F,,,,,Y,@F2@,,Helen /Reidy/

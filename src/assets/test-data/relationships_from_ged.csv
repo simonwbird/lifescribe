@@ -1,0 +1,5 @@
+rel_type,a_id,b_id,family_id,marriage_date,divorce_date,note
+spouse,@I_293219078@,@I_293218678@,@F1@,,,
+parent,@I_293219078@,@I_293219080@,@F1@,,,father->child
+parent,@I_293218678@,@I_293219080@,@F1@,,,mother->child
+parent,@I_293218278@,@I_293219078@,@F2@,,,mother->child

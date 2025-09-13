@@ -1,0 +1,4 @@
+person_id,given_name,surname,sex,birth_date,is_living,raw_name
+@I_NEW_ZUZANA@,Zuzana,Buckova,F,1983,Y,Zuzana /Buckova/
+@I_NEW_LUCY@,Lucy Shirley,Bird,F,2014,Y,Lucy Shirley /Bird/
+@I_NEW_JAMIE@,Jamie William,Bird,M,2016,Y,Jamie William /Bird/

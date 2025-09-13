@@ -1,0 +1,185 @@
+{
+  "people": [
+    {
+      "person_id": "@I_293219080@",
+      "given_name": "Simon",
+      "surname": "Bird",
+      "sex": "M",
+      "birth_date": null,
+      "birth_place": null,
+      "death_date": null,
+      "death_place": null,
+      "is_living": "Y",
+      "fams": "",
+      "famc": "@F1@",
+      "raw_name": "Simon /Bird/"
+    },
+    {
+      "person_id": "@I_293219078@",
+      "given_name": "David",
+      "surname": "Bird",
+      "sex": "M",
+      "birth_date": "15/01",
+      "birth_place": "Melbourne, Victoria, Australia",
+      "death_date": null,
+      "death_place": null,
+      "is_living": "Y",
+      "fams": "@F1@",
+      "famc": "@F2@",
+      "raw_name": "David /Bird/"
+    },
+    {
+      "person_id": "@I_293218678@",
+      "given_name": "Helen Shirley",
+      "surname": "Kemter",
+      "sex": "F",
+      "birth_date": "20/10",
+      "birth_place": "Melbourne, Victoria, Australia",
+      "death_date": null,
+      "death_place": null,
+      "is_living": "Y",
+      "fams": "@F1@",
+      "famc": "",
+      "raw_name": "Helen Shirley /Kemter/"
+    },
+    {
+      "person_id": "@I_293218278@",
+      "given_name": "Helen",
+      "surname": "Reidy",
+      "sex": "F",
+      "birth_date": null,
+      "birth_place": null,
+      "death_date": null,
+      "death_place": null,
+      "is_living": "Y",
+      "fams": "@F2@",
+      "famc": "",
+      "raw_name": "Helen /Reidy/"
+    },
+    {
+      "person_id": "@I_NEW_ZUZANA@",
+      "given_name": "Zuzana",
+      "surname": "Buckova",
+      "sex": "F",
+      "birth_date": "1983",
+      "birth_place": NaN,
+      "death_date": NaN,
+      "death_place": NaN,
+      "is_living": "Y",
+      "fams": NaN,
+      "famc": NaN,
+      "raw_name": "Zuzana /Buckova/"
+    },
+    {
+      "person_id": "@I_NEW_LUCY@",
+      "given_name": "Lucy Shirley",
+      "surname": "Bird",
+      "sex": "F",
+      "birth_date": "2014",
+      "birth_place": NaN,
+      "death_date": NaN,
+      "death_place": NaN,
+      "is_living": "Y",
+      "fams": NaN,
+      "famc": NaN,
+      "raw_name": "Lucy Shirley /Bird/"
+    },
+    {
+      "person_id": "@I_NEW_JAMIE@",
+      "given_name": "Jamie William",
+      "surname": "Bird",
+      "sex": "M",
+      "birth_date": "2016",
+      "birth_place": NaN,
+      "death_date": NaN,
+      "death_place": NaN,
+      "is_living": "Y",
+      "fams": NaN,
+      "famc": NaN,
+      "raw_name": "Jamie William /Bird/"
+    }
+  ],
+  "relationships": [
+    {
+      "rel_type": "spouse",
+      "a_id": "@I_293219078@",
+      "b_id": "@I_293218678@",
+      "family_id": "@F1@",
+      "marriage_date": null,
+      "divorce_date": null,
+      "note": ""
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_293219078@",
+      "b_id": "@I_293219080@",
+      "family_id": "@F1@",
+      "marriage_date": null,
+      "divorce_date": null,
+      "note": "father->child"
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_293218678@",
+      "b_id": "@I_293219080@",
+      "family_id": "@F1@",
+      "marriage_date": null,
+      "divorce_date": null,
+      "note": "mother->child"
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_293218278@",
+      "b_id": "@I_293219078@",
+      "family_id": "@F2@",
+      "marriage_date": null,
+      "divorce_date": null,
+      "note": "mother->child"
+    },
+    {
+      "rel_type": "spouse",
+      "a_id": "@I_293219080@",
+      "b_id": "@I_NEW_ZUZANA@",
+      "family_id": "@F_NEW_SB_ZB@",
+      "marriage_date": "",
+      "divorce_date": "",
+      "note": ""
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_293219080@",
+      "b_id": "@I_NEW_LUCY@",
+      "family_id": "@F_NEW_SB_ZB@",
+      "marriage_date": "",
+      "divorce_date": "",
+      "note": "father->child"
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_NEW_ZUZANA@",
+      "b_id": "@I_NEW_LUCY@",
+      "family_id": "@F_NEW_SB_ZB@",
+      "marriage_date": "",
+      "divorce_date": "",
+      "note": "mother->child"
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_293219080@",
+      "b_id": "@I_NEW_JAMIE@",
+      "family_id": "@F_NEW_SB_ZB@",
+      "marriage_date": "",
+      "divorce_date": "",
+      "note": "father->child"
+    },
+    {
+      "rel_type": "parent",
+      "a_id": "@I_NEW_ZUZANA@",
+      "b_id": "@I_NEW_JAMIE@",
+      "family_id": "@F_NEW_SB_ZB@",
+      "marriage_date": "",
+      "divorce_date": "",
+      "note": "mother->child"
+    }
+  ]
+}
