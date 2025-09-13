@@ -16,7 +16,7 @@ import Prompts from "./pages/Prompts";
 import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
 import Profile from "./pages/Profile";
-import FamilyTree from "./pages/FamilyTree";
+import FamilyTreeV2 from "./pages/FamilyTreeV2";
 import PersonProfile from "./pages/PersonProfile";
 import Collections from "./pages/Collections";
 import { PersonTimeline } from "./pages/PersonTimeline";
@@ -60,7 +60,7 @@ const App = () => (
           <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />
           <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
           <Route path="/family/members" element={<AuthGate><FamilyMembers /></AuthGate>} />
-          <Route path="/family/tree" element={<AuthGate><FamilyTree /></AuthGate>} />
+          <Route path="/family/tree" element={<AuthGate><FamilyTreeV2 /></AuthGate>} />
           <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
           <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
           <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
