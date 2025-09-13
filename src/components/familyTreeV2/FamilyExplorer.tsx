@@ -23,6 +23,15 @@ interface FamilyExplorerProps {
   onPersonFocus?: (personId: string) => void
 }
 
+// Dark canvas background style
+const CANVAS_BG: React.CSSProperties = {
+  background: "#3B3C41",
+  backgroundImage:
+    "radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px), radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px)",
+  backgroundSize: "24px 24px, 24px 24px",
+  backgroundPosition: "0 0, 12px 12px",
+};
+
 export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   familyId,
   focusPersonId,
@@ -137,6 +146,12 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     const nodeRects = Array.from(newLayout.rects.values())
     setNodes(nodeRects)
 
+    // Auto-fit once when layout is first calculated
+    setTimeout(() => {
+      if (nodeRects.length > 0 && svgRef.current) {
+        handleFitView()
+      }
+    }, 100)
   }
 
   const handleZoomIn = () => {
@@ -252,7 +267,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   return (
-    <div className="w-full h-full relative fe-canvas" style={{ background: '#F8F9FA' }}>
+    <div className="w-full h-full relative fe-canvas" style={CANVAS_BG}>
       {/* Toolbar */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
@@ -309,6 +324,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       <svg
         ref={svgRef}
         className="w-full h-full cursor-move"
+        viewBox={layout ? `0 0 ${layout.bounds.width} ${layout.bounds.height}` : "0 0 800 600"}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -317,7 +333,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       >
         <defs>
           <filter id="feCardShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="black" floodOpacity="0.20"/>
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="black" floodOpacity="0.20" />
           </filter>
         </defs>
         
@@ -326,7 +342,20 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
           {renderConnections()}
           
           {/* Then render person cards on top */}
-          {nodes.map(renderPersonNode)}
+          {layout && Array.from(layout.rects.values()).map(r => {
+            const person = people.find(p => p.id === r.id)
+            if (!person) return null
+            return (
+              <PersonCard 
+                key={r.id} 
+                x={r.x}
+                y={r.y}
+                person={person} 
+                onClick={() => handlePersonClick(person.id)}
+                onAddClick={(p, type) => handleQuickAdd(type, p.id)}
+              />
+            )
+          })}
           
           {/* Finally captions */}
           {renderGenerationCaptions()}
