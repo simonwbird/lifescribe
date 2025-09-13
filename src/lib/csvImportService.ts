@@ -363,37 +363,57 @@ export class CsvImportService {
     // Helper function to parse dates safely
     const parseDate = (dateStr: string): string | null => {
       if (!dateStr || dateStr.trim() === '') return null
-      
-      // Handle formats like "1984.0" - remove decimal part
       let cleanDateStr = dateStr.replace(/\.0$/, '')
-      
-      // If it's just a year (4 digits), assume January 1st
       if (/^\d{4}$/.test(cleanDateStr)) {
         cleanDateStr = `${cleanDateStr}-01-01`
       }
-      
       const date = new Date(cleanDateStr)
       if (isNaN(date.getTime())) {
         console.warn(`Invalid date format: ${dateStr}`)
         return null
       }
-      
       return date.toISOString().split('T')[0]
     }
 
-    // Fetch existing people and prepare insert list
-    const { data: existingPeople } = await supabase
+    // 0) CLEAN OUT EXISTING DATA FOR THIS FAMILY (V2 + Legacy)
+    try {
+      // V2: remove children for this family's unions, then unions, then people
+      const { data: v2Families } = await supabase
+        .from('tree_families')
+        .select('id')
+        .eq('family_id', familyId)
+
+      const v2FamilyIds = (v2Families || []).map((f: any) => f.id)
+      if (v2FamilyIds.length > 0) {
+        await supabase
+          .from('tree_family_children')
+          .delete()
+          .in('family_id', v2FamilyIds)
+      }
+      await supabase.from('tree_families').delete().eq('family_id', familyId)
+      await supabase.from('tree_people').delete().eq('family_id', familyId)
+
+      // Legacy: delete relationships first, then people
+      await supabase.from('relationships').delete().eq('family_id', familyId)
+      await supabase.from('people').delete().eq('family_id', familyId)
+    } catch (cleanupErr) {
+      console.warn('Cleanup warning (non-fatal):', cleanupErr)
+    }
+
+    // 1) INSERT INTO V2 TABLES (tree_people, tree_families, tree_family_children)
+    // Fetch existing tree_people after cleanup (should be empty but keep logic safe)
+    const { data: existingTreePeople } = await supabase
       .from('tree_people')
       .select('id, source_xref')
       .eq('family_id', familyId)
 
-    const existingMap = new Map<string, string>()
-    existingPeople?.forEach(p => {
-      if (p.source_xref) existingMap.set(p.source_xref, p.id)
+    const existingTreeMap = new Map<string, string>()
+    existingTreePeople?.forEach(p => {
+      if (p.source_xref) existingTreeMap.set(p.source_xref, p.id)
     })
 
-    const toInsert = people
-      .filter(person => !existingMap.has(person.person_id))
+    const v2ToInsert = people
+      .filter(person => !existingTreeMap.has(person.person_id))
       .map(person => ({
         family_id: familyId,
         given_name: person.given_name || null,
@@ -406,33 +426,28 @@ export class CsvImportService {
         created_by: userId
       }))
 
-    let insertedPeople: Array<{ id: string; source_xref: string | null }> = []
-    if (toInsert.length > 0) {
+    let insertedTreePeople: Array<{ id: string; source_xref: string | null }> = []
+    if (v2ToInsert.length > 0) {
       const { data, error: peopleError } = await supabase
         .from('tree_people')
-        .insert(toInsert)
+        .insert(v2ToInsert)
         .select('id, source_xref')
       if (peopleError) throw peopleError
-      insertedPeople = data || []
+      insertedTreePeople = data || []
     }
 
-    // Create mapping from source IDs to database IDs (existing + inserted)
-    const idMap = new Map<string, string>()
-    existingMap.forEach((id, xref) => idMap.set(xref, id))
-    insertedPeople.forEach(person => {
+    // Mapping (xref -> tree_people.id)
+    const idMapV2 = new Map<string, string>()
+    existingTreeMap.forEach((id, xref) => idMapV2.set(xref, id))
+    insertedTreePeople.forEach(person => {
       if (person.source_xref) {
-        idMap.set(person.source_xref, person.id)
+        idMapV2.set(person.source_xref, person.id)
       }
     })
 
-    // Process relationships
-    const childrenToInsert: Array<{
-      family_id: string
-      child_id: string
-    }> = []
-    const childKeys = new Set<string>()
-
-    // Group relationships by family and type
+    // Group relationships by family and type for V2 unions/children
+    const childrenToInsertV2: Array<{ family_id: string; child_id: string }> = []
+    const childKeysV2 = new Set<string>()
     const familyGroups = new Map<string, {
       spouses: Array<{ a_id: string, b_id: string }>,
       children: Array<{ parent_id: string, child_id: string }>
@@ -442,9 +457,7 @@ export class CsvImportService {
       if (!familyGroups.has(rel.family_id)) {
         familyGroups.set(rel.family_id, { spouses: [], children: [] })
       }
-      
       const group = familyGroups.get(rel.family_id)!
-      
       if (rel.rel_type === 'spouse') {
         group.spouses.push({ a_id: rel.a_id, b_id: rel.b_id })
       } else if (rel.rel_type === 'parent') {
@@ -452,13 +465,12 @@ export class CsvImportService {
       }
     })
 
-    // Insert tree families and children
+    // Insert unions and collect children for V2
     for (const [familyXref, group] of familyGroups) {
       if (group.spouses.length > 0) {
-        const spouse = group.spouses[0] // Take first spouse relationship
-        const partner1Id = idMap.get(spouse.a_id)
-        const partner2Id = idMap.get(spouse.b_id)
-
+        const spouse = group.spouses[0]
+        const partner1Id = idMapV2.get(spouse.a_id)
+        const partner2Id = idMapV2.get(spouse.b_id)
         if (partner1Id && partner2Id) {
           const { data: insertedFamily } = await supabase
             .from('tree_families')
@@ -474,27 +486,22 @@ export class CsvImportService {
             .single()
 
           if (insertedFamily) {
-            // Add children to this family
             group.children.forEach(child => {
-              const childDbId = idMap.get(child.child_id)
+              const childDbId = idMapV2.get(child.child_id)
               if (childDbId) {
                 const key = `${insertedFamily.id}-${childDbId}`
-                if (!childKeys.has(key)) {
-                  childrenToInsert.push({
-                    family_id: insertedFamily.id,
-                    child_id: childDbId
-                  })
-                  childKeys.add(key)
+                if (!childKeysV2.has(key)) {
+                  childrenToInsertV2.push({ family_id: insertedFamily.id, child_id: childDbId })
+                  childKeysV2.add(key)
                 }
               }
             })
           }
         }
       } else if (group.children.length > 0) {
-        // Single parent family
+        // Single parent V2 family
         const parentChild = group.children[0]
-        const parentId = idMap.get(parentChild.parent_id)
-        
+        const parentId = idMapV2.get(parentChild.parent_id)
         if (parentId) {
           const { data: insertedFamily } = await supabase
             .from('tree_families')
@@ -510,15 +517,12 @@ export class CsvImportService {
 
           if (insertedFamily) {
             group.children.forEach(child => {
-              const childDbId = idMap.get(child.child_id)
+              const childDbId = idMapV2.get(child.child_id)
               if (childDbId) {
                 const key = `${insertedFamily.id}-${childDbId}`
-                if (!childKeys.has(key)) {
-                  childrenToInsert.push({
-                    family_id: insertedFamily.id,
-                    child_id: childDbId
-                  })
-                  childKeys.add(key)
+                if (!childKeysV2.has(key)) {
+                  childrenToInsertV2.push({ family_id: insertedFamily.id, child_id: childDbId })
+                  childKeysV2.add(key)
                 }
               }
             })
@@ -527,13 +531,63 @@ export class CsvImportService {
       }
     }
 
-    // Insert all family children
-    if (childrenToInsert.length > 0) {
+    if (childrenToInsertV2.length > 0) {
       const { error: childrenError } = await supabase
         .from('tree_family_children')
-        .upsert(childrenToInsert, { onConflict: 'family_id,child_id', ignoreDuplicates: true })
-
+        .upsert(childrenToInsertV2, { onConflict: 'family_id,child_id', ignoreDuplicates: true })
       if (childrenError) throw childrenError
+    }
+
+    // 2) INSERT INTO LEGACY TABLES (people, relationships) FOR BACKWARD COMPAT
+    // Build deterministic IDs for people we will insert
+    const legacyIdMap = new Map<string, string>() // xref -> people.id
+    const legacyPeopleToInsert = people.map(p => {
+      const id = crypto.randomUUID()
+      legacyIdMap.set(p.person_id, id)
+      const fullName = `${p.given_name || ''} ${p.surname || ''}`.trim() || p.person_id
+      return {
+        id,
+        family_id: familyId,
+        given_name: p.given_name || null,
+        surname: p.surname || null,
+        full_name: fullName,
+        gender: p.sex || null,
+        birth_date: parseDate(p.birth_date || ''),
+        death_date: parseDate(p.death_date || ''),
+        created_by: userId
+      }
+    })
+
+    if (legacyPeopleToInsert.length > 0) {
+      const { error: legacyPeopleErr } = await supabase
+        .from('people')
+        .insert(legacyPeopleToInsert)
+      if (legacyPeopleErr) throw legacyPeopleErr
+    }
+
+    // Relationships
+    const relDedup = new Set<string>()
+    const legacyRelsToInsert = relationships.flatMap(rel => {
+      const fromId = legacyIdMap.get(rel.a_id)
+      const toId = legacyIdMap.get(rel.b_id)
+      if (!fromId || !toId) return []
+      const key = `${fromId}-${toId}-${rel.rel_type}`
+      if (relDedup.has(key)) return []
+      relDedup.add(key)
+      return [{
+        family_id: familyId,
+        from_person_id: fromId,
+        to_person_id: toId,
+        relationship_type: rel.rel_type,
+        created_by: userId
+      }]
+    })
+
+    if (legacyRelsToInsert.length > 0) {
+      const { error: legacyRelErr } = await supabase
+        .from('relationships')
+        .insert(legacyRelsToInsert)
+      if (legacyRelErr) throw legacyRelErr
     }
   }
 
