@@ -113,7 +113,10 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
       <FamilyExplorer
         people={people}
         relationships={relationships}
-        focusPersonId={focusPersonId || people[0]?.id || ''}
+        focusPersonId={focusPersonId || (people.find(p => relationships.some(r => 
+          (r.type === 'parent' && (r.parent_id === p.id || r.child_id === p.id)) ||
+          (r.type === 'spouse' && (r.a === p.id || r.b === p.id))
+        ))?.id || people[0]?.id) || ''}
         showCaptions={false}
         onAddRequested={handleAddRequested}
       />
