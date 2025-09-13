@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { NodeRect, Person } from "../../lib/familyTreeV2Types";
-import { Plus } from "lucide-react";
 
 /** Card constants (Ancestry proportions - redesigned for vertical layout) */
 export const CARD_W = 140;
@@ -88,7 +87,7 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
 
       {/* Subtle connector buttons */}
       {/* Add Parent - Top */}
-      <g className="connector-btn" style={{ opacity: 0.7 }}>
+      <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'parent')}>
         <circle 
           cx={CARD_W/2} 
           cy={-8} 
@@ -96,16 +95,13 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
           fill="#6B7280" 
           stroke="#fff" 
           strokeWidth="1"
-          style={{ cursor: 'pointer' }}
-          onClick={(e) => handleAddRelation(e, 'parent')}
         />
-        <foreignObject x={CARD_W/2 - 6} y={-14} width="12" height="12" className="pointer-events-none">
-          <Plus size={12} color="#fff" />
-        </foreignObject>
+        <line x1={CARD_W/2 - 4} y1={-8} x2={CARD_W/2 + 4} y2={-8} stroke="#fff" strokeWidth="1.5" />
+        <line x1={CARD_W/2} y1={-12} x2={CARD_W/2} y2={-4} stroke="#fff" strokeWidth="1.5" />
       </g>
 
       {/* Add Sibling - Left */}
-      <g className="connector-btn" style={{ opacity: 0.7 }}>
+      <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'sibling')}>
         <circle 
           cx={-8} 
           cy={CARD_H/2} 
@@ -113,16 +109,13 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
           fill="#6B7280" 
           stroke="#fff" 
           strokeWidth="1"
-          style={{ cursor: 'pointer' }}
-          onClick={(e) => handleAddRelation(e, 'sibling')}
         />
-        <foreignObject x={-14} y={CARD_H/2 - 6} width="12" height="12" className="pointer-events-none">
-          <Plus size={12} color="#fff" />
-        </foreignObject>
+        <line x1={-12} y1={CARD_H/2} x2={-4} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+        <line x1={-8} y1={CARD_H/2 - 4} x2={-8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
       </g>
 
       {/* Add Spouse - Right */}
-      <g className="connector-btn" style={{ opacity: 0.7 }}>
+      <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'spouse')}>
         <circle 
           cx={CARD_W + 8} 
           cy={CARD_H/2} 
@@ -130,16 +123,13 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
           fill="#6B7280" 
           stroke="#fff" 
           strokeWidth="1"
-          style={{ cursor: 'pointer' }}
-          onClick={(e) => handleAddRelation(e, 'spouse')}
         />
-        <foreignObject x={CARD_W + 2} y={CARD_H/2 - 6} width="12" height="12" className="pointer-events-none">
-          <Plus size={12} color="#fff" />
-        </foreignObject>
+        <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+        <line x1={CARD_W + 8} y1={CARD_H/2 - 4} x2={CARD_W + 8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
       </g>
 
       {/* Add Child - Bottom */}
-      <g className="connector-btn" style={{ opacity: 0.7 }}>
+      <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'child')}>
         <circle 
           cx={CARD_W/2} 
           cy={CARD_H + 8} 
@@ -147,12 +137,9 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
           fill="#6B7280" 
           stroke="#fff" 
           strokeWidth="1"
-          style={{ cursor: 'pointer' }}
-          onClick={(e) => handleAddRelation(e, 'child')}
         />
-        <foreignObject x={CARD_W/2 - 6} y={CARD_H + 2} width="12" height="12" className="pointer-events-none">
-          <Plus size={12} color="#fff" />
-        </foreignObject>
+        <line x1={CARD_W/2 - 4} y1={CARD_H + 8} x2={CARD_W/2 + 4} y2={CARD_H + 8} stroke="#fff" strokeWidth="1.5" />
+        <line x1={CARD_W/2} y1={CARD_H + 4} x2={CARD_W/2} y2={CARD_H + 12} stroke="#fff" strokeWidth="1.5" />
       </g>
       
       {/* Name below photo - centered and wrapped */}
