@@ -1,22 +1,18 @@
 import React from 'react'
 
-export const CARD_W = 156;
-export const CARD_H = 208;
-export const CARD_R = 12;
+export const CARD_W = 140;
+export const CARD_H = 180;
+export const CARD_R = 8;
 
-export const TILE_X = 10;
-export const TILE_Y = 10;
-export const TILE_W = 56;
-export const TILE_H = 76;
-export const TILE_R = 8;
+export const PHOTO_X = 12;
+export const PHOTO_Y = 12;
+export const PHOTO_W = CARD_W - 24;
+export const PHOTO_H = 100;
+export const PHOTO_R = 6;
 
-export const AVATAR_SIZE = 32;
-export const AVATAR_X = CARD_W - 10 - AVATAR_SIZE;
-export const AVATAR_Y = 10;
-
-export const NAME_X = TILE_X + TILE_W + 10;
-export const NAME_Y = 30;
-export const DATES_Y = NAME_Y + 20;
+export const NAME_X = CARD_W / 2;
+export const NAME_Y = PHOTO_Y + PHOTO_H + 20;
+export const DATES_Y = NAME_Y + 18;
 
 /* Layout spacing */
 export const H_SPACING = 48;        // siblings
@@ -24,12 +20,11 @@ export const ROW_HEIGHT = 220;      // generations
 export const MARRIAGE_GAP = 16;     // space between spouses
 export const COMPONENT_GAP = 220;   // between disconnected groups
 
-const genderFill = (g?: string) =>
-  g === 'male' ? 'var(--fe-male)'
-: g === 'female' ? 'var(--fe-female)'
-: 'var(--fe-unknown)';
-
 const year = (iso?: string) => iso ? iso.slice(0,4) : '';
+
+const getInitials = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
 export interface PersonCardProps {
   x: number; 
@@ -55,7 +50,8 @@ export const PersonCard: React.FC<PersonCardProps> = ({
 }) => {
   const b = year(person.birth_date);
   const d = year(person.death_date);
-  const dates = d ? `${b}–${d}` : (b ? `${b}–Living` : 'Living');
+  const dates = d ? `${b}–${d}` : (b ? `b. ${b}` : '');
+  const initials = getInitials(person.full_name);
 
   return (
     <g transform={`translate(${x},${y})`}>
@@ -66,72 +62,73 @@ export const PersonCard: React.FC<PersonCardProps> = ({
         rx={CARD_R}
         fill="var(--fe-card)" 
         stroke="var(--fe-card-border)"
+        strokeWidth="1"
         filter="url(#feCardShadow)"
         className="cursor-pointer hover:stroke-primary transition-colors"
         onClick={onClick}
       />
 
-      {/* Left gender tile */}
-      <rect 
-        x={TILE_X} 
-        y={TILE_Y} 
-        width={TILE_W} 
-        height={TILE_H} 
-        rx={TILE_R}
-        fill={genderFill(person.gender)}
+      {/* Photo area */}
+      <rect
+        x={PHOTO_X}
+        y={PHOTO_Y} 
+        width={PHOTO_W}
+        height={PHOTO_H}
+        rx={PHOTO_R}
+        fill="#f0f0f0"
+        stroke="var(--fe-card-border)"
+        strokeWidth="1"
       />
 
-      {/* White silhouette */}
-      <g transform={`translate(${TILE_X+6},${TILE_Y+6})`}>
-        <path
-          d="M30 18c0 5.5-4.5 10-10 10S10 23.5 10 18 14.5 8 20 8s10 4.5 10 10z M40 54c0-9-9-16-20-16S0 45 0 54v6h40v-6z"
-          fill="#fff" 
-          opacity=".95"
-        />
-      </g>
-
-      {/* Round avatar (optional) */}
-      {person.avatar_url && (
+      {/* Photo or avatar */}
+      {person.avatar_url ? (
         <>
           <clipPath id={`clip-${person.id}`}>
-            <circle cx={AVATAR_X + AVATAR_SIZE/2} cy={AVATAR_Y + AVATAR_SIZE/2} r={AVATAR_SIZE/2}/>
+            <rect x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H} rx={PHOTO_R}/>
           </clipPath>
           <image 
             href={person.avatar_url} 
-            x={AVATAR_X} 
-            y={AVATAR_Y} 
-            width={AVATAR_SIZE} 
-            height={AVATAR_SIZE}
+            x={PHOTO_X} 
+            y={PHOTO_Y} 
+            width={PHOTO_W} 
+            height={PHOTO_H}
             clipPath={`url(#clip-${person.id})`}
-          />
-          <circle 
-            cx={AVATAR_X + AVATAR_SIZE/2} 
-            cy={AVATAR_Y + AVATAR_SIZE/2} 
-            r={AVATAR_SIZE/2} 
-            fill="none" 
-            stroke="#fff" 
-            strokeWidth="2"
+            preserveAspectRatio="xMidYMid slice"
           />
         </>
+      ) : (
+        /* Initials fallback */
+        <text 
+          x={PHOTO_X + PHOTO_W / 2} 
+          y={PHOTO_Y + PHOTO_H / 2 + 6} 
+          textAnchor="middle"
+          className="fill-muted-foreground text-xl font-semibold"
+        >
+          {initials}
+        </text>
       )}
 
       {/* Name */}
       <text 
         x={NAME_X} 
         y={NAME_Y} 
+        textAnchor="middle"
         className="fe-name"
       >
         {person.full_name}
       </text>
       
       {/* Dates */}
-      <text 
-        x={NAME_X} 
-        y={DATES_Y} 
-        className="fe-dates"
-      >
-        {dates}
-      </text>
+      {dates && (
+        <text 
+          x={NAME_X} 
+          y={DATES_Y} 
+          textAnchor="middle"
+          className="fe-dates"
+        >
+          {dates}
+        </text>
+      )}
 
       {/* Quick add zones */}
       {onQuickAdd && (

@@ -303,22 +303,35 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     
     const focusPerson = people.find(p => p.id === focusPersonId) || people[0]
     const focusName = focusPerson ? 
-      `${focusPerson.given_name || ''} ${focusPerson.surname || ''}`.trim() : 'Focus'
+      (focusPerson.given_name || focusPerson.full_name || '').split(' ')[0] : 'Focus'
     
     // Group nodes by their Y position to identify generations
-    const generationYs = new Set(nodes.map(n => n.y))
-    const sortedYs = Array.from(generationYs).sort((a, b) => a - b)
+    const generationGroups = new Map<number, typeof nodes>()
+    nodes.forEach(node => {
+      const y = Math.round(node.y / 50) * 50 // Group by approximate Y position
+      if (!generationGroups.has(y)) {
+        generationGroups.set(y, [])
+      }
+      generationGroups.get(y)!.push(node)
+    })
+    
+    const sortedYs = Array.from(generationGroups.keys()).sort((a, b) => a - b)
     
     return sortedYs.map((y, index) => {
+      const nodesInGeneration = generationGroups.get(y) || []
       const caption = captionForDepth(index, focusName)
-      if (!caption) return null
+      if (!caption || !nodesInGeneration.length) return null
       
-      const canvasWidth = svgRef.current?.clientWidth || 800
+      // Position caption centered under the generation
+      const minX = Math.min(...nodesInGeneration.map(n => n.x))
+      const maxX = Math.max(...nodesInGeneration.map(n => n.x))
+      const centerX = (minX + maxX) / 2
+      
       return (
         <text 
           key={`caption-${y}`}
-          x={0} 
-          y={y + CARD_H / 2 + 40} 
+          x={centerX} 
+          y={y + CARD_H / 2 + 50} 
           className="fe-caption"
         >
           {caption}
@@ -510,26 +523,21 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
           /* Family Explorer "Ancestry" skin */
           :root {
             /* Canvas + grid */
-            --fe-canvas: #3B3C41;
-            --fe-grid: rgba(255,255,255,.04);
+            --fe-canvas: #4A4A4A;
+            --fe-grid: rgba(255,255,255,.05);
 
             /* Cards */
             --fe-card: #FFFFFF;
-            --fe-card-border: #D9D9DF;
-            --fe-shadow: rgba(0,0,0,.20);
+            --fe-card-border: #E0E0E0;
+            --fe-shadow: rgba(0,0,0,.15);
 
             /* Text */
-            --fe-ink: #1F2328;
-            --fe-ink-muted: #6B7280;
-
-            /* Gender tiles */
-            --fe-male: #8DA9C4;
-            --fe-female: #E6B0A0;
-            --fe-unknown: #C3C7CF;
+            --fe-ink: #333333;
+            --fe-ink-muted: #666666;
 
             /* Lines */
-            --fe-line: #C9CCD4;
-            --fe-line-strong: #AEB3BE;
+            --fe-line: #B8B8B8;
+            --fe-line-strong: #999999;
           }
           
           .fe-canvas{
@@ -540,9 +548,9 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
             background-size: 24px 24px, 24px 24px;
             background-position: 0 0, 12px 12px;
           }
-          .fe-caption{ font:600 12px/1.1 Inter, system-ui; fill:rgba(255,255,255,.85); text-anchor:middle; }
-          .fe-name{ font:600 13px/1.2 Inter, system-ui; fill:var(--fe-ink); }
-          .fe-dates{ font:12px/1.2 Inter, system-ui; fill:var(--fe-ink-muted); }
+          .fe-caption{ font:600 11px/1.1 Inter, system-ui; fill:rgba(255,255,255,.90); text-anchor:middle; }
+          .fe-name{ font:600 11px/1.3 Inter, system-ui; fill:var(--fe-ink); text-anchor:middle; }
+          .fe-dates{ font:400 10px/1.2 Inter, system-ui; fill:var(--fe-ink-muted); text-anchor:middle; }
         `}</style>
         
         <svg
