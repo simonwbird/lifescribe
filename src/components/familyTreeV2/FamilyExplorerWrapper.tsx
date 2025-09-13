@@ -22,6 +22,12 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
     loadData()
   }, [familyId, focusPersonId])
 
+  // Force reload every 2 seconds to catch DB changes (temporary debug)
+  useEffect(() => {
+    const interval = setInterval(loadData, 2000)
+    return () => clearInterval(interval)
+  }, [familyId])
+
   const loadData = async () => {
     try {
       const data = await FamilyTreeService.getTreeData(familyId, focusPersonId || undefined)
@@ -78,6 +84,8 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
 
       // 3) Quick sanity logs (optional)
       console.log('[Tree] people:', convertedPeople.length, 'rels:', rels.length, 'focus:', focusPersonId)
+      console.log('[Tree] People:', convertedPeople.map(p => p.given_name))
+      console.log('[Tree] Relationships:', rels)
 
       setPeople(convertedPeople)
       setRelationships(rels)
