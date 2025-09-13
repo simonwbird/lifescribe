@@ -366,7 +366,6 @@ export class CsvImportService {
     const childrenToInsert: Array<{
       family_id: string
       child_id: string
-      created_by: string
     }> = []
 
     // Group relationships by family and type
@@ -417,8 +416,7 @@ export class CsvImportService {
               if (childDbId) {
                 childrenToInsert.push({
                   family_id: insertedFamily.id,
-                  child_id: childDbId,
-                  created_by: userId
+                  child_id: childDbId
                 })
               }
             })
@@ -448,8 +446,7 @@ export class CsvImportService {
               if (childDbId) {
                 childrenToInsert.push({
                   family_id: insertedFamily.id,
-                  child_id: childDbId,
-                  created_by: userId
+                  child_id: childDbId
                 })
               }
             })
