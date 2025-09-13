@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, TreePine } from 'lucide-react'
 import { AncestorFan } from '@/components/familyTreeV2/AncestorFan'
@@ -49,7 +50,9 @@ const FamilyTreeFan = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <>
+      <Header />
+      <div className="h-screen flex flex-col">
       <div className="flex items-center gap-4 p-4 border-b bg-background">
         <Button variant="ghost" size="sm" onClick={() => navigate('/family/tree')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -66,7 +69,8 @@ const FamilyTreeFan = () => {
           onPersonClick={(personId) => navigate(`/family-tree/explorer?focus=${personId}`)}
         />
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
