@@ -77,18 +77,18 @@ small, .overline {
 
     --radius: 0.5rem;
 
-    /* LifeScribe scrapbook color palette - muted, warm, nostalgic */
+    /* LifeScribe celebration color palette - warm, joyful, life-affirming */
     --scrapbook-cream: 45 25% 92%;        /* Soft cream background */
     --scrapbook-beige: 42 20% 85%;        /* Warm beige */
     --scrapbook-sage: 120 15% 70%;        /* Muted sage green */
     --scrapbook-blue: 210 25% 75%;        /* Soft dusty blue */
     --scrapbook-charcoal: 220 15% 25%;    /* Deep charcoal for text */
-    --scrapbook-brown: 25 30% 45%;        /* Rich brown accent */
+    --scrapbook-coral: 12 85% 65%;        /* Warm coral - celebrating life */
     --scrapbook-paper: 42 15% 96%;        /* Paper white */
     --scrapbook-shadow: 220 10% 10%;      /* Soft shadow */
     
-    /* Override brand colors with scrapbook palette */
-    --brand-primary: var(--scrapbook-brown);
+    /* Override brand colors with celebration palette */
+    --brand-primary: var(--scrapbook-coral);
     --brand-primary-foreground: var(--scrapbook-paper);
     --brand-secondary: var(--scrapbook-sage);
     --brand-secondary-foreground: var(--scrapbook-charcoal);
@@ -97,8 +97,8 @@ small, .overline {
     --brand-green: 142 65% 45%;        /* Accessible green for Create CTA */
     --brand-green-foreground: 0 0% 100%;
     
-    /* Scrapbook-inspired gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--scrapbook-brown)), hsl(var(--scrapbook-sage)));
+    /* Life-celebrating gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--scrapbook-coral)), hsl(var(--scrapbook-sage)));
     --gradient-paper: linear-gradient(to bottom right, hsl(var(--scrapbook-paper)), hsl(var(--scrapbook-cream)));
     --gradient-subtle: linear-gradient(to bottom, hsl(var(--scrapbook-paper)), hsl(var(--scrapbook-beige) / 0.3));
     
