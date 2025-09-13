@@ -312,14 +312,35 @@ export class CsvImportService {
   ): Promise<void> {
     const { people, relationships } = preview
 
+    // Helper function to parse dates safely
+    const parseDate = (dateStr: string): string | null => {
+      if (!dateStr || dateStr.trim() === '') return null
+      
+      // Handle formats like "1984.0" - remove decimal part
+      let cleanDateStr = dateStr.replace(/\.0$/, '')
+      
+      // If it's just a year (4 digits), assume January 1st
+      if (/^\d{4}$/.test(cleanDateStr)) {
+        cleanDateStr = `${cleanDateStr}-01-01`
+      }
+      
+      const date = new Date(cleanDateStr)
+      if (isNaN(date.getTime())) {
+        console.warn(`Invalid date format: ${dateStr}`)
+        return null
+      }
+      
+      return date.toISOString().split('T')[0]
+    }
+
     // Insert people
     const peopleToInsert = people.map(person => ({
       family_id: familyId,
       given_name: person.given_name || null,
       surname: person.surname || null,
       sex: person.sex || null,
-      birth_date: person.birth_date ? new Date(person.birth_date).toISOString().split('T')[0] : null,
-      death_date: person.death_date ? new Date(person.death_date).toISOString().split('T')[0] : null,
+      birth_date: parseDate(person.birth_date || ''),
+      death_date: parseDate(person.death_date || ''),
       is_living: person.is_living === 'Y',
       source_xref: person.person_id,
       created_by: userId
