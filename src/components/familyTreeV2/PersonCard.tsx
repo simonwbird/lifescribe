@@ -1,12 +1,12 @@
 import React from "react";
 import { NodeRect, Person } from "../../lib/familyTreeV2Types";
 
-/** Card constants (Ancestry proportions) */
-export const CARD_W = 156;
-export const CARD_H = 208;
+/** Card constants (Ancestry proportions - redesigned for vertical layout) */
+export const CARD_W = 140;
+export const CARD_H = 180;
 export const CARD_R = 12;
 
-const TILE_X = 10, TILE_Y = 10, TILE_W = 56, TILE_H = 76, TILE_R = 8;
+const PHOTO_X = 10, PHOTO_Y = 10, PHOTO_W = 120, PHOTO_H = 90, PHOTO_R = 8;
 
 const TOKENS = {
   card: "#FFFFFF",
@@ -28,25 +28,43 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
   const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
   const name = fullName(person);
   
-  // Truncate long names to fit card width
-  const maxNameChars = 16; // Adjust based on card width and font size
-  const displayName = name.length > maxNameChars ? `${name.slice(0, maxNameChars - 1)}…` : name;
+  // Split name for better fitting
+  const nameParts = name.split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
 
   return (
     <g transform={`translate(${Math.round(rect.x)},${Math.round(rect.y)})`}>
       <rect width={CARD_W} height={CARD_H} rx={CARD_R} fill={TOKENS.card} stroke={TOKENS.cardBorder}
             filter="url(#feCardShadow)" />
-      <rect x={TILE_X} y={TILE_Y} width={TILE_W} height={TILE_H} rx={TILE_R} fill={genderFill(person.sex)} />
-      <path
-        d="M36 28c0 7.18-5.82 13-13 13s-13-5.82-13-13S15.82 15 23 15s13 5.82 13 13zm10 38c0-11.7-10.3-21-23-21S0 54.3 0 66v8h46v-8z"
-        transform="translate(14,12)" fill="#fff" opacity="0.95"
-      />
-      <text x={TILE_X + TILE_W + 10} y={30}
-            style={{ fontFamily: font, fontSize: 13, fontWeight: 600, fill: TOKENS.name }}>
-        <tspan>{displayName}</tspan>
+      
+      {/* Photo area at top */}
+      <rect x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H} rx={PHOTO_R} 
+            fill={genderFill(person.sex)} />
+      
+      {/* Person silhouette icon */}
+      <g transform={`translate(${PHOTO_X + PHOTO_W/2 - 23}, ${PHOTO_Y + PHOTO_H/2 - 30})`}>
+        <path
+          d="M23 28c6.627 0 12-5.373 12-12S29.627 4 23 4s-12 5.373-12 12 5.373 12 12 12zm0 4C15.268 32 0 36.268 0 44v4h46v-4c0-7.732-15.268-12-23-12z"
+          fill="#fff" opacity="0.9"
+        />
+      </g>
+      
+      {/* Name below photo - centered and wrapped */}
+      <text x={CARD_W/2} y={PHOTO_Y + PHOTO_H + 20} textAnchor="middle"
+            style={{ fontFamily: font, fontSize: 12, fontWeight: 600, fill: TOKENS.name }}>
+        {firstName}
       </text>
-      <text x={TILE_X + TILE_W + 10} y={50}
-            style={{ fontFamily: font, fontSize: 12, fill: TOKENS.dates }}>
+      {lastName && (
+        <text x={CARD_W/2} y={PHOTO_Y + PHOTO_H + 35} textAnchor="middle"
+              style={{ fontFamily: font, fontSize: 12, fontWeight: 600, fill: TOKENS.name }}>
+          {lastName}
+        </text>
+      )}
+      
+      {/* Dates at bottom - centered */}
+      <text x={CARD_W/2} y={CARD_H - 15} textAnchor="middle"
+            style={{ fontFamily: font, fontSize: 11, fill: TOKENS.dates }}>
         {dates}
       </text>
     </g>
