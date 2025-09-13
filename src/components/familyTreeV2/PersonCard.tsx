@@ -26,6 +26,11 @@ const fullName = (p: Person) => (p.given_name + " " + (p.surname ?? "")).trim();
 export function PersonCard({ rect, person }: { rect: NodeRect; person: Person }) {
   const b = yr(person.birth_date), d = yr(person.death_date);
   const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
+  const name = fullName(person);
+  
+  // Truncate long names to fit card width
+  const maxNameChars = 16; // Adjust based on card width and font size
+  const displayName = name.length > maxNameChars ? `${name.slice(0, maxNameChars - 1)}…` : name;
 
   return (
     <g transform={`translate(${Math.round(rect.x)},${Math.round(rect.y)})`}>
@@ -38,7 +43,7 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
       />
       <text x={TILE_X + TILE_W + 10} y={30}
             style={{ fontFamily: font, fontSize: 13, fontWeight: 600, fill: TOKENS.name }}>
-        {fullName(person)}
+        <tspan>{displayName}</tspan>
       </text>
       <text x={TILE_X + TILE_W + 10} y={50}
             style={{ fontFamily: font, fontSize: 12, fill: TOKENS.dates }}>
