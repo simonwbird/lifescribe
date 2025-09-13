@@ -98,6 +98,8 @@ export default function HomeV2() {
   const [streak, setStreak] = useState({ current: 4, target: 7 })
   const [simpleMode, setSimpleMode] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [activitiesPage, setActivitiesPage] = useState(1)
+  const activitiesPerPage = 5
   const [selectedCaptureMode, setSelectedCaptureMode] = useState<'write' | 'photo' | 'voice' | 'video'>('write')
   
   const navigate = useNavigate()
@@ -698,35 +700,74 @@ export default function HomeV2() {
                       <TabsTrigger value="invites">Invites</TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="all" className="space-y-3 mt-4">
-                      {activities.map((activity) => (
-                        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${activity.unread ? 'bg-primary' : 'bg-muted'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm">
-                              <span className="font-medium">{activity.actor}</span>{' '}
-                              <span className="text-muted-foreground">{activity.action}</span>{' '}
-                              <span className="font-medium">{activity.target}</span>
-                            </p>
-                            {activity.snippet && (
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                {activity.snippet}
-                              </p>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="sm">View</Button>
-                            <Button variant="ghost" size="sm">
-                              <Heart className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <MessageCircle className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </TabsContent>
+                     <TabsContent value="all" className="space-y-3 mt-4">
+                       {activities
+                         .slice((activitiesPage - 1) * activitiesPerPage, activitiesPage * activitiesPerPage)
+                         .map((activity) => (
+                         <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors">
+                           <div className={`w-2 h-2 rounded-full mt-2 ${activity.unread ? 'bg-primary' : 'bg-muted'}`} />
+                           <div className="flex-1 min-w-0">
+                             <p className="text-sm">
+                               <span className="font-medium">{activity.actor}</span>{' '}
+                               <span className="text-muted-foreground">{activity.action}</span>{' '}
+                               <span className="font-medium">{activity.target}</span>
+                             </p>
+                             {activity.snippet && (
+                               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                 {activity.snippet}
+                               </p>
+                             )}
+                             <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                           </div>
+                           <div className="flex gap-1">
+                             <Button variant="ghost" size="sm">View</Button>
+                             <Button variant="ghost" size="sm">
+                               <Heart className="h-3 w-3" />
+                             </Button>
+                             <Button variant="ghost" size="sm">
+                               <MessageCircle className="h-3 w-3" />
+                             </Button>
+                           </div>
+                         </div>
+                       ))}
+                       
+                       {/* Pagination */}
+                       {activities.length > activitiesPerPage && (
+                         <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t">
+                           <Button 
+                             variant="outline" 
+                             size="sm" 
+                             onClick={() => setActivitiesPage(Math.max(1, activitiesPage - 1))}
+                             disabled={activitiesPage === 1}
+                           >
+                             Previous
+                           </Button>
+                           
+                           <div className="flex gap-1">
+                             {Array.from({ length: Math.ceil(activities.length / activitiesPerPage) }, (_, i) => i + 1).map((page) => (
+                               <Button
+                                 key={page}
+                                 variant={activitiesPage === page ? "default" : "outline"}
+                                 size="sm"
+                                 onClick={() => setActivitiesPage(page)}
+                                 className="w-8 h-8"
+                               >
+                                 {page}
+                               </Button>
+                             ))}
+                           </div>
+                           
+                           <Button 
+                             variant="outline" 
+                             size="sm" 
+                             onClick={() => setActivitiesPage(Math.min(Math.ceil(activities.length / activitiesPerPage), activitiesPage + 1))}
+                             disabled={activitiesPage === Math.ceil(activities.length / activitiesPerPage)}
+                           >
+                             Next
+                           </Button>
+                         </div>
+                       )}
+                     </TabsContent>
                     
                     {/* Other tabs would show filtered content */}
                     <TabsContent value="stories">Stories activity...</TabsContent>
