@@ -243,8 +243,8 @@ export default function PersonProfile() {
   }
 
   const getRelationshipSummary = () => {
-    const parents = relationships.filter(r => r.relationship_type === 'parent' && r.from_person_id === person?.id)
-    const children = relationships.filter(r => r.relationship_type === 'parent' && r.to_person_id === person?.id)
+    const children = relationships.filter(r => r.relationship_type === 'parent' && r.from_person_id === person?.id)
+    const parents = relationships.filter(r => r.relationship_type === 'parent' && r.to_person_id === person?.id)
     const spouses = relationships.filter(r => r.relationship_type === 'spouse' && 
       (r.from_person_id === person?.id || r.to_person_id === person?.id))
 
@@ -517,9 +517,9 @@ export default function PersonProfile() {
                           <h4 className="font-medium text-sm text-muted-foreground mb-2">Parents</h4>
                           <div className="flex flex-wrap gap-2">
                             {parents.map((rel) => (
-                              <Link key={rel.id} to={`/people/${rel.to_person_id}`}>
+                              <Link key={rel.id} to={`/people/${rel.from_person_id}`}>
                                 <Badge variant="outline" className="hover:bg-muted">
-                                  {getPersonDisplayName(rel.to_people)}
+                                  {getPersonDisplayName(rel.from_people)}
                                 </Badge>
                               </Link>
                             ))}
@@ -551,9 +551,9 @@ export default function PersonProfile() {
                           <h4 className="font-medium text-sm text-muted-foreground mb-2">Children</h4>
                           <div className="flex flex-wrap gap-2">
                             {children.map((rel) => (
-                              <Link key={rel.id} to={`/people/${rel.from_person_id}`}>
+                              <Link key={rel.id} to={`/people/${rel.to_person_id}`}>
                                 <Badge variant="outline" className="hover:bg-muted">
-                                  {getPersonDisplayName(rel.from_people)}
+                                  {getPersonDisplayName(rel.to_people)}
                                 </Badge>
                               </Link>
                             ))}
