@@ -474,24 +474,19 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       }
     })
 
-    return (
-      <>
-        {/* Debug info */}
-        <text x="400" y="150" fill="green" fontSize="14">
-          Unions: {unionConnections.length}, Parents: {parentConnections.length}
-        </text>
-        
-        <ConnectionRenderer 
-          parentConnections={parentConnections}
-          spouseConnections={[]} // Using unionConnections instead
-          unionConnections={unionConnections}
-        />
-      </>
-    )
+      return (
+        <>
+          <ConnectionRenderer 
+            parentConnections={parentConnections}
+            spouseConnections={[]} 
+            unionConnections={unionConnections}
+          />
+        </>
+      )
   }
 
   return (
-    <div className="w-full h-full relative fe-canvas">
+    <div className="w-full h-full relative fe-canvas" style={{ background: '#F8F9FA' }}>
       {/* Toolbar */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
@@ -564,15 +559,8 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         </defs>
         
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-          {/* DEBUG: Test if SVG rendering works at all */}
-          <rect x="0" y="0" width="200" height="100" fill="red" opacity="0.5" />
-          <text x="100" y="50" fill="white" fontSize="16" textAnchor="middle">DEBUG SVG</text>
-          
           {/* Render connections FIRST (behind cards) */}
           {renderConnections()}
-          
-          {/* Then render union nodes */}
-          {unions.map(renderUnionNode)}
           
           {/* Then render person cards on top */}
           {nodes.map(renderPersonNode)}
