@@ -111,15 +111,32 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     console.debug('Layout nodes:', layout.nodes.length)
     setNodes(layout.nodes)
     setUnions(layout.unions)
-    const focusNode = layout.nodes.find(n => n.id === focusId)
-    if (focusNode && svgRef.current) {
-      const svgWidth = svgRef.current.clientWidth || 800
-      const svgHeight = svgRef.current.clientHeight || 600
-      setPan({ 
-        x: svgWidth / 2 - focusNode.x, 
-        y: svgHeight / 2 - focusNode.y 
-      })
-    }
+    
+    // Auto-fit view to show all nodes on screen
+    setTimeout(() => {
+      if (layout.nodes.length > 0) {
+        const minX = Math.min(...layout.nodes.map(n => n.x))
+        const maxX = Math.max(...layout.nodes.map(n => n.x))
+        const minY = Math.min(...layout.nodes.map(n => n.y))
+        const maxY = Math.max(...layout.nodes.map(n => n.y))
+        
+        const width = maxX - minX + 200
+        const height = maxY - minY + 200
+        
+        const svgWidth = svgRef.current?.clientWidth || 800
+        const svgHeight = svgRef.current?.clientHeight || 600
+        
+        const scaleX = svgWidth / width
+        const scaleY = svgHeight / height
+        const scale = Math.min(scaleX, scaleY, 1)
+        
+        setZoom(scale)
+        setPan({
+          x: svgWidth / 2 - (minX + maxX) / 2,
+          y: svgHeight / 2 - (minY + maxY) / 2
+        })
+      }
+    }, 100)
   }
 
   const handleZoomIn = () => {
