@@ -39,7 +39,7 @@ const Hero = () => (
             </p>
             <h1 className="text-hero lg:text-6xl font-serif font-bold leading-tight text-foreground">
               Some memories fade.{" "}
-              <span className="text-brand-primary">
+              <span className="text-brand-500">
                 Yours don't have to.
               </span>
             </h1>
@@ -48,20 +48,21 @@ const Hero = () => (
             LifeScribe is a private home for the memories that matter most — the voices, photos, recipes, and adventures you never want to lose.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
-            <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">
+            <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg">
               <Link to="/onboarding">
                 Begin Your Family Album <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="lg" className="text-lg px-8 py-6 text-muted-foreground hover:text-foreground">
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 text-brand-700 border-brand-700 hover:bg-brand-700 hover:text-white">
               <a href="#how-it-works">
                 See how it works
               </a>
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground text-center lg:text-left">
-            Private by default · Family-only access
-          </p>
+          <div className="flex gap-2 justify-center lg:justify-start">
+            <span className="chip">Private by default</span>
+            <span className="chip">Family-only access</span>
+          </div>
         </div>
         <div className="relative">
           <div className="relative rounded-lg overflow-hidden shadow-photo bg-card border border-border">
@@ -70,7 +71,6 @@ const Hero = () => (
               alt="Multi-generational family sharing stories and memories together around a table"
               className="w-full h-full object-cover aspect-[4/3]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-scrapbook-shadow/20 to-transparent"></div>
           </div>
           {/* Decorative photo corner */}
           <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-card border border-border rounded-lg shadow-frame transform rotate-6 opacity-80"></div>
@@ -82,7 +82,7 @@ const Hero = () => (
 
 // EXPERIENCE SECTION
 const ExperienceSection = () => (
-  <section className="py-20 bg-muted/30 relative">
+  <section className="py-20 bg-neutral-section relative">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16 space-y-6">
@@ -97,8 +97,8 @@ const ExperienceSection = () => (
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
-              <div className="p-3 bg-brand-accent rounded-lg">
-                <TreePine className="h-6 w-6 text-brand-primary" />
+              <div className="p-3 bg-neutral-canvas rounded-lg">
+                <TreePine className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Tree that grows with your family</h3>
@@ -107,8 +107,8 @@ const ExperienceSection = () => (
             </div>
             
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
-              <div className="p-3 bg-brand-accent rounded-lg">
-                <Clock className="h-6 w-6 text-brand-primary" />
+              <div className="p-3 bg-neutral-canvas rounded-lg">
+                <Clock className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Timelines you can wander</h3>
@@ -117,8 +117,8 @@ const ExperienceSection = () => (
             </div>
             
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
-              <div className="p-3 bg-brand-accent rounded-lg">
-                <BookHeart className="h-6 w-6 text-brand-primary" />
+              <div className="p-3 bg-neutral-canvas rounded-lg">
+                <BookHeart className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Recipes & heirlooms with their stories</h3>
@@ -127,8 +127,8 @@ const ExperienceSection = () => (
             </div>
             
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
-              <div className="p-3 bg-brand-accent rounded-lg">
-                <Heart className="h-6 w-6 text-brand-primary" />
+              <div className="p-3 bg-neutral-canvas rounded-lg">
+                <Heart className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Voices you can replay</h3>
@@ -168,8 +168,8 @@ const BenefitsSection = () => (
         <div className="grid md:grid-cols-2 gap-12">
           <div className="space-y-8">
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-brand-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                <Users className="h-6 w-6 text-brand-secondary-foreground" />
+              <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
+                <Users className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">Grandparents sharing stories the kids will listen to again and again</h3>
@@ -178,8 +178,8 @@ const BenefitsSection = () => (
             </div>
             
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-brand-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                <BookHeart className="h-6 w-6 text-brand-secondary-foreground" />
+              <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
+                <BookHeart className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">Old photos no longer tucked away in dusty boxes</h3>
@@ -190,8 +190,8 @@ const BenefitsSection = () => (
           
           <div className="space-y-8">
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-brand-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                <Globe className="h-6 w-6 text-brand-secondary-foreground" />
+              <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
+                <Globe className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">Family scattered across the world, connected in one place</h3>
@@ -200,8 +200,8 @@ const BenefitsSection = () => (
             </div>
             
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-brand-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                <Home className="h-6 w-6 text-brand-secondary-foreground" />
+              <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
+                <Home className="h-6 w-6 text-seaglass" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">A safe space that feels like home — private, warm, and only for you</h3>
@@ -217,18 +217,18 @@ const BenefitsSection = () => (
 
 // EMOTIONAL MOMENT SECTION
 const EmotionalSection = () => (
-  <section className="py-20 bg-muted/20 relative overflow-hidden">
+  <section className="py-20 bg-neutral-section relative overflow-hidden">
     <div className="container mx-auto px-4 text-center">
       <div className="max-w-5xl mx-auto space-y-8">
         <h2 className="text-hero font-serif font-bold leading-tight text-foreground">
           Imagine your granddaughter discovering the recipe you cooked every Sunday, 
-          <span className="text-brand-primary italic"> in your handwriting.</span> 
+          <span className="text-brand-500 italic"> in your handwriting.</span> 
           Or hearing your laugh for the very first time.
         </h2>
         <p className="text-body font-sans text-muted-foreground leading-relaxed max-w-4xl mx-auto">
           LifeScribe makes sure the details — the ones that make life beautiful — are never forgotten.
         </p>
-        <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">
+        <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg">
           <Link to="/onboarding">
             Preserve a Memory Today <Heart className="ml-2 h-5 w-5" />
           </Link>
@@ -246,7 +246,7 @@ const TestimonialCard = ({ quote, author }: { quote: string, author: string }) =
   <Card className="bg-card rounded-lg shadow-photo border border-border p-6 h-full relative">
     <CardContent className="p-0">
       <div className="mb-6">
-        <div className="text-4xl text-brand-primary font-serif leading-none">"</div>
+        <div className="text-4xl text-brand-500 font-serif leading-none">"</div>
       </div>
       <p className="text-lg font-sans mb-6 italic leading-relaxed text-foreground">
         {quote}
@@ -254,7 +254,7 @@ const TestimonialCard = ({ quote, author }: { quote: string, author: string }) =
       <p className="font-sans font-medium text-muted-foreground">— {author}</p>
     </CardContent>
     {/* Decorative corner */}
-    <div className="absolute -top-2 -right-2 w-6 h-6 bg-brand-accent rounded-full opacity-60"></div>
+    <div className="absolute -top-2 -right-2 w-6 h-6 bg-seaglass rounded-full opacity-60"></div>
   </Card>
 )
 
@@ -288,25 +288,25 @@ const TestimonialsSection = () => (
 )
 
 const PrivacySection = () => (
-  <section className="py-16 bg-muted/20">
+  <section className="py-16 bg-neutral-section">
     <div className="container mx-auto px-4">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-2xl font-serif font-semibold mb-8 text-foreground">Why it's safe</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="space-y-2">
-            <Lock className="h-8 w-8 text-brand-primary mx-auto" />
+            <Lock className="h-8 w-8 text-seaglass mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">Private by default</p>
           </div>
           <div className="space-y-2">
-            <Users className="h-8 w-8 text-brand-primary mx-auto" />
+            <Users className="h-8 w-8 text-seaglass mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">Invite-only</p>
           </div>
           <div className="space-y-2">
-            <ArrowRight className="h-8 w-8 text-brand-primary mx-auto" />
+            <ArrowRight className="h-8 w-8 text-seaglass mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">Export anytime</p>
           </div>
           <div className="space-y-2">
-            <Home className="h-8 w-8 text-brand-primary mx-auto" />
+            <Home className="h-8 w-8 text-seaglass mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">You own your data</p>
           </div>
         </div>
@@ -317,7 +317,7 @@ const PrivacySection = () => (
 
 // HOW IT WORKS
 const HowItWorksSection = () => (
-  <section className="py-20 bg-muted/30" id="how-it-works">
+  <section className="py-20 bg-neutral-canvas" id="how-it-works">
     <div className="container mx-auto px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
@@ -328,7 +328,7 @@ const HowItWorksSection = () => (
         
         <div className="grid md:grid-cols-3 gap-12">
           <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-brand-primary rounded-lg flex items-center justify-center text-brand-primary-foreground text-2xl font-serif font-bold shadow-frame">
+            <div className="mx-auto w-16 h-16 bg-brand-700 rounded-lg flex items-center justify-center text-white text-2xl font-serif font-bold shadow-frame">
               1
             </div>
             <h3 className="text-2xl font-serif font-semibold text-foreground">Answer a gentle prompt</h3>
@@ -336,7 +336,7 @@ const HowItWorksSection = () => (
           </div>
           
           <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-brand-primary rounded-lg flex items-center justify-center text-brand-primary-foreground text-2xl font-serif font-bold shadow-frame">
+            <div className="mx-auto w-16 h-16 bg-brand-700 rounded-lg flex items-center justify-center text-white text-2xl font-serif font-bold shadow-frame">
               2
             </div>
             <h3 className="text-2xl font-serif font-semibold text-foreground">Snap a photo or scan a document</h3>
@@ -344,7 +344,7 @@ const HowItWorksSection = () => (
           </div>
           
           <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-brand-primary rounded-lg flex items-center justify-center text-brand-primary-foreground text-2xl font-serif font-bold shadow-frame">
+            <div className="mx-auto w-16 h-16 bg-brand-700 rounded-lg flex items-center justify-center text-white text-2xl font-serif font-bold shadow-frame">
               3
             </div>
             <h3 className="text-2xl font-serif font-semibold text-foreground">Invite family to listen, share, and add their own</h3>
@@ -363,21 +363,21 @@ const FinalCallToAction = () => (
       <div className="max-w-5xl mx-auto space-y-8">
         <h2 className="text-hero font-serif font-bold leading-tight text-foreground">
           Your story is a gift.{" "}
-          <span className="text-brand-primary">Pass it on.</span>
+          <span className="text-brand-500">Pass it on.</span>
         </h2>
         <p className="text-body font-sans text-muted-foreground leading-relaxed max-w-3xl mx-auto">
           Join the families building their own living archives with LifeScribe.
         </p>
-        <Button asChild size="lg" className="text-xl px-12 py-8 rounded-md font-sans font-medium bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground shadow-photo transition-all duration-300 hover:shadow-lg">
+        <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg">
           <Link to="/onboarding">
-            Begin Today with LifeScribe <ArrowRight className="ml-3 h-6 w-6" />
+            Start Your Family Album <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>
       </div>
     </div>
     {/* Decorative elements */}
-    <div className="absolute top-16 left-16 w-16 h-20 bg-card border border-border rounded-sm shadow-frame transform rotate-12 opacity-40"></div>
-    <div className="absolute bottom-16 right-16 w-20 h-16 bg-card border border-border rounded-sm shadow-frame transform -rotate-6 opacity-40"></div>
+    <div className="absolute top-16 left-16 w-20 h-20 bg-card border border-border rounded-full shadow-frame opacity-40"></div>
+    <div className="absolute bottom-16 right-16 w-16 h-16 bg-card border border-border rounded-lg shadow-frame transform rotate-45 opacity-40"></div>
   </section>
 )
 

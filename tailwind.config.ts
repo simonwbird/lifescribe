@@ -61,7 +61,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Warm terracotta brand palette
+        // Sunrise Coral brand palette
         brand: {
           700: "hsl(var(--brand-700))",
           600: "hsl(var(--brand-600))", 
@@ -80,13 +80,14 @@ export default {
           DEFAULT: "hsl(var(--ink))",
           muted: "hsl(var(--ink-muted))",
         },
-        // Layout neutrals
+        // Layout neutrals - warm peach palette
         neutral: {
           canvas: "hsl(var(--neutral-canvas))",
-          sand: "hsl(var(--neutral-sand))",
+          section: "hsl(var(--neutral-section))",
           card: "hsl(var(--neutral-card))",
-          bluegray: "hsl(var(--neutral-bluegray))",
         },
+        // Counter-accent - fresh sea-glass
+        seaglass: "hsl(var(--seaglass))",
         // State colors
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
@@ -112,7 +113,7 @@ export default {
       },
       boxShadow: {
         card: "0 8px 24px rgba(0,0,0,0.06)",
-        focus: "0 0 0 3px rgba(39,26,20,0.35)",
+        focus: "0 0 0 2px rgba(34,26,23,0.35)",
       },
       keyframes: {
         "accordion-down": {

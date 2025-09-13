@@ -24,10 +24,10 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
     <div className="text-center space-y-8">
       {/* Hero Actions */}
       <div>
-        <h1 className="text-hero font-serif text-charcoal mb-6">
+        <h1 className="text-hero font-serif text-foreground mb-6">
           Welcome to your family's story
         </h1>
-        <p className="text-body text-warm-gray mb-8 max-w-2xl mx-auto">
+        <p className="text-body text-muted-foreground mb-8 max-w-2xl mx-auto">
           Start building your family's living archive with these simple first steps.
         </p>
         
@@ -35,7 +35,7 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
           <Button
             asChild
             size="lg"
-            className="h-auto p-6 bg-sage hover:bg-sage/90 text-cream"
+            className="h-auto p-6 bg-brand-700 hover:bg-brand-600 text-white"
           >
             <Link to="/stories/new">
               <div className="flex flex-col items-center space-y-3">
@@ -52,14 +52,14 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
             asChild
             size="lg"
             variant="outline"
-            className="h-auto p-6 border-sage/30 hover:bg-sage/5"
+            className="h-auto p-6 border-brand-700 text-brand-700 hover:bg-brand-700 hover:text-white"
           >
             <Link to="/family/members">
               <div className="flex flex-col items-center space-y-3">
-                <UserPlus className="w-8 h-8 text-sage" />
+                <UserPlus className="w-8 h-8" />
                 <div>
-                  <h3 className="text-body font-medium mb-1 text-charcoal">Invite a Family Member</h3>
-                  <p className="text-fine text-warm-gray">Share the joy together</p>
+                  <h3 className="text-body font-medium mb-1">Invite a Family Member</h3>
+                  <p className="text-fine opacity-75">Share the joy together</p>
                 </div>
               </div>
             </Link>
@@ -69,14 +69,14 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
             asChild
             size="lg"
             variant="outline"
-            className="h-auto p-6 border-sage/30 hover:bg-sage/5"
+            className="h-auto p-6 border-brand-700 text-brand-700 hover:bg-brand-700 hover:text-white"
           >
             <Link to="/stories/new">
               <div className="flex flex-col items-center space-y-3">
-                <Image className="w-8 h-8 text-sage" />
+                <Image className="w-8 h-8" />
                 <div>
-                  <h3 className="text-body font-medium mb-1 text-charcoal">Scan a Photo</h3>
-                  <p className="text-fine text-warm-gray">Bring old memories online</p>
+                  <h3 className="text-body font-medium mb-1">Scan a Photo</h3>
+                  <p className="text-fine opacity-75">Bring old memories online</p>
                 </div>
               </div>
             </Link>
@@ -87,7 +87,7 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
       {/* Setup Progress */}
       <Card className="max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-h3 font-serif text-charcoal">
+          <CardTitle className="text-h3 font-serif text-foreground">
             Your Family Hub is {Math.round(progressPercentage)}% set up
           </CardTitle>
         </CardHeader>
@@ -99,13 +99,13 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
               <div key={step.id} className="flex items-center space-x-3">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
                   step.completed 
-                    ? 'bg-sage text-cream' 
-                    : 'border-2 border-warm-gray'
+                    ? 'bg-brand-700 text-white' 
+                    : 'border-2 border-muted-foreground'
                 }`}>
                   {step.completed && <Check className="w-3 h-3" />}
                 </div>
                 <span className={`text-body ${
-                  step.completed ? 'text-sage' : 'text-charcoal'
+                  step.completed ? 'text-brand-700' : 'text-foreground'
                 }`}>
                   {step.label}
                 </span>
