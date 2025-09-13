@@ -1,131 +1,55 @@
-import React from 'react'
-import { 
-  topPort, 
-  bottomPort, 
-  unionBar, 
-  unionYForRow, 
-  roundedOrthogonal, 
-  STEM_LEN, 
-  CORNER_RAD 
-} from './AncestryConnectors'
+// src/components/familyTreeV2/ConnectionRenderer.tsx
+import React from "react";
+import { FamilyGraph, TreeLayout } from "../../lib/familyTreeV2Types";
+import {
+  BAR_W, EDGE_W, STEM_LEN, COLORS,
+  topPort, bottomPort, unionBar, pathUnionToChild, pathParentToChild
+} from "./AncestryConnectors";
 
-interface ConnectionRendererProps {
-  parentConnections: Array<{
-    parentX: number
-    parentY: number
-    childX: number
-    childY: number
-  }>
-  spouseConnections: Array<{
-    spouse1X: number
-    spouse1Y: number
-    spouse2X: number
-    spouse2Y: number
-    rowY: number
-  }>
-  unionConnections?: Array<{
-    unionId: string
-    spouse1: { x: number; y: number }
-    spouse2: { x: number; y: number }
-    children: Array<{ x: number; y: number }>
-    rowY: number
-  }>
-}
-
-export const ConnectionRenderer: React.FC<ConnectionRendererProps> = ({
-  parentConnections,
-  spouseConnections,
-  unionConnections = []
-}) => {
-  console.log('ConnectionRenderer rendering with:', {
-    parentConnections: parentConnections.length,
-    spouseConnections: spouseConnections.length, 
-    unionConnections: unionConnections.length
-  })
-
+export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGraph; layout: TreeLayout }) {
   return (
     <g>
-      {/* Union bars and stems - Ancestry.com style */}
-      {unionConnections.map((union, i) => {
-        const { x1, x2, y, ax, bx } = unionBar(union.spouse1, union.spouse2, union.rowY)
-        const xm = Math.round((x1 + x2) / 2)
-        
+      {layout.unions.map(u => {
+        const a = layout.rects.get(u.a)!;
+        const b = layout.rects.get(u.b)!;
+        const rowY = layout.rows.get(u.depth)!;
+        const { x1, x2, y, ax, bx, xm } = unionBar(a, b, rowY);
+
         return (
-          <g key={`union-${union.unionId}-${i}`}>
-            {/* Subtle stems to union bar */}
-            <path 
-              d={`M${ax},${y - STEM_LEN} V${y}`} 
-              stroke="#AEB3BE" 
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path 
-              d={`M${bx},${y - STEM_LEN} V${y}`} 
-              stroke="#AEB3BE" 
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            
-            {/* Blue union bar - Ancestry style */}
-            <path 
-              d={`M${x1},${y} L${x2},${y}`} 
-              stroke="#4A90E2" 
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            
-            {/* Children connection lines */}
-            {union.children.map((child, ci) => {
-              const tp = topPort(child)
-              const midY = Math.round((y + tp.y) / 2)
-              const points = [
-                { x: xm, y: y },
-                { x: xm, y: midY },
-                { x: tp.x, y: midY },
-                { x: tp.x, y: tp.y }
-              ]
-              const d = roundedOrthogonal(points, CORNER_RAD)
-              
-              return (
-                <path
-                  key={`union-child-${union.unionId}-${ci}`}
-                  d={d}
-                  stroke="#C9CCD4"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )
+          <g key={`u-${u.id}`}>
+            {/* stems */}
+            <path d={`M${ax},${y - STEM_LEN} V${y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            <path d={`M${bx},${y - STEM_LEN} V${y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            {/* bar */}
+            <path d={`M${x1},${y} L${x2},${y}`} stroke={COLORS.strong} strokeWidth={BAR_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            {/* children */}
+            {u.children.map(cid => {
+              const c = layout.rects.get(cid);
+              if (!c) return null;
+              const tp = topPort(c);
+              const d = pathUnionToChild(xm, y, tp);
+              return <path key={`uc-${u.id}-${cid}`} d={d} stroke={COLORS.link} strokeWidth={EDGE_W}
+                           fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />;
             })}
           </g>
-        )
+        );
       })}
 
-      {/* Parent-child connections for single parents */}
-      {parentConnections.map((conn, i) => {
-        const parentBottom = bottomPort({ x: conn.parentX, y: conn.parentY })
-        const childTop = topPort({ x: conn.childX, y: conn.childY })
-        const midY = Math.round((parentBottom.y + childTop.y) / 2)
-        
-        const points = [
-          parentBottom,
-          { x: parentBottom.x, y: midY },
-          { x: childTop.x, y: midY },
-          childTop
-        ]
-        const d = roundedOrthogonal(points, CORNER_RAD)
-        
-        return (
-          <path
-            key={`parent-${i}`}
-            d={d}
-            stroke="#C9CCD4"
-            strokeWidth="2"
-            fill="none"
-            strokeLinecap="round"
-          />
-        )
+      {/* Single-parent edges (child not in any union) */}
+      {Array.from(layout.rects.values()).map(r => {
+        const viaUnion = new Set<string>();
+        for (const u of layout.unions) if (u.children.length && (u.a === r.id || u.b === r.id)) u.children.forEach(id => viaUnion.add(id));
+        return (graph.childrenOf.get(r.id) ?? []).map(cid => {
+          if (viaUnion.has(cid)) return null;
+          const c = layout.rects.get(cid); if (!c) return null;
+          const d = pathParentToChild(bottomPort(r), topPort(c));
+          return <path key={`pc-${r.id}-${cid}`} d={d} stroke={COLORS.link} strokeWidth={EDGE_W}
+                       fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />;
+        });
       })}
     </g>
-  )
+  );
 }

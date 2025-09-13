@@ -14,7 +14,7 @@ import type { TreePerson, TreeFamily, TreeFamilyChild } from '@/lib/familyTreeV2
 import { QuickAddModal } from './QuickAddModal'
 import { PersonDrawer } from './PersonDrawer'
 import { PersonCard, CARD_W, CARD_H } from './PersonCard'
-import { ConnectionRenderer } from './ConnectionRenderer'
+import ConnectionRenderer from './ConnectionRenderer'
 import { toast } from 'sonner'
 
 interface FamilyExplorerProps {
@@ -405,84 +405,64 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     // Simple debug - if this renders, function is being called
     console.log('renderConnections called with:', { unionsCount: unions.length, nodesCount: nodes.length })
     
-    if (unions.length === 0) {
-      return (
-        <g>
-          <text x="400" y="50" fill="red" fontSize="16">NO UNIONS FOUND</text>
-        </g>
-      )
+    if (unions.length === 0 || nodes.length === 0) {
+      return <g></g>
     }
 
-    if (nodes.length === 0) {
-      return (
-        <g>
-          <text x="400" y="100" fill="red" fontSize="16">NO NODES FOUND</text>
-        </g>
-      )
-    }
-
-    // Build union connections with proper Ancestry-style routing
-    const unionConnections: Array<{
-      unionId: string
-      spouse1: { x: number; y: number }
-      spouse2: { x: number; y: number }
-      children: Array<{ x: number; y: number }>
-      rowY: number
-    }> = []
-
-    const parentConnections: Array<{
-      parentX: number
-      parentY: number
-      childX: number
-      childY: number
-    }> = []
-
-    // Build union connections from your unions data
+    // Build FamilyGraph - map children relationships
+    const childrenOf = new Map<string, string[]>()
+    const parentsOf = new Map<string, string[]>()
+    
     unions.forEach(union => {
-      const partner1Node = nodes.find(n => n.id === union.partner1.id)
-      const partner2Node = union.partner2 ? nodes.find(n => n.id === union.partner2.id) : null
+      const partner1Id = union.partner1.id
+      const partner2Id = union.partner2?.id
+      const childIds = union.children.map(c => c.id)
       
-      if (partner1Node && partner2Node) {
-        // Find children of this union
-        const childNodes = union.children.map(child => 
-          nodes.find(n => n.id === child.id)
-        ).filter(Boolean) as LayoutNode[]
+      if (partner1Id) {
+        childrenOf.set(partner1Id, [...(childrenOf.get(partner1Id) || []), ...childIds])
+      }
+      if (partner2Id) {
+        childrenOf.set(partner2Id, [...(childrenOf.get(partner2Id) || []), ...childIds])
+      }
 
-        unionConnections.push({
-          unionId: union.id,
-          spouse1: { x: partner1Node.x - CARD_W / 2, y: partner1Node.y - CARD_H / 2 },
-          spouse2: { x: partner2Node.x - CARD_W / 2, y: partner2Node.y - CARD_H / 2 },
-          children: childNodes.map(child => ({ 
-            x: child.x - CARD_W / 2, 
-            y: child.y - CARD_H / 2 
-          })),
-          rowY: partner1Node.y - CARD_H / 2 // row Y is the top of cards
-        })
-      } else if (partner1Node && !partner2Node) {
-        // Single parent - use fallback parent-child connections
-        union.children.forEach(child => {
-          const childNode = nodes.find(n => n.id === child.id)
-          if (childNode) {
-            parentConnections.push({
-              parentX: partner1Node.x - CARD_W / 2,
-              parentY: partner1Node.y - CARD_H / 2,
-              childX: childNode.x - CARD_W / 2,
-              childY: childNode.y - CARD_H / 2
-            })
-          }
-        })
+      // Build parent relationships
+      childIds.forEach(childId => {
+        const parents = []
+        if (partner1Id) parents.push(partner1Id)
+        if (partner2Id) parents.push(partner2Id)
+        parentsOf.set(childId, [...(parentsOf.get(childId) || []), ...parents])
+      })
+    })
+
+    const graph = { childrenOf, parentsOf }
+
+    // Build TreeLayout - convert nodes and unions to layout format
+    const rects = new Map<string, { id: string; x: number; y: number }>()
+    const rows = new Map<number, number>()
+    
+    nodes.forEach(node => {
+      rects.set(node.id, { 
+        id: node.id, 
+        x: node.x - CARD_W / 2, 
+        y: node.y - CARD_H / 2 
+      })
+      // Track row Y positions by level
+      if (node.level !== undefined) {
+        rows.set(node.level, node.y - CARD_H / 2)
       }
     })
 
-      return (
-        <>
-          <ConnectionRenderer 
-            parentConnections={parentConnections}
-            spouseConnections={[]} 
-            unionConnections={unionConnections}
-          />
-        </>
-      )
+    const layoutUnions = unions.map(union => ({
+      id: union.id,
+      a: union.partner1.id,
+      b: union.partner2?.id || union.partner1.id,
+      depth: nodes.find(n => n.id === union.partner1.id)?.level || 0,
+      children: union.children.map(c => c.id)
+    }))
+
+    const layout = { unions: layoutUnions, rects, rows }
+
+    return <ConnectionRenderer graph={graph} layout={layout} />
   }
 
   return (

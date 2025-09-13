@@ -167,6 +167,24 @@ export interface LayoutConfig {
   generationHeight: number
 }
 
+// Connection rendering types
+export interface FamilyGraph {
+  childrenOf: Map<string, string[]>
+  parentsOf: Map<string, string[]>
+}
+
+export interface TreeLayout {
+  unions: Array<{
+    id: string
+    a: string
+    b: string
+    depth: number
+    children: string[]
+  }>
+  rects: Map<string, { id: string; x: number; y: number }>
+  rows: Map<number, number>
+}
+
 // UI state types
 export interface TreeViewState {
   view: 'explorer' | 'fan'
