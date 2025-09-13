@@ -113,18 +113,49 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     }
   }
 
-  // Center children under union midpoint
+  // Center children under union midpoint — keep spouse clusters together to avoid overlaps
   for (const u of g.unions) {
     const a = rects.get(u.a), b = rects.get(u.b);
     if (!a || !b) continue;
     const xm = Math.round((a.x + CARD_W/2 + b.x + CARD_W/2)/2);
     const cd = u.depth - 1;
     const rowY = rows.get(cd); if (!rowY) continue;
+
+    // Only children actually placed at this child depth
     const kids = u.children.filter(id => rects.get(id)?.depth === cd);
     if (!kids.length) continue;
-    const total = kids.length * CARD_W + (kids.length - 1) * SIB_GAP;
+
+    // Build clusters: child alone, or child+same-depth spouse
+    const used = new Set<string>();
+    const clusters: string[][] = [];
+    for (const id of kids) {
+      if (used.has(id)) continue;
+      const spouseId = Array.from(g.spouses.get(id) ?? [])
+        .find(s => rects.get(s)?.depth === cd);
+      if (spouseId && !used.has(spouseId)) {
+        clusters.push([id, spouseId]);
+        used.add(id); used.add(spouseId);
+      } else {
+        clusters.push([id]);
+        used.add(id);
+      }
+    }
+
+    const cW = (c: string[]) => c.length === 2 ? CARD_W*2 + SPOUSE_GAP : CARD_W;
+    const total = clusters.reduce((sum, c, i) => sum + cW(c) + (i ? SIB_GAP : 0), 0);
     let x = Math.round(xm - total/2);
-    for (const id of kids){ const r = rects.get(id)!; r.x = x; r.y = rowY; x += CARD_W + SIB_GAP; }
+
+    for (const c of clusters) {
+      if (c.length === 2) {
+        const [child, spouse] = c;
+        const rc = rects.get(child)!; const rs = rects.get(spouse)!;
+        rc.x = x; rc.y = rowY;
+        rs.x = x + CARD_W + SPOUSE_GAP; rs.y = rowY;
+        x += cW(c) + SIB_GAP;
+      } else {
+        const rc = rects.get(c[0])!; rc.x = x; rc.y = rowY; x += CARD_W + SIB_GAP;
+      }
+    }
   }
 
   const unions = g.unions.map(u => ({ ...u, y: unionYForRow(rows.get(u.depth)!) }));
