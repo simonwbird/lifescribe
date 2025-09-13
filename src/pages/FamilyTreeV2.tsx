@@ -82,7 +82,7 @@ const FamilyTreeV2 = () => {
       
       // Handle single combined CSV or two separate CSVs (people + relationships)
       if (files.length === 1) {
-        // Assume single file contains people data for now
+        // Single file - assume people only for now
         const content = await files[0].text()
         const people = CsvImportService.parsePeopleCsv(content)
         
@@ -91,10 +91,23 @@ const FamilyTreeV2 = () => {
           return
         }
 
-        toast.success(`Found ${people.length} people in CSV. Full import with relationships requires separate files.`)
+        // Create a preview with just people (no relationships)
+        const preview = {
+          people,
+          relationships: [],
+          peopleCount: people.length,
+          familiesCount: 0,
+          childrenCount: 0,
+          duplicates: []
+        }
+
+        // Commit the import
+        await CsvImportService.commitCsvImport(preview, familyId, userId)
+        toast.success(`Successfully imported ${people.length} people from CSV`)
         
-        // For now, just show what was found - full implementation would need proper import flow
-        console.log('Parsed people:', people)
+        // Reload tree data
+        const data = await FamilyTreeService.getTreeData(familyId)
+        setTreeData(data)
         
       } else if (files.length === 2) {
         // Two files: people + relationships
@@ -119,17 +132,23 @@ const FamilyTreeV2 = () => {
         const preview = await CsvImportService.previewCsvImport(peopleContent, relationshipsContent, familyId)
         
         if (preview.duplicates.length > 0) {
-          toast.warning(`Found ${preview.duplicates.length} potential duplicates. Review needed.`)
+          toast.warning(`Found ${preview.duplicates.length} potential duplicates. Importing anyway...`)
         }
 
-        toast.success(`Ready to import ${preview.peopleCount} people and ${preview.familiesCount} families from CSV`)
-        console.log('CSV preview:', preview)
+        // Commit the full import
+        await CsvImportService.commitCsvImport(preview, familyId, userId)
+        toast.success(`Successfully imported ${preview.peopleCount} people, ${preview.familiesCount} families, and ${preview.childrenCount} relationships from CSV`)
+        
+        // Reload tree data
+        const data = await FamilyTreeService.getTreeData(familyId)
+        setTreeData(data)
         
       } else {
         toast.error('Please select either 1 CSV file (people only) or 2 CSV files (people + relationships)')
       }
       
     } catch (error) {
+      console.error('CSV import error:', error)
       toast.error('CSV import failed: ' + error.message)
     } finally {
       setLoading(false)

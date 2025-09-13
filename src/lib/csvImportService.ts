@@ -245,6 +245,150 @@ export class CsvImportService {
     ].join('\n')
   }
 
+  // Commit CSV import to database
+  static async commitCsvImport(
+    preview: ImportPreview,
+    familyId: string,
+    userId: string
+  ): Promise<void> {
+    const { people, relationships } = preview
+
+    // Insert people
+    const peopleToInsert = people.map(person => ({
+      family_id: familyId,
+      given_name: person.given_name || null,
+      surname: person.surname || null,
+      sex: person.sex || null,
+      birth_date: person.birth_date ? new Date(person.birth_date).toISOString().split('T')[0] : null,
+      death_date: person.death_date ? new Date(person.death_date).toISOString().split('T')[0] : null,
+      is_living: person.is_living === 'Y',
+      source_xref: person.person_id,
+      created_by: userId
+    }))
+
+    const { data: insertedPeople, error: peopleError } = await supabase
+      .from('tree_people')
+      .insert(peopleToInsert)
+      .select('id, source_xref')
+
+    if (peopleError) throw peopleError
+    if (!insertedPeople) throw new Error('Failed to insert people')
+
+    // Create mapping from source IDs to database IDs
+    const idMap = new Map<string, string>()
+    insertedPeople.forEach(person => {
+      if (person.source_xref) {
+        idMap.set(person.source_xref, person.id)
+      }
+    })
+
+    // Process relationships
+    const familiesToInsert = new Set<string>()
+    const childrenToInsert: Array<{
+      family_id: string
+      child_id: string
+      created_by: string
+    }> = []
+
+    // Group relationships by family and type
+    const familyGroups = new Map<string, {
+      spouses: Array<{ a_id: string, b_id: string }>,
+      children: Array<{ parent_id: string, child_id: string }>
+    }>()
+
+    relationships.forEach(rel => {
+      if (!familyGroups.has(rel.family_id)) {
+        familyGroups.set(rel.family_id, { spouses: [], children: [] })
+      }
+      
+      const group = familyGroups.get(rel.family_id)!
+      
+      if (rel.rel_type === 'spouse') {
+        group.spouses.push({ a_id: rel.a_id, b_id: rel.b_id })
+      } else if (rel.rel_type === 'parent') {
+        group.children.push({ parent_id: rel.a_id, child_id: rel.b_id })
+      }
+    })
+
+    // Insert tree families and children
+    for (const [familyXref, group] of familyGroups) {
+      if (group.spouses.length > 0) {
+        const spouse = group.spouses[0] // Take first spouse relationship
+        const partner1Id = idMap.get(spouse.a_id)
+        const partner2Id = idMap.get(spouse.b_id)
+
+        if (partner1Id && partner2Id) {
+          const { data: insertedFamily } = await supabase
+            .from('tree_families')
+            .insert({
+              family_id: familyId,
+              partner1_id: partner1Id,
+              partner2_id: partner2Id,
+              relationship_type: 'married',
+              source_xref: familyXref,
+              created_by: userId
+            })
+            .select('id')
+            .single()
+
+          if (insertedFamily) {
+            // Add children to this family
+            group.children.forEach(child => {
+              const childDbId = idMap.get(child.child_id)
+              if (childDbId) {
+                childrenToInsert.push({
+                  family_id: insertedFamily.id,
+                  child_id: childDbId,
+                  created_by: userId
+                })
+              }
+            })
+          }
+        }
+      } else if (group.children.length > 0) {
+        // Single parent family
+        const parentChild = group.children[0]
+        const parentId = idMap.get(parentChild.parent_id)
+        
+        if (parentId) {
+          const { data: insertedFamily } = await supabase
+            .from('tree_families')
+            .insert({
+              family_id: familyId,
+              partner1_id: parentId,
+              relationship_type: 'single',
+              source_xref: familyXref,
+              created_by: userId
+            })
+            .select('id')
+            .single()
+
+          if (insertedFamily) {
+            group.children.forEach(child => {
+              const childDbId = idMap.get(child.child_id)
+              if (childDbId) {
+                childrenToInsert.push({
+                  family_id: insertedFamily.id,
+                  child_id: childDbId,
+                  created_by: userId
+                })
+              }
+            })
+          }
+        }
+      }
+    }
+
+    // Insert all family children
+    if (childrenToInsert.length > 0) {
+      const { error: childrenError } = await supabase
+        .from('tree_family_children')
+        .insert(childrenToInsert)
+
+      if (childrenError) throw childrenError
+    }
+  }
+
   // Download CSV templates as files
   static downloadTemplate(type: 'people' | 'relationships'): void {
     const content = type === 'people' ? 
