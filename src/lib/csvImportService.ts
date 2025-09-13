@@ -367,6 +367,7 @@ export class CsvImportService {
       family_id: string
       child_id: string
     }> = []
+    const childKeys = new Set<string>()
 
     // Group relationships by family and type
     const familyGroups = new Map<string, {
@@ -414,10 +415,14 @@ export class CsvImportService {
             group.children.forEach(child => {
               const childDbId = idMap.get(child.child_id)
               if (childDbId) {
-                childrenToInsert.push({
-                  family_id: insertedFamily.id,
-                  child_id: childDbId
-                })
+                const key = `${insertedFamily.id}-${childDbId}`
+                if (!childKeys.has(key)) {
+                  childrenToInsert.push({
+                    family_id: insertedFamily.id,
+                    child_id: childDbId
+                  })
+                  childKeys.add(key)
+                }
               }
             })
           }
@@ -444,10 +449,14 @@ export class CsvImportService {
             group.children.forEach(child => {
               const childDbId = idMap.get(child.child_id)
               if (childDbId) {
-                childrenToInsert.push({
-                  family_id: insertedFamily.id,
-                  child_id: childDbId
-                })
+                const key = `${insertedFamily.id}-${childDbId}`
+                if (!childKeys.has(key)) {
+                  childrenToInsert.push({
+                    family_id: insertedFamily.id,
+                    child_id: childDbId
+                  })
+                  childKeys.add(key)
+                }
               }
             })
           }
@@ -459,7 +468,7 @@ export class CsvImportService {
     if (childrenToInsert.length > 0) {
       const { error: childrenError } = await supabase
         .from('tree_family_children')
-        .insert(childrenToInsert)
+        .upsert(childrenToInsert, { onConflict: 'family_id,child_id', ignoreDuplicates: true })
 
       if (childrenError) throw childrenError
     }
