@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { NodeRect, Person } from "../../lib/familyTreeV2Types";
 
 /** Card constants (Ancestry proportions - redesigned for vertical layout) */
@@ -24,6 +25,7 @@ const yr = (v?: string|number|null) => v==null ? "" : String(v).slice(0,4);
 const fullName = (p: Person) => (p.given_name + " " + (p.surname ?? "")).trim();
 
 export function PersonCard({ rect, person }: { rect: NodeRect; person: Person }) {
+  const navigate = useNavigate();
   const b = yr(person.birth_date), d = yr(person.death_date);
   const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
   const name = fullName(person);
@@ -33,8 +35,16 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
   const firstName = nameParts[0] || '';
   const lastName = nameParts.slice(1).join(' ') || '';
 
+  const handleClick = () => {
+    navigate(`/person/${person.id}`);
+  };
+
   return (
-    <g transform={`translate(${Math.round(rect.x)},${Math.round(rect.y)})`}>
+    <g 
+      transform={`translate(${Math.round(rect.x)},${Math.round(rect.y)})`}
+      style={{ cursor: 'pointer' }}
+      onClick={handleClick}
+    >
       <rect width={CARD_W} height={CARD_H} rx={CARD_R} fill={TOKENS.card} stroke={TOKENS.cardBorder}
             filter="url(#feCardShadow)" />
       
@@ -83,6 +93,16 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
             style={{ fontFamily: font, fontSize: 11, fill: TOKENS.dates }}>
         {dates}
       </text>
+
+      {/* Hover indicator */}
+      <rect 
+        x={0} y={0} width={CARD_W} height={CARD_H} rx={CARD_R} 
+        fill="transparent" 
+        stroke="transparent" 
+        strokeWidth={2}
+        style={{ opacity: 0, transition: 'all 0.2s' }}
+        className="hover:stroke-primary hover:opacity-100"
+      />
     </g>
   );
 }
