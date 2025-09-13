@@ -294,7 +294,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     
     const focusPerson = people.find(p => p.id === focusPersonId) || people[0]
     const focusName = focusPerson ? 
-      (focusPerson.given_name || focusPerson.full_name || '').split(' ')[0] : 'Focus'
+      (focusPerson.given_name || focusPerson.full_name || '').split(' ')[0] : 'Simon'
     
     // Group nodes by level (from layout engine)
     const levelGroups = new Map<number, LayoutNode[]>()
@@ -306,15 +306,15 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     })
     
     const captionForLevel = (level: number, name: string) => {
-      if (level === 0) return `${name} & siblings`
-      if (level === 1) return `${name}'s children`
-      if (level === -1) return `${name}'s parents`
-      if (level === -2) return `${name}'s grandparents`
-      if (level === -3) return `${name}'s great-grandparents` 
-      if (level === -4) return `${name}'s 2nd great-grandparents`
-      if (level < -4) return `${name}'s ${Math.abs(level) - 2}${getOrdinalSuffix(Math.abs(level) - 2)} great-grandparents`
-      if (level === 2) return `${name}'s grandchildren`
-      if (level > 2) return `${name}'s ${level - 1}${getOrdinalSuffix(level - 1)} great-grandchildren`
+      // Ancestry-style exact captions
+      if (level === 3) return `${name}'s great-grandparents`
+      if (level === 2) return `${name}'s grandparents`
+      if (level === 1) return `${name}'s parents`
+      if (level === 0) return `${name}'s siblings`
+      if (level === -1) return `${name}'s children`
+      if (level === -2) return `${name}'s grandchildren`
+      if (level > 3) return `${name}'s ${level - 2}${getOrdinalSuffix(level - 2)} great-grandparents`
+      if (level < -2) return `${name}'s ${Math.abs(level) - 1}${getOrdinalSuffix(Math.abs(level) - 1)} great-grandchildren`
       return ''
     }
     
@@ -328,17 +328,18 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       const caption = captionForLevel(level, focusName)
       if (!caption || !levelNodes.length) return null
       
-      // Position caption centered under the generation
+      // Position caption below the generation (rowY + CARD_H + 34)
       const minX = Math.min(...levelNodes.map(n => n.x))
       const maxX = Math.max(...levelNodes.map(n => n.x))
       const centerX = (minX + maxX) / 2
-      const y = levelNodes[0].y + CARD_H / 2 + 30
+      const rowY = levelNodes[0].y - CARD_H / 2 // top of cards
+      const captionY = rowY + CARD_H + 34
       
       return (
         <text 
           key={`caption-${level}`}
           x={centerX} 
-          y={y} 
+          y={captionY} 
           className="fe-caption"
         >
           {caption}
@@ -412,44 +413,55 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   const renderConnections = () => {
+    // Build union connections with proper Ancestry-style routing
+    const unionConnections: Array<{
+      unionId: string
+      spouse1: { x: number; y: number }
+      spouse2: { x: number; y: number }
+      children: Array<{ x: number; y: number }>
+      rowY: number
+    }> = []
+
     const parentConnections: Array<{
-      parentX: number;
-      parentY: number; 
-      childX: number;
-      childY: number;
-    }> = []
-    
-    const spouseConnections: Array<{
-      spouse1X: number;
-      spouse1Y: number;
-      spouse2X: number;
-      spouse2Y: number;
+      parentX: number
+      parentY: number
+      childX: number
+      childY: number
     }> = []
 
-    // Connect parents to children through unions
+    // Build union connections from your unions data
     unions.forEach(union => {
-      union.children.forEach(child => {
-        const childNode = nodes.find(n => n.id === child.id)
-        if (childNode) {
-          parentConnections.push({
-            parentX: union.x,
-            parentY: union.y + union.height / 2,
-            childX: childNode.x,
-            childY: childNode.y - CARD_H / 2
-          })
-        }
-      })
-
-      // Connect spouses with horizontal bar
       const partner1Node = nodes.find(n => n.id === union.partner1.id)
       const partner2Node = union.partner2 ? nodes.find(n => n.id === union.partner2.id) : null
       
       if (partner1Node && partner2Node) {
-        spouseConnections.push({
-          spouse1X: partner1Node.x + CARD_W / 2,
-          spouse1Y: partner1Node.y,
-          spouse2X: partner2Node.x - CARD_W / 2, 
-          spouse2Y: partner2Node.y
+        // Find children of this union
+        const childNodes = union.children.map(child => 
+          nodes.find(n => n.id === child.id)
+        ).filter(Boolean) as LayoutNode[]
+
+        unionConnections.push({
+          unionId: union.id,
+          spouse1: { x: partner1Node.x - CARD_W / 2, y: partner1Node.y - CARD_H / 2 },
+          spouse2: { x: partner2Node.x - CARD_W / 2, y: partner2Node.y - CARD_H / 2 },
+          children: childNodes.map(child => ({ 
+            x: child.x - CARD_W / 2, 
+            y: child.y - CARD_H / 2 
+          })),
+          rowY: partner1Node.y - CARD_H / 2 // row Y is the top of cards
+        })
+      } else if (partner1Node && !partner2Node) {
+        // Single parent - use fallback parent-child connections
+        union.children.forEach(child => {
+          const childNode = nodes.find(n => n.id === child.id)
+          if (childNode) {
+            parentConnections.push({
+              parentX: partner1Node.x - CARD_W / 2,
+              parentY: partner1Node.y - CARD_H / 2,
+              childX: childNode.x - CARD_W / 2,
+              childY: childNode.y - CARD_H / 2
+            })
+          }
         })
       }
     })
@@ -457,7 +469,8 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     return (
       <ConnectionRenderer 
         parentConnections={parentConnections}
-        spouseConnections={spouseConnections}
+        spouseConnections={[]} // Using unionConnections instead
+        unionConnections={unionConnections}
       />
     )
   }

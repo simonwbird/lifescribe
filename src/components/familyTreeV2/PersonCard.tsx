@@ -1,6 +1,6 @@
 import React from 'react'
 
-// Ancestry-style card dimensions
+// Ancestry-style card dimensions and connector geometry
 export const CARD_W = 156;
 export const CARD_H = 208;  
 export const CARD_R = 12;
@@ -24,11 +24,16 @@ export const MEDIA_X = NAME_X;
 export const MEDIA_Y = 64;
 export const MEDIA_R = 8;
 
-/* Layout spacing */
-export const H_SPACING = 48;        // siblings
-export const ROW_HEIGHT = 220;      // generations
-export const MARRIAGE_GAP = 16;     // space between spouses
-export const COMPONENT_GAP = 220;   // between disconnected groups
+// Layout spacing (Ancestry-style)
+export const ROW_HEIGHT = 220;      // vertical distance between generational rows
+export const SIB_GAP = 48;          // horizontal gap between siblings
+export const SPOUSE_GAP = 16;       // empty space between spouse card edges
+
+// Connector geometry
+export const PORT_INSET = 8;        // pull connectors slightly off the card edge
+export const STEM_LEN = 10;         // short vertical stems into the marriage bar
+export const CORNER_RAD = 12;       // rounded elbows radius for orthogonal paths
+export const STROKE_W = 2;          // connector thickness
 
 const year = (iso?: string) => iso ? iso.slice(0,4) : '';
 

@@ -336,4 +336,28 @@ small, .overline {
     font: 12px/1.2 Inter, system-ui;
     fill: var(--fe-ink-muted);
   }
+
+  /* Ancestry-style connectors */
+  .fe-stem, .fe-bar, .fe-link {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke; /* keeps width constant on zoom */
+    shape-rendering: geometricPrecision;
+    fill: none;
+  }
+  
+  .fe-stem { 
+    stroke: var(--fe-line-strong); 
+    stroke-width: 2; 
+  }
+  
+  .fe-bar { 
+    stroke: var(--fe-line-strong); 
+    stroke-width: 3; 
+  }
+  
+  .fe-link { 
+    stroke: var(--fe-line); 
+    stroke-width: 2; 
+  }
 }
