@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,23 @@ export default function Login() {
   const [message, setMessage] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        navigate('/')
+      }
+    })
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate('/')
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [navigate])
+
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
