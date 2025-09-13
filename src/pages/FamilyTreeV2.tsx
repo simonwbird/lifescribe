@@ -169,6 +169,20 @@ const FamilyTreeV2 = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Family Tree</h1>
         <div className="flex gap-2">
+          <input
+            type="file"
+            accept=".ged"
+            onChange={handleGedcomUpload}
+            className="hidden"
+            id="gedcom-upload-existing"
+          />
+          <Button 
+            variant="outline" 
+            onClick={() => document.getElementById('gedcom-upload-existing')?.click()}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import GED
+          </Button>
           <Button variant="outline" onClick={() => navigate('/family-tree/explorer')}>
             Family Explorer
           </Button>
