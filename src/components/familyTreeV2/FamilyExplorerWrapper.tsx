@@ -22,12 +22,6 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
     loadData()
   }, [familyId, focusPersonId])
 
-  // Force reload every 2 seconds to catch DB changes (temporary debug)
-  useEffect(() => {
-    const interval = setInterval(loadData, 2000)
-    return () => clearInterval(interval)
-  }, [familyId])
-
   const loadData = async () => {
     try {
       const data = await FamilyTreeService.getTreeData(familyId, focusPersonId || undefined)
