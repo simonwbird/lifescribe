@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
 import FamilyExplorerWrapper from '@/components/familyTreeV2/FamilyExplorerWrapper'
 import { FamilyDataEditor } from '@/components/family-tree/FamilyDataEditor'
+import { GedcomImportModal } from '@/components/family-tree/GedcomImportModal'
 
 const FamilyTreeV2 = () => {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ const FamilyTreeV2 = () => {
   const [treeData, setTreeData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showDataEditor, setShowDataEditor] = useState(false)
+  const [showGedcomImport, setShowGedcomImport] = useState(false)
 
   useEffect(() => {
     loadUserData()
@@ -50,30 +52,9 @@ const FamilyTreeV2 = () => {
     }
   }
 
-  const handleGedcomUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !familyId || !userId) return
-
-    try {
-      setLoading(true)
-      const content = await file.text()
-      const preview = await GedcomImportService.previewImport(content, familyId)
-      
-      if (preview.duplicates.length > 0) {
-        toast.warning(`Found ${preview.duplicates.length} potential duplicates. Review needed.`)
-      }
-
-      await GedcomImportService.commitImport(preview, familyId, userId)
-      toast.success(`Imported ${preview.peopleCount} people and ${preview.familiesCount} families`)
-      
-      // Reload data
-      const data = await FamilyTreeService.getTreeData(familyId)
-      setTreeData(data)
-    } catch (error) {
-      toast.error('Import failed: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
+  const handleGedcomUpload = () => {
+    // Open safe import modal instead of direct upload
+    setShowGedcomImport(true)
   }
 
   const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -253,19 +234,12 @@ const FamilyTreeV2 = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Family Tree</h1>
           <div className="flex gap-2">
-            <input
-              type="file"
-              accept=".ged"
-              onChange={handleGedcomUpload}
-              className="hidden"
-              id="gedcom-upload-existing"
-            />
             <Button 
               variant="outline" 
-              onClick={() => document.getElementById('gedcom-upload-existing')?.click()}
+              onClick={handleGedcomUpload}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Import GED
+              Safe Import GED
             </Button>
             <input
               type="file"
@@ -310,6 +284,17 @@ const FamilyTreeV2 = () => {
         onOpenChange={setShowDataEditor}
         familyId={familyId || ''}
         onDataChange={() => {
+          // Force refresh of the family tree
+          loadUserData()
+        }}
+      />
+      
+      <GedcomImportModal
+        open={showGedcomImport}
+        onOpenChange={setShowGedcomImport}
+        familyId={familyId || ''}
+        userId={userId || ''}
+        onImportComplete={() => {
           // Force refresh of the family tree
           loadUserData()
         }}
