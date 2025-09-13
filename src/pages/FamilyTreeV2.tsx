@@ -10,6 +10,7 @@ import { CsvImportService } from '@/lib/csvImportService'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
 import FamilyExplorerWrapper from '@/components/familyTreeV2/FamilyExplorerWrapper'
+import { FamilyDataEditor } from '@/components/family-tree/FamilyDataEditor'
 
 const FamilyTreeV2 = () => {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ const FamilyTreeV2 = () => {
   const [userId, setUserId] = useState<string | null>(null)
   const [treeData, setTreeData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showDataEditor, setShowDataEditor] = useState(false)
 
   useEffect(() => {
     loadUserData()
@@ -287,6 +289,13 @@ const FamilyTreeV2 = () => {
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 Import CSV
               </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDataEditor(true)}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Edit Data
+              </Button>
             </div>
           </div>
         </div>
@@ -295,6 +304,16 @@ const FamilyTreeV2 = () => {
           <FamilyExplorerWrapper familyId={familyId} />
         </div>
       </div>
+      
+      <FamilyDataEditor
+        open={showDataEditor}
+        onOpenChange={setShowDataEditor}
+        familyId={familyId || ''}
+        onDataChange={() => {
+          // Force refresh of the family tree
+          loadUserData()
+        }}
+      />
     </>
   )
 }
