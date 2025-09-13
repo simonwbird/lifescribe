@@ -65,6 +65,9 @@ export default function FamilyExplorer({
   return (
     <div style={{ width:"100%", height:"100%", ...BG }}>
       <svg ref={svgRef} width="100%" height="100%" role="img" aria-label="Family tree">
+        <text x={24} y={28} fill="#ff77ff" fontSize="22" fontFamily="ui-monospace">USING: FamilyExplorer.tsx</text>
+        <path d={`M0,40 L${layout.bounds.width},40`} stroke="#ff00ff" strokeWidth={6} vectorEffect="non-scaling-stroke" />
+        <text x={24} y={70} fill="#77ff77" fontSize="18" fontFamily="ui-monospace">CR: rails-fixed v1</text>
         <defs>
           <filter id="feCardShadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="black" floodOpacity="0.20" />

@@ -6,10 +6,11 @@ import {
 } from "./AncestryConnectors";
 
 /**
- * Ancestry-style, de-spaghetti:
- *  • One fixed rail Y per child depth: railY = rows(childDepth) - RAIL_GAP_ABOVE_CHILD
+ * Ancestry-style, fixed-per-row rails:
+ *  • One rail Y per child depth: railY = rows(childDepth) - RAIL_GAP_ABOVE_CHILD
  *  • Unions: stems → bar → single vertical to rail → verticals to each child.
  *  • Single parent: parent bottom → single vertical to rail → verticals to each child.
+ *  • All strokes: rounded caps, non-scaling.
  */
 export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGraph; layout: TreeLayout }) {
   /** ---------- UNIONS (group children by depth; one rail per depth) ---------- */
@@ -21,17 +22,14 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
     const rowY = layout.rows.get(u.depth)!;
     const { x1, x2, y, ax, bx, xm } = unionBar(a, b, rowY);
 
-    // keep only children that exist in layout
-    const kids = u.children
-      .map(id => ({ id, r: layout.rects.get(id)! }))
-      .filter(k => !!k.r);
-
-    // group children by their depth (usually all d-1, but be robust)
+    // children that exist in layout, grouped by their depth
     const byDepth = new Map<number, { id: string; tx: number; ty: number }[]>();
-    for (const k of kids) {
-      const d = k.r.depth; // child depth
-      const tp = topPort(k.r);
-      (byDepth.get(d) ?? byDepth.set(d, []).get(d)!).push({ id: k.id, tx: tp.x, ty: tp.y });
+    for (const id of u.children) {
+      const r = layout.rects.get(id);
+      if (!r) continue;
+      const d = r.depth;
+      const tp = topPort(r);
+      (byDepth.get(d) ?? byDepth.set(d, []).get(d)!).push({ id, tx: tp.x, ty: tp.y });
     }
 
     const out: Array<{
@@ -43,9 +41,13 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
 
     byDepth.forEach((children, childDepth) => {
       const railY = (layout.rows.get(childDepth) ?? (y + 60)) - RAIL_GAP_ABOVE_CHILD;
-      const xs = children.map(c => c.tx).concat([xm]); // span includes union midpoint
-      const rail = { y: railY, x1: Math.min(...xs), x2: Math.max(...xs) };
-      out.push({ key: `${u.id}-${childDepth}`, bar: { x1, x2, y, ax, bx, xm }, rail, children });
+      const xs = children.map(c => c.tx).concat([xm]);
+      out.push({
+        key: `${u.id}-${childDepth}`,
+        bar: { x1, x2, y, ax, bx, xm },
+        rail: { y: railY, x1: Math.min(...xs), x2: Math.max(...xs) },
+        children
+      });
     });
 
     return out;
@@ -63,33 +65,26 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
   };
   const singleParentGroups: SPGroup[] = [];
 
-  // For each parent, group remaining children by child depth (one rail per depth)
   Array.from(layout.rects.values()).forEach(parentRect => {
     const rawKids = (graph.childrenOf.get(parentRect.id) ?? []).filter(id => !childInUnion.has(id));
     if (!rawKids.length) return;
 
-    const kidRects = rawKids
-      .map(id => ({ id, r: layout.rects.get(id)! }))
-      .filter(k => !!k.r);
-    if (!kidRects.length) return;
-
     const byDepth = new Map<number, { id: string; tx: number; ty: number }[]>();
-    for (const k of kidRects) {
-      const d = k.r.depth;
-      const tp = topPort(k.r);
-      (byDepth.get(d) ?? byDepth.set(d, []).get(d)!).push({ id: k.id, tx: tp.x, ty: tp.y });
+    for (const id of rawKids) {
+      const r = layout.rects.get(id);
+      if (!r) continue;
+      const tp = topPort(r);
+      (byDepth.get(r.depth) ?? byDepth.set(r.depth, []).get(r.depth)!).push({ id, tx: tp.x, ty: tp.y });
     }
 
     const pBottom = bottomPort(parentRect);
-
     byDepth.forEach((children, childDepth) => {
       const railY = (layout.rows.get(childDepth) ?? (pBottom.y + 40)) - RAIL_GAP_ABOVE_CHILD;
-      const xs = children.map(c => c.tx).concat([pBottom.x]); // span includes parent bottom
-      const rail = { y: railY, x1: Math.min(...xs), x2: Math.max(...xs) };
+      const xs = children.map(c => c.tx).concat([pBottom.x]);
       singleParentGroups.push({
         key: `${parentRect.id}-${childDepth}`,
         parentBottomX: pBottom.x,
-        rail,
+        rail: { y: railY, x1: Math.min(...xs), x2: Math.max(...xs) },
         children
       });
     });
@@ -97,7 +92,10 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
 
   return (
     <g>
-      {/* ===== unions (bar + stems + single drop + shared rail + child drops) ===== */}
+      {/* Canary to confirm this renderer is mounted */}
+      <text x={24} y={100} fill="#ffff77" fontSize="16" fontFamily="ui-monospace">ConnectionRenderer: rails-fixed</text>
+
+      {/* ===== unions ===== */}
       {unionGroups.map(g => (
         <Fragment key={g.key}>
           {/* stems */}
@@ -108,13 +106,13 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
           {/* bar */}
           <path d={`M${g.bar.x1},${g.bar.y} L${g.bar.x2},${g.bar.y}`} stroke={COLORS.strong} strokeWidth={BAR_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* drop from bar midpoint to rail (strong) */}
+          {/* drop from bar midpoint to fixed rail */}
           <path d={`M${g.bar.xm},${g.bar.y} V${g.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* shared rail (link color) */}
+          {/* rail */}
           <path d={`M${g.rail.x1},${g.rail.y} L${g.rail.x2},${g.rail.y}`} stroke={COLORS.link} strokeWidth={EDGE_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* verticals to each child */}
+          {/* drops to children */}
           {g.children.map(c => (
             <path key={`${g.key}-${c.id}`} d={`M${c.tx},${g.rail.y} V${c.ty}`} stroke={COLORS.link} strokeWidth={EDGE_W}
                   fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
@@ -125,13 +123,10 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
       {/* ===== single-parent rails ===== */}
       {singleParentGroups.map(sp => (
         <g key={sp.key}>
-          {/* parent drop to rail (strong) */}
           <path d={`M${sp.parentBottomX},${sp.rail.y - 24} V${sp.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* rail */}
           <path d={`M${sp.rail.x1},${sp.rail.y} L${sp.rail.x2},${sp.rail.y}`} stroke={COLORS.link} strokeWidth={EDGE_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* child drops */}
           {sp.children.map(c => (
             <path key={`${sp.key}-${c.id}`} d={`M${c.tx},${sp.rail.y} V${c.ty}`} stroke={COLORS.link} strokeWidth={EDGE_W}
                   fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
