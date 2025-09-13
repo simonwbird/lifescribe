@@ -61,11 +61,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Sunrise Coral brand palette
+        // Sea-Glass + Coral brand palette
         brand: {
           700: "hsl(var(--brand-700))",
           600: "hsl(var(--brand-600))", 
-          500: "hsl(var(--brand-500))",
           primary: "hsl(var(--brand-primary))",
           "primary-foreground": "hsl(var(--brand-primary-foreground))",
           secondary: "hsl(var(--brand-secondary))",
@@ -74,6 +73,12 @@ export default {
           accent: "hsl(var(--brand-accent))",
           green: "hsl(var(--brand-green))",
           "green-foreground": "hsl(var(--brand-green-foreground))",
+        },
+        // Accent colors
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+          500: "hsl(var(--accent-500))",
         },
         // Semantic text colors
         ink: {
@@ -86,8 +91,6 @@ export default {
           section: "hsl(var(--neutral-section))",
           card: "hsl(var(--neutral-card))",
         },
-        // Counter-accent - fresh sea-glass
-        seaglass: "hsl(var(--seaglass))",
         // State colors
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",

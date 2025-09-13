@@ -77,22 +77,19 @@ small, .overline {
 
     --radius: 0.5rem;
 
-    /* Sunrise Coral brand palette - celebrating life memories */
-    --brand-700: 12 54% 49%;           /* #C24A36 - Primary (AA compliant) */
-    --brand-600: 12 54% 54%;           /* #D15441 - Hover state */
-    --brand-500: 12 100% 68%;          /* #FF7A64 - Accent (large text only) */
+    /* Sea-Glass + Coral theme - fresh and celebratory */
+    --brand-700: 172 77% 36%;          /* #16A39A - Primary (AA compliant) */
+    --brand-600: 173 78% 31%;          /* #108E86 - Hover state */
+    --accent-500: 12 100% 68%;         /* #FF7A64 - Coral accent (large text only) */
     
     /* Semantic text colors */
-    --ink: 25 25% 11%;                 /* #221A17 - Body text */
-    --ink-muted: 25 4% 42%;            /* #6C6763 - Secondary text */
+    --ink: 210 14% 14%;                /* #1C2228 - Body text */
+    --ink-muted: 210 10% 44%;          /* #66707B - Secondary text */
     
-    /* Layout neutrals - warm peach palette */
-    --neutral-canvas: 30 43% 96%;      /* #FFF7F3 - Page background */
-    --neutral-section: 25 100% 95%;    /* #FFEDE6 - Section background */
+    /* Layout neutrals - cool mint palette */
+    --neutral-canvas: 160 33% 97%;     /* #F7FBFA - Page background */
+    --neutral-section: 160 43% 95%;    /* #ECF7F5 - Section background */
     --neutral-card: 0 0% 100%;         /* #FFFFFF - Cards stay white */
-    
-    /* Counter-accent - fresh sea-glass */
-    --seaglass: 174 51% 37%;           /* #2E8F86 - Cool counter-accent */
     
     /* State colors */
     --success: 122 39% 49%;
@@ -110,18 +107,18 @@ small, .overline {
     --scrapbook-paper: 42 15% 96%;
     --scrapbook-shadow: 220 10% 10%;
     
-    /* Brand colors using Sunrise Coral palette */
+    /* Brand colors using Sea-Glass + Coral palette */
     --brand-primary: var(--brand-700);
     --brand-primary-foreground: 0 0% 100%;
     --brand-secondary: var(--neutral-section);
     --brand-secondary-foreground: var(--ink);
     --brand-muted: var(--neutral-card);
-    --brand-accent: var(--seaglass);
+    --brand-accent: var(--accent-500);
     --brand-green: 142 65% 45%;
     --brand-green-foreground: 0 0% 100%;
     
-    /* Warm coral gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-700)), hsl(var(--brand-500)));
+    /* Cool sea-glass gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-700)), hsl(var(--brand-600)));
     --gradient-paper: linear-gradient(to bottom right, hsl(var(--neutral-canvas)), hsl(var(--neutral-section)));
     --gradient-subtle: linear-gradient(to bottom, hsl(var(--neutral-canvas)), hsl(var(--neutral-section) / 0.3));
     
@@ -129,7 +126,7 @@ small, .overline {
     --shadow-photo: 0 4px 12px hsl(var(--ink) / 0.15);
     --shadow-frame: 0 2px 8px hsl(var(--ink) / 0.1);
     --shadow-card: 0 8px 24px rgba(0,0,0,0.06);
-    --shadow-focus: 0 0 0 2px rgba(34,26,23,0.35);
+    --shadow-focus: 0 0 0 2px rgba(28,34,40,0.35);
     --border-photo: 1px solid hsl(var(--neutral-section));
     
     /* Override main colors with Sunrise Coral theme */
@@ -230,7 +227,7 @@ small, .overline {
   }
   
   ::selection { 
-    background: hsl(var(--brand-500)); 
+    background: hsl(var(--accent-500)); 
     color: white; 
   }
 }
@@ -268,9 +265,9 @@ small, .overline {
 
   .chip {
     @apply inline-flex items-center gap-1 rounded-xl px-3 py-1 text-sm;
-    background: hsl(var(--neutral-canvas));
+    background: #E9F6F4;
     color: hsl(var(--brand-700));
-    border: 1px solid hsl(var(--brand-700) / 0.2);
+    border: 1px solid rgba(22,163,154,0.25);
   }
 
   .card-terracotta {

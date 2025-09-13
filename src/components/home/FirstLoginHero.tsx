@@ -99,14 +99,14 @@ export default function FirstLoginHero({ completedSteps, onStepComplete }: First
               <div key={step.id} className="flex items-center space-x-3">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
                   step.completed 
-                    ? 'bg-brand-700 text-white' 
-                    : 'border-2 border-muted-foreground'
+                     ? 'bg-brand-700 text-white' 
+                     : 'border-2 border-muted-foreground'
                 }`}>
                   {step.completed && <Check className="w-3 h-3" />}
                 </div>
-                <span className={`text-body ${
-                  step.completed ? 'text-brand-700' : 'text-foreground'
-                }`}>
+                 <span className={`text-body ${
+                   step.completed ? 'text-brand-700' : 'text-foreground'
+                 }`}>
                   {step.label}
                 </span>
               </div>

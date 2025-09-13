@@ -39,7 +39,7 @@ const Hero = () => (
             </p>
             <h1 className="text-hero lg:text-6xl font-serif font-bold leading-tight text-foreground">
               Some memories fade.{" "}
-              <span className="text-brand-500">
+              <span className="text-accent-500">
                 Yours don't have to.
               </span>
             </h1>
@@ -98,7 +98,7 @@ const ExperienceSection = () => (
           <div className="space-y-8">
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
               <div className="p-3 bg-neutral-canvas rounded-lg">
-                <TreePine className="h-6 w-6 text-seaglass" />
+                <TreePine className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Tree that grows with your family</h3>
@@ -108,7 +108,7 @@ const ExperienceSection = () => (
             
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
               <div className="p-3 bg-neutral-canvas rounded-lg">
-                <Clock className="h-6 w-6 text-seaglass" />
+                <Clock className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Timelines you can wander</h3>
@@ -118,7 +118,7 @@ const ExperienceSection = () => (
             
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
               <div className="p-3 bg-neutral-canvas rounded-lg">
-                <BookHeart className="h-6 w-6 text-seaglass" />
+                <BookHeart className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Recipes & heirlooms with their stories</h3>
@@ -128,7 +128,7 @@ const ExperienceSection = () => (
             
             <div className="flex items-start space-x-4 p-4 bg-card rounded-lg shadow-frame border border-border">
               <div className="p-3 bg-neutral-canvas rounded-lg">
-                <Heart className="h-6 w-6 text-seaglass" />
+                <Heart className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Voices you can replay</h3>
@@ -169,7 +169,7 @@ const BenefitsSection = () => (
           <div className="space-y-8">
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
-                <Users className="h-6 w-6 text-seaglass" />
+                <Users className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">Grandparents sharing stories the kids will listen to again and again</h3>
@@ -179,7 +179,7 @@ const BenefitsSection = () => (
             
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
-                <BookHeart className="h-6 w-6 text-seaglass" />
+                <BookHeart className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">Old photos no longer tucked away in dusty boxes</h3>
@@ -191,7 +191,7 @@ const BenefitsSection = () => (
           <div className="space-y-8">
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
-                <Globe className="h-6 w-6 text-seaglass" />
+                <Globe className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">Family scattered across the world, connected in one place</h3>
@@ -201,7 +201,7 @@ const BenefitsSection = () => (
             
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-neutral-canvas rounded-full flex items-center justify-center flex-shrink-0">
-                <Home className="h-6 w-6 text-seaglass" />
+                <Home className="h-6 w-6 text-brand-700" />
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-3 text-foreground">A safe space that feels like home — private, warm, and only for you</h3>
@@ -222,7 +222,7 @@ const EmotionalSection = () => (
       <div className="max-w-5xl mx-auto space-y-8">
         <h2 className="text-hero font-serif font-bold leading-tight text-foreground">
           Imagine your granddaughter discovering the recipe you cooked every Sunday, 
-          <span className="text-brand-500 italic"> in your handwriting.</span> 
+          <span className="text-accent-500 italic"> in your handwriting.</span> 
           Or hearing your laugh for the very first time.
         </h2>
         <p className="text-body font-sans text-muted-foreground leading-relaxed max-w-4xl mx-auto">
@@ -246,7 +246,7 @@ const TestimonialCard = ({ quote, author }: { quote: string, author: string }) =
   <Card className="bg-card rounded-lg shadow-photo border border-border p-6 h-full relative">
     <CardContent className="p-0">
       <div className="mb-6">
-        <div className="text-4xl text-brand-500 font-serif leading-none">"</div>
+        <div className="text-4xl text-accent-500 font-serif leading-none">"</div>
       </div>
       <p className="text-lg font-sans mb-6 italic leading-relaxed text-foreground">
         {quote}
@@ -254,7 +254,7 @@ const TestimonialCard = ({ quote, author }: { quote: string, author: string }) =
       <p className="font-sans font-medium text-muted-foreground">— {author}</p>
     </CardContent>
     {/* Decorative corner */}
-    <div className="absolute -top-2 -right-2 w-6 h-6 bg-seaglass rounded-full opacity-60"></div>
+    <div className="absolute -top-2 -right-2 w-6 h-6 bg-brand-700 rounded-full opacity-60"></div>
   </Card>
 )
 
@@ -294,19 +294,19 @@ const PrivacySection = () => (
         <h2 className="text-2xl font-serif font-semibold mb-8 text-foreground">Why it's safe</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="space-y-2">
-            <Lock className="h-8 w-8 text-seaglass mx-auto" />
+            <Lock className="h-8 w-8 text-brand-700 mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">Private by default</p>
           </div>
           <div className="space-y-2">
-            <Users className="h-8 w-8 text-seaglass mx-auto" />
+            <Users className="h-8 w-8 text-brand-700 mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">Invite-only</p>
           </div>
           <div className="space-y-2">
-            <ArrowRight className="h-8 w-8 text-seaglass mx-auto" />
+            <ArrowRight className="h-8 w-8 text-brand-700 mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">Export anytime</p>
           </div>
           <div className="space-y-2">
-            <Home className="h-8 w-8 text-seaglass mx-auto" />
+            <Home className="h-8 w-8 text-brand-700 mx-auto" />
             <p className="font-sans text-sm text-muted-foreground">You own your data</p>
           </div>
         </div>
@@ -363,7 +363,7 @@ const FinalCallToAction = () => (
       <div className="max-w-5xl mx-auto space-y-8">
         <h2 className="text-hero font-serif font-bold leading-tight text-foreground">
           Your story is a gift.{" "}
-          <span className="text-brand-500">Pass it on.</span>
+          <span className="text-accent-500">Pass it on.</span>
         </h2>
         <p className="text-body font-sans text-muted-foreground leading-relaxed max-w-3xl mx-auto">
           Join the families building their own living archives with LifeScribe.
