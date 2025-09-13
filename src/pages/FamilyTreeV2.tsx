@@ -192,6 +192,13 @@ const FamilyTreeV2 = () => {
               <Upload className="h-4 w-4 mr-2" />
               Import GED
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/family-tree/csv-import')}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
             <Button variant="outline" onClick={() => navigate('/family-tree/explorer')}>
               Family Explorer
             </Button>
