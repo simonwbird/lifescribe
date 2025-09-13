@@ -53,6 +53,8 @@ export class FamilyTreeLayoutEngine {
   private children: TreeFamilyChild[]
   private personMap: Map<string, TreePerson>
   private familyMap: Map<string, TreeFamily>
+  private childMap: Map<string, TreePerson[]> = new Map()
+  private parentMap: Map<string, TreePerson[]> = new Map()
 
   constructor(
     people: TreePerson[],
@@ -66,6 +68,33 @@ export class FamilyTreeLayoutEngine {
     this.children = children
     this.personMap = new Map(people.map(p => [p.id, p]))
     this.familyMap = new Map(families.map(f => [f.id, f]))
+
+    // Build adjacency maps for fast lookups and better completeness
+    families.forEach(family => {
+      const famChildren = children.filter(fc => fc.family_id === family.id)
+      const p1 = family.partner1_id ? this.personMap.get(family.partner1_id) : undefined
+      const p2 = family.partner2_id ? this.personMap.get(family.partner2_id) : undefined
+
+      famChildren.forEach(fc => {
+        const child = this.personMap.get(fc.child_id)
+        if (!child) return
+        // Parents of this child
+        const parents: TreePerson[] = []
+        if (p1) parents.push(p1)
+        if (p2) parents.push(p2)
+        if (!this.parentMap.has(child.id)) this.parentMap.set(child.id, [])
+        const arr = this.parentMap.get(child.id)!
+        parents.forEach(par => { if (!arr.find(x => x.id === par.id)) arr.push(par) })
+
+        // Children of each parent
+        ;[p1, p2].forEach(par => {
+          if (!par) return
+          if (!this.childMap.has(par.id)) this.childMap.set(par.id, [])
+          const carr = this.childMap.get(par.id)!
+          if (!carr.find(x => x.id === child.id)) carr.push(child)
+        })
+      })
+    })
   }
 
   // Build layout for focus person and surrounding family
@@ -230,48 +259,11 @@ export class FamilyTreeLayoutEngine {
   }
 
   private getChildren(personId: string): TreePerson[] {
-    const children: TreePerson[] = []
-    
-    // Find families where person is a partner
-    const parentFamilies = this.families.filter(f => 
-      f.partner1_id === personId || f.partner2_id === personId
-    )
-
-    // Get children from those families
-    parentFamilies.forEach(family => {
-      const familyChildren = this.children
-        .filter(fc => fc.family_id === family.id)
-        .map(fc => this.personMap.get(fc.child_id))
-        .filter(Boolean) as TreePerson[]
-      
-      children.push(...familyChildren)
-    })
-
-    return children
+    return this.childMap.get(personId) || []
   }
 
   private getParents(personId: string): TreePerson[] {
-    const parents: TreePerson[] = []
-    
-    // Find families where person is a child
-    const childFamilies = this.children
-      .filter(fc => fc.child_id === personId)
-      .map(fc => this.familyMap.get(fc.family_id))
-      .filter(Boolean) as TreeFamily[]
-
-    // Get parents from those families
-    childFamilies.forEach(family => {
-      if (family.partner1_id) {
-        const parent = this.personMap.get(family.partner1_id)
-        if (parent) parents.push(parent)
-      }
-      if (family.partner2_id) {
-        const parent = this.personMap.get(family.partner2_id)
-        if (parent) parents.push(parent)
-      }
-    })
-
-    return parents
+    return this.parentMap.get(personId) || []
   }
 
   private addParentGeneration(
