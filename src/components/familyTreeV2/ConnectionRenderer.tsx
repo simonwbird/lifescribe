@@ -19,12 +19,12 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
         return (
           <g key={`u-${u.id}`}>
             {/* stems */}
-            <path d={`M${ax},${y - STEM_LEN} V${y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+            <path d={`M${ax},${y - STEM_LEN} V${y}`} stroke="#AEB3BE" strokeWidth={EDGE_W}
                   fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-            <path d={`M${bx},${y - STEM_LEN} V${y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+            <path d={`M${bx},${y - STEM_LEN} V${y}`} stroke="#AEB3BE" strokeWidth={EDGE_W}
                   fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             {/* bar */}
-            <path d={`M${x1},${y} L${x2},${y}`} stroke={COLORS.strong} strokeWidth={BAR_W}
+            <path d={`M${x1},${y} L${x2},${y}`} stroke="#AEB3BE" strokeWidth={BAR_W}
                   fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             {/* children */}
             {(u.children ?? []).map(cid => {
@@ -32,7 +32,7 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
               if (!c) return null;
               const tp = topPort(c);
               const d = pathUnionToChild(xm, y, tp);
-              return <path key={`uc-${u.id}-${cid}`} d={d} stroke={COLORS.link} strokeWidth={EDGE_W}
+              return <path key={`uc-${u.id}-${cid}`} d={d} stroke="#C9CCD4" strokeWidth={EDGE_W}
                            fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />;
             })}
           </g>
@@ -54,7 +54,7 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
           const c = layout.rects.get(cid);
           if (!c) return null;
           const d = pathParentToChild(bottomPort(r), topPort(c));
-          return <path key={`pc-${rid}-${cid}`} d={d} stroke={COLORS.link} strokeWidth={EDGE_W}
+          return <path key={`pc-${rid}-${cid}`} d={d} stroke="#C9CCD4" strokeWidth={EDGE_W}
                        fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />;
         });
       })}
