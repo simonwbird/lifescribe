@@ -265,25 +265,14 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   const renderPersonNode = (node: LayoutNode) => {
-    const displayName = `${node.given_name || ''} ${node.surname || ''}`.trim() || 'Unknown'
-    
-    const person = {
-      id: node.id,
-      full_name: displayName,
-      birth_date: node.birth_date,
-      death_date: node.death_date,
-      gender: node.gender,
-      avatar_url: node.avatar_url
-    }
-
     return (
       <PersonCard
         key={node.id}
         x={node.x - CARD_W / 2}
         y={node.y - CARD_H / 2}
-        person={person}
-        onClick={() => handlePersonClick(node.id)}
-        onQuickAdd={(type) => handleQuickAdd(type, node.id)}
+        person={node}
+        onClick={(p) => handlePersonClick(p.id)}
+        onAddClick={(p, type) => handleQuickAdd(type, p.id)}
       />
     )
   }
