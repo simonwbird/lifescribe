@@ -551,7 +551,7 @@ export class CsvImportService {
         given_name: p.given_name || null,
         surname: p.surname || null,
         full_name: fullName,
-        gender: p.sex || null,
+        gender: p.sex === 'M' ? 'male' : p.sex === 'F' ? 'female' : p.sex === 'X' ? 'other' : null,
         birth_date: parseDate(p.birth_date || ''),
         death_date: parseDate(p.death_date || ''),
         created_by: userId
