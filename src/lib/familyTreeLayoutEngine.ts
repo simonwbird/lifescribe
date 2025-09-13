@@ -35,13 +35,13 @@ export interface LayoutConfig {
 }
 
 export const defaultLayoutConfig: LayoutConfig = {
-  nodeWidth: 156,
-  nodeHeight: 208,
+  nodeWidth: 140,
+  nodeHeight: 180,
   unionWidth: 40,
   unionHeight: 20,
-  horizontalSpacing: 80,
-  siblingSpacing: 60,
-  generationHeight: 240
+  horizontalSpacing: 60,
+  siblingSpacing: 50,
+  generationHeight: 200
 }
 
 export class FamilyTreeLayoutEngine {
