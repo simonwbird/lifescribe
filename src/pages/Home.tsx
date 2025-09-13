@@ -11,6 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { supabase } from '@/lib/supabase'
 import { useAnalytics } from '@/hooks/useAnalytics'
+
+// Import capture background images
+import writingPaperBg from '@/assets/capture-backgrounds/writing-paper.jpg'
+import cameraLensBg from '@/assets/capture-backgrounds/camera-lens.jpg'
+import microphoneBg from '@/assets/capture-backgrounds/microphone.jpg'
+import videoCameraBg from '@/assets/capture-backgrounds/video-camera.jpg'
 import { 
   FileText, 
   Camera, 
@@ -629,47 +635,56 @@ export default function HomeV2() {
                     <Button 
                       onClick={() => handleQuickCapture('write')}
                       variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-indigo-100 hover:from-blue-100 hover:to-indigo-200 text-gray-800 shadow-sm group"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
+                      style={{
+                        backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.9), rgba(199, 210, 254, 0.9)), url(${writingPaperBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
                     >
-                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                        <div className="absolute inset-2 border-2 border-dashed border-blue-300 rounded"></div>
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-indigo-100/30 group-hover:from-blue-100/50 group-hover:to-indigo-200/50 transition-all duration-300"></div>
                       <FileText className="h-7 w-7 relative z-10 text-blue-600" />
                       <span className="font-semibold relative z-10 text-blue-800">Write</span>
                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('photo')}
                       variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-teal-100 hover:from-emerald-100 hover:to-teal-200 text-gray-800 shadow-sm group"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
+                      style={{
+                        backgroundImage: `linear-gradient(rgba(236, 253, 245, 0.9), rgba(167, 243, 208, 0.9)), url(${cameraLensBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
                     >
-                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                        <div className="absolute top-3 left-3 right-3 bottom-6 border-2 border-emerald-300 rounded"></div>
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-2 bg-emerald-300 rounded"></div>
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/30 to-teal-100/30 group-hover:from-emerald-100/50 group-hover:to-teal-200/50 transition-all duration-300"></div>
                       <Camera className="h-7 w-7 relative z-10 text-emerald-600" />
                       <span className="font-semibold relative z-10 text-emerald-800">Photo</span>
                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('voice')}
                       variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-orange-50 to-amber-100 hover:from-orange-100 hover:to-amber-200 text-gray-800 shadow-sm group"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
+                      style={{
+                        backgroundImage: `linear-gradient(rgba(255, 247, 237, 0.9), rgba(254, 215, 170, 0.9)), url(${microphoneBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
                     >
-                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-6 h-8 border-2 border-orange-300 rounded-full"></div>
-                        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-orange-300"></div>
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/30 to-amber-100/30 group-hover:from-orange-100/50 group-hover:to-amber-200/50 transition-all duration-300"></div>
                       <Mic className="h-7 w-7 relative z-10 text-orange-600" />
                       <span className="font-semibold relative z-10 text-orange-800">Voice</span>
                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('video')}
                       variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-violet-100 hover:from-purple-100 hover:to-violet-200 text-gray-800 shadow-sm group"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
+                      style={{
+                        backgroundImage: `linear-gradient(rgba(250, 245, 255, 0.9), rgba(221, 214, 254, 0.9)), url(${videoCameraBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
                     >
-                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                        <div className="absolute top-3 left-2 right-6 bottom-3 border-2 border-purple-300 rounded"></div>
-                        <div className="absolute top-4 right-2 w-4 h-4 border-2 border-l-0 border-purple-300 rounded-r"></div>
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 to-violet-100/30 group-hover:from-purple-100/50 group-hover:to-violet-200/50 transition-all duration-300"></div>
                       <Video className="h-7 w-7 relative z-10 text-purple-600" />
                       <span className="font-semibold relative z-10 text-purple-800">Video</span>
                     </Button>
