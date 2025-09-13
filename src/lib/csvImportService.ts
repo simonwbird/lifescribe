@@ -23,7 +23,7 @@ export class CsvImportService {
     const tempRows: TempRow[] = []
 
     for (let i = 1; i < lines.length; i++) {
-      const values = this.parseCsvLine(lines[i])
+      const values = CsvImportService.parseCsvLine(lines[i])
       if (values.length < headers.length) continue
 
       const person: Partial<GedcomPerson> = {}
@@ -208,8 +208,8 @@ export class CsvImportService {
     relationshipsContent: string,
     familyId: string
   ): Promise<ImportPreview> {
-    const people = this.parsePeopleCsv(peopleContent)
-    const relationships = this.parseRelationshipsCsv(relationshipsContent)
+    const people = CsvImportService.parsePeopleCsv(peopleContent)
+    const relationships = CsvImportService.parseRelationshipsCsv(relationshipsContent)
 
     // Get existing people for duplicate detection
     const { data: existingPeople } = await supabase
@@ -218,7 +218,7 @@ export class CsvImportService {
       .eq('family_id', familyId)
 
     const duplicates = existingPeople ? 
-      people.flatMap(person => this.findPotentialMatches(person, existingPeople)) : []
+      people.flatMap(person => CsvImportService.findPotentialMatches(person, existingPeople)) : []
 
     const uniqueFamilies = new Set(relationships.map(r => r.family_id)).size
     const childrenCount = relationships.filter(r => r.rel_type === 'parent').length
@@ -242,7 +242,7 @@ export class CsvImportService {
     const people: GedcomPerson[] = []
 
     for (let i = 1; i < lines.length; i++) {
-      const values = this.parseCsvLine(lines[i])
+      const values = CsvImportService.parseCsvLine(lines[i])
       if (values.length < headers.length) continue
 
       const person: Partial<GedcomPerson> = {}
@@ -304,7 +304,7 @@ export class CsvImportService {
     const relationships: GedcomRelationship[] = []
 
     for (let i = 1; i < lines.length; i++) {
-      const values = this.parseCsvLine(lines[i])
+      const values = CsvImportService.parseCsvLine(lines[i])
       if (values.length < headers.length) continue
 
       const rel: Partial<GedcomRelationship> = {}
@@ -577,7 +577,7 @@ export class CsvImportService {
 
   // Download CSV template
   static downloadCombinedTemplate(): void {
-    const content = this.generateCombinedTemplate()
+    const content = CsvImportService.generateCombinedTemplate()
     
     const blob = new Blob([content], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
