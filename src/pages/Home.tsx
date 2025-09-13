@@ -632,20 +632,29 @@ export default function HomeV2() {
                 <CardContent className="space-y-4">
                   {/* Primary capture modes */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Button 
-                      onClick={() => handleQuickCapture('write')}
-                      variant="outline"
-                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group"
-                      style={{
-                        backgroundImage: `linear-gradient(rgba(239, 246, 255, 0.9), rgba(199, 210, 254, 0.9)), url(${writingPaperBg})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-indigo-100/30 group-hover:from-blue-100/50 group-hover:to-indigo-200/50 transition-all duration-300"></div>
-                      <FileText className="h-7 w-7 relative z-10 text-blue-600" />
-                      <span className="font-semibold relative z-10 text-blue-800">Write</span>
-                    </Button>
+                     <Button 
+                       onClick={() => handleQuickCapture('write')}
+                       variant="outline"
+                       className="relative h-24 flex-col gap-2 overflow-hidden border-0 shadow-sm group bg-blue-50"
+                       style={{
+                         backgroundImage: `
+                           repeating-linear-gradient(
+                             transparent,
+                             transparent 18px,
+                             rgba(59, 130, 246, 0.1) 18px,
+                             rgba(59, 130, 246, 0.1) 20px
+                           ),
+                           url(${writingPaperBg})
+                         `,
+                         backgroundSize: 'auto, cover',
+                         backgroundPosition: 'center, center',
+                         backgroundBlendMode: 'multiply'
+                       }}
+                     >
+                       <div className="absolute inset-0 group-hover:bg-blue-100/20 transition-all duration-300"></div>
+                       <FileText className="h-7 w-7 relative z-10 text-blue-600" />
+                       <span className="font-semibold relative z-10 text-blue-800">Write</span>
+                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('photo')}
                       variant="outline"
