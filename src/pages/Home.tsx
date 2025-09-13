@@ -629,34 +629,49 @@ export default function HomeV2() {
                     <Button 
                       onClick={() => handleQuickCapture('write')}
                       variant="outline"
-                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-indigo-100 hover:from-blue-100 hover:to-indigo-200 text-gray-800 shadow-sm group"
                     >
-                      <FileText className="h-6 w-6" />
-                      <span className="font-medium">Write</span>
+                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                        <div className="absolute inset-2 border-2 border-dashed border-blue-300 rounded"></div>
+                      </div>
+                      <FileText className="h-7 w-7 relative z-10 text-blue-600" />
+                      <span className="font-semibold relative z-10 text-blue-800">Write</span>
                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('photo')}
                       variant="outline"
-                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-teal-100 hover:from-emerald-100 hover:to-teal-200 text-gray-800 shadow-sm group"
                     >
-                      <Camera className="h-6 w-6" />
-                      <span className="font-medium">Photo</span>
+                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                        <div className="absolute top-3 left-3 right-3 bottom-6 border-2 border-emerald-300 rounded"></div>
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-2 bg-emerald-300 rounded"></div>
+                      </div>
+                      <Camera className="h-7 w-7 relative z-10 text-emerald-600" />
+                      <span className="font-semibold relative z-10 text-emerald-800">Photo</span>
                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('voice')}
                       variant="outline"
-                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-orange-50 to-amber-100 hover:from-orange-100 hover:to-amber-200 text-gray-800 shadow-sm group"
                     >
-                      <Mic className="h-6 w-6" />
-                      <span className="font-medium">Voice</span>
+                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-6 h-8 border-2 border-orange-300 rounded-full"></div>
+                        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-orange-300"></div>
+                      </div>
+                      <Mic className="h-7 w-7 relative z-10 text-orange-600" />
+                      <span className="font-semibold relative z-10 text-orange-800">Voice</span>
                     </Button>
                     <Button 
                       onClick={() => handleQuickCapture('video')}
                       variant="outline"
-                      className="h-20 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30"
+                      className="relative h-24 flex-col gap-2 overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-violet-100 hover:from-purple-100 hover:to-violet-200 text-gray-800 shadow-sm group"
                     >
-                      <Video className="h-6 w-6" />
-                      <span className="font-medium">Video</span>
+                      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                        <div className="absolute top-3 left-2 right-6 bottom-3 border-2 border-purple-300 rounded"></div>
+                        <div className="absolute top-4 right-2 w-4 h-4 border-2 border-l-0 border-purple-300 rounded-r"></div>
+                      </div>
+                      <Video className="h-7 w-7 relative z-10 text-purple-600" />
+                      <span className="font-semibold relative z-10 text-purple-800">Video</span>
                     </Button>
                   </div>
 
