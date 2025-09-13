@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
@@ -36,7 +36,8 @@ import {
   Camera,
   Heart,
   TreePine,
-  ArrowLeft
+  ArrowLeft,
+  Plus
 } from 'lucide-react'
 import type { Story, Answer, Question, Profile } from '@/lib/types'
 import type { Person } from '@/lib/familyTreeTypes'
@@ -68,6 +69,7 @@ export default function PersonProfile() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (id) {
@@ -570,6 +572,27 @@ export default function PersonProfile() {
               </TabsContent>
 
               <TabsContent value="stories" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Stories</h3>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => navigate(`/stories/new?person=${person.id}`)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Story
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsLinkStoryOpen(true)}
+                      size="sm"
+                    >
+                      <LinkIcon className="h-4 w-4 mr-2" />
+                      Link Existing
+                    </Button>
+                  </div>
+                </div>
+                
                 {stories.length > 0 ? (
                   stories.map((story) => (
                     <StoryCard key={story.id} story={story} />
@@ -580,12 +603,23 @@ export default function PersonProfile() {
                       <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-medium mb-2">No Stories Yet</h3>
                       <p className="text-muted-foreground mb-4">
-                        No stories have been linked to {displayName} yet.
+                        Share a memory, experience, or story about {displayName}.
                       </p>
-                      <Button onClick={() => setIsLinkStoryOpen(true)}>
-                        <LinkIcon className="h-4 w-4 mr-2" />
-                        Link a Story
-                      </Button>
+                      <div className="flex gap-2 justify-center">
+                        <Button 
+                          onClick={() => navigate(`/stories/new?person=${person.id}`)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Story
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsLinkStoryOpen(true)}
+                        >
+                          <LinkIcon className="h-4 w-4 mr-2" />
+                          Link Existing
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
