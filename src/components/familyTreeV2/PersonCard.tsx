@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { NodeRect, Person } from "../../lib/familyTreeV2Types";
+import { Plus } from "lucide-react";
 
 /** Card constants (Ancestry proportions - redesigned for vertical layout) */
 export const CARD_W = 140;
@@ -35,8 +36,17 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
   const firstName = nameParts[0] || '';
   const lastName = nameParts.slice(1).join(' ') || '';
 
-  const handleClick = () => {
-    navigate(`/people/${person.id}`);
+  const handleClick = (e: React.MouseEvent) => {
+    // Only navigate if not clicking on a connector button
+    if (!(e.target as Element).closest('.connector-btn')) {
+      navigate(`/people/${person.id}`);
+    }
+  };
+
+  const handleAddRelation = (e: React.MouseEvent, type: 'parent' | 'sibling' | 'child' | 'spouse') => {
+    e.stopPropagation();
+    // TODO: Open modal/dialog to add new family member with this relationship
+    console.log(`Add ${type} for ${name}`);
   };
 
   return (
@@ -75,6 +85,75 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
           />
         </g>
       )}
+
+      {/* Subtle connector buttons */}
+      {/* Add Parent - Top */}
+      <g className="connector-btn" style={{ opacity: 0.7 }}>
+        <circle 
+          cx={CARD_W/2} 
+          cy={-8} 
+          r="8" 
+          fill="#6B7280" 
+          stroke="#fff" 
+          strokeWidth="1"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => handleAddRelation(e, 'parent')}
+        />
+        <foreignObject x={CARD_W/2 - 6} y={-14} width="12" height="12" className="pointer-events-none">
+          <Plus size={12} color="#fff" />
+        </foreignObject>
+      </g>
+
+      {/* Add Sibling - Left */}
+      <g className="connector-btn" style={{ opacity: 0.7 }}>
+        <circle 
+          cx={-8} 
+          cy={CARD_H/2} 
+          r="8" 
+          fill="#6B7280" 
+          stroke="#fff" 
+          strokeWidth="1"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => handleAddRelation(e, 'sibling')}
+        />
+        <foreignObject x={-14} y={CARD_H/2 - 6} width="12" height="12" className="pointer-events-none">
+          <Plus size={12} color="#fff" />
+        </foreignObject>
+      </g>
+
+      {/* Add Spouse - Right */}
+      <g className="connector-btn" style={{ opacity: 0.7 }}>
+        <circle 
+          cx={CARD_W + 8} 
+          cy={CARD_H/2} 
+          r="8" 
+          fill="#6B7280" 
+          stroke="#fff" 
+          strokeWidth="1"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => handleAddRelation(e, 'spouse')}
+        />
+        <foreignObject x={CARD_W + 2} y={CARD_H/2 - 6} width="12" height="12" className="pointer-events-none">
+          <Plus size={12} color="#fff" />
+        </foreignObject>
+      </g>
+
+      {/* Add Child - Bottom */}
+      <g className="connector-btn" style={{ opacity: 0.7 }}>
+        <circle 
+          cx={CARD_W/2} 
+          cy={CARD_H + 8} 
+          r="8" 
+          fill="#6B7280" 
+          stroke="#fff" 
+          strokeWidth="1"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => handleAddRelation(e, 'child')}
+        />
+        <foreignObject x={CARD_W/2 - 6} y={CARD_H + 2} width="12" height="12" className="pointer-events-none">
+          <Plus size={12} color="#fff" />
+        </foreignObject>
+      </g>
       
       {/* Name below photo - centered and wrapped */}
       <text x={CARD_W/2} y={PHOTO_Y + PHOTO_H + 20} textAnchor="middle"
