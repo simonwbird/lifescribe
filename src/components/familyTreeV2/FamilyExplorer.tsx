@@ -13,7 +13,7 @@ const BG: React.CSSProperties = {
 };
 
 export default function FamilyExplorer({
-  people, relationships, focusPersonId, showCaptions = true,
+  people, relationships, focusPersonId, showCaptions = false,
 }:{
   people: Person[];
   relationships: Relationship[];
