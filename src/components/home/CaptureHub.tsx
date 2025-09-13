@@ -36,7 +36,7 @@ const TILES: TileConfig[] = [
     title: 'Write',
     description: 'Capture a memory in your own words.',
     icon: FileText,
-    route: '/create/write',
+    route: '/stories/new',
     color: '#2563EB',
     colorRgb: '37, 99, 235',
     hints: ['first job', 'grandma\'s recipe', 'that road trip'],
@@ -47,7 +47,7 @@ const TILES: TileConfig[] = [
     title: 'Photo',
     description: 'Add a photo and tell its story.',
     icon: Camera,
-    route: '/create/photo',
+    route: '/stories/new',
     color: '#10B981',
     colorRgb: '16, 185, 129',
     hints: ['wedding', 'school play', 'first home'],
@@ -58,7 +58,7 @@ const TILES: TileConfig[] = [
     title: 'Voice',
     description: 'Record your voice or a loved one\'s.',
     icon: Mic,
-    route: '/create/voice',
+    route: '/stories/new',
     color: '#F59E0B',
     colorRgb: '245, 158, 11',
     hints: ['grandpa\'s laugh', 'lullaby', 'bedtime tale'],
@@ -69,7 +69,7 @@ const TILES: TileConfig[] = [
     title: 'Video',
     description: 'Share a short clip or message.',
     icon: Video,
-    route: '/create/video',
+    route: '/stories/new',
     color: '#8B5CF6',
     colorRgb: '139, 92, 246',
     hints: ['birthday candles', 'holiday cheers', 'silly dance'],
@@ -80,19 +80,19 @@ const TILES: TileConfig[] = [
 const QUICK_ACTIONS = [
   {
     title: 'Answer today\'s prompt',
-    route: '/prompts/today',
+    route: '/prompts',
     icon: Calendar,
     ariaLabel: 'Answer today\'s writing prompt'
   },
   {
     title: 'Invite family',
-    route: '/family/invite',
+    route: '/family/members',
     icon: Users,
     ariaLabel: 'Invite family members'
   },
   {
     title: 'Upload a batch',
-    route: '/upload/batch',
+    route: '/stories/new',
     icon: Upload,
     ariaLabel: 'Upload multiple files'
   }
