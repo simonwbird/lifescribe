@@ -248,14 +248,7 @@ const FamilyTreeV2 = () => {
               className="hidden"
               id="csv-upload-existing"
             />
-            <div className="flex gap-1">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => CsvImportService.downloadCombinedTemplate()}
-              >
-                📥 Template
-              </Button>
+            <div className="flex flex-col gap-1">
               <Button 
                 variant="outline" 
                 onClick={() => document.getElementById('csv-upload-existing')?.click()}
@@ -263,14 +256,20 @@ const FamilyTreeV2 = () => {
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 Import CSV
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowDataEditor(true)}
+              <button 
+                onClick={() => CsvImportService.downloadCombinedTemplate()}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
               >
-                <Users className="h-4 w-4 mr-2" />
-                Edit Data
-              </Button>
+                Download CSV template
+              </button>
             </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDataEditor(true)}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Edit Data
+            </Button>
           </div>
         </div>
         
