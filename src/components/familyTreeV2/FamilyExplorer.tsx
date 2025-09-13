@@ -137,18 +137,9 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     const nodeRects = Array.from(newLayout.rects.values())
     setNodes(nodeRects)
 
-    return { nodes: nodeRects, layout: newLayout }
   }
 
-    // When showing All generations, include every disconnected component with relationships
-    if (gen >= 999) {
-      const processed = new Set(layout.nodes.map(n => n.id))
-      const addedUnionIds = new Set(layout.unions.map(u => u.id))
-
-      // Start placing additional components to the right of current bounds
-      let xOffset = 0
-      if (layout.nodes.length > 0) {
-        const maxX = Math.max(...layout.nodes.map(n => n.x))
+  const handleZoomOut = () => {
         xOffset = maxX + 200
       }
 
@@ -216,15 +207,6 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         const scaleY = svgHeight / height
         const scale = Math.min(scaleX, scaleY, 1)
         
-        setZoom(scale)
-        setPan({
-          x: svgWidth / 2 - (minX + maxX) / 2,
-          y: svgHeight / 2 - (minY + maxY) / 2
-        })
-      }
-    }, 100)
-  }
-
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev * 1.2, 3))
   }
@@ -263,6 +245,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
     }
+  }
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -313,70 +296,6 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
 
   const renderGenerationCaptions = () => {
     return null // Disabled for now
-  }
-
-  const renderUnionNode = (union: UnionNode) => {
-    const partner1Name = `${union.partner1.given_name || ''} ${union.partner1.surname || ''}`.trim()
-    const partner2Name = union.partner2 ? 
-      `${union.partner2.given_name || ''} ${union.partner2.surname || ''}`.trim() : null
-
-    return (
-      <g key={union.id} transform={`translate(${union.x}, ${union.y})`}>
-        {/* Union Card */}
-        <rect
-          x={-union.width / 2}
-          y={-union.height / 2}
-          width={union.width}
-          height={union.height}
-          rx={12}
-          className="fill-muted/30 stroke-primary stroke-2"
-        />
-        
-        {/* Heart icon */}
-        <Heart size={16} x={-8} y={-25} className="fill-primary" />
-        
-        {/* Partner names */}
-        <text
-          x={0}
-          y={-5}
-          textAnchor="middle"
-          className="fill-foreground text-sm font-medium"
-        >
-          {partner1Name}
-        </text>
-        
-        {partner2Name && (
-          <>
-            <text
-              x={0}
-              y={10}
-              textAnchor="middle"
-              className="fill-muted-foreground text-xs"
-            >
-              &
-            </text>
-            <text
-              x={0}
-              y={25}
-              textAnchor="middle"
-              className="fill-foreground text-sm font-medium"
-            >
-              {partner2Name}
-            </text>
-          </>
-        )}
-
-        {/* Relationship type */}
-        <text
-          x={0}
-          y={union.height / 2 - 5}
-          textAnchor="middle"
-          className="fill-muted-foreground text-xs capitalize"
-        >
-          {union.family.relationship_type}
-        </text>
-      </g>
-    )
   }
 
   const renderConnections = () => {
