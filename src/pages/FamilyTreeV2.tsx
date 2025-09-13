@@ -9,6 +9,7 @@ import { GedcomImportService } from '@/lib/gedcomImportService'
 import { CsvImportService } from '@/lib/csvImportService'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
+import FamilyExplorerWrapper from '@/components/familyTreeV2/FamilyExplorerWrapper'
 
 const FamilyTreeV2 = () => {
   const navigate = useNavigate()
@@ -296,13 +297,8 @@ const FamilyTreeV2 = () => {
           </div>
         </div>
         
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground mb-4">
-            You have {treeData.people.length} people in your family tree
-          </p>
-          <Button onClick={() => navigate('/family-tree/explorer')}>
-            Explore Tree
-          </Button>
+        <div className="mt-6">
+          <FamilyExplorerWrapper familyId={familyId} />
         </div>
       </div>
     </>
