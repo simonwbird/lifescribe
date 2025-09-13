@@ -169,20 +169,18 @@ export interface LayoutConfig {
 
 // Connection rendering types
 export interface FamilyGraph {
+  peopleById: Map<string, Person>
   childrenOf: Map<string, string[]>
   parentsOf: Map<string, string[]>
+  spouses: Map<string, Set<string>>
+  unions: Union[]
 }
 
 export interface TreeLayout {
-  unions: Array<{
-    id: string
-    a: string
-    b: string
-    depth: number
-    children: string[]
-  }>
-  rects: Map<string, { id: string; x: number; y: number }>
+  rects: Map<string, NodeRect>
+  unions: Union[]
   rows: Map<number, number>
+  bounds: { width: number; height: number }
 }
 
 // UI state types
@@ -198,6 +196,38 @@ export interface TreeViewState {
   autoLayout: boolean
   zoom: number
   pan: { x: number; y: number }
+}
+
+// Additional layout types for the new layout engine
+export interface Person {
+  id: string
+  [key: string]: any // Allow other properties
+}
+
+export interface Relationship {
+  type: 'parent' | 'spouse'
+  parent_id?: string
+  child_id?: string
+  a?: string
+  b?: string
+}
+
+export interface NodeRect {
+  id: string
+  x: number
+  y: number
+  w: number
+  h: number
+  depth: number
+}
+
+export interface Union {
+  id: string
+  a: string
+  b: string
+  children: string[]
+  depth: number
+  y: number
 }
 
 export interface QuickAddForm {

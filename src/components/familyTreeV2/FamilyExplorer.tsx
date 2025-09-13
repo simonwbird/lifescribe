@@ -8,9 +8,9 @@ import {
   Heart,
   Settings
 } from 'lucide-react'
-import { FamilyTreeLayoutEngine, defaultLayoutConfig, type LayoutNode, type UnionNode } from '@/lib/familyTreeLayoutEngine'
+import { buildGraph, layoutGraph } from '@/lib/familyTreeLayoutEngine'
 import { FamilyTreeService } from '@/lib/familyTreeV2Service'
-import type { TreePerson, TreeFamily, TreeFamilyChild } from '@/lib/familyTreeV2Types'
+import type { TreePerson, TreeFamily, TreeFamilyChild, FamilyGraph, TreeLayout, NodeRect } from '@/lib/familyTreeV2Types'
 import { QuickAddModal } from './QuickAddModal'
 import { PersonDrawer } from './PersonDrawer'
 import { PersonCard, CARD_W, CARD_H } from './PersonCard'
@@ -34,8 +34,8 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   
-  const [nodes, setNodes] = useState<LayoutNode[]>([])
-  const [unions, setUnions] = useState<UnionNode[]>([])
+  const [nodes, setNodes] = useState<NodeRect[]>([])
+  const [layout, setLayout] = useState<TreeLayout | null>(null)
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [quickAddContext, setQuickAddContext] = useState<{
@@ -107,8 +107,38 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     focusId: string,
     gen: number = generations
   ) => {
-    const engine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
-    const layout = engine.calculateLayout(focusId, gen)
+    // Convert to new API format
+    const rels = []
+    
+    // Add parent-child relationships from families
+    for (const family of families) {
+      const familyChildren = children.filter(c => c.family_id === family.id)
+      for (const child of familyChildren) {
+        if (family.partner1_id) {
+          rels.push({ type: 'parent' as const, parent_id: family.partner1_id, child_id: child.child_id })
+        }
+        if (family.partner2_id) {
+          rels.push({ type: 'parent' as const, parent_id: family.partner2_id, child_id: child.child_id })
+        }
+      }
+      
+      // Add spouse relationships
+      if (family.partner1_id && family.partner2_id) {
+        rels.push({ type: 'spouse' as const, a: family.partner1_id, b: family.partner2_id })
+      }
+    }
+
+    const graph = buildGraph(people, rels, focusId)
+    const newLayout = layoutGraph(graph, focusId)
+    
+    setLayout(newLayout)
+    
+    // Convert rects to nodes array for backward compatibility
+    const nodeRects = Array.from(newLayout.rects.values())
+    setNodes(nodeRects)
+
+    return { nodes: nodeRects, layout: newLayout }
+  }
 
     // When showing All generations, include every disconnected component with relationships
     if (gen >= 999) {
@@ -264,77 +294,25 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     loadTreeData() // Refresh tree
   }
 
-  const renderPersonNode = (node: LayoutNode) => {
+  const renderPersonNode = (node: NodeRect) => {
+    const person = people.find(p => p.id === node.id)
+    if (!person) return null
+    
     return (
       <PersonCard
         key={node.id}
-        x={node.x - CARD_W / 2}
-        y={node.y - CARD_H / 2}
-        person={node}
-        onClick={(p) => handlePersonClick(p.id)}
-        onAddClick={(p, type) => handleQuickAdd(type, p.id)}
+        x={node.x}
+        y={node.y}
+        person={person}
+        onClick={() => handlePersonClick(person)}
+        onAddClick={(type) => handleQuickAdd(type, person.id)}
       />
     )
   }
 
 
   const renderGenerationCaptions = () => {
-    if (!nodes.length) return null
-    
-    const focusPerson = people.find(p => p.id === focusPersonId) || people[0]
-    const focusName = focusPerson ? 
-      (focusPerson.given_name || focusPerson.full_name || '').split(' ')[0] : 'Simon'
-    
-    // Group nodes by level (from layout engine)
-    const levelGroups = new Map<number, LayoutNode[]>()
-    nodes.forEach(node => {
-      if (!levelGroups.has(node.level)) {
-        levelGroups.set(node.level, [])
-      }
-      levelGroups.get(node.level)!.push(node)
-    })
-    
-    const captionForLevel = (level: number, name: string) => {
-      // Ancestry-style exact captions
-      if (level === 3) return `${name}'s great-grandparents`
-      if (level === 2) return `${name}'s grandparents`
-      if (level === 1) return `${name}'s parents`
-      if (level === 0) return `${name}'s siblings`
-      if (level === -1) return `${name}'s children`
-      if (level === -2) return `${name}'s grandchildren`
-      if (level > 3) return `${name}'s ${level - 2}${getOrdinalSuffix(level - 2)} great-grandparents`
-      if (level < -2) return `${name}'s ${Math.abs(level) - 1}${getOrdinalSuffix(Math.abs(level) - 1)} great-grandchildren`
-      return ''
-    }
-    
-    const getOrdinalSuffix = (n: number) => {
-      const s = ['th', 'st', 'nd', 'rd']
-      const v = n % 100
-      return s[(v - 20) % 10] || s[v] || s[0]
-    }
-    
-    return Array.from(levelGroups.entries()).map(([level, levelNodes]) => {
-      const caption = captionForLevel(level, focusName)
-      if (!caption || !levelNodes.length) return null
-      
-      // Position caption below the generation (rowY + CARD_H + 34)
-      const minX = Math.min(...levelNodes.map(n => n.x))
-      const maxX = Math.max(...levelNodes.map(n => n.x))
-      const centerX = (minX + maxX) / 2
-      const rowY = levelNodes[0].y - CARD_H / 2 // top of cards
-      const captionY = rowY + CARD_H + 34
-      
-      return (
-        <text 
-          key={`caption-${level}`}
-          x={centerX} 
-          y={captionY} 
-          className="fe-caption"
-        >
-          {caption}
-        </text>
-      )
-    })
+    return null // Disabled for now
   }
 
   const renderUnionNode = (union: UnionNode) => {
@@ -402,67 +380,11 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   const renderConnections = () => {
-    // Simple debug - if this renders, function is being called
-    console.log('renderConnections called with:', { unionsCount: unions.length, nodesCount: nodes.length })
-    
-    if (unions.length === 0 || nodes.length === 0) {
+    if (!layout || nodes.length === 0) {
       return <g></g>
     }
 
-    // Build FamilyGraph - map children relationships
-    const childrenOf = new Map<string, string[]>()
-    const parentsOf = new Map<string, string[]>()
-    
-    unions.forEach(union => {
-      const partner1Id = union.partner1.id
-      const partner2Id = union.partner2?.id
-      const childIds = union.children.map(c => c.id)
-      
-      if (partner1Id) {
-        childrenOf.set(partner1Id, [...(childrenOf.get(partner1Id) || []), ...childIds])
-      }
-      if (partner2Id) {
-        childrenOf.set(partner2Id, [...(childrenOf.get(partner2Id) || []), ...childIds])
-      }
-
-      // Build parent relationships
-      childIds.forEach(childId => {
-        const parents = []
-        if (partner1Id) parents.push(partner1Id)
-        if (partner2Id) parents.push(partner2Id)
-        parentsOf.set(childId, [...(parentsOf.get(childId) || []), ...parents])
-      })
-    })
-
-    const graph = { childrenOf, parentsOf }
-
-    // Build TreeLayout - convert nodes and unions to layout format
-    const rects = new Map<string, { id: string; x: number; y: number }>()
-    const rows = new Map<number, number>()
-    
-    nodes.forEach(node => {
-      rects.set(node.id, { 
-        id: node.id, 
-        x: node.x - CARD_W / 2, 
-        y: node.y - CARD_H / 2 
-      })
-      // Track row Y positions by level
-      if (node.level !== undefined) {
-        rows.set(node.level, node.y - CARD_H / 2)
-      }
-    })
-
-    const layoutUnions = unions.map(union => ({
-      id: union.id,
-      a: union.partner1.id,
-      b: union.partner2?.id || union.partner1.id,
-      depth: nodes.find(n => n.id === union.partner1.id)?.level || 0,
-      children: union.children.map(c => c.id)
-    }))
-
-    const layout = { unions: layoutUnions, rects, rows }
-
-    return <ConnectionRenderer graph={graph} layout={layout} />
+    return <ConnectionRenderer graph={layout} layout={layout} />
   }
 
   return (
@@ -515,9 +437,6 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
           <Badge variant="secondary" className="text-xs">
             {nodes.length} people
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            {unions.length} unions
           </Badge>
         </div>
       </div>
