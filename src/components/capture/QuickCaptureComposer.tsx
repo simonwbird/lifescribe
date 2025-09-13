@@ -758,28 +758,40 @@ export default function QuickCaptureComposer({
       icon: FileText,
       label: 'Write',
       subtitle: 'Write a memory',
-      shortcut: 'W'
+      shortcut: 'W',
+      color: '#2563EB',
+      colorRgb: '37, 99, 235',
+      backgroundImage: '/hub/write-fallback.jpg'
     },
     {
       mode: 'photo' as const,
       icon: Camera,
       label: 'Photo',
       subtitle: 'Add photos',
-      shortcut: 'P'
+      shortcut: 'P',
+      color: '#10B981',
+      colorRgb: '16, 185, 129',
+      backgroundImage: '/hub/photo-fallback.jpg'
     },
     {
       mode: 'voice' as const,
       icon: Mic,
       label: 'Voice',
       subtitle: 'Record voice',
-      shortcut: 'V'
+      shortcut: 'V',
+      color: '#F59E0B',
+      colorRgb: '245, 158, 11',
+      backgroundImage: '/hub/voice-fallback.jpg'
     },
     {
       mode: 'video' as const,
       icon: Video,
       label: 'Video',
       subtitle: 'Record short video',
-      shortcut: 'Shift+V'
+      shortcut: 'Shift+V',
+      color: '#8B5CF6',
+      colorRgb: '139, 92, 246',
+      backgroundImage: '/hub/video-fallback.jpg'
     }
   ]
 
@@ -787,11 +799,11 @@ export default function QuickCaptureComposer({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent hideClose className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 lg:max-w-md lg:ml-auto lg:mr-4 lg:h-[calc(100vh-2rem)] lg:my-4">
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b shrink-0">
+        <DialogHeader className="px-6 py-4 border-b shrink-0 bg-gradient-to-r from-primary/5 to-accent/5">
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-3">
-              Quick Capture
-              <Badge variant="secondary" className="text-xs">
+            <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+              ✨ Quick Capture
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
                 4/7 streak
               </Badge>
             </DialogTitle>
@@ -799,7 +811,7 @@ export default function QuickCaptureComposer({
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-gray-100"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -840,21 +852,47 @@ export default function QuickCaptureComposer({
 
             {/* Capture Mode Tiles */}
             <div className="grid grid-cols-2 gap-3">
-              {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, shortcut }) => (
+              {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, shortcut, color, colorRgb, backgroundImage }) => (
                 <Button
                   key={mode}
-                  variant={selectedMode === mode ? "default" : "outline"}
-                  className="h-20 flex-col gap-2 text-center p-4"
+                  variant="outline"
+                  className={`
+                    relative h-24 flex-col gap-2 p-4 overflow-hidden border-0 shadow-sm group
+                    ${selectedMode === mode ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}
+                  `}
+                  style={{
+                    background: `linear-gradient(to bottom, rgba(${colorRgb}, 0.78), rgba(${colorRgb}, 0.78)), url(${backgroundImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
                   onClick={() => setSelectedMode(mode)}
                 >
-                  <Icon className="h-5 w-5" />
-                  <div>
-                    <div className="font-medium text-sm">{label}</div>
-                    <div className="text-xs opacity-70">{subtitle}</div>
+                  {/* Background blur effect */}
+                  <div 
+                    className="absolute inset-0 transition-all duration-400 group-hover:scale-105 blur-md"
+                    style={{
+                      backgroundImage: `url(${backgroundImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  />
+
+                  {/* Sheen effect on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
                   </div>
-                  <Badge variant="secondary" className="text-xs h-5">
-                    {shortcut}
-                  </Badge>
+
+                  {/* Content */}
+                  <div className="relative z-10 h-full flex flex-col justify-between items-center text-white">
+                    <Icon className="h-6 w-6" />
+                    <div className="text-center">
+                      <div className="font-semibold text-sm">{label}</div>
+                      <div className="text-xs text-white/80">{subtitle}</div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs h-5 bg-white/20 text-white border-white/30">
+                      {shortcut}
+                    </Badge>
+                  </div>
                 </Button>
               ))}
             </div>
