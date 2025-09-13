@@ -89,8 +89,13 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     
     // Center view on focus person
     const focusNode = layout.nodes.find(n => n.id === focusId)
-    if (focusNode) {
-      setPan({ x: -focusNode.x, y: -focusNode.y })
+    if (focusNode && svgRef.current) {
+      const svgWidth = svgRef.current.clientWidth || 800
+      const svgHeight = svgRef.current.clientHeight || 600
+      setPan({ 
+        x: svgWidth / 2 - focusNode.x, 
+        y: svgHeight / 2 - focusNode.y 
+      })
     }
   }
 
@@ -122,8 +127,8 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     
     setZoom(scale)
     setPan({
-      x: -(minX + maxX) / 2,
-      y: -(minY + maxY) / 2
+      x: svgWidth / 2 - (minX + maxX) / 2,
+      y: svgHeight / 2 - (minY + maxY) / 2
     })
   }
 
@@ -434,7 +439,7 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <g transform={`translate(${svgRef.current?.clientWidth || 0 / 2}, ${svgRef.current?.clientHeight || 0 / 2}) scale(${zoom}) translate(${pan.x}, ${pan.y})`}>
+          <g transform={`scale(${zoom}) translate(${pan.x}, ${pan.y})`}>
             {/* Grid background */}
             <defs>
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
