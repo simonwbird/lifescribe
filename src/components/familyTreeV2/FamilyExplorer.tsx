@@ -61,6 +61,13 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     loadTreeData()
   }, [familyId, focusPersonId])
 
+  // Recalculate layout when Auto Layout mode changes
+  useEffect(() => {
+    if (people.length > 0 && (focusPersonId || people[0])) {
+      calculateLayout(people, families, children, focusPersonId || people[0].id, generations)
+    }
+  }, [autoLayout])
+
   const loadTreeData = async () => {
     try {
       const data = await FamilyTreeService.getTreeData(familyId, focusPersonId)
@@ -89,7 +96,8 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
     const layout = engine.calculateLayout(focusId, gen)
     // Fallback: if too few nodes, include all people so the canvas reflects DB
     const nodeIds = new Set(layout.nodes.map(n => n.id))
-    if (layout.nodes.length < Math.min(people.length, 5)) {
+    // Only show 'everyone in a grid' when Auto Layout is OFF
+    if (!autoLayout && layout.nodes.length < Math.min(people.length, 5)) {
       const extra: LayoutNode[] = []
       people.forEach((p, idx) => {
         if (!nodeIds.has(p.id)) {
