@@ -42,13 +42,29 @@ export function PersonCard({ rect, person }: { rect: NodeRect; person: Person })
       <rect x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H} rx={PHOTO_R} 
             fill={genderFill(person.sex)} />
       
-      {/* Person silhouette icon */}
-      <g transform={`translate(${PHOTO_X + PHOTO_W/2 - 23}, ${PHOTO_Y + PHOTO_H/2 - 30})`}>
-        <path
-          d="M23 28c6.627 0 12-5.373 12-12S29.627 4 23 4s-12 5.373-12 12 5.373 12 12 12zm0 4C15.268 32 0 36.268 0 44v4h46v-4c0-7.732-15.268-12-23-12z"
-          fill="#fff" opacity="0.9"
-        />
-      </g>
+      {/* Display uploaded image if available, otherwise show silhouette */}
+      {person.avatar_url ? (
+        <foreignObject x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H}>
+          <img 
+            src={person.avatar_url} 
+            alt={name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: `${PHOTO_R}px`
+            }}
+          />
+        </foreignObject>
+      ) : (
+        // Default person silhouette icon
+        <g transform={`translate(${PHOTO_X + PHOTO_W/2 - 23}, ${PHOTO_Y + PHOTO_H/2 - 30})`}>
+          <path
+            d="M23 28c6.627 0 12-5.373 12-12S29.627 4 23 4s-12 5.373-12 12 5.373 12 12 12zm0 4C15.268 32 0 36.268 0 44v4h46v-4c0-7.732-15.268-12-23-12z"
+            fill="#fff" opacity="0.9"
+          />
+        </g>
+      )}
       
       {/* Name below photo - centered and wrapped */}
       <text x={CARD_W/2} y={PHOTO_Y + PHOTO_H + 20} textAnchor="middle"
