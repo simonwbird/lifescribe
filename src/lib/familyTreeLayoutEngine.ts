@@ -141,12 +141,24 @@ export class FamilyTreeLayoutEngine {
           (f.partner1_id === created[1].id && f.partner2_id === created[0].id)
         )
         if (family && !unionIds.has(family.id)) {
+          const familyChildren = this.children
+            .filter(fc => fc.family_id === family.id)
+            .map(fc => this.personMap.get(fc.child_id))
+            .filter(Boolean) as TreePerson[]
+
+          // Ensure all siblings (including target) are added at this generation level
+          familyChildren.forEach((child, idx) => {
+            const cx = idx * (this.config.nodeWidth + this.config.siblingSpacing)
+            const cy = (level + 1) * this.config.generationHeight
+            getOrCreateNode(child, cx, cy, level + 1)
+          })
+
           unions.push({
             id: family.id,
             family,
             partner1: created[0],
             partner2: created[1],
-            children: [target],
+            children: familyChildren,
             x: 0,
             y: level * this.config.generationHeight,
             width: this.config.unionWidth,
