@@ -44,7 +44,7 @@ export default function WelcomeHeader({ firstName = 'Emily', lastSeen, onCreateC
       <Button 
         onClick={onCreateClick}
         size="lg"
-        className="bg-sage hover:bg-sage/90 text-cream px-8 font-serif"
+        className="bg-brand-700 hover:bg-brand-600 text-white px-8 font-serif"
       >
         <Plus className="w-5 h-5 mr-2" />
         Create

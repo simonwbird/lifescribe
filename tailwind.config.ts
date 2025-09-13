@@ -25,6 +25,7 @@ export default {
         'h3':   ['1.25rem',{ lineHeight: '1.3' }],                              // 20px
         'body': ['1rem',   { lineHeight: '1.6' }],                              // 16px
         'fine': ['0.875rem',{lineHeight:'1.5'}],                                // 14px
+        'display': ['2.75rem', { lineHeight: '1.1', letterSpacing: '-0.015em' }], // Large display text
       },
       colors: {
         border: "hsl(var(--border))",
@@ -60,7 +61,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Warm terracotta brand palette
         brand: {
+          700: "hsl(var(--brand-700))",
+          600: "hsl(var(--brand-600))", 
+          500: "hsl(var(--brand-500))",
           primary: "hsl(var(--brand-primary))",
           "primary-foreground": "hsl(var(--brand-primary-foreground))",
           secondary: "hsl(var(--brand-secondary))",
@@ -70,6 +75,23 @@ export default {
           green: "hsl(var(--brand-green))",
           "green-foreground": "hsl(var(--brand-green-foreground))",
         },
+        // Semantic text colors
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          muted: "hsl(var(--ink-muted))",
+        },
+        // Layout neutrals
+        neutral: {
+          canvas: "hsl(var(--neutral-canvas))",
+          sand: "hsl(var(--neutral-sand))",
+          card: "hsl(var(--neutral-card))",
+          bluegray: "hsl(var(--neutral-bluegray))",
+        },
+        // State colors
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        error: "hsl(var(--error))",
+        info: "hsl(var(--info))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -85,6 +107,12 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "0.9rem",
+        "2xl": "1.25rem",
+      },
+      boxShadow: {
+        card: "0 8px 24px rgba(0,0,0,0.06)",
+        focus: "0 0 0 3px rgba(39,26,20,0.35)",
       },
       keyframes: {
         "accordion-down": {

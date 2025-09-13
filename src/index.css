@@ -77,43 +77,66 @@ small, .overline {
 
     --radius: 0.5rem;
 
-    /* LifeScribe celebration color palette - warm, joyful, life-affirming */
-    --scrapbook-cream: 45 25% 92%;        /* Soft cream background */
-    --scrapbook-beige: 42 20% 85%;        /* Warm beige */
-    --scrapbook-sage: 120 15% 70%;        /* Muted sage green */
-    --scrapbook-blue: 210 25% 75%;        /* Soft dusty blue */
-    --scrapbook-charcoal: 220 15% 25%;    /* Deep charcoal for text */
-    --scrapbook-coral: 12 85% 65%;        /* Warm coral - celebrating life */
-    --scrapbook-paper: 42 15% 96%;        /* Paper white */
-    --scrapbook-shadow: 220 10% 10%;      /* Soft shadow */
+    /* Warm terracotta brand palette - celebrating life memories */
+    --brand-700: 15 45% 45%;           /* Primary terracotta (AA compliant) */
+    --brand-600: 15 45% 50%;           /* Hover state */
+    --brand-500: 15 75% 60%;           /* Accent (large text only) */
     
-    /* Override brand colors with celebration palette */
-    --brand-primary: var(--scrapbook-coral);
-    --brand-primary-foreground: var(--scrapbook-paper);
-    --brand-secondary: var(--scrapbook-sage);
-    --brand-secondary-foreground: var(--scrapbook-charcoal);
-    --brand-muted: var(--scrapbook-beige);
-    --brand-accent: var(--scrapbook-blue);
-    --brand-green: 142 65% 45%;        /* Accessible green for Create CTA */
+    /* Semantic text colors */
+    --ink: 25 35% 12%;                 /* Body text */
+    --ink-muted: 25 8% 38%;            /* Secondary text */
+    
+    /* Layout neutrals */
+    --neutral-canvas: 40 15% 94%;      /* Page background */
+    --neutral-sand: 35 50% 80%;        /* Section background */
+    --neutral-card: 20 60% 75%;        /* Soft card tint */
+    --neutral-bluegray: 220 15% 75%;   /* Cool counter-accent */
+    
+    /* State colors */
+    --success: 122 39% 49%;
+    --warning: 35 91% 40%;
+    --error: 4 90% 58%;
+    --info: 207 90% 54%;
+    
+    /* Legacy scrapbook colors for compatibility */
+    --scrapbook-cream: 45 25% 92%;
+    --scrapbook-beige: 42 20% 85%; 
+    --scrapbook-sage: 120 15% 70%;
+    --scrapbook-blue: 210 25% 75%;
+    --scrapbook-charcoal: 220 15% 25%;
+    --scrapbook-coral: 12 85% 65%;
+    --scrapbook-paper: 42 15% 96%;
+    --scrapbook-shadow: 220 10% 10%;
+    
+    /* Brand colors using terracotta palette */
+    --brand-primary: var(--brand-700);
+    --brand-primary-foreground: var(--neutral-canvas);
+    --brand-secondary: var(--neutral-sand);
+    --brand-secondary-foreground: var(--ink);
+    --brand-muted: var(--neutral-card);
+    --brand-accent: var(--neutral-bluegray);
+    --brand-green: 142 65% 45%;
     --brand-green-foreground: 0 0% 100%;
     
-    /* Life-celebrating gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--scrapbook-coral)), hsl(var(--scrapbook-sage)));
-    --gradient-paper: linear-gradient(to bottom right, hsl(var(--scrapbook-paper)), hsl(var(--scrapbook-cream)));
-    --gradient-subtle: linear-gradient(to bottom, hsl(var(--scrapbook-paper)), hsl(var(--scrapbook-beige) / 0.3));
+    /* Warm gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-700)), hsl(var(--neutral-sand)));
+    --gradient-paper: linear-gradient(to bottom right, hsl(var(--neutral-canvas)), hsl(var(--neutral-sand)));
+    --gradient-subtle: linear-gradient(to bottom, hsl(var(--neutral-canvas)), hsl(var(--neutral-sand) / 0.3));
     
-    /* Paper texture and shadows */
-    --shadow-photo: 0 4px 12px hsl(var(--scrapbook-shadow) / 0.15);
-    --shadow-frame: 0 2px 8px hsl(var(--scrapbook-shadow) / 0.1);
-    --border-photo: 1px solid hsl(var(--scrapbook-beige));
+    /* Enhanced shadows */
+    --shadow-photo: 0 4px 12px hsl(var(--ink) / 0.15);
+    --shadow-frame: 0 2px 8px hsl(var(--ink) / 0.1);
+    --shadow-card: 0 8px 24px rgba(0,0,0,0.06);
+    --shadow-focus: 0 0 0 3px hsl(var(--ink) / 0.35);
+    --border-photo: 1px solid hsl(var(--neutral-sand));
     
-    /* Override main colors with scrapbook theme */
-    --background: var(--scrapbook-paper);
-    --foreground: var(--scrapbook-charcoal);
-    --muted: var(--scrapbook-beige);
-    --muted-foreground: 220 12% 45%;
-    --card: var(--scrapbook-paper);
-    --border: var(--scrapbook-beige);
+    /* Override main colors with terracotta theme */
+    --background: var(--neutral-canvas);
+    --foreground: var(--ink);
+    --muted: var(--neutral-sand);
+    --muted-foreground: var(--ink-muted);
+    --card: 0 0% 100%;
+    --border: var(--neutral-sand);
 
     --sidebar-background: 0 0% 98%;
 
@@ -187,5 +210,91 @@ small, .overline {
 
   body {
     @apply bg-background text-foreground;
+    background: hsl(var(--neutral-canvas));
+    color: hsl(var(--ink));
+  }
+  
+  h1, h2, h3 { 
+    color: hsl(var(--ink)); 
+  }
+  
+  a { 
+    color: hsl(var(--brand-700)); 
+    text-underline-offset: 2px; 
+  }
+  
+  a:hover { 
+    color: hsl(var(--brand-600)); 
+  }
+  
+  ::selection { 
+    background: hsl(var(--brand-500)); 
+    color: white; 
+  }
+}
+
+/* Terracotta Component Classes */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-2xl px-5 py-3 font-medium transition-colors focus:outline-none;
+    box-shadow: 0 0 0 0 rgba(0,0,0,0);
+  }
+  
+  .btn-primary {
+    background: hsl(var(--brand-700));
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: hsl(var(--brand-600));
+  }
+  
+  .btn-primary:focus-visible {
+    box-shadow: var(--shadow-focus);
+  }
+  
+  .btn-outline {
+    @apply border text-brand-700 bg-transparent;
+    border-color: hsl(var(--brand-700));
+    color: hsl(var(--brand-700));
+  }
+  
+  .btn-outline:hover {
+    background: hsl(var(--brand-700));
+    color: white;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-xl px-3 py-1 text-sm;
+    background: hsl(var(--neutral-canvas));
+    color: hsl(var(--brand-700));
+    border: 1px solid hsl(var(--brand-700) / 0.2);
+  }
+
+  .card-terracotta {
+    @apply rounded-2xl p-6;
+    background: white;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-tint {
+    @apply rounded-2xl p-6;
+    background: hsl(var(--neutral-card));
+    box-shadow: var(--shadow-card);
+  }
+
+  .section-sand { 
+    background: hsl(var(--neutral-sand)); 
+  }
+  
+  .muted { 
+    color: hsl(var(--ink-muted)); 
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-xl px-3 py-1 text-sm;
+    background: hsl(var(--neutral-canvas));
+    color: hsl(var(--ink));
+    border: 1px solid rgba(0,0,0,0.06);
   }
 }
