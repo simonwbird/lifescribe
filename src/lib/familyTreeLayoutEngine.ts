@@ -227,19 +227,36 @@ export class FamilyTreeLayoutEngine {
         const person2 = nodes.find(n => n.id === partner.id)
         
         if (person1 && person2) {
+          // Find real family records that connect these two partners (either order)
+          const matchingFamilies = this.families.filter(f =>
+            (f.partner1_id === person1.id && f.partner2_id === person2.id) ||
+            (f.partner1_id === person2.id && f.partner2_id === person1.id)
+          )
+
+          // Collect children belonging to these families
+          const unionChildren = matchingFamilies.flatMap(f =>
+            this.children
+              .filter(fc => fc.family_id === f.id)
+              .map(fc => this.personMap.get(fc.child_id))
+              .filter(Boolean) as TreePerson[]
+          )
+
+          // Prefer the first actual family if present, otherwise synthesize one
+          const familyRef = matchingFamilies[0] || {
+            id: `union-${unionKey}`,
+            family_id: person1.family_id,
+            partner1_id: person1.id,
+            partner2_id: person2.id,
+            relationship_type: 'union',
+            created_at: new Date().toISOString()
+          }
+
           const union: UnionNode = {
             id: `union-${unionKey}`,
-            family: {
-              id: `union-${unionKey}`,
-              family_id: person1.family_id,
-              partner1_id: person1.id,
-              partner2_id: person2.id,
-              relationship_type: 'union',
-              created_at: new Date().toISOString()
-            },
+            family: familyRef,
             partner1: person1,
             partner2: person2,
-            children: [],
+            children: unionChildren,
             x: (person1.x + person2.x) / 2,
             y: person1.y,
             width: this.config.unionWidth,
