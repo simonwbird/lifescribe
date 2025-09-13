@@ -332,27 +332,12 @@ small, .overline {
     fill: var(--fe-ink-muted);
   }
 
-  /* Ancestry-style connectors */
-  .fe-stem, .fe-bar, .fe-link {
+  /* Family Explorer lines (Ancestry) - colors set in ConnectionRenderer */
+  .fe-link, .fe-stem, .fe-bar {
     stroke-linecap: round;
     stroke-linejoin: round;
-    vector-effect: non-scaling-stroke; /* keeps width constant on zoom */
+    vector-effect: non-scaling-stroke;
     shape-rendering: geometricPrecision;
     fill: none;
-  }
-  
-  .fe-stem { 
-    stroke: #777777; 
-    stroke-width: 2; 
-  }
-  
-  .fe-bar { 
-    stroke: #777777; 
-    stroke-width: 3; 
-  }
-  
-  .fe-link { 
-    stroke: #777777; 
-    stroke-width: 2; 
   }
 }
