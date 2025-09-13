@@ -11,6 +11,17 @@ export class CsvImportService {
     const people: GedcomPerson[] = []
     const relationships: GedcomRelationship[] = []
 
+    type TempRow = {
+      person: GedcomPerson
+      spouseId?: string
+      parent1Id?: string
+      parent2Id?: string
+      familyId?: string
+      marriageDate?: string
+    }
+
+    const tempRows: TempRow[] = []
+
     for (let i = 1; i < lines.length; i++) {
       const values = this.parseCsvLine(lines[i])
       if (values.length < headers.length) continue
@@ -21,12 +32,10 @@ export class CsvImportService {
       let parent2Id = ''
       let familyId = ''
       let marriageDate = ''
-      
+
       headers.forEach((header, index) => {
         const value = values[index]?.trim().replace(/"/g, '') || ''
-        
         switch (header.toLowerCase()) {
-          // Person fields
           case 'person_id':
             person.person_id = value
             break
@@ -74,50 +83,89 @@ export class CsvImportService {
       })
 
       if (person.person_id) {
-        // Set defaults
         person.is_living = person.is_living || 'Y'
         person.raw_name = person.raw_name || `${person.given_name || ''} /${person.surname || ''}/`
-        people.push(person as GedcomPerson)
+        const finalized = person as GedcomPerson
+        people.push(finalized)
+        tempRows.push({ person: finalized, spouseId, parent1Id, parent2Id, familyId, marriageDate })
+      }
+    }
 
-        // Create spouse relationship
-        if (spouseId && familyId) {
+    // Build a map of spouse families from rows: key = sorted pair "A|B" => family_xref
+    const pairKey = (a: string, b: string) => [a, b].sort().join('|')
+    const spouseFamilyMap = new Map<string, string>()
+
+    tempRows.forEach(r => {
+      if (r.spouseId && r.familyId) {
+        spouseFamilyMap.set(pairKey(r.person.person_id, r.spouseId), r.familyId)
+      }
+    })
+
+    // Build relationships with correct family IDs
+    const spouseDedup = new Set<string>()
+    const parentDedup = new Set<string>()
+
+    tempRows.forEach(r => {
+      // Spouse
+      if (r.spouseId && r.familyId) {
+        const key = `${r.familyId}|${pairKey(r.person.person_id, r.spouseId)}`
+        if (!spouseDedup.has(key)) {
           relationships.push({
             rel_type: 'spouse',
-            a_id: person.person_id,
-            b_id: spouseId,
-            family_id: familyId,
-            marriage_date: marriageDate,
+            a_id: r.person.person_id,
+            b_id: r.spouseId,
+            family_id: r.familyId,
+            marriage_date: r.marriageDate || '',
             divorce_date: '',
             note: ''
           })
-        }
-
-        // Create parent-child relationships
-        if (parent1Id && familyId) {
-          relationships.push({
-            rel_type: 'parent',
-            a_id: parent1Id,
-            b_id: person.person_id,
-            family_id: familyId,
-            marriage_date: '',
-            divorce_date: '',
-            note: 'parent->child'
-          })
-        }
-
-        if (parent2Id && familyId) {
-          relationships.push({
-            rel_type: 'parent',
-            a_id: parent2Id,
-            b_id: person.person_id,
-            family_id: familyId,
-            marriage_date: '',
-            divorce_date: '',
-            note: 'parent->child'
-          })
+          spouseDedup.add(key)
         }
       }
-    }
+
+      // Parents -> child
+      if (r.parent1Id || r.parent2Id) {
+        let parentsFamilyXref = ''
+        if (r.parent1Id && r.parent2Id) {
+          parentsFamilyXref = spouseFamilyMap.get(pairKey(r.parent1Id, r.parent2Id)) || `F_${pairKey(r.parent1Id, r.parent2Id)}`
+        } else if (r.parent1Id) {
+          parentsFamilyXref = `F_single_${r.parent1Id}`
+        } else if (r.parent2Id) {
+          parentsFamilyXref = `F_single_${r.parent2Id}`
+        }
+
+        if (r.parent1Id) {
+          const k1 = `${parentsFamilyXref}|${r.parent1Id}|${r.person.person_id}`
+          if (!parentDedup.has(k1)) {
+            relationships.push({
+              rel_type: 'parent',
+              a_id: r.parent1Id,
+              b_id: r.person.person_id,
+              family_id: parentsFamilyXref,
+              marriage_date: '',
+              divorce_date: '',
+              note: 'parent->child'
+            })
+            parentDedup.add(k1)
+          }
+        }
+        if (r.parent2Id) {
+          const k2 = `${parentsFamilyXref}|${r.parent2Id}|${r.person.person_id}`
+          if (!parentDedup.has(k2)) {
+            relationships.push({
+              rel_type: 'parent',
+              a_id: r.parent2Id,
+              b_id: r.person.person_id,
+              family_id: parentsFamilyXref,
+              marriage_date: '',
+              divorce_date: '',
+              note: 'parent->child'
+            })
+            parentDedup.add(k2)
+          }
+        }
+      }
+    })
 
     return { people, relationships }
   }
@@ -333,29 +381,44 @@ export class CsvImportService {
       return date.toISOString().split('T')[0]
     }
 
-    // Insert people
-    const peopleToInsert = people.map(person => ({
-      family_id: familyId,
-      given_name: person.given_name || null,
-      surname: person.surname || null,
-      sex: person.sex || null,
-      birth_date: parseDate(person.birth_date || ''),
-      death_date: parseDate(person.death_date || ''),
-      is_living: person.is_living === 'Y',
-      source_xref: person.person_id,
-      created_by: userId
-    }))
-
-    const { data: insertedPeople, error: peopleError } = await supabase
+    // Fetch existing people and prepare insert list
+    const { data: existingPeople } = await supabase
       .from('tree_people')
-      .insert(peopleToInsert)
       .select('id, source_xref')
+      .eq('family_id', familyId)
 
-    if (peopleError) throw peopleError
-    if (!insertedPeople) throw new Error('Failed to insert people')
+    const existingMap = new Map<string, string>()
+    existingPeople?.forEach(p => {
+      if (p.source_xref) existingMap.set(p.source_xref, p.id)
+    })
 
-    // Create mapping from source IDs to database IDs
+    const toInsert = people
+      .filter(person => !existingMap.has(person.person_id))
+      .map(person => ({
+        family_id: familyId,
+        given_name: person.given_name || null,
+        surname: person.surname || null,
+        sex: person.sex || null,
+        birth_date: parseDate(person.birth_date || ''),
+        death_date: parseDate(person.death_date || ''),
+        is_living: person.is_living === 'Y',
+        source_xref: person.person_id,
+        created_by: userId
+      }))
+
+    let insertedPeople: Array<{ id: string; source_xref: string | null }> = []
+    if (toInsert.length > 0) {
+      const { data, error: peopleError } = await supabase
+        .from('tree_people')
+        .insert(toInsert)
+        .select('id, source_xref')
+      if (peopleError) throw peopleError
+      insertedPeople = data || []
+    }
+
+    // Create mapping from source IDs to database IDs (existing + inserted)
     const idMap = new Map<string, string>()
+    existingMap.forEach((id, xref) => idMap.set(xref, id))
     insertedPeople.forEach(person => {
       if (person.source_xref) {
         idMap.set(person.source_xref, person.id)
