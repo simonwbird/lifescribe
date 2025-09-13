@@ -139,74 +139,6 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
 
   }
 
-  const handleZoomOut = () => {
-        xOffset = maxX + 200
-      }
-
-      // Helper to compute bounds
-      const getBounds = (nodes: LayoutNode[]) => {
-        if (nodes.length === 0) return { minX: 0, maxX: 0, minY: 0, maxY: 0 }
-        const minX = Math.min(...nodes.map(n => n.x))
-        const maxX = Math.max(...nodes.map(n => n.x))
-        const minY = Math.min(...nodes.map(n => n.y))
-        const maxY = Math.max(...nodes.map(n => n.y))
-        return { minX, maxX, minY, maxY }
-      }
-
-      // Place each remaining connected component side-by-side preserving relationships
-      for (const person of people) {
-        if (processed.has(person.id)) continue
-
-        const subEngine = new FamilyTreeLayoutEngine(people, families, children, defaultLayoutConfig)
-        const sub = subEngine.calculateLayout(person.id, gen)
-
-        // Offset this component so it doesn't overlap the current layout
-        const { minX: sMinX, maxX: sMaxX, minY: sMinY } = getBounds(sub.nodes)
-        const dx = xOffset - sMinX
-        const dy = 0 - sMinY
-
-        sub.nodes.forEach(sn => {
-          if (!processed.has(sn.id)) {
-            layout.nodes.push({ ...sn, x: sn.x + dx, y: sn.y + dy })
-            processed.add(sn.id)
-          }
-        })
-        sub.unions.forEach(su => {
-          if (!addedUnionIds.has(su.id)) {
-            layout.unions.push({ ...su, x: su.x + dx, y: su.y + dy })
-            addedUnionIds.add(su.id)
-          }
-        })
-
-        xOffset += (sMaxX - sMinX) + 200
-      }
-    }
-
-    // REMOVED: Fallback grid layout that was capping nodes at 3-5
-    // Always use the proper generational layout from the engine
-    
-    console.debug('Layout nodes:', layout.nodes.length)
-    setNodes(layout.nodes)
-    setUnions(layout.unions)
-    
-    // Auto-fit view to show all nodes on screen
-    setTimeout(() => {
-      if (layout.nodes.length > 0) {
-        const minX = Math.min(...layout.nodes.map(n => n.x))
-        const maxX = Math.max(...layout.nodes.map(n => n.x))
-        const minY = Math.min(...layout.nodes.map(n => n.y))
-        const maxY = Math.max(...layout.nodes.map(n => n.y))
-        
-        const width = maxX - minX + 200
-        const height = maxY - minY + 200
-        
-        const svgWidth = svgRef.current?.clientWidth || 800
-        const svgHeight = svgRef.current?.clientHeight || 600
-        
-        const scaleX = svgWidth / width
-        const scaleY = svgHeight / height
-        const scale = Math.min(scaleX, scaleY, 1)
-        
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev * 1.2, 3))
   }
@@ -245,7 +177,6 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
     }
-  }
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -287,8 +218,8 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
         x={node.x}
         y={node.y}
         person={person}
-        onClick={() => handlePersonClick(person)}
-        onAddClick={(type) => handleQuickAdd(type, person.id)}
+        onClick={() => handlePersonClick(person.id)}
+        onAddClick={(p, type) => handleQuickAdd(type, p.id)}
       />
     )
   }
@@ -303,7 +234,21 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
       return <g></g>
     }
 
-    return <ConnectionRenderer graph={layout} layout={layout} />
+    const childrenOf = new Map<string, string[]>()
+    layout.unions.forEach(u => {
+      childrenOf.set(u.a, [...(childrenOf.get(u.a) || []), ...u.children])
+      childrenOf.set(u.b, [...(childrenOf.get(u.b) || []), ...u.children])
+    })
+
+    const graphForRenderer: FamilyGraph = {
+      peopleById: new Map(),
+      childrenOf,
+      parentsOf: new Map(),
+      spouses: new Map(),
+      unions: layout.unions
+    }
+
+    return <ConnectionRenderer graph={graphForRenderer} layout={layout} />
   }
 
   return (
