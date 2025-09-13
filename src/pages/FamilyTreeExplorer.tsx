@@ -56,7 +56,7 @@ const FamilyTreeExplorer = () => {
         <h1 className="text-lg font-semibold">Family Explorer</h1>
       </div>
       
-      <div className="flex-1">
+      <div className="flex-1 fe-canvas">
         <FamilyExplorer 
           familyId={familyId}
           onPersonFocus={(personId) => navigate(`?focus=${personId}`)}

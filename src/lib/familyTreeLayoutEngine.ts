@@ -35,13 +35,13 @@ export interface LayoutConfig {
 }
 
 export const defaultLayoutConfig: LayoutConfig = {
-  nodeWidth: 140,
-  nodeHeight: 180,
+  nodeWidth: 156,
+  nodeHeight: 208,
   unionWidth: 40,
   unionHeight: 20,
-  horizontalSpacing: 60,
-  siblingSpacing: 50,
-  generationHeight: 200
+  horizontalSpacing: 48,
+  siblingSpacing: 48,
+  generationHeight: 220
 }
 
 export class FamilyTreeLayoutEngine {
@@ -144,61 +144,111 @@ export class FamilyTreeLayoutEngine {
     const nodes: LayoutNode[] = []
     const unions: UnionNode[] = []
     
-    // Specific positioning to match Ancestry.com layout exactly
-    const positions = this.getAncestryPositions()
+    // Build generational layout using BFS from focus person
+    const focusPerson = this.personMap.get(focusPersonId)
+    if (!focusPerson) throw new Error('Focus person not found')
     
-    // Create nodes at exact positions
-    Object.entries(positions).forEach(([personName, pos]) => {
-      // Find person by name
-      const person = this.people.find(p => 
-        p.full_name.toLowerCase().includes(personName.toLowerCase()) ||
-        `${p.given_name} ${p.surname}`.toLowerCase().includes(personName.toLowerCase())
-      )
+    // Build depth map using BFS
+    const depthMap = new Map<string, number>()
+    const queue: { personId: string, depth: number }[] = [{ personId: focusPersonId, depth: 0 }]
+    const visited = new Set<string>()
+    
+    while (queue.length > 0) {
+      const { personId, depth } = queue.shift()!
+      if (visited.has(personId)) continue
+      visited.add(personId)
+      depthMap.set(personId, depth)
       
-      if (person) {
-        const node = this.createLayoutNode(person, pos.x, pos.y, pos.level)
-        nodes.push(node)
+      // Add parents (go up in generations)
+      const parents = this.getParents(personId)
+      parents.forEach(parent => {
+        if (!visited.has(parent.id)) {
+          queue.push({ personId: parent.id, depth: depth + 1 })
+        }
+      })
+      
+      // Add children (go down in generations)
+      const children = this.getChildren(personId)
+      children.forEach(child => {
+        if (!visited.has(child.id)) {
+          queue.push({ personId: child.id, depth: depth - 1 })
+        }
+      })
+      
+      // Add spouses at same level
+      const partners = this.getPartners(personId)
+      partners.forEach(partner => {
+        if (!visited.has(partner.id)) {
+          queue.push({ personId: partner.id, depth: depth })
+        }
+      })
+    }
+    
+    // Group people by generation
+    const generationMap = new Map<number, TreePerson[]>()
+    this.people.forEach(person => {
+      const depth = depthMap.get(person.id)
+      if (depth !== undefined) {
+        if (!generationMap.has(depth)) {
+          generationMap.set(depth, [])
+        }
+        generationMap.get(depth)!.push(person)
       }
     })
-
-    // Create unions for married couples
-    const marriagePositions = [
-      ['Simon William Bird', 'Zuzana Buckova'],
-      ['David Edward Bird', 'Helen Bird'], 
-      ['Edward Ellis Bird', 'Helen Dorothy Viccars'],
-      ['Henry George Kemter', 'Shirley Lenore Thomas'],
-      ['George Alfred Kemter', 'Ada Windeler'],
-      ['Archibald C Viccars', 'Annie May Cragg'],
-      ['William B Thomas', 'Bertha Olive Stork'],
-      ['William G Kemter', 'Bentley Kerry-Anne']
-    ]
-
-    marriagePositions.forEach(([name1, name2], index) => {
-      const person1 = nodes.find(n => n.full_name.includes(name1))
-      const person2 = nodes.find(n => n.full_name.includes(name2))
+    
+    // Layout each generation
+    const sortedDepths = Array.from(generationMap.keys()).sort((a, b) => b - a) // Parents first
+    
+    sortedDepths.forEach(depth => {
+      const peopleInGeneration = generationMap.get(depth) || []
+      const generationWidth = peopleInGeneration.length * this.config.nodeWidth + 
+                            (peopleInGeneration.length - 1) * this.config.siblingSpacing
+      let startX = -generationWidth / 2
       
-      if (person1 && person2) {
-        const union: UnionNode = {
-          id: `union-${index}`,
-          family: {
-            id: `union-${index}`,
-            family_id: person1.family_id,
-            partner1_id: person1.id,
-            partner2_id: person2.id,
-            relationship_type: 'union',
-            created_at: new Date().toISOString()
-          },
-          partner1: person1,
-          partner2: person2,
-          children: [],
-          x: (person1.x + person2.x) / 2,
-          y: person1.y + this.config.nodeHeight / 2,
-          width: this.config.unionWidth,
-          height: this.config.unionHeight,
-          level: person1.level
+      peopleInGeneration.forEach((person, index) => {
+        const x = startX + index * (this.config.nodeWidth + this.config.siblingSpacing)
+        const y = -depth * this.config.generationHeight // Negative because parents are "up"
+        
+        const node = this.createLayoutNode(person, x, y, depth)
+        nodes.push(node)
+      })
+    })
+    
+    // Create unions for spouse pairs
+    const processedUnions = new Set<string>()
+    
+    this.partnersMap.forEach((partners, personId) => {
+      partners.forEach(partner => {
+        const unionKey = [personId, partner.id].sort().join('-')
+        if (processedUnions.has(unionKey)) return
+        processedUnions.add(unionKey)
+        
+        const person1 = nodes.find(n => n.id === personId)
+        const person2 = nodes.find(n => n.id === partner.id)
+        
+        if (person1 && person2) {
+          const union: UnionNode = {
+            id: `union-${unionKey}`,
+            family: {
+              id: `union-${unionKey}`,
+              family_id: person1.family_id,
+              partner1_id: person1.id,
+              partner2_id: person2.id,
+              relationship_type: 'union',
+              created_at: new Date().toISOString()
+            },
+            partner1: person1,
+            partner2: person2,
+            children: [],
+            x: (person1.x + person2.x) / 2,
+            y: person1.y,
+            width: this.config.unionWidth,
+            height: this.config.unionHeight,
+            level: person1.level
+          }
+          unions.push(union)
         }
-        unions.push(union)
-      }
+      })
     })
 
     const bounds = this.calculateBounds(nodes, unions)

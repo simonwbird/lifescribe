@@ -7,10 +7,11 @@ const strokeCommon = {
   strokeLinecap: 'round' as const
 };
 
-function vLine(x1: number, y1: number, x2: number, y2: number) {
-  // Straight lines like Ancestry.com
-  const midY = y1 + (y2 - y1) / 2;
-  return `M${x1},${y1} L${x1},${midY} L${x2},${midY} L${x2},${y2}`;
+function parentChildCurve(x1: number, y1: number, x2: number, y2: number) {
+  // Gentle cubic curve for parent-child connections
+  const dy = y2 - y1;
+  const midY = y1 + dy * 0.5;
+  return `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
 }
 
 function hBar(x1: number, x2: number, y: number) {
@@ -42,7 +43,7 @@ export const ConnectionRenderer: React.FC<ConnectionRendererProps> = ({
       {parentConnections.map((conn, i) => (
         <path 
           key={`parent-${i}`}
-          d={vLine(conn.parentX, conn.parentY, conn.childX, conn.childY)} 
+          d={parentChildCurve(conn.parentX, conn.parentY, conn.childX, conn.childY)} 
           {...strokeCommon} 
         />
       ))}

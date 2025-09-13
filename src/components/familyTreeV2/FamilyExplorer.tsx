@@ -463,38 +463,92 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-background">
+    <div className="w-full h-full relative fe-canvas">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 p-4 border-b bg-muted/10">
-        <Button variant="outline" size="sm" onClick={handleZoomOut}>
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleZoomIn}>
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleFitView}>
-          <Maximize className="h-4 w-4" />
-        </Button>
-        
-        <div className="flex items-center gap-2 ml-4">
-          <span className="text-sm text-muted-foreground">Zoom: {Math.round(zoom * 100)}%</span>
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+        <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleZoomOut}
+            disabled={zoom <= 0.1}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium px-2">{Math.round(zoom * 100)}%</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleZoomIn}
+            disabled={zoom >= 3}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleFitView}
+            title="Fit to view"
+          >
+            <Maximize className="h-4 w-4" />
+          </Button>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Generations:</span>
-            <select 
-              value={generations} 
-              onChange={(e) => setGenerations(parseInt(e.target.value))}
-              className="text-sm border rounded px-2 py-1 bg-background"
-            >
-              <option value={3}>3</option>
-              <option value={5}>5</option>
-              <option value={7}>7</option>
-              <option value={10}>10</option>
-              <option value={999}>All</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
+          <label className="text-sm text-muted-foreground">Generations:</label>
+          <select 
+            value={generations} 
+            onChange={(e) => setGenerations(Number(e.target.value))}
+            className="text-sm bg-transparent border-none focus:outline-none"
+          >
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={999}>All</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border">
+          <Badge variant="secondary" className="text-xs">
+            {nodes.length} people
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            {unions.length} unions
+          </Badge>
+        </div>
+      </div>
+
+      {/* SVG Canvas */}
+      <svg
+        ref={svgRef}
+        className="w-full h-full cursor-move"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ background: 'transparent' }}
+      >
+        <defs>
+          <filter id="feCardShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="black" floodOpacity="0.20"/>
+          </filter>
+        </defs>
+        
+        <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+          {/* Render connections first (behind nodes) */}
+          {renderConnections()}
+          
+          {/* Render unions */}
+          {unions.map(renderUnionNode)}
+          
+          {/* Render person nodes */}
+          {nodes.map(renderPersonNode)}
+          
+          {/* Render generation captions */}
+          {renderGenerationCaptions()}
+        </g>
+      </svg>
           {/* Header stats that reflect the same arrays the canvas uses */}
           <Badge variant="outline" title="Nodes shown">
             {visibleGraph.people.length} people
@@ -586,30 +640,30 @@ export const FamilyExplorer: React.FC<FamilyExplorerProps> = ({
             
             {/* Generation captions */}
             {renderGenerationCaptions()}
-          </g>
-        </svg>
-      </div>
-
-      {/* Quick Add Modal */}
-      {showQuickAdd && quickAddContext && (
-        <QuickAddModal
-          open={showQuickAdd}
-          onOpenChange={setShowQuickAdd}
-          familyId={familyId}
-          relationshipType={quickAddContext.type}
-          targetPersonId={quickAddContext.targetPersonId}
-          onSuccess={handleQuickAddSuccess}
-        />
-      )}
-
-      {/* Person Details Drawer */}
-      {selectedPersonId && (
-        <PersonDrawer
-          personId={selectedPersonId}
-          open={!!selectedPersonId}
-          onOpenChange={(open) => !open && setSelectedPersonId(null)}
-        />
-      )}
+        </g>
+      </svg>
     </div>
+
+    {/* Quick Add Modal */}
+    {showQuickAdd && quickAddContext && (
+      <QuickAddModal
+        open={showQuickAdd}
+        onOpenChange={setShowQuickAdd}
+        familyId={familyId}
+        relationshipType={quickAddContext.type}
+        targetPersonId={quickAddContext.targetPersonId}
+        onSuccess={handleQuickAddSuccess}
+      />
+    )}
+
+    {/* Person Details Drawer */}
+    {selectedPersonId && (
+      <PersonDrawer
+        personId={selectedPersonId}
+        open={!!selectedPersonId}
+        onOpenChange={(open) => !open && setSelectedPersonId(null)}
+      />
+    )}
+  </div>
   )
 }

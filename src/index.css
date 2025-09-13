@@ -129,6 +129,20 @@ small, .overline {
     --shadow-focus: 0 0 0 2px rgba(28,34,40,0.35);
     --border-photo: 1px solid hsl(var(--neutral-section));
     
+    /* Family Explorer specific tokens */
+    --fe-canvas: #3B3C41;
+    --fe-grid: rgba(255,255,255,.04);
+    --fe-card: #fff;
+    --fe-card-border: #D9D9DF;
+    --fe-shadow: rgba(0,0,0,.20);
+    --fe-ink: #1F2328;
+    --fe-ink-muted: #6B7280;
+    --fe-male: #8DA9C4;
+    --fe-female: #E6B0A0;
+    --fe-unknown: #C3C7CF;
+    --fe-line: #C9CCD4;
+    --fe-line-strong: #AEB3BE;
+    
     /* Override main colors with Sunrise Coral theme */
     --background: var(--neutral-canvas);
     --foreground: var(--ink);
@@ -295,5 +309,31 @@ small, .overline {
     background: hsl(var(--neutral-canvas));
     color: hsl(var(--ink));
     border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* Family Explorer specific classes */  
+  .fe-canvas {
+    background: var(--fe-canvas);
+    background-image:
+      radial-gradient(var(--fe-grid) 1px, transparent 1px),
+      radial-gradient(var(--fe-grid) 1px, transparent 1px);
+    background-size: 24px 24px, 24px 24px;
+    background-position: 0 0, 12px 12px;
+  }
+
+  .fe-caption {
+    font: 600 12px/1.1 Inter, system-ui;
+    fill: rgba(255,255,255,.85);
+    text-anchor: middle;
+  }
+
+  .fe-name {
+    font: 600 13px/1.2 Inter, system-ui;
+    fill: var(--fe-ink);
+  }
+
+  .fe-dates {
+    font: 12px/1.2 Inter, system-ui;
+    fill: var(--fe-ink-muted);
   }
 }

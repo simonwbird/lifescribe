@@ -1,18 +1,28 @@
 import React from 'react'
 
-export const CARD_W = 140;
-export const CARD_H = 180;
-export const CARD_R = 8;
+// Ancestry-style card dimensions
+export const CARD_W = 156;
+export const CARD_H = 208;  
+export const CARD_R = 12;
 
-export const PHOTO_X = 12;
-export const PHOTO_Y = 12;
-export const PHOTO_W = CARD_W - 24;
-export const PHOTO_H = 100;
-export const PHOTO_R = 6;
+// Gender tile (left side)
+export const TILE_X = 10;
+export const TILE_Y = 10;
+export const TILE_W = 56;
+export const TILE_H = 76;
+export const TILE_R = 8;
 
-export const NAME_X = CARD_W / 2;
-export const NAME_Y = PHOTO_Y + PHOTO_H + 20;
-export const DATES_Y = NAME_Y + 18;
+// Text positioning
+export const NAME_X = TILE_X + TILE_W + 10;
+export const NAME_Y = 30;
+export const DATES_Y = 50;
+
+// Optional media preview
+export const MEDIA_W = 52;
+export const MEDIA_H = 66;
+export const MEDIA_X = NAME_X;
+export const MEDIA_Y = 64;
+export const MEDIA_R = 8;
 
 /* Layout spacing */
 export const H_SPACING = 48;        // siblings
@@ -48,14 +58,28 @@ export const PersonCard: React.FC<PersonCardProps> = ({
   onClick, 
   onQuickAdd 
 }) => {
-  const b = year(person.birth_date);
-  const d = year(person.death_date);
-  const dates = d ? `${b}–${d}` : (b ? `b. ${b}` : '');
+  const birthYear = year(person.birth_date);
+  const deathYear = year(person.death_date);
+  
+  // Ancestry-style date formatting
+  const dates = deathYear 
+    ? `${birthYear}–${deathYear}`
+    : birthYear 
+    ? `${birthYear}–Living`
+    : 'Living';
+    
   const initials = getInitials(person.full_name);
+  
+  // Gender color mapping
+  const genderColor = person.gender === 'male' 
+    ? 'var(--fe-male)' 
+    : person.gender === 'female' 
+    ? 'var(--fe-female)' 
+    : 'var(--fe-unknown)';
 
   return (
     <g transform={`translate(${x},${y})`}>
-      {/* Card */}
+      {/* Card background */}
       <rect 
         width={CARD_W} 
         height={CARD_H} 
@@ -64,136 +88,91 @@ export const PersonCard: React.FC<PersonCardProps> = ({
         stroke="var(--fe-card-border)"
         strokeWidth="1"
         filter="url(#feCardShadow)"
-        className="cursor-pointer hover:stroke-primary transition-colors"
+        className="cursor-pointer"
         onClick={onClick}
       />
 
-      {/* Photo area */}
+      {/* Gender tile */}
       <rect
-        x={PHOTO_X}
-        y={PHOTO_Y} 
-        width={PHOTO_W}
-        height={PHOTO_H}
-        rx={PHOTO_R}
-        fill="#f0f0f0"
-        stroke="var(--fe-card-border)"
-        strokeWidth="1"
+        x={TILE_X}
+        y={TILE_Y} 
+        width={TILE_W}
+        height={TILE_H}
+        rx={TILE_R}
+        fill={genderColor}
       />
 
-      {/* Photo or avatar */}
+      {/* Initials badge in top-left corner */}
+      <rect
+        x={8}
+        y={8}
+        width={24}
+        height={16}
+        rx={6}
+        fill="rgba(0,0,0,.06)"
+      />
+      <text 
+        x={20} 
+        y={19} 
+        textAnchor="middle"
+        style={{ font: '600 11px Inter, system-ui', fill: 'var(--fe-ink)' }}
+      >
+        {initials}
+      </text>
+
+      {/* White silhouette icon in gender tile center */}
+      <circle
+        cx={TILE_X + TILE_W/2}
+        cy={TILE_Y + TILE_H/2 - 8}
+        r={12}
+        fill="white"
+        opacity={0.8}
+      />
+      <rect
+        x={TILE_X + TILE_W/2 - 8}
+        y={TILE_Y + TILE_H/2 + 2}
+        width={16}
+        height={12}
+        rx={2}
+        fill="white"
+        opacity={0.8}
+      />
+
+      {/* Optional media preview */}
       {person.avatar_url ? (
         <>
           <clipPath id={`clip-${person.id}`}>
-            <rect x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H} rx={PHOTO_R}/>
+            <rect x={MEDIA_X} y={MEDIA_Y} width={MEDIA_W} height={MEDIA_H} rx={MEDIA_R}/>
           </clipPath>
           <image 
             href={person.avatar_url} 
-            x={PHOTO_X} 
-            y={PHOTO_Y} 
-            width={PHOTO_W} 
-            height={PHOTO_H}
+            x={MEDIA_X} 
+            y={MEDIA_Y} 
+            width={MEDIA_W} 
+            height={MEDIA_H}
             clipPath={`url(#clip-${person.id})`}
             preserveAspectRatio="xMidYMid slice"
           />
         </>
-      ) : (
-        /* Initials fallback */
-        <text 
-          x={PHOTO_X + PHOTO_W / 2} 
-          y={PHOTO_Y + PHOTO_H / 2 + 6} 
-          textAnchor="middle"
-          className="fill-muted-foreground text-xl font-semibold"
-        >
-          {initials}
-        </text>
-      )}
+      ) : null}
 
       {/* Name */}
       <text 
         x={NAME_X} 
         y={NAME_Y} 
-        textAnchor="middle"
         className="fe-name"
       >
         {person.full_name}
       </text>
       
       {/* Dates */}
-      {dates && (
-        <text 
-          x={NAME_X} 
-          y={DATES_Y} 
-          textAnchor="middle"
-          className="fe-dates"
-        >
-          {dates}
-        </text>
-      )}
-
-      {/* Quick add zones */}
-      {onQuickAdd && (
-        <>
-          {/* Add partner */}
-          <circle
-            cx={CARD_W + 20}
-            cy={CARD_H / 2}
-            r={12}
-            className="fill-primary/20 stroke-primary stroke-2 cursor-pointer hover:fill-primary/40 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuickAdd('partner')
-            }}
-          />
-          <text 
-            x={CARD_W + 20} 
-            y={CARD_H / 2 + 4} 
-            textAnchor="middle" 
-            className="fill-primary text-xs font-bold pointer-events-none"
-          >
-            +
-          </text>
-
-          {/* Add child */}
-          <circle
-            cx={CARD_W / 2}
-            cy={CARD_H + 20}
-            r={12}
-            className="fill-primary/20 stroke-primary stroke-2 cursor-pointer hover:fill-primary/40 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuickAdd('child')
-            }}
-          />
-          <text 
-            x={CARD_W / 2} 
-            y={CARD_H + 20 + 4} 
-            textAnchor="middle" 
-            className="fill-primary text-xs font-bold pointer-events-none"
-          >
-            +
-          </text>
-
-          {/* Add parent */}
-          <circle
-            cx={CARD_W / 2}
-            cy={-20}
-            r={12}
-            className="fill-primary/20 stroke-primary stroke-2 cursor-pointer hover:fill-primary/40 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuickAdd('parent')
-            }}
-          />
-          <text 
-            x={CARD_W / 2} 
-            y={-20 + 4} 
-            textAnchor="middle" 
-            className="fill-primary text-xs font-bold pointer-events-none"
-          >
-            +
-          </text>
-        </>
-      )}
+      <text 
+        x={NAME_X} 
+        y={DATES_Y} 
+        className="fe-dates"
+      >
+        {dates}
+      </text>
     </g>
   );
 };
