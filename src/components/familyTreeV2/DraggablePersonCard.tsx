@@ -174,7 +174,8 @@ export function DraggablePersonCard({
   
   // Determine which side is "outside" for married couples
   const getOutsideSides = () => {
-    if (!isMarried || !graph) return { left: true, right: true };
+    // If not married or no graph data, show all buttons
+    if (!isMarried || !graph || !positions) return { left: true, right: true };
     
     const spouses = graph.spouses?.get(person.id);
     if (!spouses || spouses.size === 0) return { left: true, right: true };
@@ -182,13 +183,17 @@ export function DraggablePersonCard({
     // Get spouse position to determine which side is "outside"
     const spouseId = Array.from(spouses)[0]; // Get first spouse
     const spousePos = positions.get(spouseId);
-    const currentPos = positions.get(person.id);
     
-    if (!spousePos || !currentPos) return { left: true, right: true };
+    // If we can't determine positions, show all buttons as fallback
+    if (!spousePos) return { left: true, right: true };
+    
+    // Use rect position (current position) instead of positions map
+    const currentX = rect.x;
+    const spouseX = spousePos.x;
     
     // If spouse is to the right, show buttons on the left side only
     // If spouse is to the left, show buttons on the right side only
-    const spouseIsToRight = spousePos.x > currentPos.x;
+    const spouseIsToRight = spouseX > currentX;
     
     return {
       left: spouseIsToRight, // Show left button if spouse is to the right
