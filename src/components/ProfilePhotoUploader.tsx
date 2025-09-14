@@ -310,8 +310,9 @@ export default function ProfilePhotoUploader({
   }
 
   const openEditDialog = () => {
-    if (!resolvedUrl) return
-    setImgSrc(resolvedUrl)
+    const src = resolvedUrl || currentPhotoUrl || ''
+    if (!src) return
+    setImgSrc(src)
     setEditDialogOpen(true)
   }
 
@@ -497,6 +498,50 @@ export default function ProfilePhotoUploader({
         </DialogContent>
       </Dialog>
 
+      {/* Photo crop editor */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Photo</DialogTitle>
+            <DialogDescription>
+              Adjust the crop to recenter your photo. Square crop fits best.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative">
+            {imgSrc && (
+              <ReactCrop
+                crop={crop}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                className="max-h-[400px] mx-auto"
+              >
+                <img
+                  ref={imgRef}
+                  alt="Crop"
+                  src={imgSrc}
+                  style={{ maxHeight: 400 }}
+                  onLoad={onImageLoad}
+                />
+              </ReactCrop>
+            )}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCrop} disabled={uploading}>
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Applying...
+                </>
+              ) : (
+                'Apply Crop'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
