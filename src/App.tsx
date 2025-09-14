@@ -37,6 +37,7 @@ import PropertyNew from "./pages/PropertyNew";
 import PropertyEdit from "./pages/PropertyEdit";
 import StoryEdit from "./pages/StoryEdit";
 import SearchPage from "./pages/Search";
+import Capture from "./pages/Capture";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,9 +85,10 @@ const App = () => (
           <Route path="/properties/:id" element={<AuthGate><PropertyDetail /></AuthGate>} />
           <Route path="/pets/new" element={<AuthGate><PetNew /></AuthGate>} />
           <Route path="/pets/:id" element={<AuthGate><PetDetail /></AuthGate>} />
-          <Route path="/pets/:id/edit" element={<AuthGate><PetEdit /></AuthGate>} />
-          <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
-          <Route path="*" element={<NotFound />} />
+           <Route path="/pets/:id/edit" element={<AuthGate><PetEdit /></AuthGate>} />
+           <Route path="/capture" element={<AuthGate><Capture /></AuthGate>} />
+           <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
+           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
