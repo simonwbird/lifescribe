@@ -46,6 +46,10 @@ export function MediaRail({ rail, onItemClick, onLoadMore }: MediaRailProps) {
             alt={item.caption || 'Media item'}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            onError={(e) => {
+              // Fallback to a placeholder if image fails to load
+              e.currentTarget.src = `https://picsum.photos/400/300?random=${item.id}`
+            }}
           />
           {item.type === 'video' && (
             <div className="absolute inset-0 flex items-center justify-center">
