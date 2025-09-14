@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
 import { 
   FileText, 
   Camera, 
   Mic, 
   Lightbulb,
-  Calendar,
   Users,
   Upload
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface CaptureHubProps {
@@ -91,20 +88,9 @@ const QUICK_ACTIONS = [
   }
 ]
 
-// Cache key for personalized backgrounds
-const CACHE_KEY = 'lifescribe_hub_backgrounds'
-const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours
-
-interface BackgroundCache {
-  timestamp: number
-  backgrounds: Record<string, string>
-}
-
 export function CaptureHub({ className }: CaptureHubProps) {
-  const [backgrounds, setBackgrounds] = useState<Record<string, string>>({})
   const [currentHints, setCurrentHints] = useState<Record<string, string>>({})
-  const [streak, setStreak] = useState({ current: 4, target: 7 })
-  const [loading, setLoading] = useState(true)
+  const [streak] = useState({ current: 4, target: 7 })
 
   // Rotate hints every 3 seconds
   useEffect(() => {
@@ -121,101 +107,6 @@ export function CaptureHub({ className }: CaptureHubProps) {
     const interval = setInterval(rotateHints, 3000)
     return () => clearInterval(interval)
   }, [])
-
-  // Get personalized backgrounds or fallbacks
-  useEffect(() => {
-    getPersonalizedBackgrounds()
-  }, [])
-
-  const getPersonalizedBackgrounds = async () => {
-    try {
-      // Check cache first
-      const cached = getCachedBackgrounds()
-      if (cached) {
-        setBackgrounds(cached)
-        setLoading(false)
-        return
-      }
-
-      // Fetch user's media from Supabase
-      const { data: media, error } = await supabase
-        .from('media')
-        .select('file_path, mime_type')
-        .like('mime_type', 'image%')
-        .order('created_at', { ascending: false })
-        .limit(12)
-
-      if (error) throw error
-
-      const newBackgrounds: Record<string, string> = {}
-      
-      if (media && media.length > 0) {
-        // Use user's images with random selection
-        TILES.forEach(tile => {
-          const randomImage = media[Math.floor(Math.random() * media.length)]
-          const { data: signedUrl } = supabase.storage
-            .from('media')
-            .getPublicUrl(randomImage.file_path)
-          
-          newBackgrounds[tile.id] = signedUrl.publicUrl
-        })
-      } else {
-        // Use fallback images
-        TILES.forEach(tile => {
-          newBackgrounds[tile.id] = `/hub/${tile.id}-fallback.jpg`
-        })
-      }
-
-      setBackgrounds(newBackgrounds)
-      setCachedBackgrounds(newBackgrounds)
-      setLoading(false)
-    } catch (error) {
-      console.error('Error loading backgrounds:', error)
-      // Use fallbacks on error
-      const fallbacks: Record<string, string> = {}
-      TILES.forEach(tile => {
-        fallbacks[tile.id] = `/hub/${tile.id}-fallback.jpg`
-      })
-      setBackgrounds(fallbacks)
-      setLoading(false)
-    }
-  }
-
-  const getCachedBackgrounds = (): Record<string, string> | null => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY)
-      if (!cached) return null
-
-      const data: BackgroundCache = JSON.parse(cached)
-      const now = Date.now()
-      
-      if (now - data.timestamp < CACHE_DURATION) {
-        return data.backgrounds
-      }
-      
-      localStorage.removeItem(CACHE_KEY)
-      return null
-    } catch {
-      return null
-    }
-  }
-
-  const setCachedBackgrounds = (backgrounds: Record<string, string>) => {
-    try {
-      const data: BackgroundCache = {
-        timestamp: Date.now(),
-        backgrounds
-      }
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data))
-    } catch {
-      // Silently fail if localStorage is not available
-    }
-  }
-
-  const refreshBackgrounds = () => {
-    localStorage.removeItem(CACHE_KEY)
-    getPersonalizedBackgrounds()
-  }
 
   const StreakChip = () => {
     const progress = (streak.current / streak.target) * 100
@@ -297,12 +188,11 @@ export function CaptureHub({ className }: CaptureHubProps) {
                 tile.id === 'voice' && "motion-safe:animate-pulse"
               )}
               style={{
-                background: `linear-gradient(to bottom right, rgba(${tile.colorRgb}, 0.95), rgba(${tile.colorRgb}, 0.9))`,
+                background: `linear-gradient(135deg, rgba(${tile.colorRgb}, 1), rgba(${tile.colorRgb}, 0.8))`,
               }}
               aria-label={tile.ariaLabel}
               aria-describedby={`${tile.id}-description`}
             >
-
               {/* Sheen effect on hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
@@ -329,11 +219,6 @@ export function CaptureHub({ className }: CaptureHubProps) {
                   )}
                 </div>
               </div>
-
-              {/* Loading shimmer */}
-              {loading && (
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
-              )}
             </Link>
           )
         })}
