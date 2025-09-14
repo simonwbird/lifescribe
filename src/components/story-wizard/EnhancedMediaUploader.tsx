@@ -354,7 +354,10 @@ export default function EnhancedMediaUploader({
   const removeMedia = (id: string) => {
     const item = media.find(m => m.id === id)
     if (item?.preview) {
-      URL.revokeObjectURL(item.preview)
+      // Only revoke blob URLs to prevent memory leaks
+      if (item.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(item.preview)
+      }
     }
     
     const updatedMedia = media.filter(m => m.id !== id)
@@ -488,8 +491,32 @@ export default function EnhancedMediaUploader({
                     src={item.preview}
                     alt={item.caption || (item.file.type.startsWith('video/') ? 'Video thumbnail' : 'Uploaded image')}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Image failed to load:', item.preview, e)
+                      // Hide broken image and show fallback
+                      e.currentTarget.style.display = 'none'
+                      const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon')
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex'
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log('Image loaded successfully:', item.preview)
+                    }}
                   />
-                ) : (
+                ) : null}
+                
+                {/* Fallback icon (hidden by default) */}
+                <div className="fallback-icon w-full h-full flex items-center justify-center" style={{ display: 'none' }}>
+                  {item.file.type.startsWith('video/') ? (
+                    <Video className="h-8 w-8 text-muted-foreground" />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+
+                {/* Always show fallback if no preview */}
+                {!item.preview && (
                   <div className="w-full h-full flex items-center justify-center">
                     {item.file.type.startsWith('video/') ? (
                       <Video className="h-8 w-8 text-muted-foreground" />
