@@ -503,6 +503,8 @@ export class FamilyTreeService {
         person_id: personId,
         x_position: x,
         y_position: y
+      }, {
+        onConflict: 'family_id,user_id,person_id'
       })
     
     if (error) throw error
