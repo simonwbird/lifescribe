@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { NodeRect, Person } from "../../lib/familyTreeV2Types";
+import { NodeRect, Person, FamilyGraph } from "../../lib/familyTreeV2Types";
 import { supabase } from '@/lib/supabase'
 
 /** Card constants (Ancestry proportions - redesigned for vertical layout) */
@@ -25,7 +25,12 @@ const genderFill = (s?: "M"|"F"|"X") => s==="M" ? TOKENS.male : s==="F" ? TOKENS
 const yr = (v?: string|number|null) => v==null ? "" : String(v).slice(0,4);
 const fullName = (p: Person) => (p.given_name + " " + (p.surname ?? "")).trim();
 
-export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; person: Person; onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void }) {
+export function PersonCard({ rect, person, onAddRequested, graph }: { 
+  rect: NodeRect; 
+  person: Person; 
+  onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void;
+  graph?: FamilyGraph;
+}) {
   const navigate = useNavigate();
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined)
 
@@ -70,6 +75,9 @@ export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; p
     e.stopPropagation();
     onAddRequested?.(type, person.id);
   };
+
+  // Check if this person is already married
+  const isMarried = graph?.spouses?.get(person.id)?.size > 0;
 
   return (
     <g 
@@ -137,19 +145,21 @@ export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; p
         <line x1={-8} y1={CARD_H/2 - 4} x2={-8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
       </g>
 
-      {/* Add Spouse - Right */}
-      <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'spouse')}>
-        <circle 
-          cx={CARD_W + 8} 
-          cy={CARD_H/2} 
-          r="8" 
-          fill="#6B7280" 
-          stroke="#fff" 
-          strokeWidth="1"
-        />
-        <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
-        <line x1={CARD_W + 8} y1={CARD_H/2 - 4} x2={CARD_W + 8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
-      </g>
+      {/* Add Spouse - Right (only show if not already married) */}
+      {!isMarried && (
+        <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'spouse')}>
+          <circle 
+            cx={CARD_W + 8} 
+            cy={CARD_H/2} 
+            r="8" 
+            fill="#6B7280" 
+            stroke="#fff" 
+            strokeWidth="1"
+          />
+          <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+          <line x1={CARD_W + 8} y1={CARD_H/2 - 4} x2={CARD_W + 8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
+        </g>
+      )}
 
       {/* Add Child - Bottom */}
       <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'child')}>

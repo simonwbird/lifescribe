@@ -71,7 +71,7 @@ export default function FamilyExplorer({
         <ConnectionRenderer graph={graph} layout={layout} />
         {/* cards */}
         <g>{Array.from(layout.rects.values()).map(r => (
-          <PersonCard key={r.id} rect={r} person={graph.peopleById.get(r.id)!} onAddRequested={onAddRequested} />
+          <PersonCard key={r.id} rect={r} person={graph.peopleById.get(r.id)!} onAddRequested={onAddRequested} graph={graph} />
         ))}</g>
         {/* captions */}
         <g>{captions}</g>
