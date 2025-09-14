@@ -163,12 +163,13 @@ export function DraggablePersonCard({
   return (
     <g 
       ref={cardRef}
-      transform={`translate(${Math.round(rect.x)},${Math.round(rect.y)})`}
+      transform={`translate(${rect.x},${rect.y})`}
       style={{ 
         cursor: cardIsDragging ? 'grabbing' : 'grab',
-        opacity: cardIsDragging ? 0.8 : 1
+        opacity: cardIsDragging ? 0.9 : 1,
+        filter: cardIsDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' : 'none'
       }}
-      className={`person-card ${cardIsDragging ? 'transition-none scale-105' : 'transition-all duration-200'}`}
+      className={`person-card ${cardIsDragging ? 'transition-none' : 'transition-all duration-200'}`}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
     >
