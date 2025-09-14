@@ -8,8 +8,7 @@ import {
   Lightbulb,
   Calendar,
   Users,
-  Upload,
-  RotateCw
+  Upload
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -275,15 +274,6 @@ export function CaptureHub({ className }: CaptureHubProps) {
         </div>
         <div className="flex items-center gap-3">
           <StreakChip />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={refreshBackgrounds}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Change background images"
-          >
-            <RotateCw className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
@@ -291,7 +281,6 @@ export function CaptureHub({ className }: CaptureHubProps) {
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {TILES.map((tile) => {
           const Icon = tile.icon
-          const backgroundUrl = backgrounds[tile.id]
           const currentHint = currentHints[tile.id]
 
           return (
@@ -301,35 +290,18 @@ export function CaptureHub({ className }: CaptureHubProps) {
               className={cn(
                 "group relative block rounded-2xl shadow-lg overflow-hidden",
                 "aspect-[4/3] sm:aspect-[16/10] transition-all duration-300",
-                "p-3 sm:p-6", // Smaller padding on mobile
+                "p-3 sm:p-6",
                 "hover:scale-[1.02] focus:scale-[1.02]",
                 "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10",
                 // Voice tile special animation
                 tile.id === 'voice' && "motion-safe:animate-pulse"
               )}
               style={{
-                background: backgroundUrl && !loading
-                  ? `linear-gradient(to bottom, rgba(${tile.colorRgb}, 0.78), rgba(${tile.colorRgb}, 0.78)), url(${backgroundUrl})`
-                  : `linear-gradient(to bottom, rgba(${tile.colorRgb}, 0.9), rgba(${tile.colorRgb}, 0.95))`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                background: `linear-gradient(to bottom right, rgba(${tile.colorRgb}, 0.95), rgba(${tile.colorRgb}, 0.9))`,
               }}
               aria-label={tile.ariaLabel}
               aria-describedby={`${tile.id}-description`}
             >
-              {/* Background image with blur and parallax effect */}
-              {backgroundUrl && !loading && (
-                <div 
-                  className="absolute inset-0 transition-all duration-400 group-hover:scale-105 blur-md"
-                  style={{
-                    backgroundImage: `url(${backgroundUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                  role="img"
-                  aria-label={`Soft-focused ${tile.title.toLowerCase()} background`}
-                />
-              )}
 
               {/* Sheen effect on hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
