@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { FileText, Camera, Mic, Lightbulb } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -19,8 +19,7 @@ const captureModeTiles = [
     route: '/stories/new?type=write',
     shortcut: 'W',
     color: '#3B9EFF',
-    colorRgb: '59, 158, 255',
-    backgroundImage: '/hub/write-fallback.jpg'
+    colorRgb: '59, 158, 255'
   },
   {
     mode: 'photo' as const,
@@ -30,8 +29,7 @@ const captureModeTiles = [
     route: '/stories/new?type=photo',
     shortcut: 'P',
     color: '#00D4AA',
-    colorRgb: '0, 212, 170',
-    backgroundImage: '/hub/photo-fallback.jpg'
+    colorRgb: '0, 212, 170'
   },
   {
     mode: 'voice' as const,
@@ -41,8 +39,7 @@ const captureModeTiles = [
     route: '/stories/new?type=voice',
     shortcut: 'V',
     color: '#FFB976',
-    colorRgb: '255, 185, 118',
-    backgroundImage: '/hub/voice-fallback.jpg'
+    colorRgb: '255, 185, 118'
   },
   {
     mode: 'prompts' as const,
@@ -52,23 +49,11 @@ const captureModeTiles = [
     route: '/prompts',
     shortcut: 'Q',
     color: '#A78BFA',
-    colorRgb: '167, 139, 250',
-    backgroundImage: '/hub/video-fallback.jpg'
+    colorRgb: '167, 139, 250'
   }
 ]
 
 export function CaptureModeTiles({ className, variant = 'default', forceMobileCompact = true }: CaptureModeTilesProps) {
-  const [backgrounds, setBackgrounds] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    // Initialize with fallback images
-    const fallbacks: Record<string, string> = {}
-    captureModeTiles.forEach(tile => {
-      fallbacks[tile.mode] = tile.backgroundImage
-    })
-    setBackgrounds(fallbacks)
-  }, [])
-
   // Auto-compact on mobile if forceMobileCompact is true
   const effectiveVariant = forceMobileCompact ? variant : variant
   const tileHeight = effectiveVariant === 'compact' ? 'h-16 sm:h-20' : 'h-20 sm:h-24'
@@ -79,9 +64,7 @@ export function CaptureModeTiles({ className, variant = 'default', forceMobileCo
 
   return (
     <div className={cn("grid grid-cols-2 gap-2 sm:gap-3", className)}>
-      {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, route, shortcut, color, colorRgb, backgroundImage }) => {
-        const backgroundUrl = backgrounds[mode] || backgroundImage
-
+      {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, route, shortcut, color, colorRgb }) => {
         return (
           <Link
             key={mode}
@@ -94,24 +77,10 @@ export function CaptureModeTiles({ className, variant = 'default', forceMobileCo
               padding
             )}
             style={{
-              background: `linear-gradient(to bottom, rgba(${colorRgb}, 0.78), rgba(${colorRgb}, 0.78)), url(${backgroundUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              background: `rgba(${colorRgb}, 1)`,
             }}
             aria-label={`${label} - ${subtitle}`}
           >
-            {/* Background blur effect */}
-            <div 
-              className="absolute inset-0 transition-all duration-400 group-hover:scale-105 blur-md"
-              style={{
-                backgroundImage: `url(${backgroundUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-              role="img"
-              aria-label={`${label} background`}
-            />
-
             {/* Sheen effect on hover */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
