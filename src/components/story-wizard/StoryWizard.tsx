@@ -8,7 +8,8 @@ import {
   type WizardStep, 
   type AutosaveStatus, 
   type AIAssist,
-  WIZARD_STEPS 
+  WIZARD_STEPS,
+  PHOTO_FIRST_STEPS 
 } from './StoryWizardTypes'
 import { MediaService } from '@/lib/mediaService'
 import StoryWizardProgress from './StoryWizardProgress'
@@ -53,6 +54,10 @@ export default function StoryWizard() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
+  
+  // Check if we're in photo-first mode
+  const isPhotoFirst = searchParams.get('type') === 'photo'
+  const currentStepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : WIZARD_STEPS
 
   // Mock AI assist data
   const [aiAssist] = useState<AIAssist>({
@@ -69,10 +74,10 @@ export default function StoryWizard() {
     const promptDescription = searchParams.get('description')
     const storyType = searchParams.get('type')
 
-    // If type=photo, start at step 3 (Photos & Video)
+    // If type=photo, start at first step in photo-first order (step 3 - Photos & Video)
     if (storyType === 'photo') {
-      setCurrentStep(3)
-      setCompletedSteps([1, 2]) // Mark earlier steps as completed
+      setCurrentStep(3) // Start with Photos & Video step
+      setCompletedSteps([]) // No steps completed yet
     }
 
     if (personId && personName) {
@@ -262,6 +267,23 @@ export default function StoryWizard() {
     setCurrentStep(step)
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps(prev => [...prev, currentStep])
+    }
+  }
+  
+  // Navigation functions that respect the current step order
+  const goToNextStep = () => {
+    const currentIndex = currentStepOrder.findIndex(s => s.id === currentStep)
+    if (currentIndex < currentStepOrder.length - 1) {
+      const nextStep = currentStepOrder[currentIndex + 1].id as WizardStep
+      goToStep(nextStep)
+    }
+  }
+  
+  const goToPreviousStep = () => {
+    const currentIndex = currentStepOrder.findIndex(s => s.id === currentStep)
+    if (currentIndex > 0) {
+      const previousStep = currentStepOrder[currentIndex - 1].id as WizardStep
+      setCurrentStep(previousStep)
     }
   }
 
@@ -462,7 +484,7 @@ export default function StoryWizard() {
           <StoryWizardStep1
             formData={formData}
             onChange={updateFormData}
-            onNext={() => goToStep(2)}
+            onNext={goToNextStep}
           />
         )
       case 2:
@@ -470,8 +492,8 @@ export default function StoryWizard() {
         <StoryWizardStep2
           formData={formData}
           onChange={updateFormData}
-          onNext={() => goToStep(3)}
-          onPrevious={() => goToStep(1)}
+          onNext={goToNextStep}
+          onPrevious={goToPreviousStep}
           familyId={familyId}
         />
         )
@@ -480,8 +502,8 @@ export default function StoryWizard() {
           <StoryWizardStep3
             formData={formData}
             onChange={updateFormData}
-            onNext={() => goToStep(4)}
-            onPrevious={() => goToStep(2)}
+            onNext={goToNextStep}
+            onPrevious={goToPreviousStep}
           />
         )
       case 4:
@@ -492,7 +514,7 @@ export default function StoryWizard() {
             onPublish={handlePublish}
             onSaveDraft={handleSaveDraft}
             onPreview={handlePreview}
-            onPrevious={() => goToStep(3)}
+            onPrevious={goToPreviousStep}
             isLoading={isLoading}
           />
         )
@@ -508,6 +530,7 @@ export default function StoryWizard() {
           currentStep={currentStep}
           completedSteps={completedSteps}
           autosaveStatus={autosaveStatus}
+          isPhotoFirst={isPhotoFirst}
         />
 
         <div className="grid gap-8 lg:grid-cols-4">
@@ -539,12 +562,12 @@ export default function StoryWizard() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur sm:hidden">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center gap-3">
           <div className="text-xs text-muted-foreground">
-            Step {currentStep} of {WIZARD_STEPS.length}
+            Step {currentStepOrder.findIndex(s => s.id === currentStep) + 1} of {currentStepOrder.length}
           </div>
           <div className="flex gap-2">
-            {currentStep < WIZARD_STEPS.length ? (
+            {currentStepOrder.findIndex(s => s.id === currentStep) < currentStepOrder.length - 1 ? (
               <button
-                onClick={() => goToStep((currentStep + 1) as WizardStep)}
+                onClick={goToNextStep}
                 className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground px-4 py-2 rounded-lg text-sm font-medium"
                 disabled={
                   (currentStep === 1 && (!formData.title.trim() || !formData.content.trim())) ||

@@ -1,31 +1,37 @@
 import { ChevronRight } from 'lucide-react'
-import { WIZARD_STEPS, type WizardStep, type AutosaveStatus } from './StoryWizardTypes'
+import { WIZARD_STEPS, PHOTO_FIRST_STEPS, type WizardStep, type AutosaveStatus } from './StoryWizardTypes'
 
 interface StoryWizardProgressProps {
   currentStep: WizardStep
   completedSteps: WizardStep[]
   autosaveStatus: AutosaveStatus
+  isPhotoFirst?: boolean
 }
 
 export default function StoryWizardProgress({ 
   currentStep, 
   completedSteps, 
-  autosaveStatus 
+  autosaveStatus,
+  isPhotoFirst = false
 }: StoryWizardProgressProps) {
+  
+  const stepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : WIZARD_STEPS
+  const currentIndex = stepOrder.findIndex(s => s.id === currentStep)
+  
   return (
     <div className="mb-6">
       {/* Progress Bar */}
       <div className="mb-4 h-2 w-full bg-muted rounded-full overflow-hidden">
         <div 
           className="h-full bg-brand-green transition-all duration-300"
-          style={{ width: `${(currentStep / WIZARD_STEPS.length) * 100}%` }}
+          style={{ width: `${((currentIndex + 1) / stepOrder.length) * 100}%` }}
         />
       </div>
 
       {/* Step Indicators */}
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-2 flex-wrap">
-          {WIZARD_STEPS.map((step, index) => (
+          {stepOrder.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div className={`flex items-center gap-2 ${
                 step.id === currentStep 
@@ -41,12 +47,12 @@ export default function StoryWizardProgress({
                     ? 'bg-muted text-muted-foreground'
                     : 'bg-muted/50 text-muted-foreground/60'
                 }`}>
-                  {step.id}
+                  {index + 1}
                 </div>
                 <span className="hidden sm:inline">{step.title}</span>
-                <span className="sm:hidden">{step.id}</span>
+                <span className="sm:hidden">{index + 1}</span>
               </div>
-              {index < WIZARD_STEPS.length - 1 && (
+              {index < stepOrder.length - 1 && (
                 <ChevronRight className="h-4 w-4 mx-1 text-muted-foreground/60" />
               )}
             </div>

@@ -52,4 +52,12 @@ export const WIZARD_STEPS = [
   { id: 4, title: '4. Review & Publish', description: 'Final review' }
 ] as const
 
+// Photo-first workflow: Photos & Video → Basics → People & Places → Review & Publish
+export const PHOTO_FIRST_STEPS = [
+  { id: 3, title: '1. Photos & Video', description: 'Add media' },
+  { id: 1, title: '2. Basics', description: 'Title and story' },
+  { id: 2, title: '3. People & Places', description: 'When, where, and who' },
+  { id: 4, title: '4. Review & Publish', description: 'Final review' }
+] as const
+
 export type WizardStep = typeof WIZARD_STEPS[number]['id']
