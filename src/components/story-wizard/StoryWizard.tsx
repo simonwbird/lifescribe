@@ -489,6 +489,8 @@ export default function StoryWizard() {
             formData={formData}
             onChange={updateFormData}
             onNext={goToNextStep}
+            onPrevious={isPhotoFirst ? goToPreviousStep : undefined}
+            isPhotoFirst={isPhotoFirst}
           />
         )
       case 2:
@@ -499,6 +501,7 @@ export default function StoryWizard() {
           onNext={goToNextStep}
           onPrevious={goToPreviousStep}
           familyId={familyId}
+          isPhotoFirst={isPhotoFirst}
         />
         )
       case 3:
@@ -508,6 +511,7 @@ export default function StoryWizard() {
             onChange={updateFormData}
             onNext={goToNextStep}
             onPrevious={goToPreviousStep}
+            isPhotoFirst={isPhotoFirst}
           />
         )
       case 4:

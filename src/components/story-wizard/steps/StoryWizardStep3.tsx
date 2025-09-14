@@ -8,13 +8,15 @@ interface StoryWizardStep3Props {
   onChange: (updates: Partial<StoryFormData>) => void
   onNext: () => void
   onPrevious: () => void
+  isPhotoFirst?: boolean
 }
 
 export default function StoryWizardStep3({ 
   formData, 
   onChange, 
   onNext, 
-  onPrevious 
+  onPrevious,
+  isPhotoFirst = false
 }: StoryWizardStep3Props) {
   return (
     <div className="space-y-6">
@@ -67,14 +69,17 @@ export default function StoryWizardStep3({
       </div>
 
       <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onPrevious}>
-          Back to People & Places
-        </Button>
+        {!isPhotoFirst && (
+          <Button variant="outline" onClick={onPrevious}>
+            Back to People & Places
+          </Button>
+        )}
+        {isPhotoFirst && <div />} {/* Spacer for photo-first mode */}
         <Button 
           onClick={onNext}
           className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground"
         >
-          Continue to Review
+          {isPhotoFirst ? 'Continue to Basics' : 'Continue to Review'}
         </Button>
       </div>
     </div>

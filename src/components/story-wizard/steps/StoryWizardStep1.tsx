@@ -9,12 +9,16 @@ interface StoryWizardStep1Props {
   formData: StoryFormData
   onChange: (updates: Partial<StoryFormData>) => void
   onNext: () => void
+  onPrevious?: () => void
+  isPhotoFirst?: boolean
 }
 
 export default function StoryWizardStep1({ 
   formData, 
   onChange, 
-  onNext 
+  onNext,
+  onPrevious,
+  isPhotoFirst = false
 }: StoryWizardStep1Props) {
   const isValid = formData.title.trim().length > 0 && formData.content.trim().length > 0
 
@@ -77,7 +81,12 @@ export default function StoryWizardStep1({
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className={`flex ${isPhotoFirst ? 'justify-between' : 'justify-end'} pt-4`}>
+        {isPhotoFirst && onPrevious && (
+          <Button variant="outline" onClick={onPrevious}>
+            Back to Photos & Video
+          </Button>
+        )}
         <Button 
           onClick={onNext} 
           disabled={!isValid}
