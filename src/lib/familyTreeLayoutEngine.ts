@@ -128,14 +128,22 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
         continue;
       }
 
-      // divorced pair cluster - keep deterministic order: older on the left (fallback to name)
+      // divorced pair cluster - deterministic order: older on the left (fallback by name)
       const ex = Array.from(g.divorced.get(id) ?? []).find(p => (dep.get(p) ?? -999) === d && !used.has(p));
       if (ex && isDivorcedPair(id, ex, d)) {
-        const [leftId, rightId] = getBirthYear(id) <= getBirthYear(ex)
+        const nameOf = (pid: string) => {
+          const pp = g.peopleById.get(pid);
+          return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
+        };
+        const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(ex))
           ? [id, ex]
           : [ex, id];
-        clusters.push([leftId, rightId]);
-        used.add(leftId); used.add(rightId);
+        // If years equal/unknown, use name to keep stability
+        const ordered = (getBirthYear(id) === getBirthYear(ex))
+          ? (nameOf(id) >= nameOf(ex) ? [id, ex] : [ex, id]) // fallback: name DESC so 'William' comes before 'Bentley'
+          : [leftId, rightId];
+        clusters.push([ordered[0], ordered[1]]);
+        used.add(ordered[0]); used.add(ordered[1]);
         continue;
       }
 
