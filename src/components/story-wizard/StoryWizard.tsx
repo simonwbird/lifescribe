@@ -67,6 +67,13 @@ export default function StoryWizard() {
     const personName = searchParams.get('personName')
     const promptTitle = searchParams.get('prompt')
     const promptDescription = searchParams.get('description')
+    const storyType = searchParams.get('type')
+
+    // If type=photo, start at step 3 (Photos & Video)
+    if (storyType === 'photo') {
+      setCurrentStep(3)
+      setCompletedSteps([1, 2]) // Mark earlier steps as completed
+    }
 
     if (personId && personName) {
       setFormData(prev => ({
