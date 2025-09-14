@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import { format } from 'date-fns'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Calendar, MapPin, Hash, X, Plus } from 'lucide-react'
+import { Calendar as CalendarIcon, MapPin, Hash, X, Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { type StoryFormData, type SelectedPerson } from '../StoryWizardTypes'
 import PeoplePicker from '../PeoplePicker'
 
@@ -31,6 +35,34 @@ export default function StoryWizardStep2({
 
   // Ensure people is always SelectedPerson[] for type safety
   const selectedPeople: SelectedPerson[] = formData.people || []
+
+  // Helper functions for date handling
+  const parseStringToDate = (dateString: string): Date | undefined => {
+    if (!dateString || dateString.trim() === '') return undefined
+    
+    try {
+      const date = new Date(dateString)
+      return isNaN(date.getTime()) ? undefined : date
+    } catch {
+      return undefined
+    }
+  }
+
+  const formatDateToString = (date: Date | undefined): string => {
+    if (!date) return ''
+    
+    try {
+      return format(date, 'MMMM d, yyyy') // e.g., "June 15, 1952"
+    } catch {
+      return ''
+    }
+  }
+
+  const currentDate = parseStringToDate(formData.date)
+
+  const handleDateSelect = (date: Date | undefined) => {
+    onChange({ date: formatDateToString(date) })
+  }
 
   const handlePeopleChange = (people: SelectedPerson[]) => {
     onChange({ people })
@@ -84,16 +116,45 @@ export default function StoryWizardStep2({
                 Approximate
               </ToggleGroupItem>
             </ToggleGroup>
-            <Input
-              id="date"
-              value={formData.date}
-              onChange={(e) => onChange({ date: e.target.value })}
-              placeholder={formData.dateType === 'exact' ? 'June 15, 1952' : 'Summer 1952, around age 8'}
-              aria-describedby="date-help"
-            />
+            
+            {formData.dateType === 'exact' ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !currentDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {currentDate ? formatDateToString(currentDate) : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={currentDate}
+                    onSelect={handleDateSelect}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <Input
+                id="date"
+                value={formData.date}
+                onChange={(e) => onChange({ date: e.target.value })}
+                placeholder="Summer 1952, around age 8"
+                aria-describedby="date-help"
+              />
+            )}
+            
             <p id="date-help" className="text-xs text-muted-foreground">
               {formData.dateType === 'exact' 
-                ? 'Enter the specific date if you know it' 
+                ? 'Select the specific date from the calendar' 
                 : 'Best guess is fine - even just the year or season'
               }
             </p>
