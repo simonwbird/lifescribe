@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
 import type { Person } from '@/lib/familyTreeTypes'
+import { supabase } from '@/lib/supabase'
 
 interface EnhancedPersonCardProps {
   person: Person
@@ -65,7 +66,27 @@ export default function EnhancedPersonCard({
   const displayName = getPersonDisplayName(person)
   const years = formatPersonYears(person)
   
-
+  // Resolve and refresh signed avatar URLs (Supabase signed URLs expire)
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined)
+  useEffect(() => {
+    let isMounted = true
+    async function refresh() {
+      if (!person.avatar_url) { setResolvedAvatarUrl(undefined); return }
+      let url = person.avatar_url as string
+      const m = url.match(/object\/sign\/([^/]+)\/([^?]+)/)
+      if (m) {
+        const bucket = m[1]
+        const objectPath = decodeURIComponent(m[2])
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600)
+        if (data?.signedUrl) url = data.signedUrl
+      }
+      if (!isMounted) return
+      setResolvedAvatarUrl(url)
+    }
+    refresh()
+    return () => { isMounted = false }
+  }, [person.avatar_url])
+  
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.no-drag')) {
       return
@@ -221,7 +242,7 @@ export default function EnhancedPersonCard({
             {/* Header with Avatar and Info */}
             <div className="flex items-start space-x-4">
               <Avatar className="h-16 w-16 ring-3 ring-white shadow-lg">
-                <AvatarImage src={person.avatar_url || undefined} />
+                <AvatarImage src={resolvedAvatarUrl || undefined} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 text-white font-bold text-lg">
                   {displayName.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
