@@ -107,7 +107,7 @@ export function DraggablePersonCard({
       const newX = newClickX - dragOffset.x;
       const newY = newClickY - dragOffset.y;
       
-      const snapped = snapToGrid(newX, newY, gridSize);
+      const snapped = (e.altKey || e.shiftKey) ? { x: newX, y: newY } : snapToGrid(newX, newY, gridSize);
       onDrag?.(person.id, snapped.x, snapped.y);
     };
 

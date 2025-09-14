@@ -74,6 +74,11 @@ export default function InteractiveFamilyTree({
       newPositions.set(personId, { x, y });
       return newPositions;
     });
+    // Expand bounds during drag so you can move beyond current viewport
+    setBounds(prev => ({
+      width: Math.max(prev.width, x + 200),
+      height: Math.max(prev.height, y + 250)
+    }));
   }, []);
 
   const handleDragStart = useCallback((personId: string) => {
@@ -195,7 +200,7 @@ export default function InteractiveFamilyTree({
       <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 text-sm text-gray-600 max-w-xs">
         <p><strong>Interactive Family Tree</strong></p>
         <p>• Drag any person to reposition them</p>
-        <p>• Cards snap to an invisible grid</p>
+        <p>• Cards snap to an invisible grid (hold Shift or Alt to disable)</p>
         <p>• Connections update automatically</p>
         <p>• Click persons to view their profile</p>
       </div>
