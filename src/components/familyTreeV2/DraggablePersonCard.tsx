@@ -91,35 +91,40 @@ export function DraggablePersonCard({
     const svgElement = (e.target as Element).closest('svg');
     if (!svgElement) return;
     
-    const svgRect = svgElement.getBoundingClientRect();
-    const clickX = e.clientX - svgRect.left;
-    const clickY = e.clientY - svgRect.top;
+    // Get SVG coordinates using the SVG's coordinate system
+    const pt = svgElement.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svgElement.getScreenCTM()?.inverse());
     
     setDragOffset({
-      x: clickX - rect.x,
-      y: clickY - rect.y
+      x: svgP.x - rect.x,
+      y: svgP.y - rect.y
     });
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newClickX = e.clientX - svgRect.left;
-      const newClickY = e.clientY - svgRect.top;
+      const newPt = svgElement.createSVGPoint();
+      newPt.x = e.clientX;
+      newPt.y = e.clientY;
+      const newSvgP = newPt.matrixTransform(svgElement.getScreenCTM()?.inverse());
       
-      const newX = newClickX - dragOffset.x;
-      const newY = newClickY - dragOffset.y;
+      const newX = newSvgP.x - dragOffset.x;
+      const newY = newSvgP.y - dragOffset.y;
       
       const snapped = (e.altKey || e.shiftKey) ? { x: newX, y: newY } : snapToGrid(newX, newY, gridSize);
       onDrag?.(person.id, snapped.x, snapped.y);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       setLocalIsDragging(false);
       
-      const svgElement = document.querySelector('svg');
-      if (!svgElement) return;
+      const finalPt = svgElement.createSVGPoint();
+      finalPt.x = e.clientX;
+      finalPt.y = e.clientY;
+      const finalSvgP = finalPt.matrixTransform(svgElement.getScreenCTM()?.inverse());
       
-      const svgRect = svgElement.getBoundingClientRect();
-      const finalX = (window.event as MouseEvent).clientX - svgRect.left - dragOffset.x;
-      const finalY = (window.event as MouseEvent).clientY - svgRect.top - dragOffset.y;
+      const finalX = finalSvgP.x - dragOffset.x;
+      const finalY = finalSvgP.y - dragOffset.y;
       
       const snapped = snapToGrid(finalX, finalY, gridSize);
       onDragEnd?.(person.id, snapped.x, snapped.y);
