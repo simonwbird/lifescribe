@@ -174,16 +174,54 @@ export default function Header() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left side - Logo and Nav */}
           <div className="flex items-center gap-6">
-            {/* Logo */}
-            <Link 
-              to="/home" 
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-              onClick={handleLogoClick}
-              aria-label="LifeScribe — go to Home"
-            >
-              <BookHeart className="h-8 w-8 text-brand-primary" />
-              <span className="text-2xl font-serif font-bold text-foreground">LifeScribe</span>
-            </Link>
+            {/* Logo and Quick Capture */}
+            <div className="flex flex-col gap-2">
+              <Link 
+                to="/home" 
+                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                onClick={handleLogoClick}
+                aria-label="LifeScribe — go to Home"
+              >
+                <BookHeart className="h-8 w-8 text-brand-primary" />
+                <span className="text-2xl font-serif font-bold text-foreground">LifeScribe</span>
+              </Link>
+              
+              {/* Quick Capture Button */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
+                  >
+                    Quick Capture
+                    <ChevronDown className="ml-2 h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-popover border shadow-md z-50">
+                  <DropdownMenuItem asChild>
+                    <Link to="/stories/new?type=write" className="flex items-center gap-2">
+                      <span>Write Story</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/stories/new?type=photo" className="flex items-center gap-2">
+                      <span>Add Photo/Video</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/stories/new?type=voice" className="flex items-center gap-2">
+                      <span>Record Voice</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/prompts" className="flex items-center gap-2">
+                      <span>Answer Prompt</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1" role="navigation">
