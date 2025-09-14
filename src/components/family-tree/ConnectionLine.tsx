@@ -137,7 +137,7 @@ export default function ConnectionLine({
     const tIntersectionY = marriageY
     
     // Path from T-intersection to child
-    const verticalLineLength = 60
+    const verticalLineLength = 100 // Increased for clearer parent-child hierarchy
     const childConnectionY = childPos.y
     const childConnectionX = childPos.x + CARD_WIDTH / 2
     

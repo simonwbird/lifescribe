@@ -34,7 +34,7 @@ export function ConnectionRenderer({
       const spouseY = spouseANode.y + personHeight / 2
       const centerX = (spouseAX + spouseBX) / 2
 
-      const drop = 50 // vertical down from union bar to the sibling bar
+      const drop = 100 // vertical down from union bar to the sibling bar (increased for clearer hierarchy)
 
       // Build child nodes list once
       const childNodes = marriage.children
