@@ -229,13 +229,9 @@ export default function EnhancedMediaUploader({
     
     const ctx = canvas.getContext('2d')
     
-    // Flip the canvas horizontally only for front camera to match the preview
-    if (currentCamera === 'user') {
-      ctx?.scale(-1, 1)
-      ctx?.drawImage(video, -canvas.width, 0)
-    } else {
-      ctx?.drawImage(video, 0, 0)
-    }
+    // Always flip the canvas horizontally to match the mirrored preview
+    ctx?.scale(-1, 1)
+    ctx?.drawImage(video, -canvas.width, 0)
     
     // Convert to blob and file
     canvas.toBlob((blob) => {
@@ -554,9 +550,7 @@ export default function EnhancedMediaUploader({
               autoPlay
               playsInline
               muted
-              className={`w-full h-full object-cover ${
-                currentCamera === 'user' ? 'transform scale-x-[-1]' : ''
-              }`}
+              className="w-full h-full object-cover transform scale-x-[-1]"
             />
           </div>
 
