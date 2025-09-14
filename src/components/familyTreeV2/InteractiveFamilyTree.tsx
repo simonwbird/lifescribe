@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Grid3X3, Eye, EyeOff, Plus, Minus, RotateCcw, History, Undo } from "lucide-react";
 import { FamilyTreeService } from "../../lib/familyTreeV2Service";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../integrations/supabase/client";
 import { toast } from "sonner";
 
 const BG: React.CSSProperties = {
@@ -21,7 +21,7 @@ const BG: React.CSSProperties = {
 
 interface InteractiveFamilyTreeProps {
   people: Person[];
-  relationships: Relationship[];
+  relationships: Relationship[]; // Use internal relationship type
   focusPersonId: string;
   showCaptions?: boolean;
   onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void;

@@ -60,7 +60,11 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
           .filter(r => r.relationship_type === 'divorced')
           .map(r => ({ type: 'divorced', a: String(r.from_person_id), b: String(r.to_person_id) }) as const)
 
-        return [...parentEdges, ...spouseEdges, ...divorcedEdges]
+        const unmarriedEdges: Relationship[] = raw
+          .filter(r => r.relationship_type === 'unmarried')
+          .map(r => ({ type: 'unmarried', a: String(r.from_person_id), b: String(r.to_person_id) }) as const)
+
+        return [...parentEdges, ...spouseEdges, ...divorcedEdges, ...unmarriedEdges]
       }
 
       function scoreOrientation(rels: Relationship[]) {
@@ -124,7 +128,9 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
         relationships={relationships}
         focusPersonId={focusPersonId || (people.find(p => relationships.some(r => 
           (r.type === 'parent' && (r.parent_id === p.id || r.child_id === p.id)) ||
-          (r.type === 'spouse' && (r.a === p.id || r.b === p.id))
+          (r.type === 'spouse' && (r.a === p.id || r.b === p.id)) ||
+          (r.type === 'divorced' && (r.a === p.id || r.b === p.id)) ||
+          (r.type === 'unmarried' && (r.a === p.id || r.b === p.id))
         ))?.id || people[0]?.id) || ''}
         showCaptions={false}
         familyId={familyId}
