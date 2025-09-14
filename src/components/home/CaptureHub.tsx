@@ -294,7 +294,7 @@ export function CaptureHub({ className }: CaptureHubProps) {
       </div>
 
       {/* Capture Tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {TILES.map((tile) => {
           const Icon = tile.icon
           const backgroundUrl = backgrounds[tile.id]
@@ -305,8 +305,9 @@ export function CaptureHub({ className }: CaptureHubProps) {
               key={tile.id}
               to={tile.route}
               className={cn(
-                "group relative block rounded-2xl p-6 shadow-lg overflow-hidden",
-                "aspect-[16/10] transition-all duration-300",
+                "group relative block rounded-2xl shadow-lg overflow-hidden",
+                "aspect-[4/3] sm:aspect-[16/10] transition-all duration-300",
+                "p-3 sm:p-6", // Smaller padding on mobile
                 "hover:scale-[1.02] focus:scale-[1.02]",
                 "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10",
                 // Voice tile special animation
@@ -344,19 +345,19 @@ export function CaptureHub({ className }: CaptureHubProps) {
               {/* Content */}
               <div className="relative z-10 h-full flex flex-col justify-between text-white">
                 <div className="flex items-start justify-between">
-                  <Icon className="h-7 w-7" />
+                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold mb-1">{tile.title}</h2>
+                  <h2 className="text-base sm:text-xl font-semibold mb-1">{tile.title}</h2>
                   <p 
                     id={`${tile.id}-description`}
-                    className="text-sm text-white/90 mb-2"
+                    className="text-xs sm:text-sm text-white/90 mb-1 sm:mb-2 line-clamp-1 sm:line-clamp-none"
                   >
                     {tile.description}
                   </p>
                   {currentHint && (
-                    <p className="text-xs text-white/75 italic">
+                    <p className="text-xs text-white/75 italic hidden sm:block">
                       {currentHint}
                     </p>
                   )}

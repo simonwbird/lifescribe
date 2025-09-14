@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 interface CaptureModeTilesProps {
   className?: string
   variant?: 'default' | 'compact'
+  forceMobileCompact?: boolean
 }
 
 const captureModeTiles = [
@@ -56,7 +57,7 @@ const captureModeTiles = [
   }
 ]
 
-export function CaptureModeTiles({ className, variant = 'default' }: CaptureModeTilesProps) {
+export function CaptureModeTiles({ className, variant = 'default', forceMobileCompact = true }: CaptureModeTilesProps) {
   const [backgrounds, setBackgrounds] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -68,13 +69,16 @@ export function CaptureModeTiles({ className, variant = 'default' }: CaptureMode
     setBackgrounds(fallbacks)
   }, [])
 
-  const tileHeight = variant === 'compact' ? 'h-20' : 'h-24'
-  const iconSize = variant === 'compact' ? 'h-5 w-5' : 'h-6 w-6'
-  const textSize = variant === 'compact' ? 'text-xs' : 'text-sm'
-  const subtextSize = variant === 'compact' ? 'text-[10px]' : 'text-xs'
+  // Auto-compact on mobile if forceMobileCompact is true
+  const effectiveVariant = forceMobileCompact ? variant : variant
+  const tileHeight = effectiveVariant === 'compact' ? 'h-16 sm:h-20' : 'h-20 sm:h-24'
+  const iconSize = effectiveVariant === 'compact' ? 'h-4 w-4 sm:h-5 sm:w-5' : 'h-5 w-5 sm:h-6 sm:w-6'
+  const textSize = effectiveVariant === 'compact' ? 'text-xs sm:text-xs' : 'text-xs sm:text-sm'
+  const subtextSize = effectiveVariant === 'compact' ? 'text-[10px] sm:text-[10px]' : 'text-[10px] sm:text-xs'
+  const padding = effectiveVariant === 'compact' ? 'p-2 sm:p-3' : 'p-3 sm:p-4'
 
   return (
-    <div className={cn("grid grid-cols-2 gap-3", className)}>
+    <div className={cn("grid grid-cols-2 gap-2 sm:gap-3", className)}>
       {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, route, shortcut, color, colorRgb, backgroundImage }) => {
         const backgroundUrl = backgrounds[mode] || backgroundImage
 
@@ -83,10 +87,11 @@ export function CaptureModeTiles({ className, variant = 'default' }: CaptureMode
             key={mode}
             to={route}
             className={cn(
-              "relative flex-col gap-2 p-4 overflow-hidden shadow-sm group rounded-xl transition-all duration-300",
+              "relative flex-col gap-1 sm:gap-2 overflow-hidden shadow-sm group rounded-xl transition-all duration-300",
               "hover:scale-[1.02] focus:scale-[1.02]",
               "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10",
-              tileHeight
+              tileHeight,
+              padding
             )}
             style={{
               background: `linear-gradient(to bottom, rgba(${colorRgb}, 0.78), rgba(${colorRgb}, 0.78)), url(${backgroundUrl})`,
@@ -117,9 +122,9 @@ export function CaptureModeTiles({ className, variant = 'default' }: CaptureMode
               <Icon className={iconSize} />
               <div className="text-center">
                 <div className={cn("font-semibold", textSize)}>{label}</div>
-                <div className={cn("text-white/80", subtextSize)}>{subtitle}</div>
+                <div className={cn("text-white/80 hidden sm:block", subtextSize)}>{subtitle}</div>
               </div>
-              <Badge variant="secondary" className="text-xs h-5 bg-white/20 text-white border-white/30">
+              <Badge variant="secondary" className={cn("text-[10px] h-4 sm:h-5 bg-white/20 text-white border-white/30", effectiveVariant === 'compact' && "hidden sm:flex")}>
                 {shortcut}
               </Badge>
             </div>
