@@ -106,25 +106,6 @@ export default function CollectionsDropdown() {
         role="menu"
       >
         <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
-          Media
-        </DropdownMenuLabel>
-        {mediaItems.map((item) => (
-          <DropdownMenuItem key={item.label} className="p-0" role="none">
-            <Link
-              to={item.href}
-              className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground group"
-              onClick={() => handleMediaClick(item)}
-              role="menuitem"
-            >
-              <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" aria-hidden="true" />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          </DropdownMenuItem>
-        ))}
-        
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
           Collections
         </DropdownMenuLabel>
         {collectionItems.map((item) => (
@@ -152,6 +133,25 @@ export default function CollectionsDropdown() {
             <span className="font-medium">All Collections</span>
           </Link>
         </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
+          Media
+        </DropdownMenuLabel>
+        {mediaItems.map((item) => (
+          <DropdownMenuItem key={item.label} className="p-0" role="none">
+            <Link
+              to={item.href}
+              className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground group"
+              onClick={() => handleMediaClick(item)}
+              role="menuitem"
+            >
+              <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" aria-hidden="true" />
+              <span className="font-medium">{item.label}</span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )
