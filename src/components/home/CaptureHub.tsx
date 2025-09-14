@@ -6,7 +6,7 @@ import {
   Mic, 
   Lightbulb,
   Users,
-  Upload
+  GitBranch
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -81,10 +81,10 @@ const QUICK_ACTIONS = [
     ariaLabel: 'Invite family members'
   },
   {
-    title: 'Upload a batch',
-    route: '/stories/new',
-    icon: Upload,
-    ariaLabel: 'Upload multiple files'
+    title: 'Add a story in your family tree',
+    route: '/family-tree',
+    icon: GitBranch,
+    ariaLabel: 'Add a story to your family tree'
   }
 ]
 
