@@ -1614,6 +1614,7 @@ export type Database = {
           family_id: string
           from_person_id: string
           id: string
+          is_biological: boolean | null
           relationship_type: Database["public"]["Enums"]["relationship_type"]
           to_person_id: string
         }
@@ -1623,6 +1624,7 @@ export type Database = {
           family_id: string
           from_person_id: string
           id?: string
+          is_biological?: boolean | null
           relationship_type: Database["public"]["Enums"]["relationship_type"]
           to_person_id: string
         }
@@ -1632,6 +1634,7 @@ export type Database = {
           family_id?: string
           from_person_id?: string
           id?: string
+          is_biological?: boolean | null
           relationship_type?: Database["public"]["Enums"]["relationship_type"]
           to_person_id?: string
         }

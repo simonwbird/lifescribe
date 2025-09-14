@@ -23,6 +23,7 @@ export interface Relationship {
   from_person_id: string
   to_person_id: string
   relationship_type: 'parent' | 'spouse' | 'divorced' | 'unmarried'
+  is_biological?: boolean
   created_at: string
   created_by?: string
 }

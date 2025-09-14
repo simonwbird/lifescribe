@@ -222,10 +222,14 @@ export class FamilyTreeLayoutEngine {
         this.spouseMap.get(rel.from_person_id)!.push(rel.to_person_id)
         this.spouseMap.get(rel.to_person_id)!.push(rel.from_person_id)
       } else if (rel.relationship_type === 'parent') {
-        if (!this.childrenMap.has(rel.from_person_id)) this.childrenMap.set(rel.from_person_id, [])
-        if (!this.parentsMap.has(rel.to_person_id)) this.parentsMap.set(rel.to_person_id, [])
-        this.childrenMap.get(rel.from_person_id)!.push(rel.to_person_id)
-        this.parentsMap.get(rel.to_person_id)!.push(rel.from_person_id)
+        // Only include biological parent relationships for tree connections
+        const isBiological = (rel as any).is_biological !== false // Default to true if not specified
+        if (isBiological) {
+          if (!this.childrenMap.has(rel.from_person_id)) this.childrenMap.set(rel.from_person_id, [])
+          if (!this.parentsMap.has(rel.to_person_id)) this.parentsMap.set(rel.to_person_id, [])
+          this.childrenMap.get(rel.from_person_id)!.push(rel.to_person_id)
+          this.parentsMap.get(rel.to_person_id)!.push(rel.from_person_id)
+        }
       }
     })
   }

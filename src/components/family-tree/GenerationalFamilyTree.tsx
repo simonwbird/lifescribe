@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { ZoomIn, ZoomOut, Home, Grid, Shuffle, Plus } from 'lucide-react'
+import { ZoomIn, ZoomOut, Home, Grid, Shuffle, Plus, Users } from 'lucide-react'
 import { FamilyTreeLayoutEngine, type LayoutNode, type Marriage } from '@/utils/familyTreeLayoutEngine'
 import ConnectionRenderer from '@/components/family-tree/ConnectionRenderer'
+import BiologicalParentsSelector from '@/components/family-tree/BiologicalParentsSelector'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { supabase } from '@/lib/supabase'
 
@@ -12,6 +13,7 @@ interface GenerationalFamilyTreeProps {
   onPersonClick?: (personId: string) => void
   onPersonEdit?: (personId: string) => void
   onAddPerson?: (parentId?: string, type?: 'child' | 'spouse' | 'parent') => void
+  onBiologicalParentsUpdate?: () => void
 }
 
 export default function GenerationalFamilyTree({
@@ -19,7 +21,8 @@ export default function GenerationalFamilyTree({
   relationships,
   onPersonClick,
   onPersonEdit,
-  onAddPerson
+  onAddPerson,
+  onBiologicalParentsUpdate
 }: GenerationalFamilyTreeProps) {
   const [zoom, setZoom] = useState(0.8)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -28,8 +31,8 @@ export default function GenerationalFamilyTree({
   const [hoveredPerson, setHoveredPerson] = useState<string | null>(null)
   const [autoLayout, setAutoLayout] = useState(true)
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
-
-  // Refresh signed URLs for avatar images so they don't expire
+  const [biologicalParentsSelectorOpen, setBiologicalParentsSelectorOpen] = useState(false)
+  const [selectedPersonForBioParents, setSelectedPersonForBioParents] = useState<Person | null>(null)
   useEffect(() => {
     let isMounted = true
     async function refreshUrls() {
@@ -98,6 +101,15 @@ export default function GenerationalFamilyTree({
 
   const handleMouseUp = () => {
     setIsDragging(false)
+  }
+
+  const handleBiologicalParentsClick = (person: Person) => {
+    setSelectedPersonForBioParents(person)
+    setBiologicalParentsSelectorOpen(true)
+  }
+
+  const handleBiologicalParentsUpdate = () => {
+    onBiologicalParentsUpdate?.()
   }
 
   // Render person card
@@ -218,6 +230,27 @@ export default function GenerationalFamilyTree({
             />
             <Plus
               x={PERSON_WIDTH / 2 - 6}
+              y={PERSON_HEIGHT + 15 - 6}
+              width={12}
+              height={12}
+              stroke="white"
+              strokeWidth={2}
+            />
+            
+            {/* Biological Parents Button */}
+            <circle
+              cx={PERSON_WIDTH / 2 + 30}
+              cy={PERSON_HEIGHT + 15}
+              r="12"
+              fill="#6B7280"
+              className="cursor-pointer transition-all duration-200"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleBiologicalParentsClick(person)
+              }}
+            />
+            <Users
+              x={PERSON_WIDTH / 2 + 30 - 6}
               y={PERSON_HEIGHT + 15 - 6}
               width={12}
               height={12}
@@ -408,6 +441,19 @@ export default function GenerationalFamilyTree({
           </div>
         )}
       </div>
+
+      {/* Biological Parents Selector */}
+      {selectedPersonForBioParents && (
+        <BiologicalParentsSelector
+          person={selectedPersonForBioParents}
+          isOpen={biologicalParentsSelectorOpen}
+          onClose={() => {
+            setBiologicalParentsSelectorOpen(false)
+            setSelectedPersonForBioParents(null)
+          }}
+          onUpdate={handleBiologicalParentsUpdate}
+        />
+      )}
     </div>
   )
 }

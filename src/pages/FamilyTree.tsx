@@ -85,10 +85,10 @@ export default function FamilyTree() {
 
       setPeople(peopleData as Person[] || [])
 
-      // Load relationships  
+      // Load relationships with biological status
       const { data: relationshipsData } = await supabase
         .from('relationships')
-        .select('*')
+        .select('*, is_biological')
         .eq('family_id', member.family_id)
 
       setRelationships(relationshipsData || [])
@@ -501,6 +501,7 @@ export default function FamilyTree() {
                     console.log('Add person:', parentId, type)
                     setIsAddPersonOpen(true)
                   }}
+                  onBiologicalParentsUpdate={loadFamilyData}
                 />
               ) : (
                 <EnhancedFamilyTreeCanvas
