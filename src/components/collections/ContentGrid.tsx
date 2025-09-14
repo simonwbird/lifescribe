@@ -13,6 +13,7 @@ interface ContentGridProps {
   showSelection?: boolean
   selectedIds?: string[]
   onSelectionChange?: (ids: string[]) => void
+  onDelete?: (id: string, type: Content['type']) => void
   emptyStateType?: ContentType | 'all'
   viewMode?: ViewMode
 }
@@ -23,6 +24,7 @@ export default function ContentGrid({
   showSelection = false,
   selectedIds = [],
   onSelectionChange,
+  onDelete,
   emptyStateType = 'all',
   viewMode = 'grid'
 }: ContentGridProps) {
@@ -149,6 +151,7 @@ export default function ContentGrid({
               content={item}
               isSelected={selectedIds.includes(item.id)}
               onSelect={handleSelect}
+              onDelete={onDelete}
               showSelection={showSelection}
             />
           ))}

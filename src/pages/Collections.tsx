@@ -177,6 +177,58 @@ export default function Collections() {
     setSelectedIds([]) // Clear selection when changing tabs
   }
 
+  const handleDelete = async (id: string, type: Content['type']) => {
+    try {
+      setLoading(true)
+      
+      // Delete from the appropriate table based on content type
+      const tableName = type === 'story' ? 'stories' : 
+                       type === 'recipe' ? 'recipes' :
+                       type === 'object' ? 'things' :
+                       type === 'property' ? 'properties' :
+                       type === 'pet' ? 'pets' : null
+      
+      if (!tableName) {
+        throw new Error(`Unknown content type: ${type}`)
+      }
+      
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      
+      // Remove from local state
+      setContent(prev => prev.filter(item => item.id !== id))
+      
+      // Update counts
+      setCounts(prev => ({
+        ...prev,
+        all: prev.all - 1,
+        [type === 'object' ? 'objects' : 
+         type === 'property' ? 'properties' :
+         type + 's']: prev[type === 'object' ? 'objects' : 
+                           type === 'property' ? 'properties' :
+                           type + 's' as keyof ContentCounts] - 1
+      }))
+      
+      toast({
+        title: "Deleted",
+        description: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully.`
+      })
+    } catch (error) {
+      console.error('Error deleting content:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete item. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSearchChange = (query: string) => {
     setSearchQuery(query)
     setSelectedIds([]) // Clear selection when searching
@@ -222,6 +274,7 @@ export default function Collections() {
               showSelection={selectedIds.length > 0}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
+              onDelete={handleDelete}
               emptyStateType={activeTab}
               viewMode={viewMode}
             />

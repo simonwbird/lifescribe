@@ -424,7 +424,7 @@ export default function ContentCard({
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuContent align="end" className="bg-popover border z-50">
                 <DropdownMenuItem asChild>
                   <Link to={getDetailUrl()} onClick={(e) => e.stopPropagation()}>
                     <Eye className="h-4 w-4 mr-2" />
