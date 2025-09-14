@@ -23,11 +23,19 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
     const rowY = layout.rows.get(u.depth)!;
     const { x1, x2, y, ax, bx, xm } = unionBar(a, b, rowY);
 
-    // children that exist in layout, grouped by their depth
+    // children that exist in layout, grouped by their depth - but verify they actually belong to this union
     const byDepth = new Map<number, { id: string; tx: number; ty: number }[]>();
     for (const id of u.children) {
       const r = layout.rects.get(id);
       if (!r) continue;
+      
+      // Double-check this child actually has these parents
+      const childParents = graph.parentsOf.get(id) ?? [];
+      if (!childParents.includes(u.a) || !childParents.includes(u.b)) {
+        console.warn(`Child ${id} does not belong to union ${u.a}+${u.b}, skipping connection`);
+        continue;
+      }
+      
       const d = r.depth;
       const tp = topPort(r);
       (byDepth.get(d) ?? byDepth.set(d, []).get(d)!).push({ id, tx: tp.x, ty: tp.y });

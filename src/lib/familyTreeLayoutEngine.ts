@@ -50,6 +50,14 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
     if (!couples.has(key)) couples.set(key, { a, b, children: [] });
     couples.get(key)!.children.push(child);
   }
+  
+  // Verify union children are correct by double-checking parent relationships
+  couples.forEach((couple, key) => {
+    couple.children = couple.children.filter(childId => {
+      const childParents = parentsOf.get(childId) ?? [];
+      return childParents.includes(couple.a) && childParents.includes(couple.b);
+    });
+  });
   // Explicit childless spouses and divorced couples
   for (const [a,set] of spouses) for (const b of set) {
     const [x,y] = a < b ? [a,b] : [b,a];
