@@ -78,6 +78,10 @@ export default function StoryWizard() {
     if (storyType === 'photo') {
       setCurrentStep(3) // Start with Photos & Video step
       setCompletedSteps([]) // No steps completed yet
+    } else if (storyType === 'write') {
+      // Explicit handling for write mode - start at step 1 (normal flow)
+      setCurrentStep(1)
+      setCompletedSteps([])
     }
 
     if (personId && personName) {
