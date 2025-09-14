@@ -12,6 +12,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { getSignedMediaUrl } from '@/lib/media'
 import type { Profile } from '@/lib/types'
 
 // Mock family spaces data - would come from API
@@ -23,6 +24,7 @@ const mockFamilySpaces = [
 export default function ProfileDropdown() {
   const [open, setOpen] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const navigate = useNavigate()
   const { track } = useAnalytics()
 
@@ -30,12 +32,32 @@ export default function ProfileDropdown() {
     const getProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data } = await supabase
+        // Get profile data
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
-        setProfile(data)
+        setProfile(profileData)
+        
+        // Get user's family ID from members table
+        const { data: memberData } = await supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .limit(1)
+          .single()
+        
+        // Get signed URL for avatar if it exists
+        if (profileData?.avatar_url && memberData?.family_id) {
+          try {
+            const signedUrl = await getSignedMediaUrl(profileData.avatar_url, memberData.family_id)
+            setAvatarUrl(signedUrl)
+          } catch (error) {
+            console.error('Error getting signed avatar URL:', error)
+            setAvatarUrl(null)
+          }
+        }
       }
     }
     getProfile()
@@ -74,7 +96,7 @@ export default function ProfileDropdown() {
         >
           <Avatar className="h-8 w-8">
             <AvatarImage 
-              src={profile?.avatar_url || ''} 
+              src={avatarUrl || ''} 
               alt={profile?.full_name || 'User avatar'} 
             />
             <AvatarFallback>
