@@ -58,7 +58,7 @@ const TILES: TileConfig[] = [
     title: 'Voice',
     description: 'Record your voice or a loved one\'s.',
     icon: Mic,
-    route: '/stories/new',
+    route: '/stories/new?type=voice',
     color: '#F59E0B',
     colorRgb: '245, 158, 11',
     hints: ['grandpa\'s laugh', 'lullaby', 'bedtime tale'],
