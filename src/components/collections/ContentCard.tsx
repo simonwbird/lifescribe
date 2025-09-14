@@ -275,14 +275,46 @@ export default function ContentCard({
         const userId = authData?.user?.id
         if (!userId) return
 
+        // 1) Try profiles.avatar_url
         const { data: profile } = await supabase
           .from('profiles')
           .select('avatar_url')
           .eq('id', userId)
           .single()
         
-        if (profile?.avatar_url) {
-          setAuthorAvatar(profile.avatar_url)
+        let avatar = profile?.avatar_url as string | null
+
+        // 2) If not set, try linked person avatar
+        if (!avatar) {
+          const { data: link } = await supabase
+            .from('person_user_links')
+            .select('person_id, family_id')
+            .eq('user_id', userId)
+            .limit(1)
+            .maybeSingle()
+          if (link?.person_id && link.family_id) {
+            const { data: person } = await supabase
+              .from('people')
+              .select('avatar_url')
+              .eq('id', link.person_id)
+              .eq('family_id', link.family_id)
+              .single()
+            avatar = (person?.avatar_url as string | null) ?? null
+          }
+        }
+
+        // Refresh Supabase signed URLs so they aren't expired
+        if (avatar) {
+          const match = avatar.match(/object\/sign\/([^/]+)\/([^?]+)/)
+          if (match) {
+            const bucket = match[1]
+            const objectPath = decodeURIComponent(match[2])
+            const { data: signed } = await supabase.storage
+              .from(bucket)
+              .createSignedUrl(objectPath, 3600)
+            if (signed?.signedUrl) avatar = signed.signedUrl
+          }
+          setAuthorAvatar(avatar)
         }
       } catch (error) {
         console.error('Error fetching current user avatar:', error)
