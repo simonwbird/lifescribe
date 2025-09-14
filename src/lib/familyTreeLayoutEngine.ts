@@ -97,6 +97,17 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
   const rects = new Map<string, NodeRect>();
   const centerX = 800;
 
+  // Map union partners per depth so couples with only shared-children (no explicit spouse edge) are still clustered
+  const unionPartnerAtDepth = new Map<number, Map<string, string>>();
+  for (const u of g.unions) {
+    const m = unionPartnerAtDepth.get(u.depth) ?? new Map<string, string>();
+    m.set(u.a, u.b);
+    m.set(u.b, u.a);
+    unionPartnerAtDepth.set(u.depth, m);
+  }
+  const isUnionPairAtDepth = (a: string, b: string, depth: number) =>
+    unionPartnerAtDepth.get(depth)?.get(a) === b || unionPartnerAtDepth.get(depth)?.get(b) === a;
+
   const getBirthYear = (id: string) => {
     const p = g.peopleById.get(id);
     if (!p?.birth_date) return 9999;
@@ -158,6 +169,24 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
         continue;
       }
 
+      // union-only pair (shared children, no explicit spouse/divorce) - deterministic ordering
+      const partner = unionPartnerAtDepth.get(d)?.get(id);
+      if (partner && !used.has(partner)) {
+        const nameOf = (pid: string) => {
+          const pp = g.peopleById.get(pid);
+          return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
+        };
+        const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(partner))
+          ? [id, partner]
+          : [partner, id];
+        const ordered = (getBirthYear(id) === getBirthYear(partner))
+          ? (nameOf(id) <= nameOf(partner) ? [id, partner] : [partner, id])
+          : [leftId, rightId];
+        clusters.push([ordered[0], ordered[1]]);
+        used.add(ordered[0]); used.add(ordered[1]);
+        continue;
+      }
+
       // single
       clusters.push([id]);
       used.add(id);
@@ -166,7 +195,10 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     const DIVORCED_GAP = 120; // pixels between divorced partners
     const cW = (c:string[]) => {
       if (c.length === 2) {
-        return isSpousePair(c[0], c[1], d) ? CARD_W*2 + SPOUSE_GAP : CARD_W*2 + DIVORCED_GAP;
+        const [a,b] = c;
+        if (isDivorcedPair(a,b,d)) return CARD_W*2 + DIVORCED_GAP;
+        if (isSpousePair(a,b,d) || isUnionPairAtDepth(a,b,d)) return CARD_W*2 + SPOUSE_GAP;
+        return CARD_W*2 + DIVORCED_GAP;
       }
       return CARD_W;
     };
@@ -178,12 +210,21 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     for (const c of clusters){
       if (c.length===2){
         const [a,b] = c;
-        if (isSpousePair(a,b,d)) {
+        const divorcedPair = isDivorcedPair(a,b,d);
+        const spousePair = isSpousePair(a,b,d);
+        const unionOnlyPair = isUnionPairAtDepth(a,b,d);
+        if (divorcedPair) {
+          // divorced pair placement
+          rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+          rects.set(b,{id:b,x:x+CARD_W+DIVORCED_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+          x += CARD_W*2 + DIVORCED_GAP + SIB_GAP;
+        } else if (spousePair || unionOnlyPair) {
+          // treat union-only the same spacing as spouses
           rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
           rects.set(b,{id:b,x:x+CARD_W+SPOUSE_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
           x += CARD_W*2 + SPOUSE_GAP + SIB_GAP;
         } else {
-          // divorced pair placement
+          // default to divorced spacing if unknown pair type
           rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
           rects.set(b,{id:b,x:x+CARD_W+DIVORCED_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
           x += CARD_W*2 + DIVORCED_GAP + SIB_GAP;
