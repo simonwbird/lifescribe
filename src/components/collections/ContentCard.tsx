@@ -266,28 +266,31 @@ export default function ContentCard({
   const isVideoRecording = content.type === 'story' && 
     content.tags.some(tag => tag.includes('video'))
 
-  // Fetch author avatar for voice recordings without cover image
+  // Fetch current user's avatar for voice recordings without cover image
   React.useEffect(() => {
-    const fetchAuthorAvatar = async () => {
-      if (isVoiceRecording && !content.coverUrl) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('avatar_url')
-            .eq('id', content.authorId)
-            .single()
-          
-          if (profile?.avatar_url) {
-            setAuthorAvatar(profile.avatar_url)
-          }
-        } catch (error) {
-          console.error('Error fetching author avatar:', error)
+    const fetchMyAvatar = async () => {
+      if (!isVoiceRecording || content.coverUrl) return
+      try {
+        const { data: authData } = await supabase.auth.getUser()
+        const userId = authData?.user?.id
+        if (!userId) return
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', userId)
+          .single()
+        
+        if (profile?.avatar_url) {
+          setAuthorAvatar(profile.avatar_url)
         }
+      } catch (error) {
+        console.error('Error fetching current user avatar:', error)
       }
     }
 
-    fetchAuthorAvatar()
-  }, [isVoiceRecording, content.coverUrl, content.authorId])
+    fetchMyAvatar()
+  }, [isVoiceRecording, content.coverUrl])
 
   const handlePlayVoice = async (e: React.MouseEvent) => {
     e.stopPropagation()
