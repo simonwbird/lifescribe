@@ -26,7 +26,8 @@ import {
   Play,
   Pause,
   Mic,
-  Video
+  Video,
+  Trash2
 } from 'lucide-react'
 
 import { getSignedMediaUrl } from '@/lib/media'
@@ -39,6 +40,7 @@ interface ContentCardProps {
   isSelected?: boolean
   onSelect?: (id: string, selected: boolean) => void
   showSelection?: boolean
+  onDelete?: (id: string, type: Content['type']) => void
 }
 
 interface VideoPlayerProps {
@@ -157,7 +159,8 @@ export default function ContentCard({
   content, 
   isSelected = false, 
   onSelect, 
-  showSelection = false 
+  showSelection = false,
+  onDelete 
 }: ContentCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [showImageViewer, setShowImageViewer] = useState(false)
@@ -169,6 +172,18 @@ export default function ContentCard({
 
   const handleCardClick = () => {
     navigate(getDetailUrl())
+  }
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!onDelete) return
+    
+    const confirmMessage = `Are you sure you want to delete this ${content.type}? This action cannot be undone.`
+    
+    if (window.confirm(confirmMessage)) {
+      onDelete(content.id, content.type)
+    }
   }
 
   const getTypeIcon = () => {
@@ -433,6 +448,15 @@ export default function ContentCard({
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </DropdownMenuItem>
+                {onDelete && (
+                  <DropdownMenuItem 
+                    onClick={handleDelete} 
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
         </div>
