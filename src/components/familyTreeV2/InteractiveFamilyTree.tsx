@@ -5,7 +5,8 @@ import { DraggablePersonCard } from "./DraggablePersonCard";
 import DynamicConnections from "./DynamicConnections";
 import { GridOverlay } from "./GridOverlay";
 import { Button } from "@/components/ui/button";
-import { Grid3X3, Eye, EyeOff, Plus, Minus, RotateCcw } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Grid3X3, Eye, EyeOff, Plus, Minus, RotateCcw, History, Undo } from "lucide-react";
 import { FamilyTreeService } from "../../lib/familyTreeV2Service";
 import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";
@@ -43,6 +44,15 @@ export default function InteractiveFamilyTree({
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  
+  // Version history state
+  const [versionHistory, setVersionHistory] = useState<Array<{
+    id: string;
+    name: string;
+    timestamp: Date;
+    positions: Map<string, { x: number; y: number }>;
+  }>>([]);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState<number>(-1);
   
   // Instructions panel dragging state
   const [instructionsPos, setInstructionsPos] = useState({ x: 0, y: 0 });
@@ -142,6 +152,21 @@ export default function InteractiveFamilyTree({
       height: Math.max(prev.height, y + 250)
     }));
 
+    // Auto-save version after drag
+    const versionName = `Auto-save ${new Date().toLocaleTimeString()}`;
+    const newVersion = {
+      id: Date.now().toString(),
+      name: versionName,
+      timestamp: new Date(),
+      positions: new Map(positions)
+    };
+    
+    setVersionHistory(prev => {
+      const updated = [...prev, newVersion];
+      // Keep only last 10 versions to avoid clutter
+      return updated.slice(-10);
+    });
+
     // Save position to database
     if (familyId && currentUser?.id) {
       try {
@@ -151,7 +176,51 @@ export default function InteractiveFamilyTree({
         toast.error('Failed to save position');
       }
     }
-  }, [familyId, currentUser?.id]);
+  }, [familyId, currentUser?.id, positions]);
+
+  const saveCurrentVersion = useCallback(() => {
+    const versionName = `Version ${versionHistory.length + 1}`;
+    const newVersion = {
+      id: Date.now().toString(),
+      name: versionName,
+      timestamp: new Date(),
+      positions: new Map(positions)
+    };
+    
+    setVersionHistory(prev => [...prev, newVersion]);
+    setCurrentVersionIndex(versionHistory.length);
+    toast.success(`Saved ${versionName}`);
+  }, [positions, versionHistory.length]);
+
+  const restoreVersion = useCallback((versionIndex: number) => {
+    if (versionIndex >= 0 && versionIndex < versionHistory.length) {
+      const version = versionHistory[versionIndex];
+      setPositions(new Map(version.positions));
+      setCurrentVersionIndex(versionIndex);
+      toast.success(`Restored to ${version.name}`);
+    }
+  }, [versionHistory]);
+
+  const undoLastChange = useCallback(() => {
+    if (versionHistory.length > 0) {
+      const lastVersionIndex = versionHistory.length - 1;
+      restoreVersion(lastVersionIndex);
+    } else {
+      // If no versions saved, reset to original layout
+      const newPositions = new Map<string, { x: number; y: number }>();
+      Array.from(initialLayout.rects.values()).forEach(rect => {
+        newPositions.set(rect.id, { x: rect.x, y: rect.y });
+      });
+      setPositions(newPositions);
+      setBounds({
+        width: Math.max(initialLayout.bounds.width, 1600),
+        height: Math.max(initialLayout.bounds.height, 1200)
+      });
+      setZoom(1);
+      setPanX(0);
+      setPanY(0);
+    }
+  }, [versionHistory.length, restoreVersion, initialLayout]);
 
   const resetLayout = async () => {
     const newPositions = new Map<string, { x: number; y: number }>();
@@ -281,14 +350,56 @@ export default function InteractiveFamilyTree({
           {showGrid ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           {showGrid ? 'Hide Grid' : 'Show Grid'}
         </Button>
+        
+        {/* Version History Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white/90 backdrop-blur-sm"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Tree Versions
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-white/95 backdrop-blur-sm z-50">
+            <DropdownMenuItem onClick={saveCurrentVersion}>
+              Save Current Version
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={resetLayout}>
+              <Grid3X3 className="h-4 w-4 mr-2" />
+              Reset to Original
+            </DropdownMenuItem>
+            {versionHistory.length > 0 && (
+              <>
+                <div className="border-t my-1" />
+                {versionHistory.map((version, index) => (
+                  <DropdownMenuItem
+                    key={version.id}
+                    onClick={() => restoreVersion(index)}
+                    className={currentVersionIndex === index ? "bg-accent" : ""}
+                  >
+                    <span className="flex-1">{version.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {version.timestamp.toLocaleTimeString()}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Undo Button */}
         <Button
           variant="outline"
           size="sm"
-          onClick={resetLayout}
+          onClick={undoLastChange}
           className="bg-white/90 backdrop-blur-sm"
+          title="Undo last change"
         >
-          <Grid3X3 className="h-4 w-4 mr-2" />
-          Refresh Tree
+          <Undo className="h-4 w-4" />
         </Button>
       </div>
 
