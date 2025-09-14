@@ -2,10 +2,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Menu, BookHeart } from 'lucide-react'
+import { Search, Menu, BookHeart, ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu'
 
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -197,6 +203,38 @@ export default function Header() {
                   Home
                 </Link>
               </Button>
+
+              {/* Media Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className={`flex items-center gap-1 hover:bg-accent hover:text-accent-foreground ${
+                      isActivePath('/media') ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground'
+                    }`}
+                  >
+                    Media
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/media" className="w-full">All Media</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/media?tab=photos" className="w-full">Photos</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/media?tab=videos" className="w-full">Videos</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/media?tab=voice" className="w-full">Voice</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/media/albums" className="w-full">Albums</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               <div data-create-button>
                 <CreateDropdown />

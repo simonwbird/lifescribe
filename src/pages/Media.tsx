@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search } from 'lucide-react'
+import { MediaService } from '@/lib/mediaService'
+import { supabase } from '@/integrations/supabase/client'
 import { 
   MediaItem, 
   MediaFilters as MediaFiltersType, 
@@ -69,110 +71,164 @@ export default function Media() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const getCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    return user
+  }
+
+  const getUserFamilyId = async () => {
+    const user = await getCurrentUser()
+    if (!user) return null
+
+    const { data: memberData } = await supabase
+      .from('members')
+      .select('family_id')
+      .eq('profile_id', user.id)
+      .single()
+
+    return memberData?.family_id || null
+  }
+
   const loadMediaData = async () => {
     setLoading(true)
     
-    // Mock API call - replace with actual implementation
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const familyId = await getUserFamilyId()
+      if (!familyId) {
+        setLoading(false)
+        return
+      }
+
+      // Fetch media items using the service
+      const items = await MediaService.fetchMediaItems({
+        tab: filters.tab,
+        familyId,
+        limit: 50,
+        searchQuery: filters.searchQuery
+      })
+
+      // Get counts
+      const mediaCounts = await MediaService.getMediaCounts(familyId)
+
+      setMediaItems(items)
+      setCounts(mediaCounts)
+    } catch (error) {
+      console.error('Error loading media:', error)
+      // Use mock data as fallback
+      const mockItems: MediaItem[] = Array.from({ length: 20 }, (_, i) => ({
+        id: `item-${i}`,
+        type: ['photo', 'video', 'voice'][i % 3] as 'photo' | 'video' | 'voice',
+        takenAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+        uploadedAt: new Date().toISOString(),
+        caption: i % 4 === 0 ? `Caption for item ${i}` : undefined,
+        duration: ['video', 'voice'].includes(['photo', 'video', 'voice'][i % 3]) ? Math.floor(Math.random() * 300) : undefined,
+        transcriptText: ['photo', 'video', 'voice'][i % 3] === 'voice' ? `Transcript for voice recording ${i}` : undefined,
+        thumbUrl: `https://picsum.photos/400/400?random=${i}`,
+        srcUrl: `https://picsum.photos/1200/800?random=${i}`,
+        posterUrl: ['photo', 'video', 'voice'][i % 3] === 'video' ? `https://picsum.photos/800/450?random=${i}` : undefined,
+        peopleIds: [],
+        placeIds: [],
+        albumIds: [],
+        favoriteCount: Math.floor(Math.random() * 10),
+        familyId: 'family-1',
+        profileId: 'user-1'
+      }))
+
+      const filteredItems = filters.tab === 'all' 
+        ? mockItems 
+        : mockItems.filter(item => {
+            if (filters.tab === 'photos') return item.type === 'photo'
+            if (filters.tab === 'videos') return item.type === 'video'
+            if (filters.tab === 'voice') return item.type === 'voice'
+            return true
+          })
+
+      setMediaItems(filteredItems)
+      setCounts({
+        all: mockItems.length,
+        photos: mockItems.filter(i => i.type === 'photo').length,
+        videos: mockItems.filter(i => i.type === 'video').length,
+        voice: mockItems.filter(i => i.type === 'voice').length
+      })
+    }
     
-    // Mock data
-    const mockItems: MediaItem[] = Array.from({ length: 50 }, (_, i) => ({
-      id: `item-${i}`,
-      type: ['photo', 'video', 'voice'][i % 3] as 'photo' | 'video' | 'voice',
-      takenAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      uploadedAt: new Date().toISOString(),
-      caption: i % 4 === 0 ? `Caption for item ${i}` : undefined,
-      duration: ['video', 'voice'].includes(['photo', 'video', 'voice'][i % 3]) ? Math.floor(Math.random() * 300) : undefined,
-      transcriptText: ['photo', 'video', 'voice'][i % 3] === 'voice' ? `Transcript for voice recording ${i}` : undefined,
-      thumbUrl: `https://picsum.photos/400/400?random=${i}`,
-      srcUrl: `https://picsum.photos/1200/800?random=${i}`,
-      posterUrl: ['photo', 'video', 'voice'][i % 3] === 'video' ? `https://picsum.photos/800/450?random=${i}` : undefined,
-      peopleIds: [],
-      placeIds: [],
-      albumIds: [],
-      favoriteCount: Math.floor(Math.random() * 10),
-      familyId: 'family-1',
-      profileId: 'user-1'
-    }))
-
-    // Filter by tab
-    const filteredItems = filters.tab === 'all' 
-      ? mockItems 
-      : mockItems.filter(item => {
-          if (filters.tab === 'photos') return item.type === 'photo'
-          if (filters.tab === 'videos') return item.type === 'video'
-          if (filters.tab === 'voice') return item.type === 'voice'
-          return true
-        })
-
-    setMediaItems(filteredItems)
-    setCounts({
-      all: mockItems.length,
-      photos: mockItems.filter(i => i.type === 'photo').length,
-      videos: mockItems.filter(i => i.type === 'video').length,
-      voice: mockItems.filter(i => i.type === 'voice').length
-    })
     setLoading(false)
   }
 
   const loadMediaRails = async () => {
-    // Mock rails data
-    const mockRails: MediaRailType[] = [
-      {
-        id: 'recent',
-        title: "This Week's Captures",
-        type: 'recent',
-        items: mediaItems.slice(0, 8),
-        hasMore: true
-      },
-      {
-        id: 'people',
-        title: 'People',
-        type: 'people',
-        items: Array.from({ length: 6 }, (_, i) => ({
-          id: `person-${i}`,
-          name: `Person ${i + 1}`,
-          avatarUrl: `https://i.pravatar.cc/150?u=${i}`,
-          mediaCount: Math.floor(Math.random() * 50),
-          recentMediaIds: [`item-${i}`, `item-${i + 1}`, `item-${i + 2}`]
-        } as Person)),
-        hasMore: false
-      },
-      {
-        id: 'events',
-        title: 'Events & Albums',
-        type: 'events',
-        items: Array.from({ length: 5 }, (_, i) => ({
-          id: `album-${i}`,
-          name: `Album ${i + 1}`,
-          description: `Description for album ${i + 1}`,
-          coverMediaId: `item-${i}`,
-          mediaIds: Array.from({ length: Math.floor(Math.random() * 20) }, (_, j) => `item-${i}-${j}`),
-          createdAt: new Date().toISOString(),
-          familyId: 'family-1',
-          createdBy: 'user-1'
-        } as Album)),
-        hasMore: false
-      },
-      {
-        id: 'places',
-        title: 'Places',
-        type: 'places',
-        items: Array.from({ length: 4 }, (_, i) => ({
-          id: `place-${i}`,
-          name: `Place ${i + 1}`,
-          coordinates: {
-            latitude: 40.7128 + Math.random() * 10,
-            longitude: -74.0060 + Math.random() * 10
-          },
-          mediaCount: Math.floor(Math.random() * 30),
-          coverMediaId: `item-${i}`
-        } as Place)),
-        hasMore: false
-      }
-    ]
+    try {
+      const familyId = await getUserFamilyId()
+      if (!familyId) return
 
-    setMediaRails(mockRails)
+      // Load rails using the service
+      const [recentRail, peopleRail, albumsRail, placesRail] = await Promise.all([
+        MediaService.fetchRecentCapturesRail(familyId),
+        MediaService.fetchPeopleRail(familyId),
+        MediaService.fetchAlbumsRail(familyId),
+        MediaService.fetchPlacesRail(familyId)
+      ])
+
+      setMediaRails([recentRail, peopleRail, albumsRail, placesRail])
+    } catch (error) {
+      console.error('Error loading rails:', error)
+      // Use mock rails as fallback
+      const mockRails: MediaRailType[] = [
+        {
+          id: 'recent',
+          title: "This Week's Captures",
+          type: 'recent',
+          items: mediaItems.slice(0, 8),
+          hasMore: true
+        },
+        {
+          id: 'people',
+          title: 'People',
+          type: 'people',
+          items: Array.from({ length: 6 }, (_, i) => ({
+            id: `person-${i}`,
+            name: `Person ${i + 1}`,
+            avatarUrl: `https://i.pravatar.cc/150?u=${i}`,
+            mediaCount: Math.floor(Math.random() * 50),
+            recentMediaIds: [`item-${i}`, `item-${i + 1}`, `item-${i + 2}`]
+          } as Person)),
+          hasMore: false
+        },
+        {
+          id: 'events',
+          title: 'Events & Albums',
+          type: 'events',
+          items: Array.from({ length: 5 }, (_, i) => ({
+            id: `album-${i}`,
+            name: `Album ${i + 1}`,
+            description: `Description for album ${i + 1}`,
+            coverMediaId: `item-${i}`,
+            mediaIds: Array.from({ length: Math.floor(Math.random() * 20) }, (_, j) => `item-${i}-${j}`),
+            createdAt: new Date().toISOString(),
+            familyId: 'family-1',
+            createdBy: 'user-1'
+          } as Album)),
+          hasMore: false
+        },
+        {
+          id: 'places',
+          title: 'Places',
+          type: 'places',
+          items: Array.from({ length: 4 }, (_, i) => ({
+            id: `place-${i}`,
+            name: `Place ${i + 1}`,
+            coordinates: {
+              latitude: 40.7128 + Math.random() * 10,
+              longitude: -74.0060 + Math.random() * 10
+            },
+            mediaCount: Math.floor(Math.random() * 30),
+            coverMediaId: `item-${i}`
+          } as Place)),
+          hasMore: false
+        }
+      ]
+
+      setMediaRails(mockRails)
+    }
   }
 
   const handleTabChange = (tab: MediaTabOption) => {
