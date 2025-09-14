@@ -412,12 +412,29 @@ export default function GenerationalFamilyTree({
       <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-gray-200">
         <h4 className="font-semibold text-sm mb-3 text-gray-800">Family Tree Legend</h4>
         
+        {/* Relationship types */}
+        <div className="space-y-2 mb-4">
+          <h5 className="font-medium text-xs text-gray-600 mb-2">Relationship Types</h5>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full">
+              <span className="text-white text-sm font-bold">♥</span>
+            </div>
+            <span>Marriage/Married Partners</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center justify-center w-6 h-6 border-2 border-gray-400 bg-white rounded-full">
+              <span className="text-gray-400 text-sm font-bold">♡</span>
+            </div>
+            <span>Unmarried Partners</span>
+          </div>
+        </div>
+        
         {/* Connection types */}
         <div className="space-y-2 mb-4">
           <h5 className="font-medium text-xs text-gray-600 mb-1">Connection Types</h5>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-4 h-0 border-t-4 border-blue-500"></div>
-            <span>Marriage/Partnership</span>
+            <span>Partnership Connection</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-4 h-0 border-t-2 border-gray-400"></div>
