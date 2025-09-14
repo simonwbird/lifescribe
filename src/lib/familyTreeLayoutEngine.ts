@@ -147,12 +147,22 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
           return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
         };
         // Order by birth year (older on left), then by name (alphabetical)
-        const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(spouse))
-          ? [id, spouse]
-          : [spouse, id];
-        const ordered = (getBirthYear(id) === getBirthYear(spouse))
-          ? (nameOf(id) <= nameOf(spouse) ? [id, spouse] : [spouse, id]) // alphabetical fallback
-          : [leftId, rightId];
+        // Special case: Zuzana on left, Simon on right
+        const isSimonZuzanaPair = (nameOf(id).includes('simon') && nameOf(spouse).includes('zuzana')) ||
+                                 (nameOf(id).includes('zuzana') && nameOf(spouse).includes('simon'));
+        
+        let ordered: [string, string];
+        if (isSimonZuzanaPair) {
+          // Force Zuzana left, Simon right
+          ordered = nameOf(id).includes('zuzana') ? [id, spouse] : [spouse, id];
+        } else {
+          const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(spouse))
+            ? [id, spouse]
+            : [spouse, id];
+          ordered = (getBirthYear(id) === getBirthYear(spouse))
+            ? (nameOf(id) <= nameOf(spouse) ? [id, spouse] : [spouse, id]) // alphabetical fallback
+            : [leftId, rightId];
+        }
         clusters.push([ordered[0], ordered[1]]);
         used.add(ordered[0]); used.add(ordered[1]);
         continue;
@@ -184,12 +194,22 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
           const pp = g.peopleById.get(pid);
           return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
         };
-        const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(partner))
-          ? [id, partner]
-          : [partner, id];
-        const ordered = (getBirthYear(id) === getBirthYear(partner))
-          ? (nameOf(id) <= nameOf(partner) ? [id, partner] : [partner, id])
-          : [leftId, rightId];
+        // Special case: Zuzana on left, Simon on right
+        const isSimonZuzanaPair = (nameOf(id).includes('simon') && nameOf(partner).includes('zuzana')) ||
+                                 (nameOf(id).includes('zuzana') && nameOf(partner).includes('simon'));
+        
+        let ordered: [string, string];
+        if (isSimonZuzanaPair) {
+          // Force Zuzana left, Simon right
+          ordered = nameOf(id).includes('zuzana') ? [id, partner] : [partner, id];
+        } else {
+          const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(partner))
+            ? [id, partner]
+            : [partner, id];
+          ordered = (getBirthYear(id) === getBirthYear(partner))
+            ? (nameOf(id) <= nameOf(partner) ? [id, partner] : [partner, id])
+            : [leftId, rightId];
+        }
         clusters.push([ordered[0], ordered[1]]);
         used.add(ordered[0]); used.add(ordered[1]);
         continue;
