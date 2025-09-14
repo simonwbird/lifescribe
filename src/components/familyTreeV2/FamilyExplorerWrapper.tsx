@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FamilyTreeService } from '@/lib/familyTreeV2Service'
-import FamilyExplorer from './FamilyExplorer'
+import InteractiveFamilyTree from './InteractiveFamilyTree'
 import { QuickAddModal } from './QuickAddModal'
 import type { Person, Relationship } from '@/lib/familyTreeV2Types'
 
@@ -118,7 +118,7 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
 
   return (
     <>
-      <FamilyExplorer
+      <InteractiveFamilyTree
         key={renderKey}
         people={people}
         relationships={relationships}

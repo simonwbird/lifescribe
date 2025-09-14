@@ -1,0 +1,264 @@
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { NodeRect, Person, FamilyGraph } from "../../lib/familyTreeV2Types";
+import { supabase } from '@/lib/supabase';
+import { snapToGrid } from "./GridOverlay";
+
+/** Card constants */
+export const CARD_W = 140;
+export const CARD_H = 180;
+export const CARD_R = 12;
+
+const PHOTO_X = 10, PHOTO_Y = 10, PHOTO_W = 120, PHOTO_H = 90, PHOTO_R = 8;
+
+const TOKENS = {
+  card: "#FFFFFF",
+  cardBorder: "#D9D9DF",
+  cardBorderDragging: "#3B82F6",
+  name: "#1F2328",
+  dates: "#6B7280",
+  male: "#8DA9C4",
+  female: "#E6B0A0",
+  unknown: "#C3C7CF",
+};
+
+const font = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+const genderFill = (s?: "M"|"F"|"X") => s==="M" ? TOKENS.male : s==="F" ? TOKENS.female : TOKENS.unknown;
+const yr = (v?: string|number|null) => v==null ? "" : String(v).slice(0,4);
+const fullName = (p: Person) => (p.given_name + " " + (p.surname ?? "")).trim();
+
+interface DraggablePersonCardProps {
+  rect: NodeRect;
+  person: Person;
+  onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void;
+  graph?: FamilyGraph;
+  onDrag?: (personId: string, x: number, y: number) => void;
+  onDragEnd?: (personId: string, x: number, y: number) => void;
+  gridSize?: number;
+  isDragging?: boolean;
+}
+
+export function DraggablePersonCard({ 
+  rect, 
+  person, 
+  onAddRequested, 
+  graph,
+  onDrag,
+  onDragEnd,
+  gridSize = 30,
+  isDragging = false
+}: DraggablePersonCardProps) {
+  const navigate = useNavigate();
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [localIsDragging, setLocalIsDragging] = useState(false);
+  const cardRef = useRef<SVGGElement>(null);
+
+  // Refresh signed URLs
+  useEffect(() => {
+    let isMounted = true;
+    async function refresh() {
+      if (!person.avatar_url) { setResolvedAvatarUrl(undefined); return; }
+      let url = person.avatar_url as string;
+      const match = url.match(/object\/sign\/([^/]+)\/([^?]+)/);
+      if (match) {
+        const bucket = match[1];
+        const objectPath = decodeURIComponent(match[2]);
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600);
+        if (data?.signedUrl) url = data.signedUrl;
+      }
+      if (!isMounted) return;
+      setResolvedAvatarUrl(url);
+    }
+    refresh();
+    return () => { isMounted = false; };
+  }, [person.avatar_url]);
+
+  const b = yr(person.birth_date), d = yr(person.death_date);
+  const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
+  const name = fullName(person);
+  
+  const nameParts = name.split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as Element).closest('.connector-btn')) return;
+    
+    e.preventDefault();
+    setLocalIsDragging(true);
+    
+    const svgElement = (e.target as Element).closest('svg');
+    if (!svgElement) return;
+    
+    const svgRect = svgElement.getBoundingClientRect();
+    const clickX = e.clientX - svgRect.left;
+    const clickY = e.clientY - svgRect.top;
+    
+    setDragOffset({
+      x: clickX - rect.x,
+      y: clickY - rect.y
+    });
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newClickX = e.clientX - svgRect.left;
+      const newClickY = e.clientY - svgRect.top;
+      
+      const newX = newClickX - dragOffset.x;
+      const newY = newClickY - dragOffset.y;
+      
+      const snapped = snapToGrid(newX, newY, gridSize);
+      onDrag?.(person.id, snapped.x, snapped.y);
+    };
+
+    const handleMouseUp = () => {
+      setLocalIsDragging(false);
+      
+      const svgElement = document.querySelector('svg');
+      if (!svgElement) return;
+      
+      const svgRect = svgElement.getBoundingClientRect();
+      const finalX = (window.event as MouseEvent).clientX - svgRect.left - dragOffset.x;
+      const finalY = (window.event as MouseEvent).clientY - svgRect.top - dragOffset.y;
+      
+      const snapped = snapToGrid(finalX, finalY, gridSize);
+      onDragEnd?.(person.id, snapped.x, snapped.y);
+      
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (!(e.target as Element).closest('.connector-btn') && !localIsDragging) {
+      navigate(`/people/${person.id}`);
+    }
+  };
+
+  const handleAddRelation = (e: React.MouseEvent, type: 'parent' | 'sibling' | 'child' | 'spouse') => {
+    e.stopPropagation();
+    onAddRequested?.(type, person.id);
+  };
+
+  const isMarried = graph?.spouses?.get(person.id)?.size > 0;
+  const cardIsDragging = isDragging || localIsDragging;
+
+  return (
+    <g 
+      ref={cardRef}
+      transform={`translate(${Math.round(rect.x)},${Math.round(rect.y)})`}
+      style={{ 
+        cursor: cardIsDragging ? 'grabbing' : 'grab',
+        opacity: cardIsDragging ? 0.8 : 1
+      }}
+      className={`person-card transition-all duration-200 ${cardIsDragging ? 'scale-105' : ''}`}
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+    >
+      <rect 
+        width={CARD_W} 
+        height={CARD_H} 
+        rx={CARD_R} 
+        fill={TOKENS.card} 
+        stroke={cardIsDragging ? TOKENS.cardBorderDragging : TOKENS.cardBorder}
+        strokeWidth={cardIsDragging ? 2 : 1}
+        filter="url(#feCardShadow)" 
+      />
+      
+      {/* Photo area */}
+      <rect 
+        x={PHOTO_X} 
+        y={PHOTO_Y} 
+        width={PHOTO_W} 
+        height={PHOTO_H} 
+        rx={PHOTO_R} 
+        fill={genderFill(person.sex)} 
+      />
+      
+      {resolvedAvatarUrl ? (
+        <foreignObject x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H}>
+          <img 
+            src={resolvedAvatarUrl} 
+            alt={name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: `${PHOTO_R}px`,
+              pointerEvents: 'none'
+            }}
+          />
+        </foreignObject>
+      ) : (
+        <g transform={`translate(${PHOTO_X + PHOTO_W/2 - 23}, ${PHOTO_Y + PHOTO_H/2 - 30})`}>
+          <path
+            d="M23 28c6.627 0 12-5.373 12-12S29.627 4 23 4s-12 5.373-12 12 5.373 12 12 12zm0 4C15.268 32 0 36.268 0 44v4h46v-4c0-7.732-15.268-12-23-12z"
+            fill="#fff" 
+            opacity="0.9"
+          />
+        </g>
+      )}
+
+      {/* Connection buttons - only show when not dragging */}
+      {!cardIsDragging && (
+        <>
+          <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'parent')}>
+            <circle cx={CARD_W/2} cy={-8} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
+            <line x1={CARD_W/2 - 4} y1={-8} x2={CARD_W/2 + 4} y2={-8} stroke="#fff" strokeWidth="1.5" />
+            <line x1={CARD_W/2} y1={-12} x2={CARD_W/2} y2={-4} stroke="#fff" strokeWidth="1.5" />
+          </g>
+
+          <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'sibling')}>
+            <circle cx={-8} cy={CARD_H/2} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
+            <line x1={-12} y1={CARD_H/2} x2={-4} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+            <line x1={-8} y1={CARD_H/2 - 4} x2={-8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
+          </g>
+
+          {!isMarried && (
+            <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'spouse')}>
+              <circle cx={CARD_W + 8} cy={CARD_H/2} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
+              <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+              <line x1={CARD_W + 8} y1={CARD_H/2 - 4} x2={CARD_W + 8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
+            </g>
+          )}
+
+          <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'child')}>
+            <circle cx={CARD_W/2} cy={CARD_H + 8} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
+            <line x1={CARD_W/2 - 4} y1={CARD_H + 8} x2={CARD_W/2 + 4} y2={CARD_H + 8} stroke="#fff" strokeWidth="1.5" />
+            <line x1={CARD_W/2} y1={CARD_H + 4} x2={CARD_W/2} y2={CARD_H + 12} stroke="#fff" strokeWidth="1.5" />
+          </g>
+        </>
+      )}
+      
+      {/* Name and dates */}
+      <text x={CARD_W/2} y={PHOTO_Y + PHOTO_H + 20} textAnchor="middle"
+            style={{ fontFamily: font, fontSize: 12, fontWeight: 600, fill: TOKENS.name, pointerEvents: 'none' }}>
+        {firstName}
+      </text>
+      {lastName && (
+        <text x={CARD_W/2} y={PHOTO_Y + PHOTO_H + 35} textAnchor="middle"
+              style={{ fontFamily: font, fontSize: 12, fontWeight: 600, fill: TOKENS.name, pointerEvents: 'none' }}>
+          {lastName}
+        </text>
+      )}
+      
+      <text x={CARD_W/2} y={CARD_H - 15} textAnchor="middle"
+            style={{ fontFamily: font, fontSize: 11, fill: TOKENS.dates, pointerEvents: 'none' }}>
+        {dates}
+      </text>
+
+      {/* Hover indicator */}
+      <rect 
+        x={0} y={0} width={CARD_W} height={CARD_H} rx={CARD_R} 
+        fill="transparent" 
+        stroke="transparent" 
+        strokeWidth={2}
+        style={{ opacity: 0, transition: 'all 0.2s', pointerEvents: 'none' }}
+        className="hover:stroke-primary hover:opacity-100"
+      />
+    </g>
+  );
+}
