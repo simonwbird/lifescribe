@@ -154,22 +154,22 @@ export function CaptureHub({ className }: CaptureHubProps) {
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="text-center sm:text-left">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
             What would you like to capture today?
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
             Share your family's stories and memories
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center sm:justify-end gap-3">
           <StreakChip />
         </div>
       </div>
 
       {/* Capture Tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {TILES.map((tile) => {
           const Icon = tile.icon
           const currentHint = currentHints[tile.id]
@@ -180,10 +180,11 @@ export function CaptureHub({ className }: CaptureHubProps) {
               to={tile.route}
               className={cn(
                 "group relative block rounded-2xl shadow-lg overflow-hidden",
-                "aspect-[4/3] sm:aspect-[16/10] transition-all duration-300",
-                "p-3 sm:p-6",
+                "aspect-[5/4] sm:aspect-[4/3] lg:aspect-[16/10] transition-all duration-300",
+                "p-4 sm:p-5 lg:p-6",
                 "hover:scale-[1.02] focus:scale-[1.02]",
-                "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10"
+                "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10",
+                "min-h-[140px] sm:min-h-[160px] lg:min-h-[120px]"
               )}
               style={{
                 background: `linear-gradient(135deg, rgba(${tile.colorRgb}, 1), rgba(${tile.colorRgb}, 0.8))`,
@@ -199,19 +200,21 @@ export function CaptureHub({ className }: CaptureHubProps) {
               {/* Content */}
               <div className="relative z-10 h-full flex flex-col justify-between text-white">
                 <div className="flex items-start justify-between">
-                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
+                  <Icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 flex-shrink-0" />
                 </div>
 
-                <div>
-                  <h2 className="text-base sm:text-xl font-semibold mb-1">{tile.title}</h2>
+                <div className="flex-1 flex flex-col justify-end">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 leading-tight">
+                    {tile.title}
+                  </h2>
                   <p 
                     id={`${tile.id}-description`}
-                    className="text-xs sm:text-sm text-white/90 mb-1 sm:mb-2 line-clamp-1 sm:line-clamp-none"
+                    className="text-sm sm:text-base lg:text-sm text-white/90 mb-2 leading-snug line-clamp-2"
                   >
                     {tile.description}
                   </p>
                   {currentHint && (
-                    <p className="text-xs text-white/75 italic hidden sm:block">
+                    <p className="text-xs sm:text-sm text-white/75 italic line-clamp-1 lg:line-clamp-2">
                       {currentHint}
                     </p>
                   )}
@@ -223,7 +226,7 @@ export function CaptureHub({ className }: CaptureHubProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+      <div className="flex flex-col xs:flex-row flex-wrap gap-3 justify-center sm:justify-start">
         {QUICK_ACTIONS.map((action) => {
           const Icon = action.icon
           return (
@@ -231,15 +234,16 @@ export function CaptureHub({ className }: CaptureHubProps) {
               key={action.route}
               to={action.route}
               className={cn(
-                "inline-flex items-center gap-2 px-4 py-3 rounded-xl",
+                "inline-flex items-center justify-center xs:justify-start gap-3 px-4 py-3 rounded-xl",
                 "bg-white shadow ring-1 ring-black/5",
                 "hover:shadow-md transition-shadow duration-200",
-                "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                "min-w-[140px] xs:min-w-0 flex-1 xs:flex-initial max-w-none xs:max-w-fit"
               )}
               aria-label={action.ariaLabel}
             >
-              <Icon className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 flex-shrink-0" />
+              <span className="text-sm sm:text-base font-medium text-gray-700 text-center xs:text-left">
                 {action.title}
               </span>
             </Link>
