@@ -50,17 +50,18 @@ export default function ProfileDropdown() {
         
         // Resolve avatar URL
         if (profileData?.avatar_url) {
+          let resolved: string | null = null
+
           // If it's an absolute URL (external), use it directly
           if (/^https?:\/\//i.test(profileData.avatar_url)) {
-            setAvatarUrl(profileData.avatar_url)
+            resolved = profileData.avatar_url
           } else {
             // Prefer the edge function (family-aware)
             try {
               if (memberData?.family_id) {
                 const signedEdgeUrl = await getSignedMediaUrl(profileData.avatar_url, memberData.family_id)
                 if (signedEdgeUrl) {
-                  setAvatarUrl(signedEdgeUrl)
-                  return
+                  resolved = signedEdgeUrl
                 }
               }
             } catch (error) {
@@ -68,17 +69,28 @@ export default function ProfileDropdown() {
             }
 
             // Fallback: client-side signed URL from Storage
-            try {
-              const { data: signed, error: signErr } = await supabase.storage
-                .from('media')
-                .createSignedUrl(profileData.avatar_url, 60 * 60) // 1 hour
-              if (signErr) throw signErr
-              setAvatarUrl(signed?.signedUrl || null)
-            } catch (fallbackErr) {
-              console.error('Fallback signed URL failed:', fallbackErr)
-              setAvatarUrl(null)
+            if (!resolved) {
+              try {
+                const { data: signed, error: signErr } = await supabase.storage
+                  .from('media')
+                  .createSignedUrl(profileData.avatar_url, 60 * 60) // 1 hour
+                if (signErr) throw signErr
+                resolved = signed?.signedUrl || null
+              } catch (fallbackErr) {
+                console.error('Fallback signed URL failed:', fallbackErr)
+              }
             }
           }
+
+          // Final fallback: auth user metadata picture (e.g., Google avatar)
+          if (!resolved && user?.user_metadata?.avatar_url) {
+            resolved = user.user_metadata.avatar_url
+          }
+
+          setAvatarUrl(resolved)
+        } else if (user?.user_metadata?.avatar_url) {
+          // No profile avatar set, use auth provider avatar
+          setAvatarUrl(user.user_metadata.avatar_url)
         }
       }
     }
