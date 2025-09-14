@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart } from "lucide-react";
 import { NodeRect, Person } from "../../lib/familyTreeV2Types";
 import { supabase } from '@/lib/supabase'
 
@@ -144,23 +143,12 @@ export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; p
           cx={CARD_W + 8} 
           cy={CARD_H/2} 
           r="8" 
-          fill="#E91E63" 
+          fill="#6B7280" 
           stroke="#fff" 
           strokeWidth="1"
         />
-        <foreignObject 
-          x={CARD_W + 8 - 6} 
-          y={CARD_H/2 - 6} 
-          width="12" 
-          height="12"
-        >
-          <Heart 
-            size={12} 
-            color="white" 
-            fill="white"
-            style={{ display: 'block' }}
-          />
-        </foreignObject>
+        <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+        <line x1={CARD_W + 8} y1={CARD_H/2 - 4} x2={CARD_W + 8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
       </g>
 
       {/* Add Child - Bottom */}

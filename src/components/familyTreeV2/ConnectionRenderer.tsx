@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { Heart } from "lucide-react";
 import { FamilyGraph, TreeLayout } from "../../lib/familyTreeV2Types";
 import {
   BAR_W, EDGE_W, STEM_LEN, COLORS,
@@ -103,6 +104,28 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
           {/* bar */}
           <path d={`M${g.bar.x1},${g.bar.y} L${g.bar.x2},${g.bar.y}`} stroke={COLORS.strong} strokeWidth={BAR_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          {/* heart icon at midpoint of marriage bar */}
+          <circle 
+            cx={g.bar.xm} 
+            cy={g.bar.y} 
+            r="12" 
+            fill="#E91E63" 
+            stroke="white" 
+            strokeWidth="2"
+          />
+          <foreignObject 
+            x={g.bar.xm - 8} 
+            y={g.bar.y - 8} 
+            width="16" 
+            height="16"
+          >
+            <Heart 
+              size={16} 
+              color="white" 
+              fill="white"
+              style={{ display: 'block' }}
+            />
+          </foreignObject>
           {/* drop from bar midpoint to fixed rail */}
           <path d={`M${g.bar.xm},${g.bar.y} V${g.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
