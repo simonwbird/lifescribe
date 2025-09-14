@@ -47,7 +47,7 @@ const TILES: TileConfig[] = [
     title: 'Photo',
     description: 'Add a photo and tell its story.',
     icon: Camera,
-    route: '/capture?mode=photo',
+    route: '/stories/new?type=photo',
     color: '#00D4AA',
     colorRgb: '0, 212, 170',
     hints: ['wedding', 'school play', 'first home'],
