@@ -204,38 +204,6 @@ export default function Header() {
                 </Link>
               </Button>
 
-              {/* Media Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className={`flex items-center gap-1 hover:bg-accent hover:text-accent-foreground ${
-                      isActivePath('/media') ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground'
-                    }`}
-                  >
-                    Media
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/media" className="w-full">All Media</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/media?tab=photos" className="w-full">Photos</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/media?tab=videos" className="w-full">Videos</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/media?tab=voice" className="w-full">Voice</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/media/albums" className="w-full">Albums</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
               <div data-create-button>
                 <CreateDropdown />
               </div>

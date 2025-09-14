@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, FileText, ChefHat, Package, Heart, Home, Archive } from 'lucide-react'
+import { ChevronDown, FileText, ChefHat, Package, Heart, Home, Archive, Images, Video, Mic, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -7,9 +7,38 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
+
+const mediaItems = [
+  {
+    icon: FolderOpen,
+    label: 'All Media',
+    href: '/media'
+  },
+  {
+    icon: Images,
+    label: 'Photos',
+    href: '/media?tab=photos'
+  },
+  {
+    icon: Video,
+    label: 'Videos',
+    href: '/media?tab=videos'
+  },
+  {
+    icon: Mic,
+    label: 'Voice',
+    href: '/media?tab=voice'
+  },
+  {
+    icon: Archive,
+    label: 'Albums',
+    href: '/media/albums'
+  }
+]
 
 const collectionItems = [
   {
@@ -48,6 +77,11 @@ export default function CollectionsDropdown() {
     setOpen(false)
   }
 
+  const handleMediaClick = (item: typeof mediaItems[0]) => {
+    track('collections_open', { type: item.label.toLowerCase() })
+    setOpen(false)
+  }
+
   const handleAllCollectionsClick = () => {
     track('collections_open', { type: 'all' })
     setOpen(false)
@@ -68,9 +102,31 @@ export default function CollectionsDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        className="w-48 p-2 bg-popover border border-border shadow-lg"
+        className="w-48 p-2 bg-popover border border-border shadow-lg z-50"
         role="menu"
       >
+        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
+          Media
+        </DropdownMenuLabel>
+        {mediaItems.map((item) => (
+          <DropdownMenuItem key={item.label} className="p-0" role="none">
+            <Link
+              to={item.href}
+              className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground group"
+              onClick={() => handleMediaClick(item)}
+              role="menuitem"
+            >
+              <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" aria-hidden="true" />
+              <span className="font-medium">{item.label}</span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
+          Collections
+        </DropdownMenuLabel>
         {collectionItems.map((item) => (
           <DropdownMenuItem key={item.label} className="p-0" role="none">
             <Link
