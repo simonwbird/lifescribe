@@ -205,15 +205,49 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
         
         if (childrenPositions.length === 0) return null;
         
-        // Check if this is a divorced couple
-        const isDivorced = graph.divorced.get(union.a)?.has(union.b) || graph.divorced.get(union.b)?.has(union.a);
-        
         return (
           <g key={union.id}>
             {drawMultiParentConnection(parent1Pos, parent2Pos, childrenPositions)}
           </g>
         );
       })}
+
+      {/* Draw divorced couple connections for children who might only have one parent relationship in DB */}
+      {Array.from(graph.divorced.entries()).map(([parentA, divorcedSet]) => 
+        Array.from(divorcedSet).map(parentB => {
+          // Check if this divorced couple has any shared children
+          const parentAChildren = graph.childrenOf.get(parentA) || [];
+          const parentBChildren = graph.childrenOf.get(parentB) || [];
+          
+          // Find children that belong to either parent (they should be shared)
+          const allChildren = [...new Set([...parentAChildren, ...parentBChildren])];
+          
+          if (allChildren.length === 0) return null;
+          
+          // Check if this couple is already handled by unions
+          const existingUnion = graph.unions.find(u => 
+            (u.a === parentA && u.b === parentB) || (u.a === parentB && u.b === parentA)
+          );
+          if (existingUnion) return null;
+          
+          const parent1Pos = positions.get(parentA);
+          const parent2Pos = positions.get(parentB);
+          
+          if (!parent1Pos || !parent2Pos) return null;
+          
+          const childrenPositions = allChildren
+            .map(childId => positions.get(childId))
+            .filter(pos => pos !== undefined) as { x: number; y: number }[];
+          
+          if (childrenPositions.length === 0) return null;
+          
+          return (
+            <g key={`divorced-${parentA}-${parentB}`}>
+              {drawMultiParentConnection(parent1Pos, parent2Pos, childrenPositions)}
+            </g>
+          );
+        })
+      )}
 
       {/* Draw single parent connections */}
       {Array.from(graph.childrenOf.entries()).map(([parentId, childIds]) => {
