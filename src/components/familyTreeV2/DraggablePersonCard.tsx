@@ -48,7 +48,7 @@ export function DraggablePersonCard({
   onDragEnd,
   gridSize = 30,
   isDragging = false,
-  positions
+  positions = new Map<string, { x: number; y: number }>()
 }: DraggablePersonCardProps) {
   const navigate = useNavigate();
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined);
