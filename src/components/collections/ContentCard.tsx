@@ -267,10 +267,14 @@ export default function ContentCard({
   const isVideoRecording = content.type === 'story' && 
     content.tags.some(tag => tag.includes('video'))
 
-  // Fetch current user's avatar for voice recordings without cover image
+  // Check if this is a prompt answer
+  const isPromptAnswer = content.type === 'story' && 
+    content.tags.includes('prompt-answer')
+
+  // Fetch current user's avatar for voice recordings and prompt answers without cover image
   React.useEffect(() => {
     const fetchMyAvatar = async () => {
-      if (!isVoiceRecording || content.coverUrl) return
+      if ((!isVoiceRecording && !isPromptAnswer) || content.coverUrl) return
       try {
         const { data: authData } = await supabase.auth.getUser()
         const userId = authData?.user?.id
@@ -323,7 +327,7 @@ export default function ContentCard({
     }
 
     fetchMyAvatar()
-  }, [isVoiceRecording, content.coverUrl])
+  }, [isVoiceRecording, isPromptAnswer, content.coverUrl])
 
   const handlePlayVoice = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -428,7 +432,7 @@ export default function ContentCard({
               e.currentTarget.src = '/placeholder.svg'
             }}
           />
-        ) : isVoiceRecording && authorAvatar ? (
+        ) : (isVoiceRecording || isPromptAnswer) && authorAvatar ? (
           <img 
             src={authorAvatar}
             alt={`${content.authorName} profile`}
@@ -436,7 +440,7 @@ export default function ContentCard({
             loading="lazy"
             onError={(e) => {
               e.currentTarget.onerror = null
-              // Fallback to microphone icon if profile image fails
+              // Fallback to microphone icon for voice or FileText icon for prompt answers
               setAuthorAvatar(null)
             }}
           />
@@ -446,6 +450,8 @@ export default function ContentCard({
               <Mic className="h-8 w-8" />
             ) : isVideoRecording ? (
               <Video className="h-8 w-8" />
+            ) : isPromptAnswer ? (
+              <FileText className="h-8 w-8" />
             ) : (
               getTypeIcon()
             )}
