@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PeopleTable } from './PeopleTable'
 import { RelationshipsTable } from './RelationshipsTable'
 import { FamilyDataService, PersonData, RelationshipData } from '@/lib/familyDataService'
+import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
 
 interface FamilyDataEditorProps {
@@ -42,6 +43,56 @@ export function FamilyDataEditor({ open, onOpenChange, familyId, onDataChange }:
       loadData()
     }
   }, [open, familyId])
+
+  // Real-time listeners for people changes
+  useEffect(() => {
+    if (!open || !familyId) return
+
+    const peopleChannel = supabase
+      .channel('people-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'people',
+          filter: `family_id=eq.${familyId}`
+        },
+        (payload) => {
+          console.log('People change detected:', payload)
+          // Reload people data when any change occurs
+          FamilyDataService.getPeople(familyId).then(setPeople).catch(console.error)
+          // Also notify parent component
+          onDataChange?.()
+        }
+      )
+      .subscribe()
+
+    const relationshipsChannel = supabase
+      .channel('relationships-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'relationships',
+          filter: `family_id=eq.${familyId}`
+        },
+        (payload) => {
+          console.log('Relationships change detected:', payload)
+          // Reload relationships data when any change occurs
+          FamilyDataService.getRelationships(familyId).then(setRelationships).catch(console.error)
+          // Also notify parent component
+          onDataChange?.()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(peopleChannel)
+      supabase.removeChannel(relationshipsChannel)
+    }
+  }, [open, familyId, onDataChange])
 
   const handleDataUpdate = () => {
     loadData()
