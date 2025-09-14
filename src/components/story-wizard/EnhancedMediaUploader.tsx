@@ -12,7 +12,8 @@ import {
   Star, 
   GripVertical,
   Camera,
-  Plus
+  Plus,
+  RotateCcw
 } from 'lucide-react'
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
@@ -34,6 +35,7 @@ export default function EnhancedMediaUploader({
   const [showCamera, setShowCamera] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingMode, setRecordingMode] = useState<'photo' | 'video'>('photo')
+  const [currentCamera, setCurrentCamera] = useState<'user' | 'environment'>('environment') // Start with rear camera
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -152,7 +154,7 @@ export default function EnhancedMediaUploader({
     try {
       const constraints: MediaStreamConstraints = {
         video: { 
-          facingMode: 'user', // Use front camera by default
+          facingMode: currentCamera, // Use selected camera
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         }
@@ -181,6 +183,40 @@ export default function EnhancedMediaUploader({
     }
   }
 
+  const switchCamera = async () => {
+    const newCamera = currentCamera === 'user' ? 'environment' : 'user'
+    setCurrentCamera(newCamera)
+    
+    // Stop current stream
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+    }
+    
+    // Start new stream with different camera
+    try {
+      const constraints: MediaStreamConstraints = {
+        video: { 
+          facingMode: newCamera,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      }
+
+      if (recordingMode === 'video') {
+        constraints.audio = true
+      }
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
+      setStream(mediaStream)
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+      }
+    } catch (error) {
+      console.error('Error switching camera:', error)
+    }
+  }
+
   const takePicture = () => {
     if (!videoRef.current || !stream) return
 
@@ -193,9 +229,13 @@ export default function EnhancedMediaUploader({
     
     const ctx = canvas.getContext('2d')
     
-    // Flip the canvas horizontally to match the preview
-    ctx?.scale(-1, 1)
-    ctx?.drawImage(video, -canvas.width, 0)
+    // Flip the canvas horizontally only for front camera to match the preview
+    if (currentCamera === 'user') {
+      ctx?.scale(-1, 1)
+      ctx?.drawImage(video, -canvas.width, 0)
+    } else {
+      ctx?.drawImage(video, 0, 0)
+    }
     
     // Convert to blob and file
     canvas.toBlob((blob) => {
@@ -486,14 +526,25 @@ export default function EnhancedMediaUploader({
             <h3 className="text-lg font-semibold">
               {recordingMode === 'photo' ? 'Take Photo' : 'Record Video'}
             </h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closeCameraInterface}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={switchCamera}
+                className="text-white hover:bg-white/20"
+                title={`Switch to ${currentCamera === 'user' ? 'rear' : 'front'} camera`}
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeCameraInterface}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           {/* Camera Preview */}
@@ -503,7 +554,9 @@ export default function EnhancedMediaUploader({
               autoPlay
               playsInline
               muted
-              className="max-w-full max-h-full object-contain transform scale-x-[-1]"
+              className={`max-w-full max-h-full object-contain ${
+                currentCamera === 'user' ? 'transform scale-x-[-1]' : ''
+              }`}
             />
           </div>
 
