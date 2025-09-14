@@ -55,7 +55,11 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
           .filter(r => r.relationship_type === 'spouse')
           .map(r => ({ type: 'spouse', a: String(r.from_person_id), b: String(r.to_person_id) }) as const)
 
-        return [...parentEdges, ...spouseEdges]
+        const divorcedEdges: Relationship[] = raw
+          .filter(r => r.relationship_type === 'divorced')
+          .map(r => ({ type: 'divorced', a: String(r.from_person_id), b: String(r.to_person_id) }) as const)
+
+        return [...parentEdges, ...spouseEdges, ...divorcedEdges]
       }
 
       function scoreOrientation(rels: Relationship[]) {

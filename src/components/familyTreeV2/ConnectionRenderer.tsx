@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { Heart } from "lucide-react";
+import { Heart, HeartCrack } from "lucide-react";
 import { FamilyGraph, TreeLayout } from "../../lib/familyTreeV2Types";
 import {
   BAR_W, EDGE_W, STEM_LEN, COLORS,
@@ -94,51 +94,68 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
   return (
     <g>
       {/* ===== unions ===== */}
-      {unionGroups.map(g => (
-        <Fragment key={g.key}>
-          {/* stems */}
-          <path d={`M${g.bar.ax},${g.bar.y - STEM_LEN} V${g.bar.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
-                fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          <path d={`M${g.bar.bx},${g.bar.y - STEM_LEN} V${g.bar.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
-                fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* bar */}
-          <path d={`M${g.bar.x1},${g.bar.y} L${g.bar.x2},${g.bar.y}`} stroke={COLORS.strong} strokeWidth={BAR_W}
-                fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* heart icon at midpoint of marriage bar */}
-          <circle 
-            cx={g.bar.xm} 
-            cy={g.bar.y} 
-            r="12" 
-            fill="#E91E63" 
-            stroke="white" 
-            strokeWidth="2"
-          />
-          <foreignObject 
-            x={g.bar.xm - 8} 
-            y={g.bar.y - 8} 
-            width="16" 
-            height="16"
-          >
-            <Heart 
-              size={16} 
-              color="white" 
-              fill="white"
-              style={{ display: 'block' }}
-            />
-          </foreignObject>
-          {/* drop from bar midpoint to fixed rail - starting from outside edge of heart circle */}
-          <path d={`M${g.bar.xm},${g.bar.y + 14} V${g.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
-                fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* rail */}
-          <path d={`M${g.rail.x1},${g.rail.y} L${g.rail.x2},${g.rail.y}`} stroke={COLORS.link} strokeWidth={EDGE_W}
-                fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          {/* drops to children */}
-          {g.children.map(c => (
-            <path key={`${g.key}-${c.id}`} d={`M${c.tx},${g.rail.y} V${c.ty}`} stroke={COLORS.link} strokeWidth={EDGE_W}
+      {unionGroups.map(g => {
+        // Find the corresponding union in layout to get the participant IDs
+        const unionKey = g.key.split('-')[0]; // Extract union ID from key like "U0-1"
+        const unionFromLayout = layout.unions.find(u => u.id === unionKey);
+        const isDivorced = unionFromLayout && 
+          graph.divorced.get(unionFromLayout.a)?.has(unionFromLayout.b);
+        
+        return (
+          <Fragment key={g.key}>
+            {/* stems */}
+            <path d={`M${g.bar.ax},${g.bar.y - STEM_LEN} V${g.bar.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
                   fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          ))}
-        </Fragment>
-      ))}
+            <path d={`M${g.bar.bx},${g.bar.y - STEM_LEN} V${g.bar.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            {/* bar */}
+            <path d={`M${g.bar.x1},${g.bar.y} L${g.bar.x2},${g.bar.y}`} stroke={COLORS.strong} strokeWidth={BAR_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            {/* heart or broken heart icon at midpoint of marriage bar */}
+            <circle 
+              cx={g.bar.xm} 
+              cy={g.bar.y} 
+              r="12" 
+              fill={isDivorced ? "#6B7280" : "#E91E63"} 
+              stroke="white" 
+              strokeWidth="2"
+            />
+            <foreignObject 
+              x={g.bar.xm - 8} 
+              y={g.bar.y - 8} 
+              width="16" 
+              height="16"
+            >
+              {isDivorced ? (
+                <HeartCrack 
+                  size={16} 
+                  color="white" 
+                  fill="white"
+                  style={{ display: 'block' }}
+                />
+              ) : (
+                <Heart 
+                  size={16} 
+                  color="white" 
+                  fill="white"
+                  style={{ display: 'block' }}
+                />
+              )}
+            </foreignObject>
+            {/* drop from bar midpoint to fixed rail - starting from outside edge of heart circle */}
+            <path d={`M${g.bar.xm},${g.bar.y + 14} V${g.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            {/* rail */}
+            <path d={`M${g.rail.x1},${g.rail.y} L${g.rail.x2},${g.rail.y}`} stroke={COLORS.link} strokeWidth={EDGE_W}
+                  fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            {/* drops to children */}
+            {g.children.map(c => (
+              <path key={`${g.key}-${c.id}`} d={`M${c.tx},${g.rail.y} V${c.ty}`} stroke={COLORS.link} strokeWidth={EDGE_W}
+                    fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            ))}
+          </Fragment>
+        )
+      })}
 
       {/* ===== single-parent rails ===== */}
       {singleParentGroups.map(sp => (

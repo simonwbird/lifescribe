@@ -8,6 +8,7 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
   const childrenOf = new Map<string, string[]>();
   const parentsOf  = new Map<string, string[]>();
   const spouses    = new Map<string, Set<string>>();
+  const divorced   = new Map<string, Set<string>>();
 
   for (const r of rels) {
     if (r.type === "parent") {
@@ -15,11 +16,16 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
       childrenOf.get(r.parent_id)!.push(r.child_id);
       if (!parentsOf.has(r.child_id)) parentsOf.set(r.child_id, []);
       parentsOf.get(r.child_id)!.push(r.parent_id);
-    } else {
+    } else if (r.type === "spouse") {
       if (!spouses.has(r.a)) spouses.set(r.a, new Set());
       if (!spouses.has(r.b)) spouses.set(r.b, new Set());
       spouses.get(r.a)!.add(r.b);
       spouses.get(r.b)!.add(r.a);
+    } else if (r.type === "divorced") {
+      if (!divorced.has(r.a)) divorced.set(r.a, new Set());
+      if (!divorced.has(r.b)) divorced.set(r.b, new Set());
+      divorced.get(r.a)!.add(r.b);
+      divorced.get(r.b)!.add(r.a);
     }
   }
 
@@ -44,8 +50,13 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
     if (!couples.has(key)) couples.set(key, { a, b, children: [] });
     couples.get(key)!.children.push(child);
   }
-  // Explicit childless spouses
+  // Explicit childless spouses and divorced couples
   for (const [a,set] of spouses) for (const b of set) {
+    const [x,y] = a < b ? [a,b] : [b,a];
+    const key = `${x}::${y}`;
+    if (!couples.has(key)) couples.set(key, { a:x, b:y, children: [] });
+  }
+  for (const [a,set] of divorced) for (const b of set) {
     const [x,y] = a < b ? [a,b] : [b,a];
     const key = `${x}::${y}`;
     if (!couples.has(key)) couples.set(key, { a:x, b:y, children: [] });
@@ -58,7 +69,7 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
     unions.push({ id:`U${i++}`, a, b, children, depth:d, y:0 });
   });
 
-  return { peopleById, childrenOf, parentsOf, spouses, unions };
+  return { peopleById, childrenOf, parentsOf, spouses, divorced, unions };
 }
 
 /** Strict generational rows; spouse clusters; children centered under union midpoint */
@@ -74,6 +85,7 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     for (const p of (g.parentsOf.get(id)  ?? [])) if (!seen.has(p)) seen.add(p), dep.set(p, d+1), q.push({ id:p, d:d+1 });
     for (const c of (g.childrenOf.get(id) ?? [])) if (!seen.has(c)) seen.add(c), dep.set(c, d-1), q.push({ id:c, d:d-1 });
     for (const s of (g.spouses.get(id)    ?? [])) if (!seen.has(s)) seen.add(s), dep.set(s, d),   q.push({ id:s, d });
+    for (const dx of (g.divorced.get(id)   ?? [])) if (!seen.has(dx)) seen.add(dx), dep.set(dx, d),   q.push({ id:dx, d });
     for (const p of (g.parentsOf.get(id)  ?? []))
       for (const sib of (g.childrenOf.get(p) ?? [])) if (!seen.has(sib)) seen.add(sib), dep.set(sib, d), q.push({ id:sib, d });
   }
