@@ -5,7 +5,7 @@ import { DraggablePersonCard } from "./DraggablePersonCard";
 import DynamicConnections from "./DynamicConnections";
 import { GridOverlay } from "./GridOverlay";
 import { Button } from "@/components/ui/button";
-import { Grid3X3, Eye, EyeOff } from "lucide-react";
+import { Grid3X3, Eye, EyeOff, Plus, Minus, RotateCcw } from "lucide-react";
 
 const BG: React.CSSProperties = {
   background: "#3B3C41",
@@ -35,6 +35,9 @@ export default function InteractiveFamilyTree({
   const [showGrid, setShowGrid] = useState(false);
   const [gridSize] = useState(30);
   const [bounds, setBounds] = useState({ width: 1600, height: 1200 });
+  const [zoom, setZoom] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
   
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -53,20 +56,20 @@ export default function InteractiveFamilyTree({
     });
   }, [initialLayout]);
 
-  // Set up SVG viewBox
+  // Set up SVG viewBox with zoom and pan
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     
     const PADDING = 80;
-    const viewW = bounds.width + PADDING * 2;
-    const viewH = bounds.height + PADDING * 2;
-    const startX = -PADDING;
-    const startY = -PADDING;
+    const viewW = (bounds.width + PADDING * 2) / zoom;
+    const viewH = (bounds.height + PADDING * 2) / zoom;
+    const startX = -PADDING / zoom + panX;
+    const startY = -PADDING / zoom + panY;
     
     svg.setAttribute("viewBox", `${startX} ${startY} ${viewW} ${viewH}`);
     svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  }, [bounds]);
+  }, [bounds, zoom, panX, panY]);
 
   const handleDrag = useCallback((personId: string, x: number, y: number) => {
     setPositions(prev => {
@@ -110,12 +113,65 @@ export default function InteractiveFamilyTree({
       width: Math.max(initialLayout.bounds.width, 1600),
       height: Math.max(initialLayout.bounds.height, 1200)
     });
+    // Reset zoom and pan
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
+  };
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.2, 3)); // Max zoom 3x
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.2, 0.2)); // Min zoom 0.2x
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
   };
 
   return (
     <div className="relative w-full h-full">
       {/* Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
+        {/* Zoom Controls */}
+        <div className="flex gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleZoomOut}
+            className="h-8 w-8 p-0"
+            title="Zoom Out"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center px-2 text-sm font-medium min-w-[3rem] justify-center">
+            {Math.round(zoom * 100)}%
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleZoomIn}
+            className="h-8 w-8 p-0"
+            title="Zoom In"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResetZoom}
+            className="h-8 w-8 p-0"
+            title="Reset Zoom"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </Button>
+        </div>
+        
+        {/* Other Controls */}
         <Button
           variant="outline"
           size="sm"
@@ -200,6 +256,7 @@ export default function InteractiveFamilyTree({
       <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 text-sm text-gray-600 max-w-xs">
         <p><strong>Interactive Family Tree</strong></p>
         <p>• Drag any person to reposition them</p>
+        <p>• Use zoom controls (+/-) to get closer or see more</p>
         <p>• Cards snap to an invisible grid (hold Shift or Alt to disable)</p>
         <p>• Connections update automatically</p>
         <p>• Click persons to view their profile</p>
