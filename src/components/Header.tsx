@@ -2,19 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Menu, BookHeart, ChevronDown, FileText, Images, Mic, Video, ChefHat, Package, Home, Heart } from 'lucide-react'
+import { Search, Menu, BookHeart, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
 import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu'
 
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -35,39 +27,9 @@ export default function Header() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
-  const [createDropdownOpen, setCreateDropdownOpen] = useState(false)
-  const [quickCaptureMode, setQuickCaptureMode] = useState<'write' | 'photo' | 'voice' | 'video'>('write')
   const navigate = useNavigate()
   const location = useLocation()
   const { track } = useAnalytics()
-
-  // Create items data
-  const quickCaptureItems = [
-    { icon: FileText, label: 'Write', description: 'Quick text capture', mode: 'write' as const },
-    { icon: Images, label: 'Photo', description: 'Capture with photos', mode: 'photo' as const },
-    { icon: Mic, label: 'Voice', description: 'Record voice memo', mode: 'voice' as const },
-    { icon: Video, label: 'Video', description: 'Record video story', mode: 'video' as const }
-  ]
-
-  const createItems = [
-    { icon: FileText, label: 'Full Story', description: 'Create a detailed story', href: '/stories/new' },
-    { icon: ChefHat, label: 'Recipe', description: 'Add a family recipe', href: '/recipes/new' },
-    { icon: Package, label: 'Object', description: 'Catalog an heirloom', href: '/objects/new' },
-    { icon: Home, label: 'Property', description: 'Document a property', href: '/properties/new' },
-    { icon: Heart, label: 'Pet', description: 'Add a family pet', href: '/pets/new' }
-  ]
-
-  const handleQuickCapture = (mode: 'write' | 'photo' | 'voice' | 'video') => {
-    track('quick_capture_open', { mode })
-    setQuickCaptureMode(mode)
-    setQuickCaptureOpen(true)
-    setCreateDropdownOpen(false)
-  }
-
-  const handleCreateItemClick = (item: typeof createItems[0]) => {
-    track('create_item_selected', { type: item.label.toLowerCase() })
-    setCreateDropdownOpen(false)
-  }
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
@@ -220,66 +182,16 @@ export default function Header() {
                 <span className="text-2xl font-serif font-bold text-foreground">LifeScribe</span>
               </Link>
               
-              {/* Create New Dropdown */}
-              <DropdownMenu open={createDropdownOpen} onOpenChange={setCreateDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Create New
-                    <ChevronDown className="ml-1 h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="start" 
-                  className="w-64 p-2 bg-popover border border-border shadow-lg z-50"
-                >
-                  <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
-                    Quick Capture
-                  </DropdownMenuLabel>
-                  {quickCaptureItems.map((item) => (
-                    <DropdownMenuItem 
-                      key={item.label} 
-                      className="p-0 cursor-pointer" 
-                      onClick={() => handleQuickCapture(item.mode)}
-                    >
-                      <div className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground group">
-                        <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" />
-                        <div className="flex-1">
-                          <div className="font-medium">{item.label}</div>
-                          <div className="text-xs text-muted-foreground group-hover:text-accent-foreground/80">
-                            {item.description}
-                          </div>
-                        </div>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                  
-                  <DropdownMenuSeparator />
-                  
-                  <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-2 py-1">
-                    Create New
-                  </DropdownMenuLabel>
-                  {createItems.map((item) => (
-                    <DropdownMenuItem key={item.label} className="p-0">
-                      <Link
-                        to={item.href}
-                        className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground group"
-                        onClick={() => handleCreateItemClick(item)}
-                      >
-                        <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" />
-                        <div className="flex-1">
-                          <div className="font-medium">{item.label}</div>
-                          <div className="text-xs text-muted-foreground group-hover:text-accent-foreground/80">
-                            {item.description}
-                          </div>
-                        </div>
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Quick Capture Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
+                onClick={() => setQuickCaptureOpen(true)}
+              >
+                <Zap className="mr-2 h-3 w-3" />
+                Quick Capture
+              </Button>
             </div>
             
             {/* Desktop Navigation */}
