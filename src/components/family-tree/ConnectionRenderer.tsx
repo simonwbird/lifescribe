@@ -101,7 +101,7 @@ export function ConnectionRenderer({
 
   const renderSpouseConnections = () => {
     const elements = marriages
-      .filter(m => m.explicit && m.parentA && m.parentB) // only explicit marriages
+      .filter(m => m.explicit && m.parentA && m.parentB) // only explicit unions (spouse or unmarried)
       .map((marriage) => {
         // Find the actual positions of the spouses
         const spouseANode = nodes.find(n => n.person.id === marriage.parentA?.id)
@@ -119,15 +119,24 @@ export function ConnectionRenderer({
         // Calculate the center between the edges for heart placement
         const centerX = (spouseAX + spouseBX) / 2
         
+        // Style based on union type
+        const isUnmarried = marriage.unionType === 'unmarried'
+        const lineColor = isUnmarried ? '#94A3B8' : marriage.branchColor
+        const heartFill = isUnmarried ? 'white' : '#ef4444'
+        const heartStroke = isUnmarried ? '#94A3B8' : 'white'
+        const heartSymbol = isUnmarried ? '♡' : '♥'
+        const heartSymbolColor = isUnmarried ? '#94A3B8' : 'white'
+        const heartCircleStroke = isUnmarried ? '#94A3B8' : marriage.branchColor
+        
         return (
           <g key={`spouse-connection-${marriage.id}`} className="spouse-connection">
-            {/* Clean horizontal connection line between spouses */}
+            {/* Clean horizontal connection line between partners */}
             <line
               x1={spouseAX}
               y1={spouseY}
               x2={spouseBX}
               y2={spouseY}
-              stroke={marriage.branchColor}
+              stroke={lineColor}
               strokeWidth="4"
               className="transition-colors"
             />
@@ -138,7 +147,7 @@ export function ConnectionRenderer({
               cy={spouseY}
               r="16"
               fill="white"
-              stroke={marriage.branchColor}
+              stroke={heartCircleStroke}
               strokeWidth="3"
               className="drop-shadow-md"
             />
@@ -148,8 +157,8 @@ export function ConnectionRenderer({
               cx={centerX} 
               cy={spouseY} 
               r="12" 
-              fill="#ef4444" 
-              stroke="white" 
+              fill={heartFill} 
+              stroke={heartStroke} 
               strokeWidth="2"
             />
             <text 
@@ -157,10 +166,10 @@ export function ConnectionRenderer({
               y={spouseY + 4} 
               textAnchor="middle" 
               fontSize="12" 
-              fill="white" 
+              fill={heartSymbolColor} 
               fontWeight="bold"
             >
-              ♥
+              {heartSymbol}
             </text>
           </g>
         )

@@ -22,6 +22,7 @@ export interface Marriage {
   depth: number
   branchColor: string
   explicit: boolean
+  unionType?: 'spouse' | 'unmarried'
 }
 
 export interface LayoutResult {
@@ -93,6 +94,7 @@ export class FamilyTreeLayoutEngine {
   private branchColors = new Map<string, string>()
   private peopleById = new Map<string, Person>()
   private explicitSpouseSet = new Set<string>()
+  private unionTypeByMarriageId = new Map<string, 'spouse' | 'unmarried'>()
 
   constructor(config: Partial<LayoutConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -117,6 +119,7 @@ export class FamilyTreeLayoutEngine {
     this.branchColors.clear()
     this.peopleById.clear()
     this.explicitSpouseSet.clear()
+    this.unionTypeByMarriageId.clear()
 
     // Index people by ID
     people.forEach(p => this.peopleById.set(p.id, p))
@@ -206,11 +209,12 @@ export class FamilyTreeLayoutEngine {
 
   private buildRelationshipMaps(relationships: Relationship[]) {
     relationships.forEach(rel => {
-      if (rel.relationship_type === 'spouse') {
+      if (rel.relationship_type === 'spouse' || rel.relationship_type === 'unmarried') {
         const a = rel.from_person_id
         const b = rel.to_person_id
         const key = [a, b].sort().join('-')
-        this.explicitSpouseSet.add(key) // mark as explicit spouse pair
+        this.explicitSpouseSet.add(key) // mark as explicit partner pair
+        this.unionTypeByMarriageId.set(key, rel.relationship_type) // record union type
         
         if (!this.spouseMap.has(rel.from_person_id)) this.spouseMap.set(rel.from_person_id, [])
         if (!this.spouseMap.has(rel.to_person_id)) this.spouseMap.set(rel.to_person_id, [])
@@ -243,8 +247,9 @@ export class FamilyTreeLayoutEngine {
           const parentA = this.peopleById.get(sortedIds[0])
           const parentB = this.peopleById.get(sortedIds[1])
           const isExplicit = this.explicitSpouseSet.has(marriageId);
+          const unionType = this.unionTypeByMarriageId.get(marriageId);
           
-          console.log(`Creating marriage ${marriageId}: ${parentA?.full_name} + ${parentB?.full_name}, explicit: ${isExplicit}`);
+          console.log(`Creating marriage ${marriageId}: ${parentA?.full_name} + ${parentB?.full_name}, explicit: ${isExplicit}, type: ${unionType}`);
           
           marriages.set(marriageId, {
             id: marriageId,
@@ -255,7 +260,8 @@ export class FamilyTreeLayoutEngine {
             y: 0,
             depth: 0,
             subtreeWidth: 0,
-            explicit: isExplicit
+            explicit: isExplicit,
+            unionType
           })
         }
       })
@@ -269,7 +275,7 @@ export class FamilyTreeLayoutEngine {
       const sortedParents = [...parents].sort()
       const marriageId = sortedParents.join('-')
 
-      // If parents are not marked spouses, still create a pseudo-marriage
+      // If parents are not marked spouses/unmarried, still create a pseudo-marriage
       if (!marriages.has(marriageId)) {
         const parentA = this.peopleById.get(sortedParents[0])
         const parentB = sortedParents[1] ? this.peopleById.get(sortedParents[1]) : undefined
@@ -284,6 +290,7 @@ export class FamilyTreeLayoutEngine {
           depth: 0,
           subtreeWidth: 0,
           explicit: this.explicitSpouseSet.has(marriageId),
+          unionType: this.unionTypeByMarriageId.get(marriageId)
         })
       }
 
