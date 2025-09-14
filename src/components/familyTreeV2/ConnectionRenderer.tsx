@@ -49,7 +49,10 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
     }> = [];
 
     byDepth.forEach((children, childDepth) => {
-      const railY = (layout.rows.get(childDepth) ?? (y + 60)) - RAIL_GAP_ABOVE_CHILD;
+      const baseRailY = (layout.rows.get(childDepth) ?? (y + 60)) - RAIL_GAP_ABOVE_CHILD;
+      // Slight per-union offset to prevent different unions at the same depth from visually merging
+      const uid = parseInt(u.id.replace(/\D/g, ''), 10) || 0;
+      const railY = baseRailY + ((uid % 2 === 0) ? -6 : 6);
       const xs = children.map(c => c.tx).concat([xm]);
       out.push({
         key: `${u.id}-${childDepth}`,
