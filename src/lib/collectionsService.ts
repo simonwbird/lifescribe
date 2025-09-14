@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { MediaService } from './mediaService'
+import { getSignedMediaUrl } from './media'
 import cookiesImg from '@/assets/grandma-cookies.jpg'
 import potRoastImg from '@/assets/sunday-pot-roast.jpg'
 import applePieImg from '@/assets/moms-apple-pie.jpg'
@@ -224,9 +225,12 @@ export class CollectionsService {
       let coverUrl = sampleStoryImageForTitle(story.title, story.content)
       if (firstPhoto?.file_path) {
         try {
-          coverUrl = await MediaService.getMediaUrl(firstPhoto.file_path) || coverUrl
+          const signedUrl = await getSignedMediaUrl(firstPhoto.file_path, familyId)
+          if (signedUrl) {
+            coverUrl = signedUrl
+          }
         } catch (error) {
-          console.error('Failed to get media URL:', error)
+          console.error('Failed to get signed media URL:', error)
         }
       }
       
@@ -294,7 +298,7 @@ export class CollectionsService {
         tags: Array.isArray(recipe.dietary_tags) ? recipe.dietary_tags : [],
         coverUrl: sampleRecipeImageForTitle(recipe.title) || (
           recipe.media?.[0]?.file_path 
-            ? await MediaService.getMediaUrl(recipe.media[0].file_path)
+            ? await getSignedMediaUrl(recipe.media[0].file_path, familyId)
             : null
         ),
         visibility: 'family' as const,
@@ -401,7 +405,7 @@ export class CollectionsService {
               .single()
             
             if (coverMedia?.file_path) {
-              coverUrl = await MediaService.getMediaUrl(coverMedia.file_path)
+              coverUrl = await getSignedMediaUrl(coverMedia.file_path, familyId)
             }
           } catch (e) {
             console.log('Could not load cover media for property', property.id)
@@ -418,7 +422,7 @@ export class CollectionsService {
               .order('created_at', { ascending: false })
               .limit(1)
             if (recentMedia && recentMedia[0]?.file_path) {
-              coverUrl = await MediaService.getMediaUrl(recentMedia[0].file_path)
+              coverUrl = await getSignedMediaUrl(recentMedia[0].file_path, familyId)
             }
           } catch (e) {
             console.log('Could not load recent media for property', property.id)
