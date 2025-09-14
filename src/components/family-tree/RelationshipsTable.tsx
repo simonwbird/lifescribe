@@ -150,7 +150,7 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
                   {editingRelationship?.id === relationship.id ? (
                      <Select 
                        value={editingRelationship.relationship_type || ''} 
-                       onValueChange={(value: 'parent' | 'spouse' | 'divorced') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
+                       onValueChange={(value: 'parent' | 'spouse' | 'divorced' | 'unmarried') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
                      >
                        <SelectTrigger>
                          <SelectValue />
@@ -159,9 +159,16 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
                          <SelectItem value="parent">Parent</SelectItem>
                          <SelectItem value="spouse">Spouse</SelectItem>
                          <SelectItem value="divorced">Divorced</SelectItem>
+                         <SelectItem value="unmarried">Unmarried Partners</SelectItem>
                        </SelectContent>
                      </Select>
-                  ) : relationship.relationship_type}
+                   ) : (
+                     relationship.relationship_type === 'parent' ? 'Parent' :
+                     relationship.relationship_type === 'spouse' ? 'Spouse' :
+                     relationship.relationship_type === 'divorced' ? 'Divorced' :
+                     relationship.relationship_type === 'unmarried' ? 'Unmarried Partners' :
+                     relationship.relationship_type
+                   )}
                 </TableCell>
                 <TableCell>
                   {editingRelationship?.id === relationship.id ? (
@@ -229,7 +236,7 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
                 <TableCell>
                    <Select 
                      value={editingRelationship.relationship_type || ''} 
-                     onValueChange={(value: 'parent' | 'spouse' | 'divorced') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
+                     onValueChange={(value: 'parent' | 'spouse' | 'divorced' | 'unmarried') => setEditingRelationship({ ...editingRelationship, relationship_type: value })}
                    >
                      <SelectTrigger>
                        <SelectValue />
@@ -238,6 +245,7 @@ export function RelationshipsTable({ relationships, people, familyId, onUpdate }
                        <SelectItem value="parent">Parent</SelectItem>
                        <SelectItem value="spouse">Spouse</SelectItem>
                        <SelectItem value="divorced">Divorced</SelectItem>
+                       <SelectItem value="unmarried">Unmarried Partners</SelectItem>
                      </SelectContent>
                    </Select>
                 </TableCell>
