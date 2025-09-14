@@ -4,7 +4,7 @@ import { CARD_W, CARD_H } from "./PersonCard";
 /** ===== Ancestry geometry + tokens (final) ===== */
 export const ROW_HEIGHT = 294;   // row vertical pitch (adjusted for ~150px union→rail drop)
 export const SIB_GAP    = 48;    // gap between siblings
-export const SPOUSE_GAP = 100;    // gap between spouses within a couple
+export const SPOUSE_GAP = 75;    // gap between spouses within a couple
 
 export const PORT_INSET = 8;     // lift ports off card edges to avoid touching borders
 export const STEM_LEN   = 10;    // short stems from partner centers into the union bar
