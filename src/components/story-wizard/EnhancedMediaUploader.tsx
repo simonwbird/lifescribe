@@ -43,20 +43,72 @@ export default function EnhancedMediaUploader({
 
   const generateId = () => Math.random().toString(36).substr(2, 9)
 
-  const handleFiles = useCallback((files: FileList | File[]) => {
+  const generateVideoThumbnail = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.muted = true
+      
+      video.onloadedmetadata = () => {
+        // Seek to 1 second or 10% of video duration, whichever is shorter
+        const seekTime = Math.min(1, video.duration * 0.1)
+        video.currentTime = seekTime
+      }
+      
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        
+        const ctx = canvas.getContext('2d')
+        ctx?.drawImage(video, 0, 0)
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const thumbnailUrl = URL.createObjectURL(blob)
+            resolve(thumbnailUrl)
+          } else {
+            reject(new Error('Failed to generate thumbnail'))
+          }
+        }, 'image/jpeg', 0.8)
+      }
+      
+      video.onerror = () => reject(new Error('Video load error'))
+      video.src = URL.createObjectURL(file)
+    })
+  }
+
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files)
     const validFiles = fileArray.filter(file => 
       file.type.startsWith('image/') || file.type.startsWith('video/')
     )
 
-    const newMediaItems: MediaItem[] = validFiles.map((file, index) => ({
-      id: generateId(),
-      file,
-      caption: '',
-      isCover: media.length === 0 && index === 0, // First image is cover by default
-      order: media.length + index,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
-    }))
+    const newMediaItems: MediaItem[] = await Promise.all(
+      validFiles.map(async (file, index) => {
+        let preview: string | undefined
+
+        if (file.type.startsWith('image/')) {
+          preview = URL.createObjectURL(file)
+        } else if (file.type.startsWith('video/')) {
+          try {
+            preview = await generateVideoThumbnail(file)
+          } catch (error) {
+            console.error('Failed to generate video thumbnail:', error)
+            preview = undefined
+          }
+        }
+
+        return {
+          id: generateId(),
+          file,
+          caption: '',
+          isCover: media.length === 0 && index === 0, // First item is cover by default
+          order: media.length + index,
+          preview
+        }
+      })
+    )
 
     const updatedMedia = [...media, ...newMediaItems].slice(0, maxFiles)
     onChange(updatedMedia)
@@ -431,15 +483,28 @@ export default function EnhancedMediaUploader({
           {media.map((item, index) => (
             <Card key={item.id} className="relative overflow-hidden">
               <div className="aspect-video relative bg-muted">
-                {item.file.type.startsWith('image/') ? (
+                {item.preview ? (
                   <img
                     src={item.preview}
-                    alt={item.caption || 'Uploaded image'}
+                    alt={item.caption || (item.file.type.startsWith('video/') ? 'Video thumbnail' : 'Uploaded image')}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Video className="h-8 w-8 text-muted-foreground" />
+                    {item.file.type.startsWith('video/') ? (
+                      <Video className="h-8 w-8 text-muted-foreground" />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    )}
+                  </div>
+                )}
+                
+                {/* Video indicator overlay */}
+                {item.file.type.startsWith('video/') && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-black/50 rounded-full p-2">
+                      <Video className="h-6 w-6 text-white" />
+                    </div>
                   </div>
                 )}
                 
