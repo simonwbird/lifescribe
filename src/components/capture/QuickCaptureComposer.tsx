@@ -760,8 +760,7 @@ export default function QuickCaptureComposer({
       subtitle: 'Write a memory',
       shortcut: 'W',
       color: '#3B9EFF',
-      colorRgb: '59, 158, 255',
-      backgroundImage: '/hub/write-fallback.jpg'
+      colorRgb: '59, 158, 255'
     },
     {
       mode: 'photo' as const,
@@ -770,8 +769,7 @@ export default function QuickCaptureComposer({
       subtitle: 'Add photos',
       shortcut: 'P',
       color: '#00D4AA',
-      colorRgb: '0, 212, 170',
-      backgroundImage: '/hub/photo-fallback.jpg'
+      colorRgb: '0, 212, 170'
     },
     {
       mode: 'voice' as const,
@@ -780,8 +778,7 @@ export default function QuickCaptureComposer({
       subtitle: 'Record voice',
       shortcut: 'V',
       color: '#FFB976',
-      colorRgb: '255, 185, 118',
-      backgroundImage: '/hub/voice-fallback.jpg'
+      colorRgb: '255, 185, 118'
     },
     {
       mode: 'video' as const,
@@ -790,8 +787,7 @@ export default function QuickCaptureComposer({
       subtitle: 'Record short video',
       shortcut: 'Shift+V',
       color: '#A78BFA',
-      colorRgb: '167, 139, 250',
-      backgroundImage: '/hub/video-fallback.jpg'
+      colorRgb: '167, 139, 250'
     }
   ]
 
@@ -852,7 +848,7 @@ export default function QuickCaptureComposer({
 
             {/* Capture Mode Tiles */}
             <div className="grid grid-cols-2 gap-3">
-              {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, shortcut, color, colorRgb, backgroundImage }) => (
+              {captureModeTiles.map(({ mode, icon: Icon, label, subtitle, shortcut, color, colorRgb }) => (
                 <Button
                   key={mode}
                   variant="outline"
@@ -861,22 +857,10 @@ export default function QuickCaptureComposer({
                     ${selectedMode === mode ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}
                   `}
                   style={{
-                    background: `linear-gradient(to bottom, rgba(${colorRgb}, 0.78), rgba(${colorRgb}, 0.78)), url(${backgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    background: `linear-gradient(135deg, rgba(${colorRgb}, 1), rgba(${colorRgb}, 0.85))`,
                   }}
                   onClick={() => setSelectedMode(mode)}
                 >
-                  {/* Background blur effect */}
-                  <div 
-                    className="absolute inset-0 transition-all duration-400 group-hover:scale-105 blur-md"
-                    style={{
-                      backgroundImage: `url(${backgroundImage})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                  />
-
                   {/* Sheen effect on hover */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
