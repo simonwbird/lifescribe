@@ -112,15 +112,26 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     let x = Math.round(centerX - total/2);
     const rowY = rows.get(d)!;
 
+    // Extra spacing to separate recently divorced pairs if they appear adjacent as singles
+    const DIVORCED_GAP = 120; // pixels between divorced singles
+    let prevSingleId: string | null = null;
+
     for (const c of clusters){
       if (c.length===2){
         const [a,b] = c;
         rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
         rects.set(b,{id:b,x:x+CARD_W+SPOUSE_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
         x += cW(c) + SIB_GAP;
+        prevSingleId = null; // reset chain on pairs
       } else {
-        rects.set(c[0],{id:c[0],x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+        const id = c[0];
+        if (prevSingleId && (g.divorced.get(prevSingleId)?.has(id) || g.divorced.get(id)?.has(prevSingleId))) {
+          // Insert extra gap before placing this single
+          x += Math.max(0, DIVORCED_GAP - SIB_GAP);
+        }
+        rects.set(id,{id,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
         x += CARD_W + SIB_GAP;
+        prevSingleId = id;
       }
     }
   }
