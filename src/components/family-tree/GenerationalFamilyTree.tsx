@@ -4,6 +4,7 @@ import { ZoomIn, ZoomOut, Home, Grid, Shuffle, Plus } from 'lucide-react'
 import { FamilyTreeLayoutEngine, type LayoutNode, type Marriage } from '@/utils/familyTreeLayoutEngine'
 import ConnectionRenderer from '@/components/family-tree/ConnectionRenderer'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
+import { supabase } from '@/lib/supabase'
 
 interface GenerationalFamilyTreeProps {
   people: Person[]
@@ -26,6 +27,32 @@ export default function GenerationalFamilyTree({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [hoveredPerson, setHoveredPerson] = useState<string | null>(null)
   const [autoLayout, setAutoLayout] = useState(true)
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
+
+  // Refresh signed URLs for avatar images so they don't expire
+  useEffect(() => {
+    let isMounted = true
+    async function refreshUrls() {
+      const entries = await Promise.all(people.map(async (p) => {
+        if (!p.avatar_url) return [p.id, undefined] as const
+        let url = p.avatar_url as string
+        const match = url.match(/object\/sign\/([^/]+)\/([^?]+)/)
+        if (match) {
+          const bucket = match[1]
+          const objectPath = decodeURIComponent(match[2])
+          const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600)
+          if (data?.signedUrl) url = data.signedUrl
+        }
+        return [p.id, url] as const
+      }))
+      if (!isMounted) return
+      const map: Record<string, string> = {}
+      entries.forEach(([id, url]) => { if (url) map[id] = url })
+      setImageUrls(map)
+    }
+    refreshUrls()
+    return () => { isMounted = false }
+  }, [people])
 
   const PERSON_WIDTH = 120
   const PERSON_HEIGHT = 140
@@ -80,6 +107,7 @@ export default function GenerationalFamilyTree({
     const birthYear = person.birth_year || (person.birth_date ? new Date(person.birth_date).getFullYear() : null)
     const deathYear = person.death_year || (person.death_date ? new Date(person.death_date).getFullYear() : null)
     const years = deathYear ? `${birthYear || '?'} - ${deathYear}` : `${birthYear || '?'} - Present`
+    const imgUrl = (imageUrls && imageUrls[person.id]) || person.avatar_url || null
 
     return (
       <g
@@ -121,15 +149,22 @@ export default function GenerationalFamilyTree({
         />
         
         {/* Profile image or initials */}
-        {person.avatar_url ? (
-          <image
-            href={person.avatar_url}
+        {imgUrl ? (
+          <foreignObject
             x={PERSON_WIDTH / 2 - AVATAR_SIZE / 2}
             y={30}
             width={AVATAR_SIZE}
             height={AVATAR_SIZE}
-            clipPath={`circle(${AVATAR_SIZE / 2}px at center)`}
-          />
+          >
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <img
+              src={imgUrl as string}
+              alt={displayName}
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+            />
+          </foreignObject>
         ) : (
           <text
             x={PERSON_WIDTH / 2}
