@@ -180,11 +180,12 @@ export function CaptureHub({ className }: CaptureHubProps) {
               to={tile.route}
               className={cn(
                 "group relative block rounded-2xl shadow-lg overflow-hidden",
-                "aspect-[5/4] sm:aspect-[4/3] lg:aspect-[16/10] transition-all duration-300",
+                "transition-all duration-300",
                 "p-4 sm:p-5 lg:p-6",
                 "hover:scale-[1.02] focus:scale-[1.02]",
                 "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10",
-                "min-h-[140px] sm:min-h-[160px] lg:min-h-[120px]"
+                "min-h-[160px] sm:min-h-[180px] md:min-h-[200px] lg:min-h-[140px]",
+                "flex"
               )}
               style={{
                 background: `linear-gradient(135deg, rgba(${tile.colorRgb}, 1), rgba(${tile.colorRgb}, 0.8))`,
@@ -198,23 +199,23 @@ export function CaptureHub({ className }: CaptureHubProps) {
               </div>
 
               {/* Content */}
-              <div className="relative z-10 h-full flex flex-col justify-between text-white">
-                <div className="flex items-start justify-between">
+              <div className="relative z-10 w-full flex flex-col justify-between text-white">
+                <div className="flex items-start justify-between mb-3 sm:mb-4">
                   <Icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 flex-shrink-0" />
                 </div>
 
                 <div className="flex-1 flex flex-col justify-end">
-                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 leading-tight">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 leading-tight">
                     {tile.title}
                   </h2>
                   <p 
                     id={`${tile.id}-description`}
-                    className="text-sm sm:text-base lg:text-sm text-white/90 mb-2 leading-snug line-clamp-2"
+                    className="text-sm sm:text-base lg:text-sm text-white/90 leading-snug"
                   >
                     {tile.description}
                   </p>
                   {currentHint && (
-                    <p className="text-xs sm:text-sm text-white/75 italic line-clamp-1 lg:line-clamp-2">
+                    <p className="text-xs sm:text-sm text-white/75 italic mt-1 line-clamp-1">
                       {currentHint}
                     </p>
                   )}
