@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react'
@@ -11,11 +11,13 @@ import RecipeWizardStep2 from './steps/RecipeWizardStep2'
 import RecipeWizardStep3 from './steps/RecipeWizardStep3'
 import RecipeWizardStep4 from './steps/RecipeWizardStep4'
 import RecipeWizardStep5 from './steps/RecipeWizardStep5'
-import type { RecipeFormData, RecipeWizardStep, AutosaveStatus } from '@/lib/recipeTypes'
+import type { RecipeFormData, RecipeWizardStep, AutosaveStatus, IngredientRow, StepRow } from '@/lib/recipeTypes'
 
 export default function RecipeWizard() {
+  const { id: recipeId } = useParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const isEditing = location.pathname.includes('/edit')
   
   const [currentStep, setCurrentStep] = useState<RecipeWizardStep>(1)
   const [completedSteps, setCompletedSteps] = useState<RecipeWizardStep[]>([])
@@ -55,6 +57,51 @@ export default function RecipeWizard() {
 
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+
+  // Load existing recipe when editing
+  useEffect(() => {
+    if (!recipeId || !isEditing) return
+    const loadRecipe = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('recipes')
+          .select('*')
+          .eq('id', recipeId)
+          .single()
+        
+        if (error) throw error
+        
+        if (data) {
+          setFormData(prev => ({
+            ...prev,
+            title: data.title || '',
+            serves: data.serves || '4',
+            prepMin: data.time_prep_minutes || 15,
+            cookMin: data.time_cook_minutes || 30,
+            ingredients: Array.isArray(data.ingredients) ? data.ingredients as IngredientRow[] : [],
+            steps: Array.isArray(data.steps) ? data.steps as StepRow[] : [],
+            notes: data.notes || '',
+            source: data.source || '',
+            diet: {
+              veg: data.dietary_tags?.includes('vegetarian') || false,
+              vegan: data.dietary_tags?.includes('vegan') || false,
+              glutenFree: data.dietary_tags?.includes('gluten-free') || false,
+              dairyFree: data.dietary_tags?.includes('dairy-free') || false
+            }
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading recipe:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load recipe for editing',
+          variant: 'destructive'
+        })
+      }
+    }
+    
+    loadRecipe()
+  }, [recipeId, isEditing, toast])
 
   // Get user and family info
   useEffect(() => {

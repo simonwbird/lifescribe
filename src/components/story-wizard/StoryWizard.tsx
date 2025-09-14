@@ -36,6 +36,12 @@ const initialFormData: StoryFormData = {
 }
 
 export default function StoryWizard() {
+  const { id: storyId } = useParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { toast } = useToast()
+  const isEditing = location.pathname.includes('/edit')
+  
   const [currentStep, setCurrentStep] = useState<WizardStep>(1)
   const [completedSteps, setCompletedSteps] = useState<WizardStep[]>([])
   const [formData, setFormData] = useState<StoryFormData>(initialFormData)
@@ -47,12 +53,6 @@ export default function StoryWizard() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
-  
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const [searchParams] = useSearchParams()
-  const { id: editingIdParam } = useParams<{ id?: string }>()
-  const [editingId, setEditingId] = useState<string | null>(null)
 
   // Mock AI assist data
   const [aiAssist] = useState<AIAssist>({
@@ -88,15 +88,14 @@ export default function StoryWizard() {
 
   // Load existing story when editing
   useEffect(() => {
-    if (!editingIdParam) return
-    setEditingId(editingIdParam)
+    if (!storyId || !isEditing) return
     const load = async () => {
       setIsLoading(true)
       try {
         const { data, error } = await supabase
           .from('stories')
           .select('*')
-          .eq('id', editingIdParam)
+          .eq('id', storyId)
           .single()
         if (error) throw error
         if (data) {
@@ -113,7 +112,7 @@ export default function StoryWizard() {
           const { data: mediaRows } = await supabase
             .from('media')
             .select('id, file_path, file_name, mime_type, file_size')
-            .eq('story_id', editingIdParam)
+            .eq('story_id', storyId)
             .order('created_at', { ascending: true })
 
           if (mediaRows && mediaRows.length > 0) {
@@ -148,7 +147,7 @@ export default function StoryWizard() {
       }
     }
     load()
-  }, [editingIdParam, toast])
+  }, [storyId, isEditing, toast])
 
   // Get family ID
   useEffect(() => {
@@ -211,7 +210,7 @@ export default function StoryWizard() {
 
   // Load draft on mount
   useEffect(() => {
-    if (editingIdParam) return // don't load drafts when editing existing story
+    if (storyId && isEditing) return // don't load drafts when editing existing story
     const loadDraft = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -276,7 +275,7 @@ export default function StoryWizard() {
       if (!user) return
 
       // If editing, update existing story
-      if (editingId) {
+      if (storyId && isEditing) {
         const { data: updated, error: updateError } = await supabase
           .from('stories')
           .update({
@@ -286,14 +285,14 @@ export default function StoryWizard() {
             occurred_on: formData.date || null,
             is_approx: formData.dateType === 'approximate'
           })
-          .eq('id', editingId)
+          .eq('id', storyId)
           .select()
           .single()
 
         if (updateError) throw updateError
 
         toast({ title: 'Story updated!', description: 'Your changes have been saved.' })
-        navigate(`/stories/${editingId}`)
+        navigate(`/stories/${storyId}`)
         return
       }
 
@@ -561,7 +560,7 @@ export default function StoryWizard() {
                   className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground px-4 py-2 rounded-lg text-sm font-medium"
                   disabled={!formData.title.trim() || !formData.content.trim() || isLoading}
                 >
-                  {isLoading ? (editingId ? 'Saving...' : 'Publishing...') : (editingId ? 'Save changes' : 'Publish')}
+                  {isLoading ? (storyId && isEditing ? 'Saving...' : 'Publishing...') : (storyId && isEditing ? 'Save changes' : 'Publish')}
                 </button>
               </>
             )}
