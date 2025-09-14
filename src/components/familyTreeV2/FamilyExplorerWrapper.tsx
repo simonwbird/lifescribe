@@ -17,6 +17,7 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
   const [modalOpen, setModalOpen] = useState(false)
   const [relType, setRelType] = useState<'partner' | 'child' | 'parent'>('child')
   const [targetId, setTargetId] = useState<string>('')
+  const [renderKey, setRenderKey] = useState(0)
 
   useEffect(() => {
     loadData()
@@ -87,6 +88,7 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
 
       setPeople(convertedPeople)
       setRelationships(rels)
+      setRenderKey(k => k + 1)
     } catch (error) {
       console.error('Error loading tree data:', error)
     } finally {
@@ -117,6 +119,7 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
   return (
     <>
       <FamilyExplorer
+        key={renderKey}
         people={people}
         relationships={relationships}
         focusPersonId={focusPersonId || (people.find(p => relationships.some(r => 
