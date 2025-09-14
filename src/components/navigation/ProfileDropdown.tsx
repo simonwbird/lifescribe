@@ -53,18 +53,31 @@ export default function ProfileDropdown() {
           // If it's an absolute URL (external), use it directly
           if (/^https?:\/\//i.test(profileData.avatar_url)) {
             setAvatarUrl(profileData.avatar_url)
-          } else if (memberData?.family_id) {
-            // Otherwise, request a signed URL via the media proxy
+          } else {
+            // Prefer the edge function (family-aware)
             try {
-              const signedUrl = await getSignedMediaUrl(profileData.avatar_url, memberData.family_id)
-              setAvatarUrl(signedUrl)
+              if (memberData?.family_id) {
+                const signedEdgeUrl = await getSignedMediaUrl(profileData.avatar_url, memberData.family_id)
+                if (signedEdgeUrl) {
+                  setAvatarUrl(signedEdgeUrl)
+                  return
+                }
+              }
             } catch (error) {
-              console.error('Error getting signed avatar URL:', error)
+              console.error('Error getting signed avatar URL via edge:', error)
+            }
+
+            // Fallback: client-side signed URL from Storage
+            try {
+              const { data: signed, error: signErr } = await supabase.storage
+                .from('media')
+                .createSignedUrl(profileData.avatar_url, 60 * 60) // 1 hour
+              if (signErr) throw signErr
+              setAvatarUrl(signed?.signedUrl || null)
+            } catch (fallbackErr) {
+              console.error('Fallback signed URL failed:', fallbackErr)
               setAvatarUrl(null)
             }
-          } else {
-            // No family context available; fall back to initials
-            setAvatarUrl(null)
           }
         }
       }
@@ -105,6 +118,7 @@ export default function ProfileDropdown() {
         >
           <Avatar className="h-8 w-8">
             <AvatarImage 
+              key={avatarUrl || 'fallback'}
               src={avatarUrl || ''} 
               alt={profile?.full_name || 'User avatar'} 
               className="object-cover"
