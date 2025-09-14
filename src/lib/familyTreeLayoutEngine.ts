@@ -97,41 +97,82 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
   const rects = new Map<string, NodeRect>();
   const centerX = 800;
 
+  const getBirthYear = (id: string) => {
+    const p = g.peopleById.get(id);
+    if (!p?.birth_date) return 9999;
+    const s = String(p.birth_date);
+    const m = s.match(/\d{4}/);
+    return m ? parseInt(m[0], 10) : 9999;
+  };
+
+  const isSpousePair = (a: string, b: string, depth: number) =>
+    (dep.get(a) === depth && dep.get(b) === depth) &&
+    (g.spouses.get(a)?.has(b) || g.spouses.get(b)?.has(a));
+
+  const isDivorcedPair = (a: string, b: string, depth: number) =>
+    (dep.get(a) === depth && dep.get(b) === depth) &&
+    (g.divorced.get(a)?.has(b) || g.divorced.get(b)?.has(a));
+
   for (const d of depths) {
     const ids = groups.get(d) ?? [];
     const clusters: string[][] = [];
     const used = new Set<string>();
     for (const id of ids){
       if (used.has(id)) continue;
-      const partner = Array.from(g.spouses.get(id) ?? []).find(p => (dep.get(p) ?? -999) === d);
-      if (partner && !used.has(partner)) clusters.push([id, partner].sort()), used.add(id), used.add(partner);
-      else clusters.push([id]), used.add(id);
+
+      // spouse pair cluster
+      const spouse = Array.from(g.spouses.get(id) ?? []).find(p => (dep.get(p) ?? -999) === d && !used.has(p));
+      if (spouse && isSpousePair(id, spouse, d)) {
+        clusters.push([id, spouse]);
+        used.add(id); used.add(spouse);
+        continue;
+      }
+
+      // divorced pair cluster - keep deterministic order: older on the left (fallback to name)
+      const ex = Array.from(g.divorced.get(id) ?? []).find(p => (dep.get(p) ?? -999) === d && !used.has(p));
+      if (ex && isDivorcedPair(id, ex, d)) {
+        const [leftId, rightId] = getBirthYear(id) <= getBirthYear(ex)
+          ? [id, ex]
+          : [ex, id];
+        clusters.push([leftId, rightId]);
+        used.add(leftId); used.add(rightId);
+        continue;
+      }
+
+      // single
+      clusters.push([id]);
+      used.add(id);
     }
-    const cW = (c:string[]) => c.length===2 ? CARD_W*2 + SPOUSE_GAP : CARD_W;
+
+    const DIVORCED_GAP = 120; // pixels between divorced partners
+    const cW = (c:string[]) => {
+      if (c.length === 2) {
+        return isSpousePair(c[0], c[1], d) ? CARD_W*2 + SPOUSE_GAP : CARD_W*2 + DIVORCED_GAP;
+      }
+      return CARD_W;
+    };
+
     const total = clusters.reduce((acc,c,i)=> acc + cW(c) + (i? SIB_GAP:0), 0);
     let x = Math.round(centerX - total/2);
     const rowY = rows.get(d)!;
 
-    // Extra spacing to separate recently divorced pairs if they appear adjacent as singles
-    const DIVORCED_GAP = 120; // pixels between divorced singles
-    let prevSingleId: string | null = null;
-
     for (const c of clusters){
       if (c.length===2){
         const [a,b] = c;
-        rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
-        rects.set(b,{id:b,x:x+CARD_W+SPOUSE_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
-        x += cW(c) + SIB_GAP;
-        prevSingleId = null; // reset chain on pairs
+        if (isSpousePair(a,b,d)) {
+          rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+          rects.set(b,{id:b,x:x+CARD_W+SPOUSE_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+          x += CARD_W*2 + SPOUSE_GAP + SIB_GAP;
+        } else {
+          // divorced pair placement
+          rects.set(a,{id:a,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+          rects.set(b,{id:b,x:x+CARD_W+DIVORCED_GAP,y:rowY,w:CARD_W,h:CARD_H,depth:d});
+          x += CARD_W*2 + DIVORCED_GAP + SIB_GAP;
+        }
       } else {
         const id = c[0];
-        if (prevSingleId && (g.divorced.get(prevSingleId)?.has(id) || g.divorced.get(id)?.has(prevSingleId))) {
-          // Insert extra gap before placing this single
-          x += Math.max(0, DIVORCED_GAP - SIB_GAP);
-        }
         rects.set(id,{id,x,y:rowY,w:CARD_W,h:CARD_H,depth:d});
         x += CARD_W + SIB_GAP;
-        prevSingleId = id;
       }
     }
   }
