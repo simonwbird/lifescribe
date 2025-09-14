@@ -167,6 +167,7 @@ export default function ContentCard({
   const [isPlaying, setIsPlaying] = useState(false)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
+  const [authorAvatar, setAuthorAvatar] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const navigate = useNavigate()
 
@@ -264,6 +265,29 @@ export default function ContentCard({
   // Check if this is a video recording
   const isVideoRecording = content.type === 'story' && 
     content.tags.some(tag => tag.includes('video'))
+
+  // Fetch author avatar for voice recordings without cover image
+  React.useEffect(() => {
+    const fetchAuthorAvatar = async () => {
+      if (isVoiceRecording && !content.coverUrl) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', content.authorId)
+            .single()
+          
+          if (profile?.avatar_url) {
+            setAuthorAvatar(profile.avatar_url)
+          }
+        } catch (error) {
+          console.error('Error fetching author avatar:', error)
+        }
+      }
+    }
+
+    fetchAuthorAvatar()
+  }, [isVoiceRecording, content.coverUrl, content.authorId])
 
   const handlePlayVoice = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -369,10 +393,25 @@ export default function ContentCard({
             }}
           />
         ) : (
-          <div className="text-muted-foreground">
-            {isVoiceRecording ? <Mic className="h-8 w-8" /> : 
-             isVideoRecording ? <Video className="h-8 w-8" /> : 
-             getTypeIcon()}
+          <div className="text-muted-foreground flex items-center justify-center relative">
+            {isVoiceRecording && authorAvatar ? (
+              <img 
+                src={authorAvatar}
+                alt={`${content.authorName} profile`}
+                className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null
+                  // Fallback to microphone icon if profile image fails
+                  setAuthorAvatar(null)
+                }}
+              />
+            ) : isVoiceRecording ? (
+              <Mic className="h-8 w-8" />
+            ) : isVideoRecording ? (
+              <Video className="h-8 w-8" />
+            ) : (
+              getTypeIcon()
+            )}
           </div>
         )}
         
