@@ -116,6 +116,45 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
   const isUnionPairAtDepth = (a: string, b: string, depth: number) =>
     unionPartnerAtDepth.get(depth)?.get(a) === b || unionPartnerAtDepth.get(depth)?.get(b) === a;
 
+  // Couple ordering overrides - specify who should be on the left
+  const coupleOverrides = new Map<string, string>();
+  // For Simon and Zuzana, put Zuzana on the left
+  for (const [personId, person] of g.peopleById) {
+    if (person.given_name?.toLowerCase().includes('simon')) {
+      // Find Zuzana as spouse or union partner
+      const spouses = Array.from(g.spouses.get(personId) ?? []);
+      const zuzana = spouses.find(id => g.peopleById.get(id)?.given_name?.toLowerCase().includes('zuzana'));
+      if (zuzana) {
+        coupleOverrides.set(`${personId}::${zuzana}`, zuzana); // Zuzana on left
+        coupleOverrides.set(`${zuzana}::${personId}`, zuzana); // Zuzana on left
+      }
+    }
+  }
+
+  const getOrderedPair = (a: string, b: string): [string, string] => {
+    const key1 = `${a}::${b}`;
+    const key2 = `${b}::${a}`;
+    
+    // Check for override
+    if (coupleOverrides.has(key1)) {
+      const leftPerson = coupleOverrides.get(key1)!;
+      return leftPerson === a ? [a, b] : [b, a];
+    }
+    if (coupleOverrides.has(key2)) {
+      const leftPerson = coupleOverrides.get(key2)!;
+      return leftPerson === a ? [a, b] : [b, a];
+    }
+    
+    // Default: older on left, alphabetical fallback
+    const [leftId, rightId] = (getBirthYear(a) <= getBirthYear(b)) ? [a, b] : [b, a];
+    if (getBirthYear(a) === getBirthYear(b)) {
+      const nameA = ((g.peopleById.get(a)?.given_name || "") + " " + (g.peopleById.get(a)?.surname || "")).trim().toLowerCase();
+      const nameB = ((g.peopleById.get(b)?.given_name || "") + " " + (g.peopleById.get(b)?.surname || "")).trim().toLowerCase();
+      return nameA <= nameB ? [a, b] : [b, a];
+    }
+    return [leftId, rightId];
+  };
+
   const getBirthYear = (id: string) => {
     const p = g.peopleById.get(id);
     if (!p?.birth_date) return 9999;
@@ -142,29 +181,9 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
       // spouse pair cluster - deterministic ordering
       const spouse = Array.from(g.spouses.get(id) ?? []).find(p => (dep.get(p) ?? -999) === d && !used.has(p));
       if (spouse && isSpousePair(id, spouse, d)) {
-        const nameOf = (pid: string) => {
-          const pp = g.peopleById.get(pid);
-          return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
-        };
-        // Order by birth year (older on left), then by name (alphabetical)
-        // Special case: Zuzana on left, Simon on right
-        const isSimonZuzanaPair = (nameOf(id).includes('simon') && nameOf(spouse).includes('zuzana')) ||
-                                 (nameOf(id).includes('zuzana') && nameOf(spouse).includes('simon'));
-        
-        let ordered: [string, string];
-        if (isSimonZuzanaPair) {
-          // Force Zuzana left, Simon right
-          ordered = nameOf(id).includes('zuzana') ? [id, spouse] : [spouse, id];
-        } else {
-          const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(spouse))
-            ? [id, spouse]
-            : [spouse, id];
-          ordered = (getBirthYear(id) === getBirthYear(spouse))
-            ? (nameOf(id) <= nameOf(spouse) ? [id, spouse] : [spouse, id]) // alphabetical fallback
-            : [leftId, rightId];
-        }
-        clusters.push([ordered[0], ordered[1]]);
-        used.add(ordered[0]); used.add(ordered[1]);
+        const [leftId, rightId] = getOrderedPair(id, spouse);
+        clusters.push([leftId, rightId]);
+        used.add(leftId); used.add(rightId);
         continue;
       }
 
@@ -190,28 +209,9 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
       // union-only pair (shared children, no explicit spouse/divorce) - deterministic ordering
       const partner = unionPartnerAtDepth.get(d)?.get(id);
       if (partner && !used.has(partner)) {
-        const nameOf = (pid: string) => {
-          const pp = g.peopleById.get(pid);
-          return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
-        };
-        // Special case: Zuzana on left, Simon on right
-        const isSimonZuzanaPair = (nameOf(id).includes('simon') && nameOf(partner).includes('zuzana')) ||
-                                 (nameOf(id).includes('zuzana') && nameOf(partner).includes('simon'));
-        
-        let ordered: [string, string];
-        if (isSimonZuzanaPair) {
-          // Force Zuzana left, Simon right
-          ordered = nameOf(id).includes('zuzana') ? [id, partner] : [partner, id];
-        } else {
-          const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(partner))
-            ? [id, partner]
-            : [partner, id];
-          ordered = (getBirthYear(id) === getBirthYear(partner))
-            ? (nameOf(id) <= nameOf(partner) ? [id, partner] : [partner, id])
-            : [leftId, rightId];
-        }
-        clusters.push([ordered[0], ordered[1]]);
-        used.add(ordered[0]); used.add(ordered[1]);
+        const [leftId, rightId] = getOrderedPair(id, partner);
+        clusters.push([leftId, rightId]);
+        used.add(leftId); used.add(rightId);
         continue;
       }
 
