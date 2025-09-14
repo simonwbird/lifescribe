@@ -58,8 +58,20 @@ export const GridOverlay: React.FC<GridOverlayProps> = ({
 
 // Utility function to snap coordinates to grid
 export const snapToGrid = (x: number, y: number, gridSize: number) => {
+  // For X coordinate, snap to nearest grid line (same as before)
+  const snappedX = Math.round(x / gridSize) * gridSize;
+  
+  // For Y coordinate, snap to top or bottom of nearest grid cell
+  const gridCellY = Math.floor(y / gridSize);
+  const cellTopY = gridCellY * gridSize;
+  const cellBottomY = (gridCellY + 1) * gridSize;
+  const cellCenterY = cellTopY + gridSize / 2;
+  
+  // Determine if we should snap to top or bottom based on position within cell
+  const snappedY = y < cellCenterY ? cellTopY : cellBottomY;
+  
   return {
-    x: Math.round(x / gridSize) * gridSize,
-    y: Math.round(y / gridSize) * gridSize
+    x: snappedX,
+    y: snappedY
   };
 };
