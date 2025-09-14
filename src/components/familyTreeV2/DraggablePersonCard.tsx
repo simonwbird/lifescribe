@@ -278,6 +278,15 @@ export function DraggablePersonCard({
             </g>
           )}
 
+          {/* Right-side sibling button when married - only on outside */}
+          {isMarried && outsideSides.right && (
+            <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'sibling')}>
+              <circle cx={CARD_W + 8} cy={CARD_H/2} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
+              <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+              <line x1={CARD_W + 8} y1={CARD_H/2 - 4} x2={CARD_W + 8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
+            </g>
+          )}
+
           {/* Spouse button - only show on outside if not married, or if no spouse */}
           {(!isMarried && outsideSides.right) && (
             <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'spouse')}>
