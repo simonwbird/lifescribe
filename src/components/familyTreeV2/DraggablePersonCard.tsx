@@ -36,6 +36,7 @@ interface DraggablePersonCardProps {
   onDragEnd?: (personId: string, x: number, y: number) => void;
   gridSize?: number;
   isDragging?: boolean;
+  positions?: Map<string, { x: number; y: number }>;
 }
 
 export function DraggablePersonCard({ 
@@ -46,7 +47,8 @@ export function DraggablePersonCard({
   onDrag,
   onDragEnd,
   gridSize = 30,
-  isDragging = false
+  isDragging = false,
+  positions
 }: DraggablePersonCardProps) {
   const navigate = useNavigate();
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined);
@@ -169,6 +171,32 @@ export function DraggablePersonCard({
 
   const isMarried = graph?.spouses?.get(person.id)?.size > 0;
   const cardIsDragging = isDragging || localIsDragging;
+  
+  // Determine which side is "outside" for married couples
+  const getOutsideSides = () => {
+    if (!isMarried || !graph) return { left: true, right: true };
+    
+    const spouses = graph.spouses?.get(person.id);
+    if (!spouses || spouses.size === 0) return { left: true, right: true };
+    
+    // Get spouse position to determine which side is "outside"
+    const spouseId = Array.from(spouses)[0]; // Get first spouse
+    const spousePos = positions.get(spouseId);
+    const currentPos = positions.get(person.id);
+    
+    if (!spousePos || !currentPos) return { left: true, right: true };
+    
+    // If spouse is to the right, show buttons on the left side only
+    // If spouse is to the left, show buttons on the right side only
+    const spouseIsToRight = spousePos.x > currentPos.x;
+    
+    return {
+      left: spouseIsToRight, // Show left button if spouse is to the right
+      right: !spouseIsToRight // Show right button if spouse is to the left
+    };
+  };
+  
+  const outsideSides = getOutsideSides();
 
   return (
     <g 
@@ -236,13 +264,17 @@ export function DraggablePersonCard({
             <line x1={CARD_W/2} y1={-12} x2={CARD_W/2} y2={-4} stroke="#fff" strokeWidth="1.5" />
           </g>
 
-          <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'sibling')}>
-            <circle cx={-8} cy={CARD_H/2} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
-            <line x1={-12} y1={CARD_H/2} x2={-4} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
-            <line x1={-8} y1={CARD_H/2 - 4} x2={-8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
-          </g>
+          {/* Sibling button - only show on outside */}
+          {outsideSides.left && (
+            <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'sibling')}>
+              <circle cx={-8} cy={CARD_H/2} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
+              <line x1={-12} y1={CARD_H/2} x2={-4} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />
+              <line x1={-8} y1={CARD_H/2 - 4} x2={-8} y2={CARD_H/2 + 4} stroke="#fff" strokeWidth="1.5" />
+            </g>
+          )}
 
-          {!isMarried && (
+          {/* Spouse button - only show on outside if not married, or if no spouse */}
+          {(!isMarried && outsideSides.right) && (
             <g className="connector-btn" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={(e) => handleAddRelation(e, 'spouse')}>
               <circle cx={CARD_W + 8} cy={CARD_H/2} r="8" fill="#6B7280" stroke="#fff" strokeWidth="1" />
               <line x1={CARD_W + 4} y1={CARD_H/2} x2={CARD_W + 12} y2={CARD_H/2} stroke="#fff" strokeWidth="1.5" />

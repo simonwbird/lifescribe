@@ -456,6 +456,7 @@ export default function InteractiveFamilyTree({
                   onDragEnd={handleDragEnd}
                   gridSize={gridSize}
                   isDragging={draggingPersonId === personId}
+                  positions={positions}
                 />
               );
             })}
