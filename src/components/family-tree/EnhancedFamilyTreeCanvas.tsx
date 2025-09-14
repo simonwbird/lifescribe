@@ -530,7 +530,7 @@ export default function EnhancedFamilyTreeCanvas({
               key={relationship.id}
               from={fromPos}
               to={toPos}
-              type={relationship.relationship_type as 'parent' | 'spouse' | 'child'}
+              type={relationship.relationship_type as 'parent' | 'spouse' | 'divorced' | 'unmarried' | 'child'}
               isHighlighted={
                 selectedPersonId === relationship.from_person_id ||
                 selectedPersonId === relationship.to_person_id

@@ -17,7 +17,7 @@ interface RelationshipsTableProps {
 interface EditingRelationship extends Partial<RelationshipData> {
   id?: string
   isNew?: boolean
-  relationship_type?: 'parent' | 'spouse' | 'divorced'
+  relationship_type?: 'parent' | 'spouse' | 'divorced' | 'unmarried'
 }
 
 export function RelationshipsTable({ relationships, people, familyId, onUpdate }: RelationshipsTableProps) {

@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 interface ConnectionLineProps {
   from: { x: number; y: number }
   to: { x: number; y: number }
-  type: 'parent' | 'spouse' | 'child' | 'divorced'
+  type: 'parent' | 'spouse' | 'child' | 'divorced' | 'unmarried'
   isHighlighted?: boolean
   relationshipId?: string
   onDelete?: (relationshipId: string) => void
@@ -12,7 +12,7 @@ interface ConnectionLineProps {
     id: string
     from_person_id: string
     to_person_id: string
-    relationship_type: 'parent' | 'spouse' | 'child' | 'divorced'
+    relationship_type: 'parent' | 'spouse' | 'child' | 'divorced' | 'unmarried'
   }>
   allPositions?: Record<string, { x: number; y: number }>
 }

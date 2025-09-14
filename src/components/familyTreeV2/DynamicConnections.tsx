@@ -45,11 +45,24 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
     );
   };
 
-  const drawSpouseLine = (pos1: { x: number; y: number }, pos2: { x: number; y: number }, isDivorced: boolean = false) => {
+  const drawSpouseLine = (pos1: { x: number; y: number }, pos2: { x: number; y: number }, relationshipType: 'spouse' | 'divorced' | 'unmarried' = 'spouse') => {
     const center1 = centerPort(pos1);
     const center2 = centerPort(pos2);
     const midX = (center1.x + center2.x) / 2;
     const midY = (center1.y + center2.y) / 2;
+    
+    const getHeartColor = () => {
+      switch (relationshipType) {
+        case 'divorced': return "#6B7280";
+        case 'unmarried': return "#FFFFFF";
+        case 'spouse':
+        default: return "#E91E63";
+      }
+    };
+
+    const getHeartBorderColor = () => {
+      return relationshipType === 'unmarried' ? "#E91E63" : "white";
+    };
     
     return (
       <Fragment>
@@ -62,13 +75,13 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
           strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
         />
-        {/* Heart or broken heart icon */}
+        {/* Heart icon */}
         <circle 
           cx={midX} 
           cy={midY} 
           r="12" 
-          fill={isDivorced ? "#6B7280" : "#E91E63"} 
-          stroke="white" 
+          fill={getHeartColor()} 
+          stroke={getHeartBorderColor()} 
           strokeWidth="2"
         />
         <foreignObject 
@@ -77,18 +90,18 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
           width="16" 
           height="16"
         >
-          {isDivorced ? (
+          {relationshipType === 'divorced' ? (
             <HeartCrack 
               size={16} 
-              color="white" 
+              color="white"
               fill="white"
               style={{ display: 'block' }}
             />
           ) : (
             <Heart 
               size={16} 
-              color="white" 
-              fill="white"
+              color={relationshipType === 'unmarried' ? "#E91E63" : "white"}
+              fill={relationshipType === 'unmarried' ? "#E91E63" : "white"}
               style={{ display: 'block' }}
             />
           )}
@@ -169,7 +182,24 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
           
           return (
             <g key={`spouse-${personId}-${spouseId}`}>
-              {drawSpouseLine(personPos, spousePos, false)}
+              {drawSpouseLine(personPos, spousePos, 'spouse')}
+            </g>
+          );
+        });
+      })}
+
+      {/* Draw unmarried connections */}
+      {Array.from(graph.unmarried.entries()).map(([personId, partnerIds]) => {
+        const personPos = positions.get(personId);
+        if (!personPos) return null;
+        
+        return Array.from(partnerIds).map(partnerId => {
+          const partnerPos = positions.get(partnerId);
+          if (!partnerPos || personId >= partnerId) return null; // Avoid duplicate lines
+          
+          return (
+            <g key={`unmarried-${personId}-${partnerId}`}>
+              {drawSpouseLine(personPos, partnerPos, 'unmarried')}
             </g>
           );
         });
@@ -186,7 +216,7 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
           
           return (
             <g key={`divorced-${personId}-${exId}`}>
-              {drawSpouseLine(personPos, exPos, true)}
+              {drawSpouseLine(personPos, exPos, 'divorced')}
             </g>
           );
         });

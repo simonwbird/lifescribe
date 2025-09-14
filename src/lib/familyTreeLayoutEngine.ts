@@ -9,6 +9,7 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
   const parentsOf  = new Map<string, string[]>();
   const spouses    = new Map<string, Set<string>>();
   const divorced   = new Map<string, Set<string>>();
+  const unmarried  = new Map<string, Set<string>>();
 
   for (const r of rels) {
     if (r.type === "parent") {
@@ -26,6 +27,11 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
       if (!divorced.has(r.b)) divorced.set(r.b, new Set());
       divorced.get(r.a)!.add(r.b);
       divorced.get(r.b)!.add(r.a);
+    } else if (r.type === "unmarried") {
+      if (!unmarried.has(r.a)) unmarried.set(r.a, new Set());
+      if (!unmarried.has(r.b)) unmarried.set(r.b, new Set());
+      unmarried.get(r.a)!.add(r.b);
+      unmarried.get(r.b)!.add(r.a);
     }
   }
 
@@ -77,7 +83,7 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
     unions.push({ id:`U${i++}`, a, b, children, depth:d, y:0 });
   });
 
-  return { peopleById, childrenOf, parentsOf, spouses, divorced, unions };
+  return { peopleById, childrenOf, parentsOf, spouses, divorced, unmarried, unions };
 }
 
 /** Strict generational rows; spouse clusters; children centered under union midpoint */

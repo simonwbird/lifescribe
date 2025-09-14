@@ -25,7 +25,7 @@ export default function FamilyTreeConnections({
     return null
   }
 
-  const renderConnectionLine = (fromId: string, toId: string, relationship: 'parent' | 'spouse' | 'divorced') => {
+  const renderConnectionLine = (fromId: string, toId: string, relationship: 'parent' | 'spouse' | 'divorced' | 'unmarried') => {
     const fromPos = getNodePosition(fromId)
     const toPos = getNodePosition(toId)
     
@@ -35,10 +35,12 @@ export default function FamilyTreeConnections({
       ? 'stroke-pink-400' 
       : relationship === 'divorced'
       ? 'stroke-gray-400'
+      : relationship === 'unmarried'
+      ? 'stroke-pink-200'
       : 'stroke-blue-400'
-    const strokeWidth = relationship === 'spouse' || relationship === 'divorced' ? '3' : '2'
+    const strokeWidth = relationship === 'spouse' || relationship === 'divorced' || relationship === 'unmarried' ? '3' : '2'
     
-    if (relationship === 'spouse' || relationship === 'divorced') {
+    if (relationship === 'spouse' || relationship === 'divorced' || relationship === 'unmarried') {
       // Straight line for spouses
       return (
         <line
@@ -48,7 +50,7 @@ export default function FamilyTreeConnections({
           x2={toPos.x}
           y2={toPos.y}
           className={`${strokeColor} stroke-2`}
-          strokeDasharray={relationship === 'spouse' ? '5,5' : relationship === 'divorced' ? '10,5,2,5' : 'none'}
+          strokeDasharray={relationship === 'spouse' ? '5,5' : relationship === 'divorced' ? '10,5,2,5' : relationship === 'unmarried' ? '2,2' : 'none'}
         />
       )
     } else {

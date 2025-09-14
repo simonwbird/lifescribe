@@ -78,7 +78,7 @@ export class FamilyTreeService {
 
     // Map spouses from relationships
     for (const r of rels) {
-      if (r.relationship_type === 'spouse') {
+      if (r.relationship_type === 'spouse' || r.relationship_type === 'unmarried') {
         const person1 = byId.get(r.from_person_id)
         const person2 = byId.get(r.to_person_id)
         if (person1 && person2) {

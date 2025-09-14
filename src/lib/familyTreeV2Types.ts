@@ -15,7 +15,8 @@ export type Person = {
 export type Relationship =
   | { type: "parent"; parent_id: string; child_id: string }
   | { type: "spouse"; a: string; b: string }
-  | { type: "divorced"; a: string; b: string };
+  | { type: "divorced"; a: string; b: string }
+  | { type: "unmarried"; a: string; b: string };
 
 export type NodeRect = { id: string; x: number; y: number; w: number; h: number; depth: number };
 
@@ -34,6 +35,7 @@ export type FamilyGraph = {
   parentsOf: Map<string, string[]>;
   spouses: Map<string, Set<string>>;
   divorced: Map<string, Set<string>>;
+  unmarried: Map<string, Set<string>>;
   unions: Union[];
 };
 

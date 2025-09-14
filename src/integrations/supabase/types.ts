@@ -2242,7 +2242,7 @@ export type Database = {
         | "business_premises"
         | "land"
         | "other"
-      relationship_type: "parent" | "spouse" | "divorced"
+      relationship_type: "parent" | "spouse" | "divorced" | "unmarried"
       role_type: "admin" | "member" | "guest"
       visit_occasion: "holiday" | "celebration" | "reunion" | "other"
     }
@@ -2444,7 +2444,7 @@ export const Constants = {
         "land",
         "other",
       ],
-      relationship_type: ["parent", "spouse", "divorced"],
+      relationship_type: ["parent", "spouse", "divorced", "unmarried"],
       role_type: ["admin", "member", "guest"],
       visit_occasion: ["holiday", "celebration", "reunion", "other"],
     },

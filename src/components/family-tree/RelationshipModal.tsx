@@ -25,8 +25,8 @@ interface RelationshipModalProps {
   fromPerson: Person | null
   toPerson: Person | null
   people: Person[]
-  onCreateRelationship: (fromPersonId: string, toPersonId: string, type: 'parent' | 'spouse') => void
-  suggestedType?: 'parent' | 'child' | 'spouse'
+  onCreateRelationship: (fromPersonId: string, toPersonId: string, type: 'parent' | 'spouse' | 'unmarried') => void
+  suggestedType?: 'parent' | 'child' | 'spouse' | 'unmarried'
 }
 
 export default function RelationshipModal({
@@ -39,8 +39,8 @@ export default function RelationshipModal({
   suggestedType
 }: RelationshipModalProps) {
   const [selectedPersonId, setSelectedPersonId] = useState<string>('')
-  const [relationshipType, setRelationshipType] = useState<'parent' | 'spouse'>(
-    suggestedType === 'child' ? 'parent' : (suggestedType as 'parent' | 'spouse') || 'spouse'
+  const [relationshipType, setRelationshipType] = useState<'parent' | 'spouse' | 'unmarried'>(
+    suggestedType === 'child' ? 'parent' : (suggestedType as 'parent' | 'spouse' | 'unmarried') || 'spouse'
   )
 
   const handleCreate = () => {
@@ -115,7 +115,7 @@ export default function RelationshipModal({
           {/* Relationship Type */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Relationship Type</label>
-            <Select value={relationshipType} onValueChange={(value: 'parent' | 'spouse') => setRelationshipType(value)}>
+            <Select value={relationshipType} onValueChange={(value: 'parent' | 'spouse' | 'unmarried') => setRelationshipType(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -129,7 +129,13 @@ export default function RelationshipModal({
                 <SelectItem value="spouse">
                   <div className="flex items-center gap-2">
                     <Heart className="w-4 h-4" />
-                    Spouse/Partner
+                    Married Couple
+                  </div>
+                </SelectItem>
+                <SelectItem value="unmarried">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-gray-400" />
+                    Unmarried Partners
                   </div>
                 </SelectItem>
               </SelectContent>
