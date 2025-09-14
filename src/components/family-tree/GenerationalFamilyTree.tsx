@@ -409,7 +409,7 @@ export default function GenerationalFamilyTree({
       )}
 
       {/* Legend */}
-      <div className="absolute bottom-4 right-4 z-20 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-gray-200 max-w-xs">
+      <div className="absolute z-50 md:bottom-4 md:right-4 bottom-24 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-gray-200 max-w-xs">
         <h4 className="font-semibold text-sm mb-3 text-gray-800">Family Tree Legend</h4>
         
         {/* Relationship types */}
