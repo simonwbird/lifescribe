@@ -19,7 +19,7 @@ export const COLORS = {
 };
 
 /** Shared rail sits a fixed distance above the child cards (per child row) */
-export const RAIL_GAP_ABOVE_CHILD = 100; // 100px gap from rail to child cards
+export const RAIL_GAP_ABOVE_CHILD = 50; // 50px gap from rail to child cards
 
 /** Union bar sits slightly below card midline (tighter to Ancestry) */
 export const unionYForRow = (rowTopY: number) =>
