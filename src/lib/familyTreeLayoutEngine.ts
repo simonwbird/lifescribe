@@ -120,11 +120,22 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     for (const id of ids){
       if (used.has(id)) continue;
 
-      // spouse pair cluster
+      // spouse pair cluster - deterministic ordering
       const spouse = Array.from(g.spouses.get(id) ?? []).find(p => (dep.get(p) ?? -999) === d && !used.has(p));
       if (spouse && isSpousePair(id, spouse, d)) {
-        clusters.push([id, spouse]);
-        used.add(id); used.add(spouse);
+        const nameOf = (pid: string) => {
+          const pp = g.peopleById.get(pid);
+          return ((pp?.given_name || "") + " " + (pp?.surname || "")).trim().toLowerCase();
+        };
+        // Order by birth year (older on left), then by name (alphabetical)
+        const [leftId, rightId] = (getBirthYear(id) <= getBirthYear(spouse))
+          ? [id, spouse]
+          : [spouse, id];
+        const ordered = (getBirthYear(id) === getBirthYear(spouse))
+          ? (nameOf(id) <= nameOf(spouse) ? [id, spouse] : [spouse, id]) // alphabetical fallback
+          : [leftId, rightId];
+        clusters.push([ordered[0], ordered[1]]);
+        used.add(ordered[0]); used.add(ordered[1]);
         continue;
       }
 
