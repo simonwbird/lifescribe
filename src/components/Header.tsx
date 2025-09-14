@@ -241,23 +241,6 @@ export default function Header() {
               </div>
               <CollectionsDropdown />
               <FamilyDropdown />
-              
-              <Button
-                asChild
-                variant="ghost"
-                className={`hover:bg-accent hover:text-accent-foreground ${
-                  isActivePath('/prompts') 
-                    ? 'bg-accent text-accent-foreground font-medium' 
-                    : 'text-muted-foreground'
-                }`}
-              >
-                <Link 
-                  to="/prompts"
-                  aria-current={isActivePath('/prompts') ? 'page' : undefined}
-                >
-                  Prompts
-                </Link>
-              </Button>
             </nav>
 
             {/* Mobile Menu Button */}
