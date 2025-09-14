@@ -28,7 +28,8 @@ import {
   Mic,
   Video
 } from 'lucide-react'
-import { MediaService } from '@/lib/mediaService'
+
+import { getSignedMediaUrl } from '@/lib/media'
 import { supabase } from '@/lib/supabase'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Content } from '@/lib/collectionsTypes'
@@ -71,8 +72,8 @@ function VideoPlayer({ content }: VideoPlayerProps) {
       }
 
       // Get signed URL for the video file
-      const url = await MediaService.getMediaUrl(media.file_path)
-      setVideoUrl(url)
+      const url = await getSignedMediaUrl(media.file_path, content.familyId)
+      if (url) setVideoUrl(url)
     } catch (error) {
       console.error('Error fetching video:', error)
     } finally {
@@ -292,7 +293,6 @@ export default function ContentCard({
 
   const getVoiceRecordingUrl = async (storyId: string): Promise<string | null> => {
     try {
-      // Fetch audio media for this story
       const { data: media, error } = await supabase
         .from('media')
         .select('file_path')
@@ -305,50 +305,9 @@ export default function ContentCard({
       if (error || !media) {
         console.error('No audio media found for story:', storyId)
         return null
-  }
-
-  const handlePlayVideo = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    if (!videoRef.current) return
-
-    if (isVideoPlaying) {
-      videoRef.current.pause()
-      setIsVideoPlaying(false)
-    } else {
-      videoRef.current.play()
-      setIsVideoPlaying(true)
-    }
-  }
-
-  const getVideoUrl = async (storyId: string): Promise<string | null> => {
-    try {
-      // Fetch video media for this story
-      const { data: media, error } = await supabase
-        .from('media')
-        .select('file_path')
-        .eq('story_id', storyId)
-        .like('mime_type', 'video%')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (error || !media) {
-        console.error('No video media found for story:', storyId)
-        return null
       }
 
-      // Get signed URL for the video file
-      const videoUrl = await MediaService.getMediaUrl(media.file_path)
-      return videoUrl
-    } catch (error) {
-      console.error('Error fetching video:', error)
-      return null
-    }
-  }
-
-      // Get signed URL for the audio file
-      const audioUrl = await MediaService.getMediaUrl(media.file_path)
+      const audioUrl = await getSignedMediaUrl(media.file_path, content.familyId)
       return audioUrl
     } catch (error) {
       console.error('Error fetching voice recording:', error)
