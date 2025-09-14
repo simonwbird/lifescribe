@@ -227,7 +227,7 @@ export function CaptureHub({ className }: CaptureHubProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-col xs:flex-row flex-wrap gap-3 justify-center sm:justify-start">
+      <div className="flex flex-row gap-3 justify-center sm:justify-start">
         {QUICK_ACTIONS.map((action) => {
           const Icon = action.icon
           return (
@@ -235,11 +235,11 @@ export function CaptureHub({ className }: CaptureHubProps) {
               key={action.route}
               to={action.route}
               className={cn(
-                "inline-flex items-center justify-center xs:justify-start gap-3 px-4 py-3 rounded-xl",
+                "inline-flex items-center justify-center gap-3 px-4 py-3 rounded-xl",
                 "bg-white shadow ring-1 ring-black/5",
                 "hover:shadow-md transition-shadow duration-200",
                 "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                "min-w-[140px] xs:min-w-0 flex-1 xs:flex-initial max-w-none xs:max-w-fit"
+                "flex-1"
               )}
               aria-label={action.ariaLabel}
             >
