@@ -500,18 +500,46 @@ export default function QuickCaptureComposer({
 
           if (answerError) throw answerError
 
-          // Link media to answer
-          await supabase
-            .from('media')
+          // Also create a story for the prompt answer
+          const { data: storyData, error: storyError } = await supabase
+            .from('stories')
             .insert({
-              answer_id: answerData.id,
-              profile_id: user.id,
               family_id: familyId,
-              file_path: filePath,
-              file_name: fileName,
-              file_size: data.audioBlob.size,
-              mime_type: data.audioBlob.type || 'audio/webm'
+              profile_id: user.id,
+              title: prompt.question,
+              content: data.text.trim() || 'Voice recording',
+              tags: [...data.tags, 'prompt-answer']
             })
+            .select()
+            .single()
+
+          if (storyError) throw storyError
+
+          // Link media to both answer and story
+          await Promise.all([
+            supabase
+              .from('media')
+              .insert({
+                answer_id: answerData.id,
+                profile_id: user.id,
+                family_id: familyId,
+                file_path: filePath,
+                file_name: fileName,
+                file_size: data.audioBlob.size,
+                mime_type: data.audioBlob.type || 'audio/webm'
+              }),
+            supabase
+              .from('media')
+              .insert({
+                story_id: storyData.id,
+                profile_id: user.id,
+                family_id: familyId,
+                file_path: filePath,
+                file_name: fileName,
+                file_size: data.audioBlob.size,
+                mime_type: data.audioBlob.type || 'audio/webm'
+              })
+          ])
         } else {
           // Create a voice story
           const { data: storyData, error: storyError } = await supabase
@@ -571,18 +599,46 @@ export default function QuickCaptureComposer({
 
           if (answerError) throw answerError
 
-          // Link media to answer
-          await supabase
-            .from('media')
+          // Also create a story for the prompt answer
+          const { data: storyData, error: storyError } = await supabase
+            .from('stories')
             .insert({
-              answer_id: answerData.id,
-              profile_id: user.id,
               family_id: familyId,
-              file_path: filePath,
-              file_name: fileName,
-              file_size: data.videoBlob.size,
-              mime_type: data.videoBlob.type || 'video/webm'
+              profile_id: user.id,
+              title: prompt.question,
+              content: data.text.trim() || 'Video recording',
+              tags: [...data.tags, 'prompt-answer']
             })
+            .select()
+            .single()
+
+          if (storyError) throw storyError
+
+          // Link media to both answer and story
+          await Promise.all([
+            supabase
+              .from('media')
+              .insert({
+                answer_id: answerData.id,
+                profile_id: user.id,
+                family_id: familyId,
+                file_path: filePath,
+                file_name: fileName,
+                file_size: data.videoBlob.size,
+                mime_type: data.videoBlob.type || 'video/webm'
+              }),
+            supabase
+              .from('media')
+              .insert({
+                story_id: storyData.id,
+                profile_id: user.id,
+                family_id: familyId,
+                file_path: filePath,
+                file_name: fileName,
+                file_size: data.videoBlob.size,
+                mime_type: data.videoBlob.type || 'video/webm'
+              })
+          ])
         } else {
           // Create a video story
           const { data: storyData, error: storyError } = await supabase
@@ -625,6 +681,17 @@ export default function QuickCaptureComposer({
               profile_id: user.id,
               family_id: familyId,
               answer_text: data.text.trim()
+            })
+
+          // Also create a story for the prompt answer
+          await supabase
+            .from('stories')
+            .insert({
+              family_id: familyId,
+              profile_id: user.id,
+              title: prompt.question,
+              content: data.text.trim(),
+              tags: [...data.tags, 'prompt-answer']
             })
         } else {
           // Create text story
@@ -689,7 +756,7 @@ export default function QuickCaptureComposer({
         has_context: !!context
       })
 
-      const savedType = prompt ? 'answer' : selectedMode === 'voice' ? 'voice story' : selectedMode === 'photo' ? 'photo story' : 'story'
+      const savedType = prompt ? 'answer & story' : selectedMode === 'voice' ? 'voice story' : selectedMode === 'photo' ? 'photo story' : 'story'
 
       toast({
         title: 'Captured!',
@@ -700,13 +767,21 @@ export default function QuickCaptureComposer({
               onClose()
               // Navigate to appropriate view
               if (prompt) {
-                navigate('/feed')
+                navigate('/collections?tab=story')
               } else {
                 navigate('/collections?tab=story')
               }
             }}>
-              View
+              {prompt ? 'View Stories' : 'View'}
             </Button>
+            {prompt && (
+              <Button size="sm" variant="outline" onClick={() => {
+                onClose()
+                navigate('/feed')
+              }}>
+                View Feed
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => {
               // Reset form for another capture
               setData({
