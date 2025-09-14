@@ -11,7 +11,8 @@ import {
   Calendar,
   Users,
   GripVertical,
-  MapPin
+  MapPin,
+  Trash2
 } from 'lucide-react'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
 import type { Person } from '@/lib/familyTreeTypes'
@@ -32,6 +33,7 @@ interface EnhancedPersonCardProps {
   onSelect: () => void
   onViewProfile: () => void
   onEditPerson: () => void
+  onDeletePerson: () => void
   onAddRelation: (type: 'parent' | 'child' | 'spouse') => void
   onConnectionStart?: (connectionType: 'parent' | 'child' | 'spouse', mousePos: { x: number; y: number }) => void
   onConnectionEnd?: () => void
@@ -54,6 +56,7 @@ export default function EnhancedPersonCard({
   onSelect,
   onViewProfile,
   onEditPerson,
+  onDeletePerson,
   onAddRelation,
   onConnectionStart,
   onConnectionEnd,
@@ -328,14 +331,16 @@ export default function EnhancedPersonCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 text-xs hover:bg-purple-50 text-purple-600"
+                  className="h-8 px-2 text-xs hover:bg-red-50 text-red-600"
                   onClick={(e) => {
                     e.stopPropagation()
-                    // Navigate to timeline
+                    if (confirm(`Are you sure you want to remove ${displayName} from the family tree? This will also delete all their relationships.`)) {
+                      onDeletePerson()
+                    }
                   }}
+                  title="Remove from tree"
                 >
-                  <MapPin className="h-3 w-3 mr-1" />
-                  Timeline
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
             </div>

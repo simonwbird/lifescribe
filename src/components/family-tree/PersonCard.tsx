@@ -10,7 +10,8 @@ import {
   Edit, 
   Calendar,
   PenTool,
-  GripVertical
+  GripVertical,
+  Trash2
 } from 'lucide-react'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
 import type { Person } from '@/lib/familyTreeTypes'
@@ -28,6 +29,7 @@ interface PersonCardProps {
   onSelect: () => void
   onViewProfile: () => void
   onEditPerson: () => void
+  onDeletePerson?: () => void
   onAddRelation: (type: 'parent' | 'child' | 'spouse') => void
   onConnectionStart?: (personId: string, hotspot: 'top' | 'bottom' | 'left' | 'right') => void
   children?: React.ReactNode
@@ -47,6 +49,7 @@ export default function PersonCard({
   onSelect,
   onViewProfile,
   onEditPerson,
+  onDeletePerson,
   onAddRelation,
   onConnectionStart,
   spouses = [],
@@ -295,6 +298,22 @@ export default function PersonCard({
                 >
                   <Calendar className="w-3 h-3 text-purple-600" />
                 </Button>
+                {onDeletePerson && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs hover:bg-red-50"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (confirm(`Are you sure you want to remove ${displayName} from the family tree?`)) {
+                        onDeletePerson()
+                      }
+                    }}
+                    title="Remove"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-600" />
+                  </Button>
+                )}
               </div>
             </div>
 

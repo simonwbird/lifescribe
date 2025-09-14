@@ -7,6 +7,8 @@ import GridOverlay from './GridOverlay'
 import RelationshipModal from './RelationshipModal'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { getPersonDisplayName } from '@/utils/familyTreeUtils'
+import { FamilyDataService } from '@/lib/familyDataService'
+import { toast } from 'sonner'
 
 interface FamilyTreeCanvasProps {
   people: Person[]
@@ -17,6 +19,8 @@ interface FamilyTreeCanvasProps {
   onDeleteRelation: (relationshipId: string) => void
   onViewProfile: (personId: string) => void
   onEditPerson: (personId: string) => void
+  onDeletePerson?: (personId: string) => void
+  onUpdate?: () => void
   positions: Record<string, { x: number; y: number }>
   selectedPersonId?: string
   shouldFitToScreen?: boolean
@@ -32,6 +36,8 @@ export default function EnhancedFamilyTreeCanvas({
   onDeleteRelation,
   onViewProfile,
   onEditPerson,
+  onDeletePerson,
+  onUpdate,
   positions,
   selectedPersonId,
   shouldFitToScreen,
@@ -422,6 +428,24 @@ export default function EnhancedFamilyTreeCanvas({
     })
   }, [people])
 
+  // Handle deleting a person
+  const handleDeletePerson = useCallback(async (personId: string) => {
+    if (onDeletePerson) {
+      onDeletePerson(personId)
+    } else {
+      // Default delete implementation
+      try {
+        await FamilyDataService.deletePerson(personId)
+        toast.success('Person removed from family tree')
+        if (onUpdate) {
+          onUpdate()
+        }
+      } catch (error: any) {
+        toast.error('Failed to delete person: ' + error.message)
+      }
+    }
+  }, [onDeletePerson, onUpdate])
+
   const handleTopLeftView = useCallback(() => {
     if (people.length === 0) return
 
@@ -580,6 +604,7 @@ export default function EnhancedFamilyTreeCanvas({
               onSelect={() => onPersonSelect(person.id)}
               onViewProfile={() => onViewProfile(person.id)}
               onEditPerson={() => onEditPerson(person.id)}
+              onDeletePerson={() => handleDeletePerson(person.id)}
               onAddRelation={(type) => handleAddRelationFromCard(person.id, type)}
               onConnectionStart={(connectionType, mousePos) => handleConnectionStart(person.id, connectionType, mousePos)}
               onConnectionEnd={() => handleConnectionEnd(person.id)}
