@@ -137,7 +137,7 @@ export default function ConnectionLine({
     const tIntersectionY = marriageY
     
     // Path from T-intersection to child
-    const verticalLineLength = 150 // Increased for clearer parent-child hierarchy
+    const verticalLineLength = 200 // Increased for clearer parent-child hierarchy
     const childConnectionY = childPos.y
     const childConnectionX = childPos.x + CARD_WIDTH / 2
     
@@ -158,7 +158,7 @@ export default function ConnectionLine({
       // L-shaped path for parent/child connections with deeper vertical drop for clarity
       const totalDeltaY = endPoint.y - startPoint.y
       const direction = Math.sign(totalDeltaY) || 1
-      const minDrop = 150 // ensure a clear generational gap
+      const minDrop = 200 // ensure a clear generational gap
       const proposedMidY = startPoint.y + totalDeltaY / 2
       const midY = direction > 0
         ? Math.max(proposedMidY, startPoint.y + minDrop)
