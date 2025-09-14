@@ -48,13 +48,22 @@ export default function ProfileDropdown() {
           .limit(1)
           .single()
         
-        // Get signed URL for avatar if it exists
-        if (profileData?.avatar_url && memberData?.family_id) {
-          try {
-            const signedUrl = await getSignedMediaUrl(profileData.avatar_url, memberData.family_id)
-            setAvatarUrl(signedUrl)
-          } catch (error) {
-            console.error('Error getting signed avatar URL:', error)
+        // Resolve avatar URL
+        if (profileData?.avatar_url) {
+          // If it's an absolute URL (external), use it directly
+          if (/^https?:\/\//i.test(profileData.avatar_url)) {
+            setAvatarUrl(profileData.avatar_url)
+          } else if (memberData?.family_id) {
+            // Otherwise, request a signed URL via the media proxy
+            try {
+              const signedUrl = await getSignedMediaUrl(profileData.avatar_url, memberData.family_id)
+              setAvatarUrl(signedUrl)
+            } catch (error) {
+              console.error('Error getting signed avatar URL:', error)
+              setAvatarUrl(null)
+            }
+          } else {
+            // No family context available; fall back to initials
             setAvatarUrl(null)
           }
         }
@@ -98,6 +107,10 @@ export default function ProfileDropdown() {
             <AvatarImage 
               src={avatarUrl || ''} 
               alt={profile?.full_name || 'User avatar'} 
+              className="object-cover"
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
+              onError={() => setAvatarUrl(null)}
             />
             <AvatarFallback>
               {profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
