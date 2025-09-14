@@ -127,6 +127,7 @@ export default function FamilyExplorerWrapper({ familyId, focusPersonId, onPerso
           (r.type === 'spouse' && (r.a === p.id || r.b === p.id))
         ))?.id || people[0]?.id) || ''}
         showCaptions={false}
+        familyId={familyId}
         onAddRequested={handleAddRequested}
       />
       <QuickAddModal

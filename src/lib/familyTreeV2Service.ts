@@ -487,6 +487,63 @@ export class FamilyTreeService {
     return data || []
   }
 
+  // Save/Load family tree positions
+  static async savePersonPosition(
+    familyId: string,
+    userId: string,
+    personId: string,
+    x: number,
+    y: number
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('family_tree_positions')
+      .upsert({
+        family_id: familyId,
+        user_id: userId,
+        person_id: personId,
+        x_position: x,
+        y_position: y
+      })
+    
+    if (error) throw error
+  }
+
+  static async loadPersonPositions(
+    familyId: string,
+    userId: string
+  ): Promise<Map<string, { x: number; y: number }>> {
+    const { data, error } = await supabase
+      .from('family_tree_positions')
+      .select('person_id, x_position, y_position')
+      .eq('family_id', familyId)
+      .eq('user_id', userId)
+    
+    if (error) throw error
+    
+    const positions = new Map<string, { x: number; y: number }>()
+    data?.forEach(pos => {
+      positions.set(pos.person_id, {
+        x: Number(pos.x_position),
+        y: Number(pos.y_position)
+      })
+    })
+    
+    return positions
+  }
+
+  static async clearPersonPositions(
+    familyId: string,
+    userId: string
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('family_tree_positions')
+      .delete()
+      .eq('family_id', familyId)
+      .eq('user_id', userId)
+    
+    if (error) throw error
+  }
+
   // Get person with relationships
   static async getPersonWithRelationships(personId: string): Promise<{
     person: TreePerson

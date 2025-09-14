@@ -6,6 +6,9 @@ import DynamicConnections from "./DynamicConnections";
 import { GridOverlay } from "./GridOverlay";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Eye, EyeOff, Plus, Minus, RotateCcw } from "lucide-react";
+import { FamilyTreeService } from "../../lib/familyTreeV2Service";
+import { supabase } from "../../lib/supabase";
+import { toast } from "sonner";
 
 const BG: React.CSSProperties = {
   background: "#3B3C41",
@@ -21,10 +24,11 @@ interface InteractiveFamilyTreeProps {
   focusPersonId: string;
   showCaptions?: boolean;
   onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void;
+  familyId?: string; // Add family ID for saving positions
 }
 
 export default function InteractiveFamilyTree({
-  people, relationships, focusPersonId, showCaptions = false, onAddRequested,
+  people, relationships, focusPersonId, showCaptions = false, onAddRequested, familyId,
 }: InteractiveFamilyTreeProps) {
   const graph: FamilyGraph = useMemo(() => buildGraph(people, relationships, focusPersonId), [people, relationships, focusPersonId]);
   const initialLayout = useMemo(() => layoutGraph(graph, focusPersonId), [graph, focusPersonId]);
@@ -38,6 +42,7 @@ export default function InteractiveFamilyTree({
   const [zoom, setZoom] = useState(1);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   // Instructions panel dragging state
   const [instructionsPos, setInstructionsPos] = useState({ x: 0, y: 0 });
@@ -46,20 +51,50 @@ export default function InteractiveFamilyTree({
   
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  // Initialize positions from layout
+  // Get current user for position saving
   useEffect(() => {
-    const newPositions = new Map<string, { x: number; y: number }>();
-    Array.from(initialLayout.rects.values()).forEach(rect => {
-      newPositions.set(rect.id, { x: rect.x, y: rect.y });
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUser(user);
     });
-    setPositions(newPositions);
+  }, []);
+
+  // Load saved positions and merge with layout positions
+  const loadPositions = useCallback(async () => {
+    if (!familyId || !currentUser?.id) return;
+    
+    try {
+      const savedPositions = await FamilyTreeService.loadPersonPositions(familyId, currentUser.id);
+      
+      // Start with layout positions
+      const newPositions = new Map<string, { x: number; y: number }>();
+      Array.from(initialLayout.rects.values()).forEach(rect => {
+        // Use saved position if available, otherwise use layout position
+        const savedPos = savedPositions.get(rect.id);
+        newPositions.set(rect.id, savedPos || { x: rect.x, y: rect.y });
+      });
+      
+      setPositions(newPositions);
+    } catch (error) {
+      console.error('Failed to load saved positions:', error);
+      // Fallback to layout positions
+      const fallbackPositions = new Map<string, { x: number; y: number }>();
+      Array.from(initialLayout.rects.values()).forEach(rect => {
+        fallbackPositions.set(rect.id, { x: rect.x, y: rect.y });
+      });
+      setPositions(fallbackPositions);
+    }
+  }, [initialLayout, familyId, currentUser?.id]);
+
+  // Initialize positions from layout and saved positions
+  useEffect(() => {
+    loadPositions();
     
     // Update bounds based on layout
     setBounds({
       width: Math.max(initialLayout.bounds.width, 1600),
       height: Math.max(initialLayout.bounds.height, 1200)
     });
-  }, [initialLayout]);
+  }, [loadPositions, initialLayout]);
 
   // Set up SVG viewBox with zoom and pan
   useEffect(() => {
@@ -93,7 +128,7 @@ export default function InteractiveFamilyTree({
     setDraggingPersonId(personId);
   }, []);
 
-  const handleDragEnd = useCallback((personId: string, x: number, y: number) => {
+  const handleDragEnd = useCallback(async (personId: string, x: number, y: number) => {
     setDraggingPersonId(null);
     setPositions(prev => {
       const newPositions = new Map(prev);
@@ -106,9 +141,19 @@ export default function InteractiveFamilyTree({
       width: Math.max(prev.width, x + 200),
       height: Math.max(prev.height, y + 250)
     }));
-  }, []);
 
-  const resetLayout = () => {
+    // Save position to database
+    if (familyId && currentUser?.id) {
+      try {
+        await FamilyTreeService.savePersonPosition(familyId, currentUser.id, personId, x, y);
+      } catch (error) {
+        console.error('Failed to save position:', error);
+        toast.error('Failed to save position');
+      }
+    }
+  }, [familyId, currentUser?.id]);
+
+  const resetLayout = async () => {
     const newPositions = new Map<string, { x: number; y: number }>();
     Array.from(initialLayout.rects.values()).forEach(rect => {
       newPositions.set(rect.id, { x: rect.x, y: rect.y });
@@ -122,6 +167,17 @@ export default function InteractiveFamilyTree({
     setZoom(1);
     setPanX(0);
     setPanY(0);
+
+    // Clear saved positions from database
+    if (familyId && currentUser?.id) {
+      try {
+        await FamilyTreeService.clearPersonPositions(familyId, currentUser.id);
+        toast.success('Layout reset and saved positions cleared');
+      } catch (error) {
+        console.error('Failed to clear saved positions:', error);
+        toast.error('Failed to clear saved positions');
+      }
+    }
   };
 
   const handleZoomIn = () => {

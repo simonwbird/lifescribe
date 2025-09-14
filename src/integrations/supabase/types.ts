@@ -178,6 +178,39 @@ export type Database = {
           },
         ]
       }
+      family_tree_positions: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          person_id: string
+          updated_at: string
+          user_id: string
+          x_position: number
+          y_position: number
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          person_id: string
+          updated_at?: string
+          user_id: string
+          x_position: number
+          y_position: number
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          person_id?: string
+          updated_at?: string
+          user_id?: string
+          x_position?: number
+          y_position?: number
+        }
+        Relationships: []
+      }
       gedcom_people_stage: {
         Row: {
           birth_date: string | null
