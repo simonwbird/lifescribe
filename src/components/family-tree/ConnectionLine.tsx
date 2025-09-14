@@ -155,8 +155,14 @@ export default function ConnectionLine({
     } else if (shouldUseTIntersection()) {
       return getTIntersectionPath()
     } else {
-      // L-shaped path for parent/child connections
-      const midY = startPoint.y + (endPoint.y - startPoint.y) / 2
+      // L-shaped path for parent/child connections with deeper vertical drop for clarity
+      const totalDeltaY = endPoint.y - startPoint.y
+      const direction = Math.sign(totalDeltaY) || 1
+      const minDrop = 100 // ensure a clear generational gap
+      const proposedMidY = startPoint.y + totalDeltaY / 2
+      const midY = direction > 0
+        ? Math.max(proposedMidY, startPoint.y + minDrop)
+        : Math.min(proposedMidY, startPoint.y - minDrop)
       
       return `M ${startPoint.x} ${startPoint.y} 
               L ${startPoint.x} ${midY} 
