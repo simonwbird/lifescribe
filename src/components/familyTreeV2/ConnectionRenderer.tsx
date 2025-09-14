@@ -126,8 +126,8 @@ export default function ConnectionRenderer({ graph, layout }: { graph: FamilyGra
               style={{ display: 'block' }}
             />
           </foreignObject>
-          {/* drop from bar midpoint to fixed rail */}
-          <path d={`M${g.bar.xm},${g.bar.y} V${g.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
+          {/* drop from bar midpoint to fixed rail - starting from bottom of heart circle */}
+          <path d={`M${g.bar.xm},${g.bar.y + 12} V${g.rail.y}`} stroke={COLORS.strong} strokeWidth={EDGE_W}
                 fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
           {/* rail */}
           <path d={`M${g.rail.x1},${g.rail.y} L${g.rail.x2},${g.rail.y}`} stroke={COLORS.link} strokeWidth={EDGE_W}
