@@ -97,12 +97,12 @@ export default function StoryWizardStep2({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Date */}
-        <div className="space-y-3">
+        <div className="space-y-3 relative">
           <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+            <CalendarIcon className="h-4 w-4" />
             When did this happen?
           </Label>
-          <div className="space-y-2">
+          <div className="space-y-2 pb-4">
             <ToggleGroup 
               type="single" 
               value={formData.dateType} 
@@ -131,7 +131,13 @@ export default function StoryWizardStep2({
                     {currentDate ? formatDateToString(currentDate) : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent 
+                  className="w-auto p-0 z-50" 
+                  align="start" 
+                  side="bottom"
+                  sideOffset={8}
+                  avoidCollisions={true}
+                >
                   <Calendar
                     mode="single"
                     selected={currentDate}
