@@ -300,6 +300,35 @@ export default function StoryWizard() {
     }
   }
 
+  // Helper function to parse various date formats into ISO format
+  const parseDate = (dateString: string): string | null => {
+    if (!dateString || dateString.trim() === '') return null
+    
+    try {
+      // Handle various formats like "14th Sept 2025", "September 14, 2025", "2025-09-14", etc.
+      const date = new Date(dateString)
+      
+      // If the date is invalid, try to clean up the string
+      if (isNaN(date.getTime())) {
+        // Remove ordinal suffixes (st, nd, rd, th)
+        const cleanedString = dateString.replace(/(\d+)(st|nd|rd|th)/g, '$1')
+        const cleanedDate = new Date(cleanedString)
+        
+        if (isNaN(cleanedDate.getTime())) {
+          console.warn('Could not parse date:', dateString)
+          return null
+        }
+        
+        return cleanedDate.toISOString().split('T')[0] // Return YYYY-MM-DD format
+      }
+      
+      return date.toISOString().split('T')[0] // Return YYYY-MM-DD format
+    } catch (error) {
+      console.warn('Error parsing date:', dateString, error)
+      return null
+    }
+  }
+
   const handlePublish = async () => {
     if (!familyId || !formData.title.trim() || !formData.content.trim()) {
       toast({
@@ -318,13 +347,15 @@ export default function StoryWizard() {
 
       // If editing, update existing story
       if (storyId && isEditing) {
+        const parsedDate = parseDate(formData.date)
+        
         const { data: updated, error: updateError } = await supabase
           .from('stories')
           .update({
             title: formData.title.trim(),
             content: formData.content.trim(),
             tags: formData.tags.length > 0 ? formData.tags : null,
-            occurred_on: formData.date || null,
+            occurred_on: parsedDate,
             is_approx: formData.dateType === 'approximate'
           })
           .eq('id', storyId)
@@ -339,6 +370,8 @@ export default function StoryWizard() {
       }
 
       // Create story first
+      const parsedDate = parseDate(formData.date)
+      
       const { data: story, error: storyError } = await supabase
         .from('stories')
         .insert({
@@ -347,7 +380,7 @@ export default function StoryWizard() {
           title: formData.title.trim(),
           content: formData.content.trim(),
           tags: formData.tags.length > 0 ? formData.tags : null,
-          occurred_on: null,
+          occurred_on: parsedDate,
           is_approx: formData.dateType === 'approximate'
         })
         .select()
