@@ -268,37 +268,66 @@ export class FamilyTreeLayoutEngine {
       })
     })
     
-    // Children always belong to the *union* of their parents
+    // Children attach to explicit unions among their parents (spouse or unmarried). If none, fallback to first two parents.
     people.forEach(person => {
       const parents = this.parentsMap.get(person.id) || []
       if (parents.length === 0) return
 
-      const sortedParents = [...parents].sort()
-      const marriageId = sortedParents.join('-')
+      let attached = false
+      // Prefer any explicit partner unions among the parents
+      for (let i = 0; i < parents.length; i++) {
+        for (let j = i + 1; j < parents.length; j++) {
+          const a = parents[i]
+          const b = parents[j]
+          const key = [a, b].sort().join('-')
 
-      // If parents are not marked spouses/unmarried, still create a pseudo-marriage
-      if (!marriages.has(marriageId)) {
-        const parentA = this.peopleById.get(sortedParents[0])
-        const parentB = sortedParents[1] ? this.peopleById.get(sortedParents[1]) : undefined
-
-        marriages.set(marriageId, {
-          id: marriageId,
-          parentA,
-          parentB,
-          children: [],
-          x: 0,
-          y: 0,
-          depth: 0,
-          subtreeWidth: 0,
-          explicit: this.explicitSpouseSet.has(marriageId),
-          unionType: this.unionTypeByMarriageId.get(marriageId)
-        })
+          if (this.explicitSpouseSet.has(key) || this.unionTypeByMarriageId.has(key)) {
+            if (!marriages.has(key)) {
+              const [left, right] = [a, b].sort()
+              marriages.set(key, {
+                id: key,
+                parentA: this.peopleById.get(left),
+                parentB: this.peopleById.get(right),
+                children: [],
+                x: 0,
+                y: 0,
+                depth: 0,
+                subtreeWidth: 0,
+                explicit: this.explicitSpouseSet.has(key),
+                unionType: this.unionTypeByMarriageId.get(key)
+              })
+            }
+            const m = marriages.get(key)!
+            if (!m.children.some(c => c.id === person.id)) {
+              m.children.push(person)
+            }
+            attached = true
+          }
+        }
       }
 
-      // Always attach child to the union node, not a single parent
-      const marriage = marriages.get(marriageId)!
-      if (!marriage.children.some(c => c.id === person.id)) {
-        marriage.children.push(person)
+      // Fallback: if no explicit union found, attach to a pseudo-union using the first two parents
+      if (!attached && parents.length >= 2) {
+        const [p1, p2] = [...parents].sort().slice(0, 2)
+        const fallbackId = `${p1}-${p2}`
+        if (!marriages.has(fallbackId)) {
+          marriages.set(fallbackId, {
+            id: fallbackId,
+            parentA: this.peopleById.get(p1),
+            parentB: this.peopleById.get(p2),
+            children: [],
+            x: 0,
+            y: 0,
+            depth: 0,
+            subtreeWidth: 0,
+            explicit: this.explicitSpouseSet.has(fallbackId),
+            unionType: this.unionTypeByMarriageId.get(fallbackId)
+          })
+        }
+        const m = marriages.get(fallbackId)!
+        if (!m.children.some(c => c.id === person.id)) {
+          m.children.push(person)
+        }
       }
     })
 
