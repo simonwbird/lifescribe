@@ -37,8 +37,8 @@ const TILES: TileConfig[] = [
     description: 'Capture a memory in your own words.',
     icon: FileText,
     route: '/stories/new',
-    color: '#2563EB',
-    colorRgb: '37, 99, 235',
+    color: '#4F9CF9',
+    colorRgb: '79, 156, 249',
     hints: ['first job', 'grandma\'s recipe', 'that road trip'],
     ariaLabel: 'Write a story'
   },
@@ -48,8 +48,8 @@ const TILES: TileConfig[] = [
     description: 'Add a photo and tell its story.',
     icon: Camera,
     route: '/capture?mode=photo',
-    color: '#10B981',
-    colorRgb: '16, 185, 129',
+    color: '#00D4AA',
+    colorRgb: '0, 212, 170',
     hints: ['wedding', 'school play', 'first home'],
     ariaLabel: 'Add a photo'
   },
@@ -59,8 +59,8 @@ const TILES: TileConfig[] = [
     description: 'Record your voice or a loved one\'s.',
     icon: Mic,
     route: '/stories/new?type=voice',
-    color: '#F59E0B',
-    colorRgb: '245, 158, 11',
+    color: '#FFB976',
+    colorRgb: '255, 185, 118',
     hints: ['grandpa\'s laugh', 'lullaby', 'bedtime tale'],
     ariaLabel: 'Record voice'
   },
@@ -70,8 +70,8 @@ const TILES: TileConfig[] = [
     description: 'Share a short clip or message.',
     icon: Video,
     route: '/stories/new',
-    color: '#8B5CF6',
-    colorRgb: '139, 92, 246',
+    color: '#A78BFA',
+    colorRgb: '167, 139, 250',
     hints: ['birthday candles', 'holiday cheers', 'silly dance'],
     ariaLabel: 'Record video'
   }

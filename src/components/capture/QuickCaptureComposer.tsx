@@ -759,8 +759,8 @@ export default function QuickCaptureComposer({
       label: 'Write',
       subtitle: 'Write a memory',
       shortcut: 'W',
-      color: '#2563EB',
-      colorRgb: '37, 99, 235',
+      color: '#4F9CF9',
+      colorRgb: '79, 156, 249',
       backgroundImage: '/hub/write-fallback.jpg'
     },
     {
@@ -769,8 +769,8 @@ export default function QuickCaptureComposer({
       label: 'Photo',
       subtitle: 'Add photos',
       shortcut: 'P',
-      color: '#10B981',
-      colorRgb: '16, 185, 129',
+      color: '#00D4AA',
+      colorRgb: '0, 212, 170',
       backgroundImage: '/hub/photo-fallback.jpg'
     },
     {
@@ -779,8 +779,8 @@ export default function QuickCaptureComposer({
       label: 'Voice',
       subtitle: 'Record voice',
       shortcut: 'V',
-      color: '#F59E0B',
-      colorRgb: '245, 158, 11',
+      color: '#FFB976',
+      colorRgb: '255, 185, 118',
       backgroundImage: '/hub/voice-fallback.jpg'
     },
     {
@@ -789,8 +789,8 @@ export default function QuickCaptureComposer({
       label: 'Video',
       subtitle: 'Record short video',
       shortcut: 'Shift+V',
-      color: '#8B5CF6',
-      colorRgb: '139, 92, 246',
+      color: '#A78BFA',
+      colorRgb: '167, 139, 250',
       backgroundImage: '/hub/video-fallback.jpg'
     }
   ]

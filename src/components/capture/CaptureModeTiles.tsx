@@ -17,8 +17,8 @@ const captureModeTiles = [
     subtitle: 'Write a memory',
     route: '/stories/new?type=write',
     shortcut: 'W',
-    color: '#2563EB',
-    colorRgb: '37, 99, 235',
+    color: '#4F9CF9',
+    colorRgb: '79, 156, 249',
     backgroundImage: '/hub/write-fallback.jpg'
   },
   {
@@ -28,8 +28,8 @@ const captureModeTiles = [
     subtitle: 'Add photos',
     route: '/stories/new?type=photo',
     shortcut: 'P',
-    color: '#10B981',
-    colorRgb: '16, 185, 129',
+    color: '#00D4AA',
+    colorRgb: '0, 212, 170',
     backgroundImage: '/hub/photo-fallback.jpg'
   },
   {
@@ -39,8 +39,8 @@ const captureModeTiles = [
     subtitle: 'Record voice',
     route: '/stories/new?type=voice',
     shortcut: 'V',
-    color: '#F59E0B',
-    colorRgb: '245, 158, 11',
+    color: '#FFB976',
+    colorRgb: '255, 185, 118',
     backgroundImage: '/hub/voice-fallback.jpg'
   },
   {
@@ -50,8 +50,8 @@ const captureModeTiles = [
     subtitle: 'Record short video',
     route: '/stories/new?type=video',
     shortcut: 'Shift+V',
-    color: '#8B5CF6',
-    colorRgb: '139, 92, 246',
+    color: '#A78BFA',
+    colorRgb: '167, 139, 250',
     backgroundImage: '/hub/video-fallback.jpg'
   }
 ]
