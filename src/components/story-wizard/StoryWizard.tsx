@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { uploadMediaFile } from '@/lib/media'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { 
@@ -435,30 +436,32 @@ export default function StoryWizard() {
         }
       }
 
-      // Upload media
+      // Upload media using family/user path: familyId/profileId/filename
       if (formData.media.length > 0 && story) {
         for (const mediaItem of formData.media) {
-          const fileExt = mediaItem.file.name.split('.').pop()
-          const fileName = `${Math.random()}.${fileExt}`
-          const filePath = `${user.id}/${fileName}`
+          const { path, error: uploadErr } = await uploadMediaFile(
+            mediaItem.file,
+            familyId,
+            user.id
+          )
 
-          const { error: uploadError } = await supabase.storage
-            .from('media')
-            .upload(filePath, mediaItem.file)
+          if (!path || uploadErr) {
+            throw new Error(uploadErr || 'Upload failed')
+          }
 
-          if (uploadError) throw uploadError
-
-          await supabase
+          const { error: dbErr } = await supabase
             .from('media')
             .insert({
               story_id: story.id,
               profile_id: user.id,
               family_id: familyId,
-              file_path: filePath,
+              file_path: path,
               file_name: mediaItem.file.name,
               file_size: mediaItem.file.size,
               mime_type: mediaItem.file.type
             })
+
+          if (dbErr) throw dbErr
         }
       }
 
