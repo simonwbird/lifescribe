@@ -5,7 +5,7 @@ import {
   FileText, 
   Camera, 
   Mic, 
-  Video,
+  Lightbulb,
   Calendar,
   Users,
   Upload,
@@ -19,7 +19,7 @@ interface CaptureHubProps {
 }
 
 interface TileConfig {
-  id: 'write' | 'photo' | 'voice' | 'video'
+  id: 'write' | 'photo' | 'voice' | 'prompts'
   title: string
   description: string
   icon: React.ComponentType<{ className?: string }>
@@ -44,14 +44,14 @@ const TILES: TileConfig[] = [
   },
   {
     id: 'photo',
-    title: 'Photo',
-    description: 'Add a photo and tell its story.',
+    title: 'Photo & Video',
+    description: 'Add photos, videos and tell their story.',
     icon: Camera,
     route: '/stories/new?type=photo',
     color: '#00D4AA',
     colorRgb: '0, 212, 170',
     hints: ['wedding', 'school play', 'first home'],
-    ariaLabel: 'Add a photo'
+    ariaLabel: 'Add photos and videos'
   },
   {
     id: 'voice',
@@ -65,25 +65,19 @@ const TILES: TileConfig[] = [
     ariaLabel: 'Record voice'
   },
   {
-    id: 'video',
-    title: 'Video',
-    description: 'Share a short clip or message.',
-    icon: Video,
-    route: '/stories/new',
+    id: 'prompts',
+    title: 'Prompts',
+    description: 'Answer today\'s writing prompt.',
+    icon: Lightbulb,
+    route: '/prompts',
     color: '#A78BFA',
     colorRgb: '167, 139, 250',
-    hints: ['birthday candles', 'holiday cheers', 'silly dance'],
-    ariaLabel: 'Record video'
+    hints: ['childhood memory', 'family tradition', 'favorite recipe'],
+    ariaLabel: 'Answer writing prompt'
   }
 ]
 
 const QUICK_ACTIONS = [
-  {
-    title: 'Answer today\'s prompt',
-    route: '/prompts',
-    icon: Calendar,
-    ariaLabel: 'Answer today\'s writing prompt'
-  },
   {
     title: 'Invite family',
     route: '/family/members',

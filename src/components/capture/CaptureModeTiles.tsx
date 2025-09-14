@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { FileText, Camera, Mic, Video } from 'lucide-react'
+import { FileText, Camera, Mic, Lightbulb } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -25,8 +25,8 @@ const captureModeTiles = [
   {
     mode: 'photo' as const,
     icon: Camera,
-    label: 'Photo',
-    subtitle: 'Add photos',
+    label: 'Photo & Video',
+    subtitle: 'Add photos & videos',
     route: '/stories/new?type=photo',
     shortcut: 'P',
     color: '#00D4AA',
@@ -45,12 +45,12 @@ const captureModeTiles = [
     backgroundImage: '/hub/voice-fallback.jpg'
   },
   {
-    mode: 'video' as const,
-    icon: Video,
-    label: 'Video',
-    subtitle: 'Record short video',
-    route: '/stories/new?type=video',
-    shortcut: 'Shift+V',
+    mode: 'prompts' as const,
+    icon: Lightbulb,
+    label: 'Prompts',
+    subtitle: 'Answer today\'s prompt',
+    route: '/prompts',
+    shortcut: 'Q',
     color: '#A78BFA',
     colorRgb: '167, 139, 250',
     backgroundImage: '/hub/video-fallback.jpg'
