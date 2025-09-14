@@ -427,20 +427,21 @@ export default function ContentCard({
               e.currentTarget.src = '/placeholder.svg'
             }}
           />
+        ) : isVoiceRecording && authorAvatar ? (
+          <img 
+            src={authorAvatar}
+            alt={`${content.authorName} profile`}
+            className="w-full h-full object-cover group-hover/image:scale-105 transition-transform duration-200"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              // Fallback to microphone icon if profile image fails
+              setAuthorAvatar(null)
+            }}
+          />
         ) : (
           <div className="text-muted-foreground flex items-center justify-center relative">
-            {isVoiceRecording && authorAvatar ? (
-              <img 
-                src={authorAvatar}
-                alt={`${content.authorName} profile`}
-                className="w-16 h-16 rounded-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null
-                  // Fallback to microphone icon if profile image fails
-                  setAuthorAvatar(null)
-                }}
-              />
-            ) : isVoiceRecording ? (
+            {isVoiceRecording ? (
               <Mic className="h-8 w-8" />
             ) : isVideoRecording ? (
               <Video className="h-8 w-8" />
