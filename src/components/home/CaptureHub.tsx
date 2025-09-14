@@ -349,12 +349,12 @@ export function CaptureHub({ className }: CaptureHubProps) {
 
                 <div>
                   <h2 className="text-xl font-semibold mb-1">{tile.title}</h2>
-                  <p 
-                    id={`${tile.id}-description`}
-                    className="text-sm text-white/90 mb-2"
+                  <Link 
+                    to="/stories/new"
+                    className="text-sm text-white/90 mb-2 hover:text-white underline underline-offset-2 transition-colors"
                   >
                     {tile.description}
-                  </p>
+                  </Link>
                   {currentHint && (
                     <p className="text-xs text-white/75 italic">
                       {currentHint}
