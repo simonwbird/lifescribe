@@ -2,16 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Menu, BookHeart, ChevronDown } from 'lucide-react'
+import { Search, Menu, BookHeart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu'
 
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -187,40 +181,14 @@ export default function Header() {
               </Link>
               
               {/* Quick Capture Button */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
-                  >
-                    Quick Capture
-                    <ChevronDown className="ml-2 h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48 bg-popover border shadow-md z-50">
-                  <DropdownMenuItem asChild>
-                    <Link to="/stories/new?type=write" className="flex items-center gap-2">
-                      <span>Write Story</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/stories/new?type=photo" className="flex items-center gap-2">
-                      <span>Add Photo/Video</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/stories/new?type=voice" className="flex items-center gap-2">
-                      <span>Record Voice</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/prompts" className="flex items-center gap-2">
-                      <span>Answer Prompt</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
+                onClick={() => navigate('/capture')}
+              >
+                Quick Capture
+              </Button>
             </div>
             
             {/* Desktop Navigation */}
