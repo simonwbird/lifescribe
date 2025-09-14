@@ -2,7 +2,7 @@ import { NodeRect } from "../../lib/familyTreeV2Types";
 import { CARD_W, CARD_H } from "./PersonCard";
 
 /** ===== Ancestry geometry + tokens (final) ===== */
-export const ROW_HEIGHT = 220;   // row vertical pitch (adjusted for new card size)
+export const ROW_HEIGHT = 412;   // row vertical pitch (adjusted for ~300px union→rail drop)
 export const SIB_GAP    = 48;    // gap between siblings
 export const SPOUSE_GAP = 16;    // gap between spouses within a couple
 
