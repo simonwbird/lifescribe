@@ -38,12 +38,19 @@ export default function MobileBottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border sm:hidden z-50" role="navigation" aria-label="Mobile navigation">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t border-border sm:hidden z-50 mobile-safe-bottom" 
+      role="navigation" 
+      aria-label="Mobile navigation"
+      style={{
+        paddingBottom: `max(env(safe-area-inset-bottom), 0.5rem)` // Handle iPhone notch
+      }}
+    >
       <div className="flex items-center justify-around py-2 px-4">
         {/* Home */}
         <Link
           to="/home"
-          className={`flex flex-col items-center gap-1 p-3 rounded-lg min-w-[60px] ${
+          className={`flex flex-col items-center gap-1 p-3 rounded-lg min-w-[60px] min-h-[44px] tap-target ${
             isActive('/home')
               ? 'text-primary bg-accent' 
               : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -58,7 +65,7 @@ export default function MobileBottomNav() {
 
         {/* Search */}
         <button
-          className="flex flex-col items-center gap-1 p-3 rounded-lg min-w-[60px] text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          className="flex flex-col items-center gap-1 p-3 rounded-lg min-w-[60px] min-h-[44px] tap-target text-muted-foreground hover:text-foreground hover:bg-accent/50"
           onClick={() => {
             track('search_open', { source: 'mobile_nav' })
             // Open search modal or focus search input
