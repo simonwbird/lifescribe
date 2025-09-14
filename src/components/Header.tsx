@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Menu, BookHeart } from 'lucide-react'
+import { Search, Menu, BookHeart, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
 
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -25,6 +26,7 @@ export default function Header() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { track } = useAnalytics()
@@ -185,8 +187,9 @@ export default function Header() {
                 variant="outline" 
                 size="sm"
                 className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
-                onClick={() => navigate('/capture')}
+                onClick={() => setQuickCaptureOpen(true)}
               >
+                <Zap className="mr-2 h-3 w-3" />
                 Quick Capture
               </Button>
             </div>
@@ -345,6 +348,12 @@ export default function Header() {
       <KeyboardShortcutsDialog
         open={shortcutsOpen}
         onOpenChange={setShortcutsOpen}
+      />
+
+      {/* Quick Capture Modal */}
+      <QuickCaptureComposer
+        isOpen={quickCaptureOpen}
+        onClose={() => setQuickCaptureOpen(false)}
       />
 
       {/* Main content landmark */}
