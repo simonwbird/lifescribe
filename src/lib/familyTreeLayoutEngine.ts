@@ -44,6 +44,8 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
     for (const p of (parentsOf.get(id) ?? [])) if (!depth.has(p)) depth.set(p, d+1), q.push({ id:p, d:d+1 });
     for (const c of (childrenOf.get(id) ?? [])) if (!depth.has(c)) depth.set(c, d-1), q.push({ id:c, d:d-1 });
     for (const s of (spouses.get(id) ?? [])) if (!depth.has(s)) depth.set(s, d),   q.push({ id:s, d });
+    for (const u of (unmarried.get(id) ?? [])) if (!depth.has(u)) depth.set(u, d), q.push({ id:u, d });
+    for (const x of (divorced.get(id) ?? [])) if (!depth.has(x)) depth.set(x, d), q.push({ id:x, d });
     for (const p of (parentsOf.get(id) ?? []))
       for (const sib of (childrenOf.get(p) ?? [])) if (!depth.has(sib)) depth.set(sib, d), q.push({ id:sib, d });
   }
