@@ -32,7 +32,10 @@ export default function EnhancedMediaUploader({
   const [dragActive, setDragActive] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingMode, setRecordingMode] = useState<'photo' | 'video'>('photo')
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -93,6 +96,7 @@ export default function EnhancedMediaUploader({
   const capturePhoto = async () => {
     try {
       setIsCapturing(true)
+      setRecordingMode('photo')
       
       // Check if we're on a mobile device or web
       const isNative = Capacitor.isNativePlatform()
@@ -128,15 +132,38 @@ export default function EnhancedMediaUploader({
     }
   }
 
+  const captureVideo = async () => {
+    try {
+      setIsCapturing(true)
+      setRecordingMode('video')
+      
+      // For now, always use web interface for video recording
+      await openCameraInterface()
+    } catch (error) {
+      console.error('Error accessing camera for video:', error)
+      // Fallback to file picker if camera fails
+      fileInputRef.current?.click()
+    } finally {
+      setIsCapturing(false)
+    }
+  }
+
   const openCameraInterface = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      const constraints: MediaStreamConstraints = {
         video: { 
           facingMode: 'user', // Use front camera by default
           width: { ideal: 1920 },
           height: { ideal: 1080 }
-        } 
-      })
+        }
+      }
+
+      // Add audio for video recording
+      if (recordingMode === 'video') {
+        constraints.audio = true
+      }
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
       
       setStream(mediaStream)
       setShowCamera(true)
@@ -181,12 +208,59 @@ export default function EnhancedMediaUploader({
     }, 'image/jpeg', 0.9)
   }
 
+  const startVideoRecording = () => {
+    if (!stream) return
+
+    try {
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm'
+      })
+      
+      const chunks: BlobPart[] = []
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+        }
+      }
+      
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' })
+        const fileName = `video-${Date.now()}.webm`
+        const file = new File([blob], fileName, { type: 'video/webm' })
+        handleFiles([file])
+        closeCameraInterface()
+      }
+      
+      recorder.start()
+      setMediaRecorder(recorder)
+      setIsRecording(true)
+    } catch (error) {
+      console.error('Error starting video recording:', error)
+    }
+  }
+
+  const stopVideoRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop()
+      setMediaRecorder(null)
+      setIsRecording(false)
+    }
+  }
+
   const closeCameraInterface = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop()
+    }
+    
     if (stream) {
       stream.getTracks().forEach(track => track.stop())
       setStream(null)
     }
+    
     setShowCamera(false)
+    setIsRecording(false)
+    setMediaRecorder(null)
   }
 
   const removeMedia = (id: string) => {
@@ -276,7 +350,7 @@ export default function EnhancedMediaUploader({
             </div>
           </div>
           
-          <div className="flex items-center gap-3 justify-center">
+          <div className="flex items-center gap-3 justify-center flex-wrap">
             <Button
               variant="outline"
               onClick={capturePhoto}
@@ -284,7 +358,17 @@ export default function EnhancedMediaUploader({
               className="gap-2"
             >
               <Camera className="h-4 w-4" />
-              {isCapturing ? 'Opening Camera...' : 'Take Photo'}
+              {isCapturing && recordingMode === 'photo' ? 'Opening Camera...' : 'Take Photo'}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={captureVideo}
+              disabled={media.length >= maxFiles || isCapturing}
+              className="gap-2"
+            >
+              <Video className="h-4 w-4" />
+              {isCapturing && recordingMode === 'video' ? 'Opening Camera...' : 'Record Video'}
             </Button>
             
             <span className="text-xs text-muted-foreground">or</span>
@@ -399,7 +483,9 @@ export default function EnhancedMediaUploader({
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-black/80 text-white">
-            <h3 className="text-lg font-semibold">Take Photo</h3>
+            <h3 className="text-lg font-semibold">
+              {recordingMode === 'photo' ? 'Take Photo' : 'Record Video'}
+            </h3>
             <Button
               variant="ghost"
               size="icon"
@@ -422,14 +508,32 @@ export default function EnhancedMediaUploader({
           </div>
 
           {/* Controls */}
-          <div className="p-6 bg-black/80 flex justify-center">
-            <Button
-              onClick={takePicture}
-              size="lg"
-              className="bg-white text-black hover:bg-gray-200 rounded-full h-16 w-16 p-0"
-            >
-              <Camera className="h-6 w-6" />
-            </Button>
+          <div className="p-6 bg-black/80 flex justify-center gap-4">
+            {recordingMode === 'photo' ? (
+              <Button
+                onClick={takePicture}
+                size="lg"
+                className="bg-white text-black hover:bg-gray-200 rounded-full h-16 w-16 p-0"
+              >
+                <Camera className="h-6 w-6" />
+              </Button>
+            ) : (
+              <Button
+                onClick={isRecording ? stopVideoRecording : startVideoRecording}
+                size="lg"
+                className={`rounded-full h-16 w-16 p-0 ${
+                  isRecording 
+                    ? 'bg-red-600 text-white hover:bg-red-700' 
+                    : 'bg-white text-black hover:bg-gray-200'
+                }`}
+              >
+                {isRecording ? (
+                  <div className="w-4 h-4 bg-white rounded-sm" />
+                ) : (
+                  <div className="w-4 h-4 bg-red-600 rounded-full" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
       )}
