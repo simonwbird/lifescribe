@@ -36,7 +36,7 @@ const TILES: TileConfig[] = [
     title: 'Write',
     description: 'Capture a memory in your own words.',
     icon: FileText,
-    route: '/stories/new',
+    route: '/stories/new?type=write',
     color: '#3B9EFF',
     colorRgb: '59, 158, 255',
     hints: ['first job', 'grandma\'s recipe', 'that road trip'],
