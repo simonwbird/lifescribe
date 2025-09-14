@@ -183,9 +183,7 @@ export function CaptureHub({ className }: CaptureHubProps) {
                 "aspect-[4/3] sm:aspect-[16/10] transition-all duration-300",
                 "p-3 sm:p-6",
                 "hover:scale-[1.02] focus:scale-[1.02]",
-                "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10",
-                // Voice tile special animation
-                tile.id === 'voice' && "motion-safe:animate-pulse"
+                "focus:outline-none focus:ring-4 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black/10"
               )}
               style={{
                 background: `linear-gradient(135deg, rgba(${tile.colorRgb}, 1), rgba(${tile.colorRgb}, 0.8))`,
