@@ -84,6 +84,7 @@ interface MarriageNode {
   depth: number
   subtreeWidth: number
   explicit: boolean
+  unionType?: 'spouse' | 'unmarried'
 }
 
 export class FamilyTreeLayoutEngine {
