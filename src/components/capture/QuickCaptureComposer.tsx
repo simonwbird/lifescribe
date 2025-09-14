@@ -1251,9 +1251,12 @@ export default function QuickCaptureComposer({
               {/* Title/Description */}
               <div className="space-y-2">
                 <Input
-                  placeholder="What's the story? (becomes the title)"
-                  value={data.title}
-                  onChange={(e) => setData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder={prompt ? "What's the story?" : "What's the story? (becomes the title)"}
+                  value={prompt ? data.text : data.title}
+                  onChange={(e) => setData(prev => prompt 
+                    ? { ...prev, text: e.target.value }
+                    : { ...prev, title: e.target.value }
+                  )}
                   className="text-sm font-medium"
                 />
               </div>
