@@ -52,6 +52,7 @@ export function DraggablePersonCard({
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [localIsDragging, setLocalIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
   const cardRef = useRef<SVGGElement>(null);
 
   // Refresh signed URLs
@@ -87,6 +88,7 @@ export function DraggablePersonCard({
     
     e.preventDefault();
     setLocalIsDragging(true);
+    setHasDragged(false); // Reset drag flag
     
     const svgElement = (e.target as Element).closest('svg') as SVGSVGElement | null;
     if (!svgElement) return;
@@ -116,6 +118,12 @@ export function DraggablePersonCard({
       const dy = dragOffsetRef.current.y;
       const newX = newSvgP.x - dx;
       const newY = newSvgP.y - dy;
+      
+      // Mark as dragged if moved more than a few pixels
+      const distance = Math.sqrt((newX - rect.x) ** 2 + (newY - rect.y) ** 2);
+      if (distance > 5) {
+        setHasDragged(true);
+      }
       
       // Do not snap while dragging for smooth movement; snap on drop instead
       onDrag?.(person.id, newX, newY);
@@ -147,9 +155,11 @@ export function DraggablePersonCard({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!(e.target as Element).closest('.connector-btn') && !localIsDragging) {
+    if (!(e.target as Element).closest('.connector-btn') && !localIsDragging && !hasDragged) {
       navigate(`/people/${person.id}`);
     }
+    // Reset drag flag after click
+    setTimeout(() => setHasDragged(false), 100);
   };
 
   const handleAddRelation = (e: React.MouseEvent, type: 'parent' | 'sibling' | 'child' | 'spouse') => {
