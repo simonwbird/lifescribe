@@ -82,7 +82,7 @@ const QUICK_ACTIONS = [
   },
   {
     title: 'Add a story in your family tree',
-    route: '/family-tree',
+    route: '/family/tree',
     icon: GitBranch,
     ariaLabel: 'Add a story to your family tree'
   }
