@@ -408,9 +408,36 @@ export default function GenerationalFamilyTree({
         </div>
       )}
 
-      {/* Legend */}
-      <div className="fixed z-[9999] top-24 left-4 md:top-28 md:left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-gray-200 max-w-xs pointer-events-auto">
-        <h4 className="font-semibold text-sm mb-3 text-gray-800">Family Tree Legend</h4>
+      {/* Legend with Tutorial */}
+      <div className="fixed z-[9999] top-24 left-4 md:top-28 md:left-4 bg-white border border-gray-300 rounded-lg p-4 shadow-xl max-w-xs">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          <h4 className="font-semibold text-sm text-gray-800">Interactive Family Tree</h4>
+        </div>
+        
+        {/* Tutorial Instructions */}
+        <div className="space-y-2 mb-4 text-xs text-gray-600">
+          <div className="flex items-start gap-2">
+            <span>•</span>
+            <span>Drag any person to reposition them</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>•</span>
+            <span>Use zoom controls (+/-) to get closer or see more</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>•</span>
+            <span>Cards snap to an invisible grid (hold Shift or Alt to disable)</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>•</span>
+            <span>Connections update automatically</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>•</span>
+            <span>Click persons to view their profile</span>
+          </div>
+        </div>
         
         {/* Relationship types */}
         <div className="space-y-2 mb-4">
