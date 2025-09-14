@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
 import type { Person } from '@/lib/familyTreeTypes'
+import { supabase } from '@/lib/supabase'
 
 interface PersonCardProps {
   person: Person
@@ -54,6 +55,28 @@ export default function PersonCard({
   const cardRef = useRef<HTMLDivElement>(null)
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 })
   const [showHotspots, setShowHotspots] = useState(false)
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined)
+
+  // Refresh signed URLs so they don't expire
+  React.useEffect(() => {
+    let isMounted = true
+    async function refresh() {
+      if (!person.avatar_url) { setResolvedAvatarUrl(undefined); return }
+      let url = person.avatar_url as string
+      // If it's a Supabase signed URL, re-sign it to ensure freshness
+      const match = url.match(/object\/sign\/([^/]+)\/([^?]+)/)
+      if (match) {
+        const bucket = match[1]
+        const objectPath = decodeURIComponent(match[2])
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600)
+        if (data?.signedUrl) url = data.signedUrl
+      }
+      if (!isMounted) return
+      setResolvedAvatarUrl(url)
+    }
+    refresh()
+    return () => { isMounted = false }
+  }, [person.avatar_url])
   
   const displayName = getPersonDisplayName(person)
   const years = formatPersonYears(person)
@@ -188,7 +211,7 @@ export default function PersonCard({
             {/* Header with Avatar and Actions */}
             <div className="flex items-start space-x-3">
               <Avatar className="h-12 w-12 ring-2 ring-white shadow-sm">
-                <AvatarImage src={person.avatar_url || undefined} />
+                <AvatarImage src={resolvedAvatarUrl || undefined} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white font-semibold">
                   {displayName.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </AvatarFallback>

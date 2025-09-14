@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { NodeRect, Person } from "../../lib/familyTreeV2Types";
+import { supabase } from '@/lib/supabase'
 
 /** Card constants (Ancestry proportions - redesigned for vertical layout) */
 export const CARD_W = 140;
@@ -26,6 +27,29 @@ const fullName = (p: Person) => (p.given_name + " " + (p.surname ?? "")).trim();
 
 export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; person: Person; onAddRequested?: (type: 'parent'|'sibling'|'child'|'spouse', personId: string) => void }) {
   const navigate = useNavigate();
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined)
+
+  // Refresh signed URLs so they don't expire
+  useEffect(() => {
+    let isMounted = true
+    async function refresh() {
+      if (!person.avatar_url) { setResolvedAvatarUrl(undefined); return }
+      let url = person.avatar_url as string
+      // If it's a Supabase signed URL, re-sign it to ensure freshness
+      const match = url.match(/object\/sign\/([^/]+)\/([^?]+)/)
+      if (match) {
+        const bucket = match[1]
+        const objectPath = decodeURIComponent(match[2])
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600)
+        if (data?.signedUrl) url = data.signedUrl
+      }
+      if (!isMounted) return
+      setResolvedAvatarUrl(url)
+    }
+    refresh()
+    return () => { isMounted = false }
+  }, [person.avatar_url])
+
   const b = yr(person.birth_date), d = yr(person.death_date);
   const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
   const name = fullName(person);
@@ -61,10 +85,10 @@ export function PersonCard({ rect, person, onAddRequested }: { rect: NodeRect; p
             fill={genderFill(person.sex)} />
       
       {/* Display uploaded image if available, otherwise show silhouette */}
-      {person.avatar_url ? (
+      {resolvedAvatarUrl ? (
         <foreignObject x={PHOTO_X} y={PHOTO_Y} width={PHOTO_W} height={PHOTO_H}>
           <img 
-            src={person.avatar_url} 
+            src={resolvedAvatarUrl} 
             alt={name}
             style={{
               width: '100%',
