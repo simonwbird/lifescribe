@@ -149,22 +149,25 @@ export default function GenerationalFamilyTree({
         />
         
         {/* Profile image or initials */}
+        <defs>
+          <clipPath id={`avatar-clip-${person.id}`}>
+            <circle
+              cx={PERSON_WIDTH / 2}
+              cy={30 + AVATAR_SIZE / 2}
+              r={AVATAR_SIZE / 2}
+            />
+          </clipPath>
+        </defs>
         {imgUrl ? (
-          <foreignObject
+          <image
+            href={imgUrl as string}
             x={PERSON_WIDTH / 2 - AVATAR_SIZE / 2}
             y={30}
             width={AVATAR_SIZE}
             height={AVATAR_SIZE}
-          >
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <img
-              src={imgUrl as string}
-              alt={displayName}
-              loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-            />
-          </foreignObject>
+            preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#avatar-clip-${person.id})`}
+          />
         ) : (
           <text
             x={PERSON_WIDTH / 2}
