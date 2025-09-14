@@ -47,6 +47,28 @@ export default function ProfilePhotoUploader({
     lg: 'h-32 w-32'
   }
 
+  // Resolve and refresh signed URLs so expired links still display
+  const [resolvedUrl, setResolvedUrl] = useState<string | undefined>(currentPhotoUrl)
+  useEffect(() => {
+    let isMounted = true
+    async function resolve() {
+      if (!currentPhotoUrl) { setResolvedUrl(undefined); return }
+      let url = currentPhotoUrl
+      // If it's a Supabase signed URL, re-sign it to ensure freshness
+      const m = url.match(/object\/sign\/([^/]+)\/([^?]+)/)
+      if (m) {
+        const bucket = m[1]
+        const objectPath = decodeURIComponent(m[2])
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600)
+        if (data?.signedUrl) url = data.signedUrl
+      }
+      if (!isMounted) return
+      setResolvedUrl(url)
+    }
+    resolve()
+    return () => { isMounted = false }
+  }, [currentPhotoUrl])
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -302,7 +324,7 @@ export default function ProfilePhotoUploader({
     <div className="flex flex-col items-center space-y-4">
       <div className="relative group">
         <Avatar className={`${sizeClasses[size]} cursor-pointer transition-opacity group-hover:opacity-75`}>
-          <AvatarImage src={currentPhotoUrl} alt="Profile" />
+          <AvatarImage src={resolvedUrl} alt="Profile" />
           <AvatarFallback className="text-lg font-semibold">
             {fallbackText}
           </AvatarFallback>
