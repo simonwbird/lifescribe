@@ -78,6 +78,9 @@ export function PersonCard({ rect, person, onAddRequested, graph }: {
 
   // Check if this person is already married
   const isMarried = graph?.spouses?.get(person.id)?.size > 0;
+  
+  // Debug log to check spouse detection
+  console.log(`${person.given_name} married:`, isMarried, 'spouses:', graph?.spouses?.get(person.id));
 
   return (
     <g 
