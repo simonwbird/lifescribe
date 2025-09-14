@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast'
 import { getSignedMediaUrl, uploadMediaFile } from '@/lib/media'
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
-import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop'
+import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop, convertToPixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 
 interface ProfilePhotoUploaderProps {
@@ -318,7 +318,7 @@ export default function ProfilePhotoUploader({
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget
-    const crop = centerCrop(
+    const pctCrop = centerCrop(
       makeAspectCrop(
         {
           unit: '%',
@@ -331,7 +331,10 @@ export default function ProfilePhotoUploader({
       width,
       height,
     )
-    setCrop(crop)
+    setCrop(pctCrop)
+    // Also compute initial pixel crop so Apply works without manual adjustment
+    const pxCrop = convertToPixelCrop(pctCrop, width, height)
+    setCompletedCrop(pxCrop)
   }
 
   const uploadPhoto = async (file: File) => {
@@ -508,7 +511,7 @@ export default function ProfilePhotoUploader({
             </DialogDescription>
           </DialogHeader>
           <div className="relative">
-            {imgSrc && (
+              {imgSrc && (
               <ReactCrop
                 crop={crop}
                 onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -520,6 +523,7 @@ export default function ProfilePhotoUploader({
                   ref={imgRef}
                   alt="Crop"
                   src={imgSrc}
+                  crossOrigin="anonymous"
                   style={{ maxHeight: 400 }}
                   onLoad={onImageLoad}
                 />
