@@ -271,18 +271,21 @@ export default function ContentCard({
     try {
       setIsPlaying(true)
       const audioUrl = await getVoiceRecordingUrl(content.id)
-      if (audioUrl) {
-        const audio = new Audio(audioUrl)
-        setCurrentAudio(audio)
-        audio.play()
-        audio.onended = () => {
-          setIsPlaying(false)
-          setCurrentAudio(null)
-        }
-        audio.onerror = () => {
-          setIsPlaying(false)
-          setCurrentAudio(null)
-        }
+      if (!audioUrl) {
+        setIsPlaying(false)
+        setCurrentAudio(null)
+        return
+      }
+      const audio = new Audio(audioUrl)
+      setCurrentAudio(audio)
+      audio.play()
+      audio.onended = () => {
+        setIsPlaying(false)
+        setCurrentAudio(null)
+      }
+      audio.onerror = () => {
+        setIsPlaying(false)
+        setCurrentAudio(null)
       }
     } catch (error) {
       console.error('Error playing voice recording:', error)
@@ -293,21 +296,20 @@ export default function ContentCard({
 
   const getVoiceRecordingUrl = async (storyId: string): Promise<string | null> => {
     try {
-      const { data: media, error } = await supabase
+      const { data, error } = await supabase
         .from('media')
         .select('file_path')
         .eq('story_id', storyId)
         .like('mime_type', 'audio%')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
 
-      if (error || !media) {
+      if (error || !data || data.length === 0) {
         console.error('No audio media found for story:', storyId)
         return null
       }
 
-      const audioUrl = await getSignedMediaUrl(media.file_path, content.familyId)
+      const audioUrl = await getSignedMediaUrl(data[0].file_path, content.familyId)
       return audioUrl
     } catch (error) {
       console.error('Error fetching voice recording:', error)
