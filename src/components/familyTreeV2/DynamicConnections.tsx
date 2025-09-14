@@ -205,6 +205,9 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
         
         if (childrenPositions.length === 0) return null;
         
+        // Check if this is a divorced couple
+        const isDivorced = graph.divorced.get(union.a)?.has(union.b) || graph.divorced.get(union.b)?.has(union.a);
+        
         return (
           <g key={union.id}>
             {drawMultiParentConnection(parent1Pos, parent2Pos, childrenPositions)}
