@@ -162,6 +162,7 @@ export default function ContentCard({
   showSelection = false,
   onDelete 
 }: ContentCardProps) {
+  console.log('ContentCard rendering:', content.title, 'coverUrl:', content.coverUrl)
   const [isHovered, setIsHovered] = useState(false)
   const [showImageViewer, setShowImageViewer] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -358,21 +359,35 @@ export default function ContentCard({
         {isVideoRecording ? (
           <VideoPlayer content={content} />
         ) : content.coverUrl ? (
-          <img 
-            src={content.coverUrl} 
-            alt={`${content.title} ${content.type} cover image`}
-            className="w-full h-full object-cover group-hover/image:scale-105 transition-transform duration-200"
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.onerror = null
-              e.currentTarget.src = '/placeholder.svg'
-            }}
-          />
+          <>
+            <img 
+              src={content.coverUrl} 
+              alt={`${content.title} ${content.type} cover image`}
+              className="w-full h-full object-cover group-hover/image:scale-105 transition-transform duration-200"
+              loading="lazy"
+              onError={(e) => {
+                console.log('Image failed to load:', content.coverUrl, 'for content:', content.title)
+                e.currentTarget.onerror = null
+                e.currentTarget.src = '/placeholder.svg'
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', content.coverUrl, 'for content:', content.title)
+              }}
+            />
+            {/* Debug info */}
+            <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              {content.coverUrl ? 'Has Cover' : 'No Cover'}
+            </div>
+          </>
         ) : (
           <div className="text-muted-foreground">
             {isVoiceRecording ? <Mic className="h-8 w-8" /> : 
              isVideoRecording ? <Video className="h-8 w-8" /> : 
              getTypeIcon()}
+            {/* Debug info */}
+            <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-1 rounded">
+              No Image
+            </div>
           </div>
         )}
         
