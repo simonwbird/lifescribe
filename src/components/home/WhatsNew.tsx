@@ -25,6 +25,15 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 // Mock data
 const mockActivities: ActivityItem[] = [
   {
+    id: '0',
+    kind: 'story',
+    title: 'What was your first full-time work experience?',
+    actor: 'Simon Bird',
+    when: '2025-09-14T22:08:15Z',
+    read: false,
+    targetUrl: '/collections?tab=story'
+  },
+  {
     id: '1',
     kind: 'story',
     title: 'My First Day of School',
