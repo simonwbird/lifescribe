@@ -288,7 +288,7 @@ export default function InteractiveFamilyTree({
           className="bg-white/90 backdrop-blur-sm"
         >
           <Grid3X3 className="h-4 w-4 mr-2" />
-          Reset Layout
+          Refresh Tree
         </Button>
       </div>
 
