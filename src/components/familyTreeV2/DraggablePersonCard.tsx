@@ -50,7 +50,7 @@ export function DraggablePersonCard({
 }: DraggablePersonCardProps) {
   const navigate = useNavigate();
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url || undefined);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [localIsDragging, setLocalIsDragging] = useState(false);
   const cardRef = useRef<SVGGElement>(null);
 
@@ -88,46 +88,55 @@ export function DraggablePersonCard({
     e.preventDefault();
     setLocalIsDragging(true);
     
-    const svgElement = (e.target as Element).closest('svg');
+    const svgElement = (e.target as Element).closest('svg') as SVGSVGElement | null;
     if (!svgElement) return;
+    const ctm = svgElement.getScreenCTM();
+    if (!ctm) return;
     
-    // Get SVG coordinates using the SVG's coordinate system
+    // Convert pointer to SVG coordinates (accounting for viewBox/zoom)
     const pt = svgElement.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
-    const svgP = pt.matrixTransform(svgElement.getScreenCTM()?.inverse());
+    const inv = ctm.inverse();
+    const svgP = pt.matrixTransform(inv);
     
-    setDragOffset({
+    // Store drag offset in ref to avoid stale state during listeners
+    dragOffsetRef.current = {
       x: svgP.x - rect.x,
       y: svgP.y - rect.y
-    });
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newPt = svgElement.createSVGPoint();
-      newPt.x = e.clientX;
-      newPt.y = e.clientY;
-      const newSvgP = newPt.matrixTransform(svgElement.getScreenCTM()?.inverse());
-      
-      const newX = newSvgP.x - dragOffset.x;
-      const newY = newSvgP.y - dragOffset.y;
-      
-      const snapped = (e.altKey || e.shiftKey) ? { x: newX, y: newY } : snapToGrid(newX, newY, gridSize);
-      onDrag?.(person.id, snapped.x, snapped.y);
     };
 
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleMouseMove = (ev: MouseEvent) => {
+      const newPt = svgElement.createSVGPoint();
+      newPt.x = ev.clientX;
+      newPt.y = ev.clientY;
+      const newSvgP = newPt.matrixTransform(inv);
+      
+      const dx = dragOffsetRef.current.x;
+      const dy = dragOffsetRef.current.y;
+      const newX = newSvgP.x - dx;
+      const newY = newSvgP.y - dy;
+      
+      // Do not snap while dragging for smooth movement; snap on drop instead
+      onDrag?.(person.id, newX, newY);
+    };
+
+    const handleMouseUp = (ev: MouseEvent) => {
       setLocalIsDragging(false);
       
       const finalPt = svgElement.createSVGPoint();
-      finalPt.x = e.clientX;
-      finalPt.y = e.clientY;
-      const finalSvgP = finalPt.matrixTransform(svgElement.getScreenCTM()?.inverse());
+      finalPt.x = ev.clientX;
+      finalPt.y = ev.clientY;
+      const finalSvgP = finalPt.matrixTransform(inv);
       
-      const finalX = finalSvgP.x - dragOffset.x;
-      const finalY = finalSvgP.y - dragOffset.y;
+      const dx = dragOffsetRef.current.x;
+      const dy = dragOffsetRef.current.y;
+      const finalX = finalSvgP.x - dx;
+      const finalY = finalSvgP.y - dy;
       
-      const snapped = snapToGrid(finalX, finalY, gridSize);
-      onDragEnd?.(person.id, snapped.x, snapped.y);
+      const shouldSnap = !(ev.altKey || ev.shiftKey);
+      const result = shouldSnap ? snapToGrid(finalX, finalY, gridSize) : { x: finalX, y: finalY };
+      onDragEnd?.(person.id, result.x, result.y);
       
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -159,7 +168,7 @@ export function DraggablePersonCard({
         cursor: cardIsDragging ? 'grabbing' : 'grab',
         opacity: cardIsDragging ? 0.8 : 1
       }}
-      className={`person-card transition-all duration-200 ${cardIsDragging ? 'scale-105' : ''}`}
+      className={`person-card ${cardIsDragging ? 'transition-none scale-105' : 'transition-all duration-200'}`}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
     >
