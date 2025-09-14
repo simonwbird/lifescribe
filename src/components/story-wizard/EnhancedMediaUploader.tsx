@@ -522,68 +522,70 @@ export default function EnhancedMediaUploader({
       {showCamera && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-black/80 text-white">
-            <h3 className="text-lg font-semibold">
+          <div className="flex items-center justify-between p-3 bg-black/90 text-white shrink-0">
+            <h3 className="text-base font-semibold">
               {recordingMode === 'photo' ? 'Take Photo' : 'Record Video'}
             </h3>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={switchCamera}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 h-8 w-8 p-0"
                 title={`Switch to ${currentCamera === 'user' ? 'rear' : 'front'} camera`}
               >
-                <RotateCcw className="h-5 w-5" />
+                <RotateCcw className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={closeCameraInterface}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 h-8 w-8 p-0"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          {/* Camera Preview */}
-          <div className="flex-1 flex items-center justify-center bg-black">
+          {/* Camera Preview - Limited height to ensure controls are visible */}
+          <div className="flex-1 flex items-center justify-center bg-black min-h-0 max-h-[calc(100vh-8rem)]">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className={`max-w-full max-h-full object-contain ${
+              className={`w-full h-full object-cover ${
                 currentCamera === 'user' ? 'transform scale-x-[-1]' : ''
               }`}
             />
           </div>
 
-          {/* Controls */}
-          <div className="p-6 bg-black/80 flex justify-center gap-4">
+          {/* Controls - Always visible at bottom */}
+          <div className="p-4 bg-black/90 flex justify-center shrink-0">
             {recordingMode === 'photo' ? (
               <Button
                 onClick={takePicture}
                 size="lg"
-                className="bg-white text-black hover:bg-gray-200 rounded-full h-16 w-16 p-0"
+                className="bg-white text-black hover:bg-gray-200 rounded-full h-14 w-14 p-0"
+                title="Take Photo"
               >
-                <Camera className="h-6 w-6" />
+                <Camera className="h-5 w-5" />
               </Button>
             ) : (
               <Button
                 onClick={isRecording ? stopVideoRecording : startVideoRecording}
                 size="lg"
-                className={`rounded-full h-16 w-16 p-0 ${
+                className={`rounded-full h-14 w-14 p-0 ${
                   isRecording 
                     ? 'bg-red-600 text-white hover:bg-red-700' 
                     : 'bg-white text-black hover:bg-gray-200'
                 }`}
+                title={isRecording ? 'Stop Recording' : 'Start Recording'}
               >
                 {isRecording ? (
-                  <div className="w-4 h-4 bg-white rounded-sm" />
+                  <div className="w-3 h-3 bg-white rounded-sm" />
                 ) : (
-                  <div className="w-4 h-4 bg-red-600 rounded-full" />
+                  <div className="w-3 h-3 bg-red-600 rounded-full" />
                 )}
               </Button>
             )}
