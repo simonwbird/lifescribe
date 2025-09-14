@@ -67,6 +67,9 @@ export default function PersonProfile() {
   const [selectedStoryId, setSelectedStoryId] = useState('')
   const [isLinkedToUser, setIsLinkedToUser] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isAddChildOpen, setIsAddChildOpen] = useState(false)
+  const [allPeople, setAllPeople] = useState<Person[]>([])
+  const [selectedChildId, setSelectedChildId] = useState('')
   
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -297,6 +300,84 @@ export default function PersonProfile() {
     }
   }
 
+  const loadAllPeople = async () => {
+    if (!familyId) return
+    
+    try {
+      const { data: peopleData } = await supabase
+        .from('people')
+        .select('*')
+        .eq('family_id', familyId)
+        .order('given_name')
+      
+      if (peopleData) {
+        setAllPeople(peopleData as Person[])
+      }
+    } catch (error) {
+      console.error('Error loading people:', error)
+    }
+  }
+
+  const handleAddChild = async () => {
+    if (!selectedChildId || !person || !familyId) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Check if relationship already exists
+      const { data: existing } = await supabase
+        .from('relationships')
+        .select('id')
+        .eq('from_person_id', person.id)
+        .eq('to_person_id', selectedChildId)
+        .eq('relationship_type', 'parent')
+        .single()
+
+      if (existing) {
+        toast({
+          title: "Relationship Already Exists",
+          description: "This person is already listed as a child",
+          variant: "destructive"
+        })
+        return
+      }
+
+      await supabase
+        .from('relationships')
+        .insert({
+          from_person_id: person.id,
+          to_person_id: selectedChildId,
+          relationship_type: 'parent',
+          family_id: familyId,
+          created_by: user.id
+        })
+
+      toast({
+        title: "Child Added",
+        description: "Child relationship has been created successfully"
+      })
+
+      setIsAddChildOpen(false)
+      setSelectedChildId('')
+      loadPersonData() // Reload to show the new relationship
+    } catch (error) {
+      console.error('Error adding child:', error)
+      toast({
+        title: "Error",
+        description: "Failed to add child relationship",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Load all people when the dialog opens
+  useEffect(() => {
+    if (isAddChildOpen && familyId) {
+      loadAllPeople()
+    }
+  }, [isAddChildOpen, familyId])
+
   if (loading) {
     return (
       <AuthGate>
@@ -434,6 +515,45 @@ export default function PersonProfile() {
                   </DialogContent>
                 </Dialog>
 
+                {/* Add Child Dialog */}
+                <Dialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Child for {displayName}</DialogTitle>
+                      <DialogDescription>
+                        Select an existing person to make them a child of {displayName}.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Select value={selectedChildId} onValueChange={setSelectedChildId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a person to be the child" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allPeople
+                            .filter(p => p.id !== person?.id) // Exclude the current person
+                            .map((person) => (
+                              <SelectItem key={person.id} value={person.id}>
+                                {person.full_name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="text-sm text-muted-foreground">
+                        Need to add a new person? You can create them in the family tree first, then come back to add the relationship.
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button onClick={handleAddChild} disabled={!selectedChildId}>
+                          Add Child
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsAddChildOpen(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 <Link to={`/people/${person.id}/timeline`}>
                   <Button variant="outline">
                     <Calendar className="h-4 w-4 mr-2" />
@@ -548,20 +668,49 @@ export default function PersonProfile() {
                         </div>
                       )}
                       
-                      {children.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm text-muted-foreground mb-2">Children</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {children.map((rel) => (
-                              <Link key={rel.id} to={`/people/${rel.to_person_id}`}>
-                                <Badge variant="outline" className="hover:bg-muted">
-                                  {getPersonDisplayName(rel.to_people)}
-                                </Badge>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                       {children.length > 0 && (
+                         <div>
+                           <div className="flex items-center justify-between mb-2">
+                             <h4 className="font-medium text-sm text-muted-foreground">Children</h4>
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => setIsAddChildOpen(true)}
+                               className="h-7 px-2 text-xs"
+                             >
+                               <Plus className="h-3 w-3 mr-1" />
+                               Add Child
+                             </Button>
+                           </div>
+                           <div className="flex flex-wrap gap-2">
+                             {children.map((rel) => (
+                               <Link key={rel.id} to={`/people/${rel.to_person_id}`}>
+                                 <Badge variant="outline" className="hover:bg-muted">
+                                   {getPersonDisplayName(rel.to_people)}
+                                 </Badge>
+                               </Link>
+                             ))}
+                           </div>
+                         </div>
+                       )}
+                       
+                       {children.length === 0 && (
+                         <div>
+                           <div className="flex items-center justify-between mb-2">
+                             <h4 className="font-medium text-sm text-muted-foreground">Children</h4>
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => setIsAddChildOpen(true)}
+                               className="h-7 px-2 text-xs"
+                             >
+                               <Plus className="h-3 w-3 mr-1" />
+                               Add Child
+                             </Button>
+                           </div>
+                           <p className="text-muted-foreground text-sm">No children recorded yet.</p>
+                         </div>
+                       )}
                       
                       {parents.length === 0 && children.length === 0 && spouses.length === 0 && (
                         <p className="text-muted-foreground text-sm">No family relationships recorded yet.</p>
