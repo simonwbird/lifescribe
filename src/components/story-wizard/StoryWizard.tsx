@@ -372,6 +372,15 @@ export default function StoryWizard() {
       // Create story first
       const parsedDate = parseDate(formData.date)
       
+      // Add workflow-specific tags
+      let tagsToUse = [...formData.tags]
+      if (isVoiceFirst && !tagsToUse.includes('voice-recording')) {
+        tagsToUse.push('voice-recording')
+      }
+      if (isPhotoFirst && !tagsToUse.includes('photo-story')) {
+        tagsToUse.push('photo-story')
+      }
+      
       const { data: story, error: storyError } = await supabase
         .from('stories')
         .insert({
@@ -379,7 +388,7 @@ export default function StoryWizard() {
           profile_id: user.id,
           title: formData.title.trim(),
           content: formData.content.trim(),
-          tags: formData.tags.length > 0 ? formData.tags : null,
+          tags: tagsToUse.length > 0 ? tagsToUse : null,
           occurred_on: parsedDate,
           is_approx: formData.dateType === 'approximate'
         })

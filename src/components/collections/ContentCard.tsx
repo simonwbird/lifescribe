@@ -260,7 +260,8 @@ export default function ContentCard({
 
   // Check if this is a voice recording
   const isVoiceRecording = content.type === 'story' && 
-    content.tags.some(tag => tag.includes('voice') || tag.includes('audio'))
+    (content.tags.some(tag => tag.includes('voice') || tag.includes('audio')) || 
+     content.tags.includes('voice-recording'))
 
   // Check if this is a video recording
   const isVideoRecording = content.type === 'story' && 
