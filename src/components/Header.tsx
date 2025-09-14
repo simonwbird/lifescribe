@@ -213,9 +213,7 @@ export default function Header() {
                 </Link>
               </Button>
 
-              <div data-create-button>
-                <CreateDropdown />
-              </div>
+              <CreateDropdown />
               <CollectionsDropdown />
               <FamilyDropdown />
             </nav>

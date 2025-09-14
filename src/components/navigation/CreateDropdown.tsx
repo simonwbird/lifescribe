@@ -96,12 +96,12 @@ export default function CreateDropdown() {
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button
-            className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground font-medium rounded-full px-4 py-2 gap-2 shadow-sm"
+            variant="ghost"
+            className="hover:bg-accent hover:text-accent-foreground text-muted-foreground font-medium"
             aria-expanded={open}
             aria-haspopup="menu"
           >
-            <Plus className="h-4 w-4" />
-            Quick Capture
+            Create New
             <ChevronDown className="h-3 w-3 ml-1" />
           </Button>
         </DropdownMenuTrigger>
