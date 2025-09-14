@@ -759,8 +759,8 @@ export default function QuickCaptureComposer({
       label: 'Write',
       subtitle: 'Write a memory',
       shortcut: 'W',
-      color: '#4F9CF9',
-      colorRgb: '79, 156, 249',
+      color: '#3B9EFF',
+      colorRgb: '59, 158, 255',
       backgroundImage: '/hub/write-fallback.jpg'
     },
     {
