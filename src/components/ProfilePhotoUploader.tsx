@@ -9,11 +9,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Camera, Upload, Loader2, ChevronDown } from 'lucide-react'
+import { Camera, Upload, Loader2, ChevronDown, Crop as CropIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { getSignedMediaUrl, uploadMediaFile } from '@/lib/media'
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
+import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 
 interface ProfilePhotoUploaderProps {
   currentPhotoUrl?: string
@@ -35,6 +37,11 @@ export default function ProfilePhotoUploader({
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [cameraOpen, setCameraOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [crop, setCrop] = useState<Crop>()
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
+  const [imgSrc, setImgSrc] = useState('')
+  const imgRef = useRef<HTMLImageElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -247,6 +254,85 @@ export default function ProfilePhotoUploader({
     return () => stopWebCamera()
   }, [cameraOpen])
 
+  const handleCrop = async () => {
+    if (!completedCrop || !imgRef.current || !canvasRef.current) {
+      toast({
+        title: "Crop error",
+        description: "Please adjust the crop area before applying",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const canvas = canvasRef.current
+    const image = imgRef.current
+    const scaleX = image.naturalWidth / image.width
+    const scaleY = image.naturalHeight / image.height
+
+    canvas.width = completedCrop.width
+    canvas.height = completedCrop.height
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) {
+      toast({
+        title: "Error",
+        description: "Could not get canvas context",
+        variant: "destructive"
+      })
+      return
+    }
+
+    ctx.drawImage(
+      image,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width,
+      completedCrop.height
+    )
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        toast({
+          title: "Error",
+          description: "Failed to create cropped image",
+          variant: "destructive"
+        })
+        return
+      }
+      const file = new File([blob], 'cropped-photo.jpg', { type: 'image/jpeg' })
+      uploadPhoto(file)
+      setEditDialogOpen(false)
+    }, 'image/jpeg', 0.9)
+  }
+
+  const openEditDialog = () => {
+    if (!resolvedUrl) return
+    setImgSrc(resolvedUrl)
+    setEditDialogOpen(true)
+  }
+
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget
+    const crop = centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        1,
+        width,
+        height,
+      ),
+      width,
+      height,
+    )
+    setCrop(crop)
+  }
+
   const uploadPhoto = async (file: File) => {
     setUploading(true)
     try {
@@ -367,6 +453,12 @@ export default function ProfilePhotoUploader({
               <Upload className="h-4 w-4" />
               Choose from Gallery
             </DropdownMenuItem>
+            {currentPhotoUrl && (
+              <DropdownMenuItem onClick={openEditDialog} className="flex items-center gap-2">
+                <CropIcon className="h-4 w-4" />
+                Edit Photo
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         
