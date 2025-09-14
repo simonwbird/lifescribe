@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Mic, Upload, Play, Pause, Trash2 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
-import { type StoryFormData } from '../StoryWizardTypes'
+import { type StoryFormData, type MediaItem } from '../StoryWizardTypes'
 
 interface StoryWizardStep5Props {
   formData: StoryFormData
@@ -41,6 +41,20 @@ export default function StoryWizardStep5({
     }
   }, [audioUrl])
 
+  // Helper: add/replace audio file in formData.media so it uploads on publish
+  const upsertAudioMedia = (file: File, previewUrl: string) => {
+    const nonAudio = (formData.media || []).filter(m => !m.file.type.startsWith('audio/'))
+    const newItem: MediaItem = {
+      id: (crypto?.randomUUID?.() || Math.random().toString(36).slice(2)),
+      file,
+      caption: '',
+      isCover: false,
+      order: nonAudio.length,
+      preview: previewUrl
+    }
+    onChange({ media: [...nonAudio, newItem] })
+  }
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -60,6 +74,10 @@ export default function StoryWizardStep5({
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
         const url = URL.createObjectURL(blob)
         setAudioUrl(url)
+        
+        // Add to media for upload on publish
+        const file = new File([blob], 'voice-recording.webm', { type: blob.type })
+        upsertAudioMedia(file, url)
         
         // Clean up stream
         if (streamRef.current) {
@@ -104,6 +122,9 @@ export default function StoryWizardStep5({
     setIsPlaying(false)
     setCurrentTime(0)
     setDuration(0)
+    // Remove any audio items from media
+    const nonAudio = (formData.media || []).filter(m => !m.file.type.startsWith('audio/'))
+    onChange({ media: nonAudio })
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +132,7 @@ export default function StoryWizardStep5({
     if (file) {
       const url = URL.createObjectURL(file)
       setAudioUrl(url)
+      upsertAudioMedia(file, url)
     }
   }
 
