@@ -138,11 +138,11 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={comment.profiles.avatar_url || ''} />
                     <AvatarFallback className="text-xs">
-                      {comment.profiles.full_name?.charAt(0) || comment.profiles.email.charAt(0)}
+                      {comment.profiles.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-medium">
-                    {comment.profiles.full_name || comment.profiles.email}
+                    {comment.profiles.full_name || 'User'}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {new Date(comment.created_at).toLocaleDateString()}

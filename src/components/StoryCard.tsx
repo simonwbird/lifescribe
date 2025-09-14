@@ -50,7 +50,7 @@ export default function StoryCard({ story }: StoryCardProps) {
           <Avatar>
             <AvatarImage src={story.profiles.avatar_url || ''} />
             <AvatarFallback>
-              {story.profiles.full_name?.charAt(0) || story.profiles.email.charAt(0)}
+              {story.profiles.full_name?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -60,7 +60,7 @@ export default function StoryCard({ story }: StoryCardProps) {
               </Link>
             </CardTitle>
             <CardDescription>
-              by {story.profiles.full_name || story.profiles.email} • {' '}
+              by {story.profiles.full_name || 'User'} • {' '}
               {new Date(story.created_at).toLocaleDateString()}
             </CardDescription>
           </div>

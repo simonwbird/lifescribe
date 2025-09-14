@@ -145,11 +145,11 @@ export default function FamilyTree() {
       if (!user) return
 
       // Get all family members
-      const { data: members } = await supabase
+        const { data: members } = await supabase
         .from('members')
         .select(`
           profile_id,
-          profiles (full_name, email)
+          profiles (full_name)
         `)
         .eq('family_id', familyId)
 
@@ -166,7 +166,7 @@ export default function FamilyTree() {
           newPeople.push({
             id: personId,
             family_id: familyId,
-            full_name: member.profiles.full_name || member.profiles.email,
+            full_name: member.profiles.full_name || 'Family Member',
             created_by: user.id
           })
 

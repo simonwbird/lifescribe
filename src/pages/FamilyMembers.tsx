@@ -10,12 +10,15 @@ import { Badge } from '@/components/ui/badge'
 import { UserPlus, Crown, User, Eye } from 'lucide-react'
 import type { Member, Profile, Family } from '@/lib/types'
 
-type MemberWithProfile = Member & { profiles: Profile }
+type MemberWithProfile = Member & { 
+  profiles: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> 
+}
 
 export default function FamilyMembers() {
   const [family, setFamily] = useState<Family | null>(null)
   const [members, setMembers] = useState<MemberWithProfile[]>([])
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
 
@@ -24,6 +27,8 @@ export default function FamilyMembers() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
+
+        setCurrentUser(user)
 
         // Get user's membership and family info
         const { data: currentMember } = await supabase
@@ -45,7 +50,7 @@ export default function FamilyMembers() {
           .from('members')
           .select(`
             *,
-            profiles (*)
+            profiles (id, full_name, avatar_url)
           `)
           .eq('family_id', currentMember.family_id)
           .order('joined_at')
@@ -128,13 +133,15 @@ export default function FamilyMembers() {
                     <Avatar className="h-16 w-16 mx-auto mb-2">
                       <AvatarImage src={member.profiles.avatar_url || ''} />
                       <AvatarFallback className="text-lg">
-                        {member.profiles.full_name?.charAt(0) || member.profiles.email.charAt(0)}
+                        {member.profiles.full_name?.charAt(0) || 'FM'}
                       </AvatarFallback>
                     </Avatar>
                     <CardTitle className="text-lg">
-                      {member.profiles.full_name || 'Unknown'}
+                      {member.profiles.full_name || 'Family Member'}
                     </CardTitle>
-                    <CardDescription>{member.profiles.email}</CardDescription>
+                    <CardDescription>
+                      {member.profile_id === currentUser?.id ? currentUser.email : 'Family Member'}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center space-y-2">
                     <Badge variant={getRoleColor(member.role)} className="flex items-center gap-1 w-fit mx-auto">

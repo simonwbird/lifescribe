@@ -48,7 +48,7 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
           <Avatar>
             <AvatarImage src={answer.profiles.avatar_url || ''} />
             <AvatarFallback>
-              {answer.profiles.full_name?.charAt(0) || answer.profiles.email.charAt(0)}
+              {answer.profiles.full_name?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -56,7 +56,7 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
               {answer.questions.question_text}
             </CardTitle>
             <CardDescription>
-              answered by {answer.profiles.full_name || answer.profiles.email} • {' '}
+              answered by {answer.profiles.full_name || 'User'} • {' '}
               {new Date(answer.created_at).toLocaleDateString()}
             </CardDescription>
           </div>
