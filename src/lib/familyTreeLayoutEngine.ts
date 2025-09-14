@@ -106,6 +106,7 @@ export function layoutGraph(g: FamilyGraph, focusId: string): TreeLayout {
     for (const p of (g.parentsOf.get(id)  ?? [])) if (!seen.has(p)) seen.add(p), dep.set(p, d+1), q.push({ id:p, d:d+1 });
     for (const c of (g.childrenOf.get(id) ?? [])) if (!seen.has(c)) seen.add(c), dep.set(c, d-1), q.push({ id:c, d:d-1 });
     for (const s of (g.spouses.get(id)    ?? [])) if (!seen.has(s)) seen.add(s), dep.set(s, d),   q.push({ id:s, d });
+    for (const u of (g.unmarried.get(id)  ?? [])) if (!seen.has(u)) seen.add(u), dep.set(u, d),   q.push({ id:u, d });
     for (const dx of (g.divorced.get(id)   ?? [])) if (!seen.has(dx)) seen.add(dx), dep.set(dx, d),   q.push({ id:dx, d });
     for (const p of (g.parentsOf.get(id)  ?? []))
       for (const sib of (g.childrenOf.get(p) ?? [])) if (!seen.has(sib)) seen.add(sib), dep.set(sib, d), q.push({ id:sib, d });
