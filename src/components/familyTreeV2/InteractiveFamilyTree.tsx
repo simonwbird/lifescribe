@@ -39,6 +39,11 @@ export default function InteractiveFamilyTree({
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   
+  // Instructions panel dragging state
+  const [instructionsPos, setInstructionsPos] = useState({ x: 0, y: 0 });
+  const [isDraggingInstructions, setIsDraggingInstructions] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Initialize positions from layout
@@ -132,6 +137,45 @@ export default function InteractiveFamilyTree({
     setPanX(0);
     setPanY(0);
   };
+
+  // Instructions panel drag handlers
+  const handleInstructionsMouseDown = (e: React.MouseEvent) => {
+    setIsDraggingInstructions(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const handleInstructionsMouseMove = (e: MouseEvent) => {
+    if (!isDraggingInstructions) return;
+    
+    const container = e.target as Element;
+    const containerRect = container.closest('.relative')?.getBoundingClientRect();
+    if (!containerRect) return;
+    
+    setInstructionsPos({
+      x: e.clientX - containerRect.left - dragOffset.x,
+      y: e.clientY - containerRect.top - dragOffset.y
+    });
+  };
+
+  const handleInstructionsMouseUp = () => {
+    setIsDraggingInstructions(false);
+  };
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDraggingInstructions) {
+      document.addEventListener('mousemove', handleInstructionsMouseMove);
+      document.addEventListener('mouseup', handleInstructionsMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleInstructionsMouseMove);
+        document.removeEventListener('mouseup', handleInstructionsMouseUp);
+      };
+    }
+  }, [isDraggingInstructions, dragOffset]);
 
   return (
     <div className="relative w-full h-full">
@@ -252,9 +296,22 @@ export default function InteractiveFamilyTree({
         </svg>
       </div>
 
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 text-sm text-gray-600 max-w-xs">
-        <p><strong>Interactive Family Tree</strong></p>
+      {/* Instructions Panel - Now draggable */}
+      <div 
+        className="absolute bg-white/90 backdrop-blur-sm rounded-lg p-3 text-sm text-gray-600 max-w-xs cursor-move select-none shadow-lg"
+        style={{
+          bottom: instructionsPos.y === 0 ? '16px' : 'auto',
+          right: instructionsPos.y === 0 ? '16px' : 'auto',
+          left: instructionsPos.x || (instructionsPos.y === 0 ? 'auto' : '16px'),
+          top: instructionsPos.y || 'auto',
+          transform: instructionsPos.x || instructionsPos.y ? `translate(${instructionsPos.x}px, ${instructionsPos.y}px)` : 'none'
+        }}
+        onMouseDown={handleInstructionsMouseDown}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          <p className="font-semibold">Interactive Family Tree</p>
+        </div>
         <p>• Drag any person to reposition them</p>
         <p>• Use zoom controls (+/-) to get closer or see more</p>
         <p>• Cards snap to an invisible grid (hold Shift or Alt to disable)</p>
