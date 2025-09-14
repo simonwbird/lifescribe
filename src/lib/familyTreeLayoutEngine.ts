@@ -75,6 +75,11 @@ export function buildGraph(people: Person[], rels: Relationship[], focusId: stri
     const key = `${x}::${y}`;
     if (!couples.has(key)) couples.set(key, { a:x, b:y, children: [] });
   }
+  for (const [a,set] of unmarried) for (const b of set) {
+    const [x,y] = a < b ? [a,b] : [b,a];
+    const key = `${x}::${y}`;
+    if (!couples.has(key)) couples.set(key, { a:x, b:y, children: [] });
+  }
 
   const unions: Union[] = [];
   let i=0;

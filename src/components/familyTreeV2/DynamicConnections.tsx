@@ -279,6 +279,42 @@ export default function DynamicConnections({ graph, positions }: DynamicConnecti
         })
       )}
 
+      {/* Draw unmarried couple connections for children who might only have one parent relationship in DB */}
+      {Array.from(graph.unmarried.entries()).map(([parentA, unmarriedSet]) => 
+        Array.from(unmarriedSet).map(parentB => {
+          // Check if this unmarried couple has any shared children
+          const parentAChildren = graph.childrenOf.get(parentA) || [];
+          const parentBChildren = graph.childrenOf.get(parentB) || [];
+          
+          // Find children that belong to either parent (they should be shared)
+          const allChildren = [...new Set([...parentAChildren, ...parentBChildren])];
+          
+          if (allChildren.length === 0) return null;
+          
+          // Check if this couple is already handled by unions
+          const existingUnion = graph.unions.find(u => 
+            (u.a === parentA && u.b === parentB) || (u.a === parentB && u.b === parentA)
+          );
+          if (existingUnion) return null;
+          
+          const parent1Pos = positions.get(parentA);
+          const parent2Pos = positions.get(parentB);
+          
+          if (!parent1Pos || !parent2Pos) return null;
+          
+          const childrenPositions = allChildren
+            .map(childId => positions.get(childId))
+            .filter(pos => pos !== undefined) as { x: number; y: number }[];
+          
+          if (childrenPositions.length === 0) return null;
+          
+          return (
+            <g key={`unmarried-${parentA}-${parentB}`}>
+              {drawMultiParentConnection(parent1Pos, parent2Pos, childrenPositions)}
+            </g>
+          );
+        })
+      )}
       {/* Draw single parent connections */}
       {Array.from(graph.childrenOf.entries()).map(([parentId, childIds]) => {
         const parentPos = positions.get(parentId);
