@@ -225,7 +225,7 @@ export default function StoryWizard() {
       const draftKey = `story_draft_${user.id}`
       const saved = localStorage.getItem(draftKey)
       
-      if (saved && !searchParams.get('person') && !searchParams.get('prompt')) {
+      if (saved && !searchParams.get('person') && !searchParams.get('prompt') && !searchParams.get('type')) {
         try {
           const draft = JSON.parse(saved)
           
