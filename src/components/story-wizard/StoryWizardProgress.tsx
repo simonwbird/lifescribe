@@ -1,21 +1,25 @@
 import { ChevronRight } from 'lucide-react'
-import { WIZARD_STEPS, PHOTO_FIRST_STEPS, type WizardStep, type AutosaveStatus } from './StoryWizardTypes'
+import { WIZARD_STEPS, PHOTO_FIRST_STEPS, VOICE_FIRST_STEPS, type WizardStep, type AutosaveStatus } from './StoryWizardTypes'
 
 interface StoryWizardProgressProps {
   currentStep: WizardStep
   completedSteps: WizardStep[]
   autosaveStatus: AutosaveStatus
   isPhotoFirst?: boolean
+  isVoiceFirst?: boolean
 }
 
 export default function StoryWizardProgress({ 
   currentStep, 
   completedSteps, 
   autosaveStatus,
-  isPhotoFirst = false
+  isPhotoFirst = false,
+  isVoiceFirst = false
 }: StoryWizardProgressProps) {
   
-  const stepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : WIZARD_STEPS
+  const stepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : 
+                  isVoiceFirst ? VOICE_FIRST_STEPS : 
+                  WIZARD_STEPS
   const currentIndex = stepOrder.findIndex(s => s.id === currentStep)
   
   return (

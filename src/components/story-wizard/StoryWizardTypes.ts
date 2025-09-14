@@ -60,4 +60,12 @@ export const PHOTO_FIRST_STEPS = [
   { id: 4, title: '4. Review & Publish', description: 'Final review' }
 ] as const
 
-export type WizardStep = typeof WIZARD_STEPS[number]['id']
+// Voice-first workflow: Voice Recording → Basics → People & Places → Review & Publish
+export const VOICE_FIRST_STEPS = [
+  { id: 5, title: '1. Voice Recording', description: 'Record or upload voice' },
+  { id: 1, title: '2. Basics', description: 'Title and story' },
+  { id: 2, title: '3. People & Places', description: 'When, where, and who' },
+  { id: 4, title: '4. Review & Publish', description: 'Final review' }
+] as const
+
+export type WizardStep = typeof WIZARD_STEPS[number]['id'] | 5 // Include step 5 for voice recording

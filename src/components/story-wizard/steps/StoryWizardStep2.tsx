@@ -15,6 +15,7 @@ interface StoryWizardStep2Props {
   onPrevious: () => void
   familyId: string | null
   isPhotoFirst?: boolean
+  isVoiceFirst?: boolean
 }
 
 export default function StoryWizardStep2({ 
@@ -23,7 +24,8 @@ export default function StoryWizardStep2({
   onNext, 
   onPrevious, 
   familyId,
-  isPhotoFirst = false
+  isPhotoFirst = false,
+  isVoiceFirst = false
 }: StoryWizardStep2Props) {
   const [newTag, setNewTag] = useState('')
 
@@ -193,7 +195,7 @@ export default function StoryWizardStep2({
           onClick={onNext}
           className="bg-brand-green hover:bg-brand-green/90 text-brand-green-foreground"
         >
-          {isPhotoFirst ? 'Continue to Review' : 'Continue to Media'}
+          {isPhotoFirst || isVoiceFirst ? 'Continue to Review' : 'Continue to Media'}
         </Button>
       </div>
     </div>

@@ -9,7 +9,8 @@ import {
   type AutosaveStatus, 
   type AIAssist,
   WIZARD_STEPS,
-  PHOTO_FIRST_STEPS 
+  PHOTO_FIRST_STEPS,
+  VOICE_FIRST_STEPS
 } from './StoryWizardTypes'
 import { MediaService } from '@/lib/mediaService'
 import StoryWizardProgress from './StoryWizardProgress'
@@ -18,6 +19,7 @@ import StoryWizardStep1 from './steps/StoryWizardStep1'
 import StoryWizardStep2 from './steps/StoryWizardStep2'
 import StoryWizardStep3 from './steps/StoryWizardStep3'
 import StoryWizardStep4 from './steps/StoryWizardStep4'
+import StoryWizardStep5 from './steps/StoryWizardStep5'
 
 // Mock modals for AI assists
 import VoiceToTextModal from './modals/VoiceToTextModal'
@@ -55,9 +57,12 @@ export default function StoryWizard() {
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
   
-  // Check if we're in photo-first mode
+  // Check if we're in photo-first or voice-first mode
   const isPhotoFirst = searchParams.get('type') === 'photo'
-  const currentStepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : WIZARD_STEPS
+  const isVoiceFirst = searchParams.get('type') === 'voice'
+  const currentStepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : 
+                          isVoiceFirst ? VOICE_FIRST_STEPS : 
+                          WIZARD_STEPS
 
   // Mock AI assist data
   const [aiAssist] = useState<AIAssist>({
@@ -77,6 +82,10 @@ export default function StoryWizard() {
     // If type=photo, start at first step in photo-first order (step 3 - Photos & Video)
     if (storyType === 'photo') {
       setCurrentStep(3) // Start with Photos & Video step
+      setCompletedSteps([]) // No steps completed yet
+    } else if (storyType === 'voice') {
+      // Voice-first mode - start at step 5 (Voice Recording)
+      setCurrentStep(5) // Start with Voice Recording step
       setCompletedSteps([]) // No steps completed yet
     } else if (storyType === 'write') {
       // Explicit handling for write mode - start at step 1 (normal flow)
@@ -489,8 +498,9 @@ export default function StoryWizard() {
             formData={formData}
             onChange={updateFormData}
             onNext={goToNextStep}
-            onPrevious={isPhotoFirst ? goToPreviousStep : undefined}
+            onPrevious={isPhotoFirst || isVoiceFirst ? goToPreviousStep : undefined}
             isPhotoFirst={isPhotoFirst}
+            isVoiceFirst={isVoiceFirst}
           />
         )
       case 2:
@@ -502,6 +512,7 @@ export default function StoryWizard() {
           onPrevious={goToPreviousStep}
           familyId={familyId}
           isPhotoFirst={isPhotoFirst}
+          isVoiceFirst={isVoiceFirst}
         />
         )
       case 3:
@@ -526,6 +537,16 @@ export default function StoryWizard() {
             isLoading={isLoading}
           />
         )
+      case 5:
+        return (
+          <StoryWizardStep5
+            formData={formData}
+            onChange={updateFormData}
+            onNext={goToNextStep}
+            onPrevious={isVoiceFirst ? undefined : goToPreviousStep}
+            isVoiceFirst={isVoiceFirst}
+          />
+        )
       default:
         return null
     }
@@ -539,6 +560,7 @@ export default function StoryWizard() {
           completedSteps={completedSteps}
           autosaveStatus={autosaveStatus}
           isPhotoFirst={isPhotoFirst}
+          isVoiceFirst={isVoiceFirst}
         />
 
         <div className="grid gap-8 lg:grid-cols-4">

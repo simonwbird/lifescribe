@@ -11,6 +11,7 @@ interface StoryWizardStep1Props {
   onNext: () => void
   onPrevious?: () => void
   isPhotoFirst?: boolean
+  isVoiceFirst?: boolean
 }
 
 export default function StoryWizardStep1({ 
@@ -18,7 +19,8 @@ export default function StoryWizardStep1({
   onChange, 
   onNext,
   onPrevious,
-  isPhotoFirst = false
+  isPhotoFirst = false,
+  isVoiceFirst = false
 }: StoryWizardStep1Props) {
   const isValid = formData.title.trim().length > 0 && formData.content.trim().length > 0
 
@@ -81,10 +83,10 @@ export default function StoryWizardStep1({
         </div>
       </div>
 
-      <div className={`flex ${isPhotoFirst ? 'justify-between' : 'justify-end'} pt-4`}>
-        {isPhotoFirst && onPrevious && (
+      <div className={`flex ${isPhotoFirst || isVoiceFirst ? 'justify-between' : 'justify-end'} pt-4`}>
+        {(isPhotoFirst || isVoiceFirst) && onPrevious && (
           <Button variant="outline" onClick={onPrevious}>
-            Back to Photos & Video
+            {isPhotoFirst ? 'Back to Photos & Video' : 'Back to Voice Recording'}
           </Button>
         )}
         <Button 
