@@ -8,6 +8,7 @@ import { MessageCircle, Heart, Share, MoreHorizontal, Copy, EyeOff, Flag } from 
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
+import { useToast } from '@/hooks/use-toast'
 
 interface ActivityItem {
   id: string
@@ -29,6 +30,7 @@ interface FamilyUpdatesFeedProps {
 export default function FamilyUpdatesFeed({ activities, variant = 'simple', className }: FamilyUpdatesFeedProps) {
   const { track } = useAnalytics()
   const navigate = useNavigate()
+  const { toast } = useToast()
 
   const handleActivityClick = (activity: ActivityItem) => {
     track('activity_clicked', { 
@@ -44,7 +46,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
     }
   }
 
-  const handleReaction = (activityId: string, reaction: string) => {
+  const handleReaction = async (activityId: string, reaction: string) => {
     track('activity_reaction', { activityId, reaction })
     
     // Implement actual functionality based on reaction type
@@ -52,6 +54,10 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
       case 'like':
         // TODO: Implement like functionality
         console.log('Liked story:', activityId)
+        toast({
+          title: "Story liked!",
+          description: "Thanks for the feedback"
+        })
         break
       case 'comment':
         // Navigate to story detail to add comment
@@ -59,16 +65,31 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
         navigate(`/stories/${storyId}#comments`)
         break
       case 'share':
-        // Implement share functionality
-        if (navigator.share) {
-          navigator.share({
-            title: 'Family Story',
-            url: window.location.origin + `/stories/${activityId.replace('story-', '')}`
-          })
-        } else {
-          // Fallback: copy to clipboard
-          navigator.clipboard.writeText(window.location.origin + `/stories/${activityId.replace('story-', '')}`)
-          console.log('Story link copied to clipboard')
+        try {
+          const shareUrl = window.location.origin + `/stories/${activityId.replace('story-', '')}`
+          
+          // Try native sharing first
+          if (navigator.share) {
+            await navigator.share({
+              title: 'Family Story',
+              url: shareUrl
+            })
+            toast({
+              title: "Story shared!",
+              description: "Thanks for sharing with others"
+            })
+          } else {
+            // Fallback: copy to clipboard
+            await navigator.clipboard.writeText(shareUrl)
+            toast({
+              title: "Link copied!",
+              description: "Story link copied to clipboard"
+            })
+          }
+        } catch (error) {
+          // Handle share cancellation or clipboard errors gracefully
+          console.log('Share cancelled or failed:', error)
+          // Don't show error toast for user cancellations
         }
         break
     }
