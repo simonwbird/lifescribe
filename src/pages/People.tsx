@@ -75,12 +75,7 @@ export default function People() {
     try {
       const { data, error } = await supabase
         .from('people')
-        .select(`
-          *,
-          person_user_links!left(user_id),
-          person_story_links!left(story_id),
-          media!left(id)
-        `)
+        .select('*')
         .eq('family_id', spaceId)
         .order('given_name')
 
@@ -89,7 +84,7 @@ export default function People() {
       const peopleWithStatus = (data || []).map((person: any) => ({
         ...person,
         gender: person.gender as ('male' | 'female' | 'other' | 'unknown') || undefined,
-        account_status: person.person_user_links?.length > 0 ? 'joined' : 'not_on_app'
+        account_status: 'not_on_app' // For now, we'll set a default status
       })) as Person[]
 
       setPeople(peopleWithStatus)
