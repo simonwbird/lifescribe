@@ -402,6 +402,47 @@ export type Database = {
           },
         ]
       }
+      guestbook: {
+        Row: {
+          author_profile_id: string
+          body: string
+          created_at: string | null
+          family_id: string
+          id: string
+          is_hidden: boolean | null
+          person_id: string
+          visibility: string | null
+        }
+        Insert: {
+          author_profile_id: string
+          body: string
+          created_at?: string | null
+          family_id: string
+          id?: string
+          is_hidden?: boolean | null
+          person_id: string
+          visibility?: string | null
+        }
+        Update: {
+          author_profile_id?: string
+          body?: string
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          is_hidden?: boolean | null
+          person_id?: string
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guestbook_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -686,15 +727,18 @@ export type Database = {
         Row: {
           alt_names: string[] | null
           avatar_url: string | null
+          bio: string | null
           birth_date: string | null
           birth_date_precision: string | null
           birth_year: number | null
+          claimed_by_profile_id: string | null
           created_at: string | null
           created_by: string | null
           death_date: string | null
           death_date_precision: string | null
           death_year: number | null
           family_id: string
+          favorites: Json | null
           full_name: string
           gender: string | null
           given_name: string | null
@@ -702,21 +746,25 @@ export type Database = {
           is_living: boolean | null
           middle_name: string | null
           notes: string | null
+          pinned_story_ids: string[] | null
           surname: string | null
           updated_at: string | null
         }
         Insert: {
           alt_names?: string[] | null
           avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
           birth_date_precision?: string | null
           birth_year?: number | null
+          claimed_by_profile_id?: string | null
           created_at?: string | null
           created_by?: string | null
           death_date?: string | null
           death_date_precision?: string | null
           death_year?: number | null
           family_id: string
+          favorites?: Json | null
           full_name: string
           gender?: string | null
           given_name?: string | null
@@ -724,21 +772,25 @@ export type Database = {
           is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
+          pinned_story_ids?: string[] | null
           surname?: string | null
           updated_at?: string | null
         }
         Update: {
           alt_names?: string[] | null
           avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
           birth_date_precision?: string | null
           birth_year?: number | null
+          claimed_by_profile_id?: string | null
           created_at?: string | null
           created_by?: string | null
           death_date?: string | null
           death_date_precision?: string | null
           death_year?: number | null
           family_id?: string
+          favorites?: Json | null
           full_name?: string
           gender?: string | null
           given_name?: string | null
@@ -746,6 +798,7 @@ export type Database = {
           is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
+          pinned_story_ids?: string[] | null
           surname?: string | null
           updated_at?: string | null
         }
