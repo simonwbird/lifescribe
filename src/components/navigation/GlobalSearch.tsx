@@ -85,7 +85,7 @@ export default function GlobalSearch({ variant = 'inline' }: GlobalSearchProps) 
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="People, stories, places…"
-                  className="pl-16"
+                  className="!pl-16"
                   autoFocus
                 />
               </div>
@@ -106,7 +106,7 @@ export default function GlobalSearch({ variant = 'inline' }: GlobalSearchProps) 
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="People, stories, places…"
-        className="pl-16 w-64 focus-visible:ring-2"
+        className="!pl-16 w-64 focus-visible:ring-2"
         aria-label="Global search"
       />
     </form>
