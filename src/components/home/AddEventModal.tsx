@@ -5,14 +5,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { getCurrentSpaceId } from '@/lib/spaceUtils'
 import { createLifeEvent } from '@/lib/eventsService'
+import { Heart, X } from 'lucide-react'
 
 interface Person {
   id: string
   full_name: string
+  is_living: boolean
 }
 
 interface AddEventModalProps {
@@ -23,8 +28,7 @@ interface AddEventModalProps {
 
 export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEventModalProps) {
   const [people, setPeople] = useState<Person[]>([])
-  const [selectedPersonId, setSelectedPersonId] = useState<string>('')
-  const [withPersonId, setWithPersonId] = useState<string>('')
+  const [selectedPeople, setSelectedPeople] = useState<string[]>([])
   const [eventType, setEventType] = useState<'anniversary' | 'memorial' | 'custom'>('anniversary')
   const [title, setTitle] = useState('')
   const [eventDate, setEventDate] = useState('')
@@ -47,7 +51,7 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
 
       const { data } = await supabase
         .from('people')
-        .select('id, full_name')
+        .select('id, full_name, is_living')
         .eq('family_id', spaceId)
         .order('full_name')
 
@@ -58,8 +62,7 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
   }
 
   const resetForm = () => {
-    setSelectedPersonId('')
-    setWithPersonId('')
+    setSelectedPeople([])
     setEventType('anniversary')
     setTitle('')
     setEventDate('')
@@ -69,21 +72,24 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
 
   const generateTitle = () => {
     if (eventType === 'custom') return
-
-    const person = people.find(p => p.id === selectedPersonId)
-    const withPerson = people.find(p => p.id === withPersonId)
+    
+    const selectedPersonNames = people
+      .filter(p => selectedPeople.includes(p.id))
+      .map(p => p.full_name)
     
     if (eventType === 'anniversary') {
-      if (person && withPerson) {
-        setTitle(`${person.full_name} & ${withPerson.full_name}'s Anniversary`)
-      } else if (person) {
-        setTitle(`${person.full_name}'s Anniversary`)
+      if (selectedPersonNames.length === 2) {
+        setTitle(`${selectedPersonNames[0]} & ${selectedPersonNames[1]}'s Anniversary`)
+      } else if (selectedPersonNames.length === 1) {
+        setTitle(`${selectedPersonNames[0]}'s Anniversary`)
       } else {
         setTitle('Anniversary')
       }
     } else if (eventType === 'memorial') {
-      if (person) {
-        setTitle(`Memorial for ${person.full_name}`)
+      if (selectedPersonNames.length === 1) {
+        setTitle(`Memorial for ${selectedPersonNames[0]}`)
+      } else if (selectedPersonNames.length > 1) {
+        setTitle(`Memorial for ${selectedPersonNames.join(', ')}`)
       } else {
         setTitle('Memorial')
       }
@@ -92,7 +98,19 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
 
   useEffect(() => {
     generateTitle()
-  }, [eventType, selectedPersonId, withPersonId, people])
+  }, [eventType, selectedPeople, people])
+
+  const togglePersonSelection = (personId: string) => {
+    setSelectedPeople(prev => 
+      prev.includes(personId) 
+        ? prev.filter(id => id !== personId)
+        : [...prev, personId]
+    )
+  }
+
+  const removePerson = (personId: string) => {
+    setSelectedPeople(prev => prev.filter(id => id !== personId))
+  }
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -118,8 +136,8 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
         title: title.trim(),
         type: eventType,
         event_date: eventDate,
-        person_id: selectedPersonId === 'none' || !selectedPersonId ? undefined : selectedPersonId,
-        with_person_id: withPersonId === 'none' || !withPersonId ? undefined : withPersonId,
+        person_id: selectedPeople[0] || undefined,
+        with_person_id: selectedPeople[1] || undefined,
         recurrence,
         notes: notes.trim() || undefined
       })
@@ -168,43 +186,81 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
 
           {/* Person Selection */}
           {eventType !== 'custom' && (
-            <div>
-              <Label htmlFor="person-select">
-                {eventType === 'memorial' ? 'Person being remembered' : 'Person'}
+            <div className="space-y-3">
+              <Label>
+                {eventType === 'memorial' ? 'People being remembered' : 'People involved'}
               </Label>
-              <Select value={selectedPersonId} onValueChange={setSelectedPersonId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a person (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {people.map((person) => (
-                    <SelectItem key={person.id} value={person.id}>
-                      {person.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+              
+              {/* Selected People */}
+              {selectedPeople.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-2 bg-muted/50 rounded-md">
+                  {selectedPeople.map(personId => {
+                    const person = people.find(p => p.id === personId)
+                    return person ? (
+                      <Badge key={personId} variant="secondary" className="gap-1">
+                        {person.full_name}
+                        <X 
+                          className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                          onClick={() => removePerson(personId)}
+                        />
+                      </Badge>
+                    ) : null
+                  })}
+                </div>
+              )}
 
-          {/* With Person (for anniversaries) */}
-          {eventType === 'anniversary' && selectedPersonId && (
-            <div>
-              <Label htmlFor="with-person-select">With</Label>
-              <Select value={withPersonId} onValueChange={setWithPersonId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select partner (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {people.filter(p => p.id !== selectedPersonId).map((person) => (
-                    <SelectItem key={person.id} value={person.id}>
-                      {person.full_name}
-                    </SelectItem>
+              {/* People Selection Lists */}
+              <ScrollArea className="h-48 border rounded-md p-2">
+                {/* Active Family */}
+                <div className="space-y-2">
+                  <div className="font-medium text-sm flex items-center gap-1 text-primary">
+                    <Heart className="h-4 w-4" />
+                    Active Family
+                  </div>
+                  {people.filter(p => p.is_living !== false).map(person => (
+                    <div key={person.id} className="flex items-center space-x-2 py-1">
+                      <Checkbox
+                        id={`active-${person.id}`}
+                        checked={selectedPeople.includes(person.id)}
+                        onCheckedChange={() => togglePersonSelection(person.id)}
+                      />
+                      <Label 
+                        htmlFor={`active-${person.id}`}
+                        className="text-sm cursor-pointer flex-1"
+                      >
+                        {person.full_name}
+                      </Label>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+
+                {/* In Memorium */}
+                {people.some(p => p.is_living === false) && (
+                  <>
+                    <div className="my-4 border-t" />
+                    <div className="space-y-2">
+                      <div className="font-medium text-sm text-muted-foreground">
+                        In Memorium
+                      </div>
+                      {people.filter(p => p.is_living === false).map(person => (
+                        <div key={person.id} className="flex items-center space-x-2 py-1">
+                          <Checkbox
+                            id={`memorium-${person.id}`}
+                            checked={selectedPeople.includes(person.id)}
+                            onCheckedChange={() => togglePersonSelection(person.id)}
+                          />
+                          <Label 
+                            htmlFor={`memorium-${person.id}`}
+                            className="text-sm cursor-pointer flex-1 text-muted-foreground"
+                          >
+                            {person.full_name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </ScrollArea>
             </div>
           )}
 
