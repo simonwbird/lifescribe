@@ -28,7 +28,7 @@ export default function Events() {
 
   useEffect(() => {
     loadEvents()
-  }, [days])
+  }, []) // Force refresh after our date fix
 
   const loadEvents = async () => {
     try {
