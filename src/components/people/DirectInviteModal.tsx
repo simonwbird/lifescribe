@@ -196,12 +196,7 @@ export default function DirectInviteModal({ familyId, onClose, onSuccess }: Dire
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Invite Someone to Your Family
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Invite Someone to Your Family</DialogTitle>
         </DialogHeader>
 
         <div className="overflow-y-auto flex-1 pr-2">
