@@ -175,7 +175,7 @@ export default function GlobalSearch() {
   return (
     <div ref={searchRef} className="relative w-full max-w-md">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
         <Input
           data-search-input
           ref={inputRef}
@@ -185,14 +185,14 @@ export default function GlobalSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          className="pl-10 pr-10"
+          className="pl-10 pr-10 h-10 bg-background border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 transition-all duration-200"
           role="combobox"
           aria-expanded={showSuggestions}
           aria-autocomplete="list"
           aria-controls={showSuggestions ? 'search-suggestions' : undefined}
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground pointer-events-none z-10" />
         )}
       </div>
 
