@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart, Shield, Crown, User } from 'lucide-react'
+import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart, Shield, Crown, User, ChevronUp, ChevronDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import PersonForm from './PersonForm'
 import InvitePersonModal from './InvitePersonModal'
@@ -27,7 +27,56 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
   const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
   const [inlineEditing, setInlineEditing] = useState<{personId: string, field: string} | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [sortField, setSortField] = useState<string>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const { toast } = useToast()
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return null
+    return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+  }
+
+  const sortedPeople = [...people].sort((a, b) => {
+    let aValue: any, bValue: any
+
+    switch (sortField) {
+      case 'name':
+        aValue = a.full_name?.toLowerCase() || ''
+        bValue = b.full_name?.toLowerCase() || ''
+        break
+      case 'age':
+        aValue = calculateAge(a.birth_date, a.death_date, a.is_living !== false) || 0
+        bValue = calculateAge(b.birth_date, b.death_date, b.is_living !== false) || 0
+        break
+      case 'stories':
+        aValue = (a as any).stories?.length || 0
+        bValue = (b as any).stories?.length || 0
+        break
+      case 'photos':
+        aValue = (a as any).media?.length || 0
+        bValue = (b as any).media?.length || 0
+        break
+      case 'birthday':
+        aValue = calculateDaysUntilBirthday(a.birth_date) || 999
+        bValue = calculateDaysUntilBirthday(b.birth_date) || 999
+        break
+      default:
+        return 0
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+    return 0
+  })
 
   const calculateAge = (birthDate: string | null, deathDate: string | null, isLiving: boolean) => {
     if (!birthDate) return null
@@ -300,19 +349,59 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50" 
+                onClick={() => handleSort('name')}
+              >
+                <div className="flex items-center gap-2">
+                  Name
+                  {getSortIcon('name')}
+                </div>
+              </TableHead>
               <TableHead>Life Dates</TableHead>
-              <TableHead>Age</TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('age')}
+              >
+                <div className="flex items-center gap-2">
+                  Age
+                  {getSortIcon('age')}
+                </div>
+              </TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Stories</TableHead>
-              <TableHead>Photos</TableHead>
-              <TableHead>Upcoming</TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('stories')}
+              >
+                <div className="flex items-center gap-2">
+                  Stories
+                  {getSortIcon('stories')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('photos')}
+              >
+                <div className="flex items-center gap-2">
+                  Photos
+                  {getSortIcon('photos')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('birthday')}
+              >
+                <div className="flex items-center gap-2">
+                  Upcoming
+                  {getSortIcon('birthday')}
+                </div>
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {people.map((person) => {
+            {sortedPeople.map((person) => {
               const age = calculateAge(person.birth_date, person.death_date, person.is_living !== false)
               const daysUntilBirthday = person.is_living !== false ? calculateDaysUntilBirthday(person.birth_date) : null
               
