@@ -331,43 +331,56 @@ export default function ProfessionalFamilyTree({
 
         {/* Action dropdown */}
         <foreignObject x={NODE_WIDTH - 32} y={8} width="24" height="24">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost" 
-                size="sm"
-                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 relative z-50"
+          <div className="pointer-events-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost" 
+                  size="sm"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 cursor-pointer relative z-50"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <MoreHorizontal className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="bg-white border border-gray-200 shadow-lg z-[100] min-w-[180px]"
+                sideOffset={5}
               >
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
-              className="bg-white border border-gray-200 shadow-lg z-[100] min-w-[180px]"
-              sideOffset={5}
-            >
-              <DropdownMenuItem 
-                onClick={() => onRecordMemoryAbout?.(person.id, displayName)}
-                className="hover:bg-gray-100 cursor-pointer"
-              >
-                <Mic className="h-4 w-4 mr-2" />
-                Record about {displayName.split(' ')[0]}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onPersonEdit?.(person.id)}
-                className="hover:bg-gray-100 cursor-pointer"
-              >
-                <Edit3 className="h-4 w-4 mr-2" />
-                Edit details
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem 
+                  onClick={() => onRecordMemoryAbout?.(person.id, displayName)}
+                  className="hover:bg-gray-100 cursor-pointer"
+                >
+                  <Mic className="h-4 w-4 mr-2" />
+                  Record about {displayName.split(' ')[0]}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onPersonEdit?.(person.id)}
+                  className="hover:bg-gray-100 cursor-pointer"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit details
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </foreignObject>
 
-        {/* Clickable overlay */}
+        {/* Clickable overlay - exclude the dropdown area */}
         <rect
-          width={NODE_WIDTH}
+          width={NODE_WIDTH - 32}
           height={NODE_HEIGHT}
+          rx="12"
+          fill="transparent"
+          className="cursor-pointer"
+          onClick={() => onPersonClick?.(person.id)}
+        />
+        <rect
+          x={0}
+          y={NODE_HEIGHT - 32}
+          width={NODE_WIDTH}
+          height={32}
           rx="12"
           fill="transparent"
           className="cursor-pointer"
