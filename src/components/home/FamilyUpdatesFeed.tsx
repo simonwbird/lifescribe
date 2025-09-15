@@ -68,8 +68,8 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
         try {
           const shareUrl = window.location.origin + `/stories/${activityId.replace('story-', '')}`
           
-          // Try native sharing first
-          if (navigator.share) {
+          // On desktop, navigator.share usually isn't available, so go straight to clipboard
+          if (navigator.share && /Mobile|Android|iPhone|iPad/.test(navigator.userAgent)) {
             await navigator.share({
               title: 'Family Story',
               url: shareUrl
@@ -79,17 +79,38 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
               description: "Thanks for sharing with others"
             })
           } else {
-            // Fallback: copy to clipboard
-            await navigator.clipboard.writeText(shareUrl)
-            toast({
-              title: "Link copied!",
-              description: "Story link copied to clipboard"
-            })
+            // Desktop fallback: copy to clipboard
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(shareUrl)
+              toast({
+                title: "Link copied!",
+                description: "Story link copied to clipboard"
+              })
+            } else {
+              // Fallback for older browsers or insecure contexts
+              const textArea = document.createElement('textarea')
+              textArea.value = shareUrl
+              textArea.style.position = 'fixed'
+              textArea.style.left = '-999999px'
+              textArea.style.top = '-999999px'
+              document.body.appendChild(textArea)
+              textArea.focus()
+              textArea.select()
+              document.execCommand('copy')
+              textArea.remove()
+              toast({
+                title: "Link copied!",
+                description: "Story link copied to clipboard"
+              })
+            }
           }
         } catch (error) {
-          // Handle share cancellation or clipboard errors gracefully
-          console.log('Share cancelled or failed:', error)
-          // Don't show error toast for user cancellations
+          console.error('Share error:', error)
+          toast({
+            title: "Share failed",
+            description: "Unable to share or copy link. Try selecting and copying the URL manually.",
+            variant: "destructive"
+          })
         }
         break
     }
