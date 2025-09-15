@@ -18,8 +18,10 @@ import {
   ChevronRight,
   Home,
   Lock,
-  Globe
+  Globe,
+  Plus
 } from 'lucide-react'
+import FamilyCreateModal from '@/components/FamilyCreateModal'
 
 // Import family photos
 import heroFamilyStories from '@/assets/hero-family-stories.jpg'
@@ -28,8 +30,12 @@ import grandfatherGranddaughter from '@/assets/grandfather-granddaughter.jpg'
 import familySelfie from '@/assets/family-selfie.jpg'
 
 // HERO SECTION
-const Hero = () => (
-  <section className="relative bg-gradient-paper min-h-[60vh] flex items-center">
+const Hero = () => {
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  
+  return (
+    <>
+      <section className="relative bg-gradient-paper min-h-[60vh] flex items-center">
     <div className="container mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
         <div className="text-center lg:text-left space-y-8">
@@ -48,15 +54,12 @@ const Hero = () => (
             LifeScribe is a private home for the memories that matter most — the voices, photos, recipes, and adventures you never want to lose.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
-            <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg">
-              <Link to="/onboarding">
-                Begin Your Family Album <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+            <Button size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg" onClick={() => setShowCreateModal(true)}>
+              <Plus className="mr-2 h-5 w-5" />
+              Create Family Space
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 text-brand-700 border-brand-700 hover:bg-brand-700 hover:text-white">
-              <a href="#how-it-works">
-                See how it works
-              </a>
+              <Link to="/login">Sign In</Link>
             </Button>
           </div>
           <div className="flex gap-2 justify-center lg:justify-start">
@@ -75,10 +78,17 @@ const Hero = () => (
           {/* Decorative photo corner */}
           <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-card border border-border rounded-lg shadow-frame transform rotate-6 opacity-80"></div>
         </div>
+        </div>
       </div>
-    </div>
-  </section>
-)
+    </section>
+    
+      <FamilyCreateModal 
+        open={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+      />
+    </>
+  )
+}
 
 // EXPERIENCE SECTION
 const ExperienceSection = () => (
@@ -606,6 +616,7 @@ const LandingHeader = () => (
 )
 
 export default function Landing() {
+  const [showCreateModal, setShowCreateModal] = useState(false)
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />

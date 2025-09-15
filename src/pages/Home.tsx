@@ -38,8 +38,13 @@ export default function Home() {
   const [drafts, setDrafts] = useState<DraftItem[]>([])
   const [loading, setLoading] = useState(true)
   
+  // Track analytics
   const { track } = useAnalytics()
   const { mode, flags, loading: modeLoading } = useMode()
+
+  // Handle URL param for voice focus after invite flow
+  const urlParams = new URLSearchParams(window.location.search)
+  const focusVoice = urlParams.get('focus') === 'voice'
 
   useEffect(() => {
     loadHomeData()

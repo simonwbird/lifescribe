@@ -176,8 +176,8 @@ const handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(resendApiKey);
     
     // Build join URL
-    const appUrl = Deno.env.get("APP_URL") || supabaseUrl.replace("/supabase", "");
-    const joinUrl = `${appUrl}/onboarding?token=${token}`;
+    const appUrl = Deno.env.get("APP_URL") || supabaseUrl.replace(".supabase.co", ".lovable.app");
+    const joinUrl = `${appUrl}/invite/${token}`;
 
     // Format expiration date
     const expiresAtFormatted = expiresAt.toLocaleDateString("en-US", {
