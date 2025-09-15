@@ -357,18 +357,14 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
       )}
 
       {memorizingPerson && (
-        <Dialog open={!!memorizingPerson} onOpenChange={() => setMemorizingPerson(null)}>
-          <DialogContent>
-            <MemorializeModal
-              person={memorizingPerson}
-              onClose={() => setMemorizingPerson(null)}
-              onSuccess={() => {
-                setMemorizingPerson(null)
-                onPersonUpdated()
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+        <MemorializeModal
+          person={memorizingPerson}
+          onClose={() => setMemorizingPerson(null)}
+          onSuccess={() => {
+            setMemorizingPerson(null)
+            onPersonUpdated()
+          }}
+        />
       )}
     </div>
   )
