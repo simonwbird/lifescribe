@@ -49,7 +49,6 @@ export default function Events() {
 
   const formatDateLabel = (event: UpcomingEvent): string => {
     const date = new Date(event.date)
-    console.log('Event:', event.person_name, 'Original date:', event.original_date, 'Calculated date:', event.date, 'JS Date:', date)
     const options: Intl.DateTimeFormatOptions = { 
       weekday: 'long', 
       month: 'long', 

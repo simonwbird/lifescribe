@@ -63,6 +63,16 @@ function calculateAge(birthDate: Date, targetDate: Date): number {
 }
 
 /**
+ * Format a date as YYYY-MM-DD without timezone shifts
+ */
+function formatDateYYYYMMDDLocal(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/**
  * Get upcoming birthdays and life events for the next 30 days
  */
 export async function getUpcomingEvents(days: number = 30): Promise<UpcomingEvent[]> {
@@ -106,7 +116,7 @@ export async function getUpcomingEvents(days: number = 30): Promise<UpcomingEven
             person_id: person.id,
             person_name: person.full_name,
             title: `${person.full_name}'s Birthday`,
-            date: nextBirthday.toISOString().split('T')[0],
+            date: formatDateYYYYMMDDLocal(nextBirthday),
             original_date: person.birth_date,
             days_until: daysUntil,
             age: isDeceased ? undefined : age,
@@ -135,7 +145,7 @@ export async function getUpcomingEvents(days: number = 30): Promise<UpcomingEven
               person_id: person.id,
               person_name: person.full_name,
               title: `${person.full_name}'s Memorial`,
-              date: nextAnniversary.toISOString().split('T')[0],
+              date: formatDateYYYYMMDDLocal(nextAnniversary),
               original_date: person.death_date,
               days_until: daysUntilAnniversary,
               age: yearsGone,
@@ -182,7 +192,7 @@ export async function getUpcomingEvents(days: number = 30): Promise<UpcomingEven
               person_id: event.person_id || undefined,
               person_name: personName || 'Family',
               title: event.title,
-              date: nextOccurrence.toISOString().split('T')[0],
+              date: formatDateYYYYMMDDLocal(nextOccurrence),
               original_date: event.event_date,
               days_until: daysUntil,
               age: yearsAgo,
@@ -271,7 +281,7 @@ export async function getAllFamilyEvents(): Promise<UpcomingEvent[]> {
               person_id: person.id,
               person_name: person.full_name,
               title: `${person.full_name}'s Birthday`,
-              date: birthdayThisYear.toISOString().split('T')[0],
+              date: formatDateYYYYMMDDLocal(birthdayThisYear),
               original_date: person.birth_date,
               days_until: daysUntil,
               age: isDeceased ? undefined : age,
@@ -298,7 +308,7 @@ export async function getAllFamilyEvents(): Promise<UpcomingEvent[]> {
                 person_id: person.id,
                 person_name: person.full_name,
                 title: `${person.full_name}'s Memorial`,
-                date: anniversaryThisYear.toISOString().split('T')[0],
+                date: formatDateYYYYMMDDLocal(anniversaryThisYear),
                 original_date: person.death_date,
                 days_until: daysUntilAnniversary,
                 age: yearsGone,
@@ -342,7 +352,7 @@ export async function getAllFamilyEvents(): Promise<UpcomingEvent[]> {
                 person_id: event.person_id || undefined,
                 person_name: personName || 'Family',
                 title: event.title,
-                date: occurrenceThisYear.toISOString().split('T')[0],
+                date: formatDateYYYYMMDDLocal(occurrenceThisYear),
                 original_date: event.event_date,
                 days_until: daysUntil,
                 age: yearsAgo,
