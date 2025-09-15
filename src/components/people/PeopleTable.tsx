@@ -19,9 +19,11 @@ interface PeopleTableProps {
   people: Person[]
   onPersonUpdated: () => void
   familyId: string
+  currentUserRole: string | null
+  currentUserId: string | null
 }
 
-export default function PeopleTable({ people, onPersonUpdated, familyId }: PeopleTableProps) {
+export default function PeopleTable({ people, onPersonUpdated, familyId, currentUserRole, currentUserId }: PeopleTableProps) {
   const [selectedPeople, setSelectedPeople] = useState<string[]>([])
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
@@ -30,6 +32,12 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
   const [sortField, setSortField] = useState<string>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const { toast } = useToast()
+
+  // Permission helpers
+  const canEdit = () => currentUserRole === 'admin' || currentUserRole === 'member'
+  const canInvite = () => currentUserRole === 'admin' || currentUserRole === 'member'
+  const canDelete = () => currentUserRole === 'admin'
+  const canManageRoles = () => currentUserRole === 'admin'
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -321,17 +329,21 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
   return (
     <div className="space-y-4">
       {/* Bulk Actions */}
-      {selectedPeople.length > 0 && (
+      {selectedPeople.length > 0 && canEdit() && (
         <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
           <span className="text-sm font-medium">{selectedPeople.length} selected</span>
-          <Button variant="outline" size="sm">
-            <Mail className="h-4 w-4 mr-2" />
-            Bulk Invite
-          </Button>
-          <Button variant="outline" size="sm">
-            <Heart className="h-4 w-4 mr-2" />
-            Mark Deceased
-          </Button>
+          {canInvite() && (
+            <Button variant="outline" size="sm">
+              <Mail className="h-4 w-4 mr-2" />
+              Bulk Invite
+            </Button>
+          )}
+          {canEdit() && (
+            <Button variant="outline" size="sm">
+              <Heart className="h-4 w-4 mr-2" />
+              Mark Deceased
+            </Button>
+          )}
           <Button variant="outline" size="sm">
             Export CSV
           </Button>
@@ -344,10 +356,12 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedPeople.length === people.length && people.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
+                {canEdit() && (
+                  <Checkbox
+                    checked={selectedPeople.length === people.length && people.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                )}
               </TableHead>
               <TableHead 
                 className="cursor-pointer select-none hover:bg-muted/50" 
@@ -408,10 +422,12 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
               return (
                 <TableRow key={person.id}>
                   <TableCell>
-                    <Checkbox
-                      checked={selectedPeople.includes(person.id)}
-                      onCheckedChange={(checked) => handleSelectPerson(person.id, checked as boolean)}
-                    />
+                    {canEdit() && (
+                      <Checkbox
+                        checked={selectedPeople.includes(person.id)}
+                        onCheckedChange={(checked) => handleSelectPerson(person.id, checked as boolean)}
+                      />
+                    )}
                   </TableCell>
                   
                   <TableCell>
@@ -503,18 +519,22 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingPerson(person)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Details
-                        </DropdownMenuItem>
+                        {canEdit() && (
+                          <DropdownMenuItem onClick={() => setEditingPerson(person)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Details
+                          </DropdownMenuItem>
+                        )}
                         
-                        <DropdownMenuItem onClick={() => setInvitingPerson(person)}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Invite/Manage
-                        </DropdownMenuItem>
+                        {canInvite() && (
+                          <DropdownMenuItem onClick={() => setInvitingPerson(person)}>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Invite/Manage
+                          </DropdownMenuItem>
+                        )}
                         
-                        {/* Role Management - Only show if person has an account */}
-                        {person.member_role && (
+                        {/* Role Management - Only show for admins with person accounts */}
+                        {canManageRoles() && person.member_role && (
                           <>
                             {person.member_role !== 'admin' && (
                               <DropdownMenuItem onClick={() => handleRoleChange(person, 'admin')}>
@@ -542,28 +562,30 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                           View Wall
                         </DropdownMenuItem>
                         
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete {person.full_name}?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete this person and all associated data. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeletePerson(person)}>
+                        {canDelete() && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete {person.full_name}?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this person and all associated data. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeletePerson(person)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

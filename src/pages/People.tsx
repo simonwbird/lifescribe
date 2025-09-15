@@ -24,6 +24,7 @@ interface MemberRole {
 
 export default function People() {
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [people, setPeople] = useState<Person[]>([])
   const [filteredPeople, setFilteredPeople] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,6 +44,7 @@ export default function People() {
         // Get current user's role
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
+        setCurrentUserId(user.id)
 
         const { data: memberData } = await supabase
           .from('members')
@@ -217,11 +219,14 @@ export default function People() {
               <div>
                 <h1 className="text-3xl font-bold mb-2">People</h1>
                 <p className="text-muted-foreground">
-                  {isAdmin ? 'Manage your family members and invitations' : 'Browse your family directory'}
+                  {currentUserRole === 'admin' ? 'Manage your family members and invitations' : 
+                   currentUserRole === 'member' ? 'View and contribute to your family directory' :
+                   currentUserRole === 'guest' ? 'Browse your family directory (read-only access)' :
+                   'Loading family directory...'}
                 </p>
               </div>
               
-              {isAdmin && (
+              {(currentUserRole === 'admin' || currentUserRole === 'member') && (
                 <Dialog open={showPersonForm} onOpenChange={setShowPersonForm}>
                   <DialogTrigger asChild>
                     <Button>
@@ -306,11 +311,13 @@ export default function People() {
             </div>
 
             {/* Content */}
-            {isAdmin ? (
+            {(currentUserRole === 'admin' || currentUserRole === 'member') ? (
               <PeopleTable 
                 people={filteredPeople}
                 onPersonUpdated={handlePersonUpdated}
                 familyId={currentSpaceId!}
+                currentUserRole={currentUserRole}
+                currentUserId={currentUserId}
               />
             ) : (
               <PeopleDirectory 
