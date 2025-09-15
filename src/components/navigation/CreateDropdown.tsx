@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useLabs } from '@/hooks/useLabs'
 
 const createItems = [
   {
@@ -16,41 +17,58 @@ const createItems = [
     label: 'Full Story',
     description: 'Create a detailed story',
     href: '/stories/new',
+    labsRequired: false,
   },
   {
     icon: ChefHat,
     label: 'Recipe',
     description: 'Add a family recipe',
     href: '/recipes/new',
+    labsRequired: true,
+    feature: 'collections' as const,
   },
   {
     icon: Package,
     label: 'Object',
     description: 'Catalog an heirloom',
     href: '/objects/new',
+    labsRequired: true,
+    feature: 'collections' as const,
   },
   {
     icon: Home,
     label: 'Property',
     description: 'Document a property',
     href: '/properties/new',
+    labsRequired: true,
+    feature: 'collections' as const,
   },
   {
     icon: Heart,
     label: 'Pet',
     description: 'Add a family pet',
     href: '/pets/new',
+    labsRequired: true,
+    feature: 'collections' as const,
   }
 ]
 
 export default function CreateDropdown() {
   const [open, setOpen] = useState(false)
   const { track } = useAnalytics()
+  const { labsEnabled, flags } = useLabs()
 
   const handleItemClick = (item: typeof createItems[0]) => {
     track('create_item_selected', { type: item.label.toLowerCase() })
     setOpen(false)
   }
+
+  const visibleItems = createItems.filter(item => {
+    if (!item.labsRequired) return true
+    if (!labsEnabled) return false
+    if (item.feature && !flags[item.feature]) return false
+    return true
+  })
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -70,7 +88,7 @@ export default function CreateDropdown() {
         className="w-64 p-2 bg-popover border border-border shadow-lg z-50"
         role="menu"
       >
-        {createItems.map((item) => (
+        {visibleItems.map((item) => (
           <DropdownMenuItem key={item.label} className="p-0" role="none">
             <Link
               to={item.href}

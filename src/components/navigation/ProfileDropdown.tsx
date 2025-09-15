@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, User, Users, Settings, CreditCard, LogOut } from 'lucide-react'
+import { ChevronDown, User, Users, Settings, CreditCard, LogOut, Beaker } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -184,6 +184,17 @@ export default function ProfileDropdown() {
             </DropdownMenuItem>
           ))}
         </div>
+
+        <DropdownMenuItem className="p-0">
+          <Link
+            to="/labs"
+            className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground"
+            onClick={() => handleMenuItemClick('labs')}
+          >
+            <Beaker className="h-4 w-4" />
+            Labs (experimental)
+          </Link>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 

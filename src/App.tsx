@@ -40,6 +40,8 @@ import StoryEdit from "./pages/StoryEdit";
 import SearchPage from "./pages/Search";
 import Capture from "./pages/Capture";
 import Media from "./pages/Media";
+import Labs from "./pages/Labs";
+import LabsGuard from "./components/navigation/LabsGuard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,28 +67,29 @@ function AppContent() {
       <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
       <Route path="/family/members" element={<AuthGate><FamilyMembers /></AuthGate>} />
       <Route path="/family/tree" element={<AuthGate><FamilyTreeV2 /></AuthGate>} />
-      <Route path="/family-tree/explorer" element={<AuthGate><FamilyTreeExplorer /></AuthGate>} />
-      <Route path="/family-tree/fan" element={<AuthGate><FamilyTreeFan /></AuthGate>} />
+      <Route path="/family-tree/explorer" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthGate>} />
+      <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
-      <Route path="/collections" element={<AuthGate><Collections /></AuthGate>} />
-      <Route path="/collections/:tab" element={<AuthGate><Collections /></AuthGate>} />
+      <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
+      <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
+      <Route path="/collections/:tab" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
       {/* Backward compatibility */}
-      <Route path="/archive" element={<AuthGate><Collections /></AuthGate>} />
-      <Route path="/recipes/new" element={<AuthGate><RecipeWizard /></AuthGate>} />
-      <Route path="/recipes/:id" element={<AuthGate><RecipeDetail /></AuthGate>} />
-      <Route path="/recipes/:id/edit" element={<AuthGate><RecipeEdit /></AuthGate>} />
-      <Route path="/recipes/:id/cook" element={<AuthGate><CookMode /></AuthGate>} />
-      <Route path="/objects/new" element={<AuthGate><ObjectsNew /></AuthGate>} />
-      <Route path="/things/:id" element={<AuthGate><ThingDetail /></AuthGate>} />
-      <Route path="/things/:id/edit" element={<AuthGate><ThingEdit /></AuthGate>} />
-      <Route path="/properties/new" element={<AuthGate><PropertyNew /></AuthGate>} />
-      <Route path="/properties/:id/edit" element={<AuthGate><PropertyEdit /></AuthGate>} />
-      <Route path="/properties/:id" element={<AuthGate><PropertyDetail /></AuthGate>} />
-      <Route path="/pets/new" element={<AuthGate><PetNew /></AuthGate>} />
-      <Route path="/pets/:id" element={<AuthGate><PetDetail /></AuthGate>} />
-       <Route path="/pets/:id/edit" element={<AuthGate><PetEdit /></AuthGate>} />
+      <Route path="/archive" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
+      <Route path="/recipes/new" element={<AuthGate><LabsGuard feature="collections"><RecipeWizard /></LabsGuard></AuthGate>} />
+      <Route path="/recipes/:id" element={<AuthGate><LabsGuard feature="collections"><RecipeDetail /></LabsGuard></AuthGate>} />
+      <Route path="/recipes/:id/edit" element={<AuthGate><LabsGuard feature="collections"><RecipeEdit /></LabsGuard></AuthGate>} />
+      <Route path="/recipes/:id/cook" element={<AuthGate><LabsGuard feature="collections"><CookMode /></LabsGuard></AuthGate>} />
+      <Route path="/objects/new" element={<AuthGate><LabsGuard feature="collections"><ObjectsNew /></LabsGuard></AuthGate>} />
+      <Route path="/things/:id" element={<AuthGate><LabsGuard feature="collections"><ThingDetail /></LabsGuard></AuthGate>} />
+      <Route path="/things/:id/edit" element={<AuthGate><LabsGuard feature="collections"><ThingEdit /></LabsGuard></AuthGate>} />
+      <Route path="/properties/new" element={<AuthGate><LabsGuard feature="collections"><PropertyNew /></LabsGuard></AuthGate>} />
+      <Route path="/properties/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PropertyEdit /></LabsGuard></AuthGate>} />
+      <Route path="/properties/:id" element={<AuthGate><LabsGuard feature="collections"><PropertyDetail /></LabsGuard></AuthGate>} />
+      <Route path="/pets/new" element={<AuthGate><LabsGuard feature="collections"><PetNew /></LabsGuard></AuthGate>} />
+      <Route path="/pets/:id" element={<AuthGate><LabsGuard feature="collections"><PetDetail /></LabsGuard></AuthGate>} />
+       <Route path="/pets/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PetEdit /></LabsGuard></AuthGate>} />
        <Route path="/capture" element={<AuthGate><Capture /></AuthGate>} />
        <Route path="/media" element={<AuthGate><Media /></AuthGate>} />
        <Route path="/media/albums" element={<AuthGate><Media /></AuthGate>} />

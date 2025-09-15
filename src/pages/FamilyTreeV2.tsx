@@ -12,9 +12,11 @@ import { toast } from 'sonner'
 import FamilyExplorerWrapper from '@/components/familyTreeV2/FamilyExplorerWrapper'
 import { FamilyDataEditor } from '@/components/family-tree/FamilyDataEditor'
 import { GedcomImportModal } from '@/components/family-tree/GedcomImportModal'
+import { useLabs } from '@/hooks/useLabs'
 
 const FamilyTreeV2 = () => {
   const navigate = useNavigate()
+  const { labsEnabled, flags } = useLabs()
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [treeData, setTreeData] = useState(null)
@@ -53,11 +55,20 @@ const FamilyTreeV2 = () => {
   }
 
   const handleGedcomUpload = () => {
+    if (!labsEnabled || !flags.gedcomImport) {
+      toast.error('GEDCOM import is available in Labs. Enable it in your profile settings.')
+      return
+    }
     // Open safe import modal instead of direct upload
     setShowGedcomImport(true)
   }
 
   const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!labsEnabled || !flags.gedcomImport) {
+      toast.error('CSV import is available in Labs. Enable it in your profile settings.')
+      return
+    }
+    
     const files = event.target.files
     if (!files || files.length === 0 || !familyId || !userId) return
 
@@ -156,71 +167,75 @@ const FamilyTreeV2 = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Import GEDCOM
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Upload your existing family tree from other software
-                </p>
-                <input
-                  type="file"
-                  accept=".ged"
-                  onChange={handleGedcomUpload}
-                  className="hidden"
-                  id="gedcom-upload"
-                />
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => document.getElementById('gedcom-upload')?.click()}
-                >
-                  Choose File
-                </Button>
-              </CardContent>
-            </Card>
+            {labsEnabled && flags.gedcomImport && (
+              <>
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Upload className="h-5 w-5" />
+                      Import GEDCOM
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upload your existing family tree from other software
+                    </p>
+                    <input
+                      type="file"
+                      accept=".ged"
+                      onChange={handleGedcomUpload}
+                      className="hidden"
+                      id="gedcom-upload"
+                    />
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => document.getElementById('gedcom-upload')?.click()}
+                    >
+                      Choose File
+                    </Button>
+                  </CardContent>
+                </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5" />
-                  Import CSV
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Upload people and relationships in one CSV file
-                </p>
-                <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => CsvImportService.downloadCombinedTemplate()}
-                    className="w-full"
-                  >
-                    📥 Download CSV Template
-                  </Button>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleCsvUpload}
-                    className="hidden"
-                    id="csv-upload"
-                  />
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => document.getElementById('csv-upload')?.click()}
-                  >
-                    Import CSV
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-5 w-5" />
+                      Import CSV
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upload people and relationships in one CSV file
+                    </p>
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => CsvImportService.downloadCombinedTemplate()}
+                        className="w-full"
+                      >
+                        📥 Download CSV Template
+                      </Button>
+                      <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCsvUpload}
+                        className="hidden"
+                        id="csv-upload"
+                      />
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => document.getElementById('csv-upload')?.click()}
+                      >
+                        Import CSV
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </div>
       </>
@@ -235,35 +250,39 @@ const FamilyTreeV2 = () => {
           <h1 className="text-3xl font-bold">Family Tree</h1>
           <p className="text-muted-foreground mt-1">Have a memory, story or photo? Click on any person to add it to their profile</p>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={handleGedcomUpload}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Safe Import GED
-            </Button>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleCsvUpload}
-              className="hidden"
-              id="csv-upload-existing"
-            />
-            <div className="flex flex-col gap-1">
-              <Button 
-                variant="outline" 
-                onClick={() => document.getElementById('csv-upload-existing')?.click()}
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Import CSV
-              </Button>
-              <button 
-                onClick={() => CsvImportService.downloadCombinedTemplate()}
-                className="text-xs text-muted-foreground hover:text-foreground underline"
-              >
-                Download CSV template
-              </button>
-            </div>
+            {labsEnabled && flags.gedcomImport && (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleGedcomUpload}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Safe Import GED
+                </Button>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCsvUpload}
+                  className="hidden"
+                  id="csv-upload-existing"
+                />
+                <div className="flex flex-col gap-1">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => document.getElementById('csv-upload-existing')?.click()}
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Import CSV
+                  </Button>
+                  <button 
+                    onClick={() => CsvImportService.downloadCombinedTemplate()}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    Download CSV template
+                  </button>
+                </div>
+              </>
+            )}
             <Button 
               variant="outline" 
               onClick={() => setShowDataEditor(true)}
@@ -290,7 +309,7 @@ const FamilyTreeV2 = () => {
       />
       
       <GedcomImportModal
-        open={showGedcomImport}
+        open={showGedcomImport && labsEnabled && flags.gedcomImport}
         onOpenChange={setShowGedcomImport}
         familyId={familyId || ''}
         userId={userId || ''}

@@ -8,6 +8,8 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
 import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
 
+import { useLabs } from '@/hooks/useLabs'
+
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
 import CollectionsDropdown from '@/components/navigation/CollectionsDropdown'
@@ -30,6 +32,7 @@ export default function Header() {
   const navigate = useNavigate()
   const location = useLocation()
   const { track } = useAnalytics()
+  const { labsEnabled, flags } = useLabs()
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
@@ -214,7 +217,7 @@ export default function Header() {
               </Button>
 
               <CreateDropdown />
-              <CollectionsDropdown />
+              {labsEnabled && flags.collections && <CollectionsDropdown />}
               <FamilyDropdown />
             </nav>
 
@@ -255,7 +258,7 @@ export default function Header() {
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-2">
               <CapturesStreak />
-              <NotificationsBell />
+              {labsEnabled && flags.notifications && <NotificationsBell />}
               <HelpDropdown onShortcutsOpen={() => setShortcutsOpen(true)} />
             </div>
 
@@ -284,17 +287,19 @@ export default function Header() {
                 <CreateDropdown />
               </div>
               
-              <Link
-                to="/collections"
-                className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                  isActivePath('/collections')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Collections
-              </Link>
+              {labsEnabled && flags.collections && (
+                <Link
+                  to="/collections"
+                  className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                    isActivePath('/collections')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Collections
+                </Link>
+              )}
 
               <div className="space-y-2">
                 <Link
