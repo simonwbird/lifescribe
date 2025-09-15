@@ -331,21 +331,20 @@ export default function People() {
             )}
           </div>
         </div>
+        
+        {/* Direct Invite Modal */}
+        {showDirectInvite && (
+          <DirectInviteModal
+            familyId={currentSpaceId!}
+            onClose={() => setShowDirectInvite(false)}
+            onSuccess={() => {
+              setShowDirectInvite(false)
+              if (currentSpaceId) {
+                fetchPeople(currentSpaceId)
+              }
+            }}
+          />
+        )}
       </div>
-
-      {/* Direct Invite Modal */}
-      {showDirectInvite && (
-        <DirectInviteModal
-          familyId={currentSpaceId!}
-          onClose={() => setShowDirectInvite(false)}
-          onSuccess={() => {
-            setShowDirectInvite(false)
-            if (currentSpaceId) {
-              fetchPeople(currentSpaceId)
-            }
-          }}
-        />
-      )}
-    </div>
-  )
-}
+    )
+  }
