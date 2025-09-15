@@ -681,12 +681,15 @@ export type Database = {
       }
       people: {
         Row: {
+          alt_names: string[] | null
           avatar_url: string | null
           birth_date: string | null
+          birth_date_precision: string | null
           birth_year: number | null
           created_at: string | null
           created_by: string | null
           death_date: string | null
+          death_date_precision: string | null
           death_year: number | null
           family_id: string
           full_name: string
@@ -700,12 +703,15 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          alt_names?: string[] | null
           avatar_url?: string | null
           birth_date?: string | null
+          birth_date_precision?: string | null
           birth_year?: number | null
           created_at?: string | null
           created_by?: string | null
           death_date?: string | null
+          death_date_precision?: string | null
           death_year?: number | null
           family_id: string
           full_name: string
@@ -719,12 +725,15 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          alt_names?: string[] | null
           avatar_url?: string | null
           birth_date?: string | null
+          birth_date_precision?: string | null
           birth_year?: number | null
           created_at?: string | null
           created_by?: string | null
           death_date?: string | null
+          death_date_precision?: string | null
           death_year?: number | null
           family_id?: string
           full_name?: string
@@ -1858,6 +1867,47 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestions: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          payload: Json
+          person_id: string | null
+          resolved_at: string | null
+          status: string
+          suggested_by: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          payload?: Json
+          person_id?: string | null
+          resolved_at?: string | null
+          status?: string
+          suggested_by: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          payload?: Json
+          person_id?: string | null
+          resolved_at?: string | null
+          status?: string
+          suggested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
             referencedColumns: ["id"]
           },
         ]

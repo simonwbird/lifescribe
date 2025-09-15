@@ -50,6 +50,7 @@ import NotFound from "./pages/NotFound";
 import InviteLanding from "./pages/InviteLanding";
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
+import People from './pages/People'
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ function AppContent() {
       <Route path="/family/tree" element={<AuthGate><FamilyTree /></AuthGate>} />
       <Route path="/family-tree/explorer" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthGate>} />
       <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />
+      <Route path="/people" element={<AuthGate><People /></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />

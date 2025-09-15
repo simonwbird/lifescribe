@@ -1,0 +1,424 @@
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import PersonForm from './PersonForm'
+import InvitePersonModal from './InvitePersonModal'
+import type { Person } from '@/lib/familyTreeTypes'
+
+interface PeopleTableProps {
+  people: Person[]
+  onPersonUpdated: () => void
+  familyId: string
+}
+
+export default function PeopleTable({ people, onPersonUpdated, familyId }: PeopleTableProps) {
+  const [selectedPeople, setSelectedPeople] = useState<string[]>([])
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null)
+  const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
+  const [inlineEditing, setInlineEditing] = useState<{personId: string, field: string} | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const { toast } = useToast()
+
+  const calculateAge = (birthDate: string | null, deathDate: string | null, isLiving: boolean) => {
+    if (!birthDate) return null
+    
+    const birth = new Date(birthDate)
+    const compareDate = deathDate ? new Date(deathDate) : new Date()
+    
+    const age = compareDate.getFullYear() - birth.getFullYear()
+    const monthDiff = compareDate.getMonth() - birth.getMonth()
+    
+    if (monthDiff < 0 || (monthDiff === 0 && compareDate.getDate() < birth.getDate())) {
+      return age - 1
+    }
+    
+    return age
+  }
+
+  const calculateDaysUntilBirthday = (birthDate: string | null) => {
+    if (!birthDate) return null
+    
+    const birth = new Date(birthDate)
+    const today = new Date()
+    const thisYear = today.getFullYear()
+    
+    // Handle Feb 29 on non-leap years
+    let nextBirthday = new Date(thisYear, birth.getMonth(), birth.getDate())
+    if (birth.getMonth() === 1 && birth.getDate() === 29 && !isLeapYear(thisYear)) {
+      nextBirthday = new Date(thisYear, 1, 28) // Feb 28
+    }
+    
+    if (nextBirthday < today) {
+      const nextYear = thisYear + 1
+      nextBirthday = new Date(nextYear, birth.getMonth(), birth.getDate())
+      if (birth.getMonth() === 1 && birth.getDate() === 29 && !isLeapYear(nextYear)) {
+        nextBirthday = new Date(nextYear, 1, 28)
+      }
+    }
+    
+    const diffTime = nextBirthday.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  }
+
+  const isLeapYear = (year: number) => {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
+  }
+
+  const getStatusBadge = (person: any) => {
+    if (person.is_living === false) {
+      return <Badge variant="secondary">Deceased</Badge>
+    }
+    
+    if (person.account_status === 'joined') {
+      return <Badge variant="default">Joined</Badge>
+    } else if (person.account_status === 'invited') {
+      return <Badge variant="outline">Invited</Badge>
+    } else {
+      return <Badge variant="secondary">Not on app</Badge>
+    }
+  }
+
+  const handleInlineEdit = (person: Person, field: string) => {
+    setInlineEditing({ personId: person.id, field })
+    setEditValue((person as any)[field] || '')
+  }
+
+  const handleSaveInlineEdit = async () => {
+    if (!inlineEditing) return
+
+    try {
+      const updates: any = {}
+      updates[inlineEditing.field] = editValue
+
+      const { error } = await supabase
+        .from('people')
+        .update(updates)
+        .eq('id', inlineEditing.personId)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Person updated successfully"
+      })
+      
+      onPersonUpdated()
+      setInlineEditing(null)
+    } catch (error) {
+      console.error('Error updating person:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update person",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleMarkDeceased = async (person: Person) => {
+    try {
+      const { error } = await supabase
+        .from('people')
+        .update({ 
+          is_living: false,
+          death_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', person.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: `${person.full_name} marked as deceased`
+      })
+      
+      onPersonUpdated()
+    } catch (error) {
+      console.error('Error marking person as deceased:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update person",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDeletePerson = async (person: Person) => {
+    try {
+      const { error } = await supabase
+        .from('people')
+        .delete()
+        .eq('id', person.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: `${person.full_name} has been deleted`
+      })
+      
+      onPersonUpdated()
+    } catch (error) {
+      console.error('Error deleting person:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete person",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedPeople(people.map(p => p.id))
+    } else {
+      setSelectedPeople([])
+    }
+  }
+
+  const handleSelectPerson = (personId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedPeople([...selectedPeople, personId])
+    } else {
+      setSelectedPeople(selectedPeople.filter(id => id !== personId))
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Bulk Actions */}
+      {selectedPeople.length > 0 && (
+        <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
+          <span className="text-sm font-medium">{selectedPeople.length} selected</span>
+          <Button variant="outline" size="sm">
+            <Mail className="h-4 w-4 mr-2" />
+            Bulk Invite
+          </Button>
+          <Button variant="outline" size="sm">
+            <Heart className="h-4 w-4 mr-2" />
+            Mark Deceased
+          </Button>
+          <Button variant="outline" size="sm">
+            Export CSV
+          </Button>
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selectedPeople.length === people.length && people.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Life Dates</TableHead>
+              <TableHead>Age</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Stories</TableHead>
+              <TableHead>Photos</TableHead>
+              <TableHead>Upcoming</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {people.map((person) => {
+              const age = calculateAge(person.birth_date, person.death_date, person.is_living !== false)
+              const daysUntilBirthday = person.is_living !== false ? calculateDaysUntilBirthday(person.birth_date) : null
+              
+              return (
+                <TableRow key={person.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedPeople.includes(person.id)}
+                      onCheckedChange={(checked) => handleSelectPerson(person.id, checked as boolean)}
+                    />
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="font-medium">{person.full_name}</div>
+                    {person.alt_names && person.alt_names.length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        aka {person.alt_names.join(', ')}
+                      </div>
+                    )}
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="space-y-1">
+                      {inlineEditing?.personId === person.id && inlineEditing?.field === 'birth_date' ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="date"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="w-32"
+                          />
+                          <Button size="sm" onClick={handleSaveInlineEdit}>Save</Button>
+                          <Button size="sm" variant="outline" onClick={() => setInlineEditing(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="cursor-pointer hover:bg-muted rounded px-2 py-1"
+                          onClick={() => handleInlineEdit(person, 'birth_date')}
+                        >
+                          {person.birth_date ? new Date(person.birth_date).toLocaleDateString() : 'Unknown'}
+                        </div>
+                      )}
+                      
+                      {person.death_date && (
+                        <div className="text-xs text-muted-foreground">
+                          † {new Date(person.death_date).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    {age !== null && (
+                      <div>
+                        {person.is_living === false ? `Would be ${age}` : age}
+                        {person.is_living === false && (
+                          <div className="text-xs text-muted-foreground">(In memoriam)</div>
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  
+                  <TableCell>
+                    {getStatusBadge(person)}
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      {(person as any).stories?.length || 0}
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Image className="h-4 w-4" />
+                      {(person as any).media?.length || 0}
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    {daysUntilBirthday !== null && (
+                      <Badge variant="outline">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {daysUntilBirthday === 0 ? 'Today!' : `${daysUntilBirthday} days`}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditingPerson(person)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Details
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem onClick={() => setInvitingPerson(person)}>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Invite/Manage
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem onClick={() => window.open(`/people/${person.id}`, '_blank')}>
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Wall
+                        </DropdownMenuItem>
+                        
+                        {person.is_living !== false && (
+                          <DropdownMenuItem onClick={() => handleMarkDeceased(person)}>
+                            <Heart className="h-4 w-4 mr-2" />
+                            Mark Deceased
+                          </DropdownMenuItem>
+                        )}
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete {person.full_name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete this person and all associated data. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeletePerson(person)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Edit Person Modal */}
+      {editingPerson && (
+        <Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit {editingPerson.full_name}</DialogTitle>
+            </DialogHeader>
+            <PersonForm
+              person={editingPerson}
+              familyId={familyId}
+              onSuccess={() => {
+                setEditingPerson(null)
+                onPersonUpdated()
+              }}
+              onCancel={() => setEditingPerson(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Invite Person Modal */}
+      {invitingPerson && (
+        <InvitePersonModal
+          person={invitingPerson}
+          familyId={familyId}
+          onClose={() => setInvitingPerson(null)}
+          onSuccess={() => {
+            setInvitingPerson(null)
+            onPersonUpdated()
+          }}
+        />
+      )}
+    </div>
+  )
+}

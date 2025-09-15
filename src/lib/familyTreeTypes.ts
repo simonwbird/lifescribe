@@ -15,6 +15,11 @@ export interface Person {
   created_at: string
   updated_at: string
   created_by?: string
+  alt_names?: string[]
+  birth_date_precision?: string
+  death_date_precision?: string
+  is_living?: boolean
+  account_status?: string
 }
 
 export interface Relationship {
