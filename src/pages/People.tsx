@@ -83,14 +83,12 @@ export default function People() {
 
       const peopleWithStatus = (data || []).map((person: any) => {
         const gender = (person.gender as ('male' | 'female' | 'other' | 'unknown')) || undefined
-        const derivedLiving =
-          typeof person.is_living === 'boolean'
-            ? person.is_living
-            : (person.death_date ? false : true)
+        // Prefer death_date to determine living status; if death_date exists, person is deceased
+        const isLiving = person?.death_date ? false : (person.is_living !== false)
         return {
           ...person,
           gender,
-          is_living: derivedLiving,
+          is_living: isLiving,
           account_status: 'not_on_app' // Placeholder until invites/person_user_links are joined
         }
       }) as Person[]
