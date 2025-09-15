@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/lib/supabase'
 
 interface InviteBannerProps {
   className?: string
@@ -71,13 +71,22 @@ export default function InviteBanner({ className }: InviteBannerProps) {
     track('invite_email_clicked')
 
     try {
-      // For now, use a mock family ID until we can resolve the typing issues
-      const mockFamilyId = 'family-123'
+      // Get current user and their family id
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data: member, error: memberError } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+
+      if (memberError || !member?.family_id) throw new Error('No family found')
 
       // Call the invite edge function
       const { data, error } = await supabase.functions.invoke('invite', {
         body: {
-          familyId: mockFamilyId,
+          familyId: member.family_id,
           email: emailInput.trim(),
           role: 'member'
         }
