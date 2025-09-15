@@ -301,9 +301,9 @@ export default function People() {
                 ))}
               </div>
 
-              {/* Search and Advanced Filter */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
+              {/* Search Only */}
+              <div className="flex justify-start">
+                <div className="relative w-80">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search by name..."
@@ -312,20 +312,6 @@ export default function People() {
                     className="pl-10"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All People ({stats.total})</SelectItem>
-                    <SelectItem value="living">Living ({stats.living})</SelectItem>
-                    <SelectItem value="deceased">No longer with us ({stats.deceased})</SelectItem>
-                    <SelectItem value="joined">Joined ({stats.invited})</SelectItem>
-                    <SelectItem value="invited">Invited (0)</SelectItem>
-                    <SelectItem value="not_on_app">Not on App ({stats.not_on_app})</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
