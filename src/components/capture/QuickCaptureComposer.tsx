@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PrivacySelector from '@/components/PrivacySelector'
 import {
   Dialog,
   DialogContent,
@@ -1404,22 +1405,10 @@ export default function QuickCaptureComposer({
               </div>
 
               {/* Privacy */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Privacy</label>
-                <Select
-                  value={data.privacy}
-                  onValueChange={(value) => setData(prev => ({ ...prev, privacy: value as Privacy }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="family">Family</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <PrivacySelector
+                value={data.privacy === 'custom' ? 'family' : data.privacy}
+                onValueChange={(value: 'family' | 'private') => setData(prev => ({ ...prev, privacy: value }))}
+              />
 
               {/* Selected People */}
               {data.people.length > 0 && (

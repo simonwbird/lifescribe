@@ -45,6 +45,8 @@ import Labs from "./pages/Labs";
 import LabsGuard from "./components/navigation/LabsGuard";
 import NotFound from "./pages/NotFound";
 import InviteLanding from "./pages/InviteLanding";
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 
 const queryClient = new QueryClient();
 
@@ -59,8 +61,10 @@ function AppContent() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/invite/:token" element={<InviteLanding />} />
-      <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
+       <Route path="/invite/:token" element={<InviteLanding />} />
+       <Route path="/privacy" element={<Privacy />} />
+       <Route path="/terms" element={<Terms />} />
+       <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
       {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />
       <Route path="/stories/new" element={<AuthGate><NewStory /></AuthGate>} />

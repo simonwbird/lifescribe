@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PrivacySelector from '@/components/PrivacySelector'
 import { Textarea } from '@/components/ui/textarea'
 import { Mic, MicOff, Loader2, Upload, Play, Pause, Trash2, X, Settings } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -405,19 +406,10 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="privacy">Privacy</Label>
-                <Select
+                <PrivacySelector
                   value={reviewData.privacy}
-                  onValueChange={(value: any) => setReviewData(prev => ({ ...prev, privacy: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="family">Family (default)</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
+                  onValueChange={(value: 'family' | 'private') => setReviewData(prev => ({ ...prev, privacy: value }))}
+                />
               </div>
 
               {labsEnabled && (
