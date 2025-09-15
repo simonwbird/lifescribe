@@ -528,6 +528,7 @@ export default function FamilyTree() {
                   onEditPerson={(personId) => navigate(`/people/${personId}`)}
                   shouldFitToScreen={shouldFitToScreen}
                   onFitToScreenComplete={() => setShouldFitToScreen(false)}
+                  onRecordMemoryAbout={handleRecordMemoryAbout}
                 />
               ) : (
                 <GenerationalFamilyTree

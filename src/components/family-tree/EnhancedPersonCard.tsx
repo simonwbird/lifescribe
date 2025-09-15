@@ -12,7 +12,8 @@ import {
   Users,
   GripVertical,
   MapPin,
-  Trash2
+  Trash2,
+  Mic
 } from 'lucide-react'
 import { getPersonDisplayName, formatPersonYears } from '@/utils/familyTreeUtils'
 import type { Person } from '@/lib/familyTreeTypes'
@@ -39,6 +40,7 @@ interface EnhancedPersonCardProps {
   onConnectionEnd?: () => void
   onHover?: (isHovered: boolean) => void
   showConnectionHotspots?: boolean
+  onRecordMemoryAbout?: () => void
 }
 
 export default function EnhancedPersonCard({
@@ -61,7 +63,8 @@ export default function EnhancedPersonCard({
   onConnectionStart,
   onConnectionEnd,
   onHover,
-  showConnectionHotspots = false
+  showConnectionHotspots = false,
+  onRecordMemoryAbout
 }: EnhancedPersonCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [showHotspots, setShowHotspots] = useState(false)
@@ -301,7 +304,7 @@ export default function EnhancedPersonCard({
               )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-2 no-drag">
+              <div className="flex items-center justify-between pt-2 no-drag gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -326,6 +329,20 @@ export default function EnhancedPersonCard({
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs hover:bg-emerald-50 text-emerald-600"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRecordMemoryAbout?.()
+                  }}
+                  title={`Record about ${displayName.split(' ')[0]}`}
+                >
+                  <Mic className="h-3 w-3 mr-1" />
+                  Record
                 </Button>
                 
                 <Button

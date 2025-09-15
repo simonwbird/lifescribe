@@ -21,6 +21,7 @@ interface FamilyTreeCanvasProps {
   onEditPerson: (personId: string) => void
   onDeletePerson?: (personId: string) => void
   onUpdate?: () => void
+  onRecordMemoryAbout?: (personId: string, personName: string) => void
   positions: Record<string, { x: number; y: number }>
   selectedPersonId?: string
   shouldFitToScreen?: boolean
@@ -38,6 +39,7 @@ export default function EnhancedFamilyTreeCanvas({
   onEditPerson,
   onDeletePerson,
   onUpdate,
+  onRecordMemoryAbout,
   positions,
   selectedPersonId,
   shouldFitToScreen,
@@ -610,6 +612,7 @@ export default function EnhancedFamilyTreeCanvas({
               onConnectionEnd={() => handleConnectionEnd(person.id)}
               onHover={(isHovered) => setHoveredPersonId(isHovered ? person.id : null)}
               showConnectionHotspots={selectedPersonId === person.id}
+              onRecordMemoryAbout={() => onRecordMemoryAbout?.(person.id, getPersonDisplayName(person))}
             />
           )
         })}
