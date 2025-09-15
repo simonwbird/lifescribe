@@ -217,6 +217,33 @@ export default function People() {
         })
       }
 
+      // Also include media authored by users linked to each person (loose uploads not tied to story/answer/recipe)
+      const userIdToPeople: Record<string, string[]> = {}
+      linksData?.forEach((l: any) => {
+        if (!userIdToPeople[l.user_id]) userIdToPeople[l.user_id] = []
+        userIdToPeople[l.user_id].push(l.person_id)
+      })
+      const allUserIds = Object.keys(userIdToPeople)
+      if (allUserIds.length > 0) {
+        const { data: authoredLooseMedia, error: authoredLooseMediaError } = await supabase
+          .from('media')
+          .select('id, profile_id')
+          .eq('family_id', spaceId)
+          .in('profile_id', allUserIds)
+          .is('story_id', null)
+          .is('answer_id', null)
+          .is('recipe_id', null)
+
+        if (authoredLooseMediaError) throw authoredLooseMediaError
+
+        authoredLooseMedia?.forEach((m: any) => {
+          const pids = userIdToPeople[m.profile_id as string] || []
+          pids.forEach((pid) => {
+            mediaCounts[pid] = (mediaCounts[pid] || 0) + 1
+          })
+        })
+      }
+
       const peopleWithStatus = (peopleData || []).map((person: any) => {
         const gender = (person.gender as ('male' | 'female' | 'other' | 'unknown')) || undefined
         // Prefer death_date to determine living status; if death_date exists, person is deceased
