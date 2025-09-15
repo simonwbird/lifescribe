@@ -93,6 +93,24 @@ export default function StoryCard({ story }: StoryCardProps) {
                     className="rounded-lg max-h-64 w-full"
                   />
                 )
+              } else if (mediaItem?.mime_type.startsWith('audio/')) {
+                return (
+                  <div key={index} className="bg-muted/50 rounded-lg p-4 flex items-center gap-3">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground mb-1">
+                        {mediaItem.file_name || 'Audio Recording'}
+                      </p>
+                      <audio
+                        src={url}
+                        controls
+                        className="w-full"
+                        preload="metadata"
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  </div>
+                )
               }
               return null
             })}
