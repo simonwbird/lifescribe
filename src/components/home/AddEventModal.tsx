@@ -118,8 +118,8 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
         title: title.trim(),
         type: eventType,
         event_date: eventDate,
-        person_id: selectedPersonId || undefined,
-        with_person_id: withPersonId || undefined,
+        person_id: selectedPersonId === 'none' || !selectedPersonId ? undefined : selectedPersonId,
+        with_person_id: withPersonId === 'none' || !withPersonId ? undefined : withPersonId,
         recurrence,
         notes: notes.trim() || undefined
       })
@@ -177,7 +177,7 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
                   <SelectValue placeholder="Select a person (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {people.map((person) => (
                     <SelectItem key={person.id} value={person.id}>
                       {person.full_name}
@@ -197,7 +197,7 @@ export default function AddEventModal({ open, onOpenChange, onSuccess }: AddEven
                   <SelectValue placeholder="Select partner (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {people.filter(p => p.id !== selectedPersonId).map((person) => (
                     <SelectItem key={person.id} value={person.id}>
                       {person.full_name}
