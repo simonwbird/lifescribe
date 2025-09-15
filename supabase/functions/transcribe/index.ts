@@ -42,19 +42,24 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Transcription request received')
     const { audio } = await req.json()
     
     if (!audio) {
+      console.error('No audio data provided')
       throw new Error('No audio data provided')
     }
 
     const openaiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiKey) {
+      console.error('OpenAI API key not configured')
       throw new Error('OpenAI API key not configured')
     }
 
+    console.log(`Processing audio data of length: ${audio.length}`)
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio)
+    console.log(`Processed binary audio: ${binaryAudio.length} bytes`)
     
     // Prepare form data
     const formData = new FormData()
@@ -64,6 +69,7 @@ serve(async (req) => {
     formData.append('response_format', 'json')
     formData.append('language', 'en') // Can be made dynamic
 
+    console.log('Sending to OpenAI Whisper API...')
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -75,10 +81,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
+      console.error(`OpenAI API error: ${response.status} ${errorText}`)
       throw new Error(`OpenAI API error: ${response.status} ${errorText}`)
     }
 
     const result = await response.json()
+    console.log(`Transcription successful. Text length: ${result.text?.length || 0} characters`)
+    console.log(`First 100 chars: ${result.text?.substring(0, 100)}...`)
 
     return new Response(
       JSON.stringify({ 

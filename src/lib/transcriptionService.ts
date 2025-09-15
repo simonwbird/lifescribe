@@ -12,24 +12,20 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     const base64Audio = await blobToBase64(audioBlob)
     
     // Call our transcription edge function
-    const response = await fetch('/api/transcribe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ audio: base64Audio })
+    const { supabase } = await import('@/lib/supabase')
+    
+    const { data, error } = await supabase.functions.invoke('transcribe', {
+      body: { audio: base64Audio }
     })
     
-    if (!response.ok) {
-      throw new Error(`Transcription failed: ${response.statusText}`)
+    if (error) {
+      throw new Error(`Transcription failed: ${error.message}`)
     }
     
-    const result = await response.json()
-    
     return {
-      text: result.text || '',
-      language: result.language || 'en',
-      confidence: result.confidence || 0.8
+      text: data.text || '',
+      language: data.language || 'en',
+      confidence: data.confidence || 0.8
     }
   } catch (error) {
     console.error('Transcription error:', error)
