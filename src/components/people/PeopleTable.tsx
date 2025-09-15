@@ -542,13 +542,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                           View Wall
                         </DropdownMenuItem>
                         
-                        {person.is_living !== false && (
-                          <DropdownMenuItem onClick={() => handleMarkDeceased(person)}>
-                            <Heart className="h-4 w-4 mr-2" />
-                            Mark Deceased
-                          </DropdownMenuItem>
-                        )}
-                        
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
