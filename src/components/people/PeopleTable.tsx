@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ interface PeopleTableProps {
 }
 
 export default function PeopleTable({ people, onPersonUpdated, familyId, currentUserRole, currentUserId }: PeopleTableProps) {
+  const navigate = useNavigate()
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
   const [memorizingPerson, setMemorizingPerson] = useState<Person | null>(null)
@@ -195,7 +197,13 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                   
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="font-medium">{person.full_name}</div>
+                      <div 
+                        className="font-medium hover:text-primary cursor-pointer transition-colors"
+                        onClick={() => navigate(`/people/${person.id}`)}
+                        title={`View ${person.is_living === false ? 'Tribute' : 'Life'} Page for ${person.full_name}`}
+                      >
+                        {person.full_name}
+                      </div>
                       {person.alt_names && person.alt_names.length > 0 && (
                         <div className="text-sm text-muted-foreground">
                           Also known as: {person.alt_names.join(', ')}

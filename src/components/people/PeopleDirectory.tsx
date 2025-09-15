@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +16,7 @@ interface PeopleDirectoryProps {
 
 export default function PeopleDirectory({ people, familyId }: PeopleDirectoryProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
+  const navigate = useNavigate()
 
   const calculateAge = (birthDate: string | null, deathDate: string | null, isLiving: boolean) => {
     if (!birthDate) return null
@@ -88,7 +90,11 @@ export default function PeopleDirectory({ people, familyId }: PeopleDirectoryPro
           const daysUntilBirthday = person.is_living !== false ? calculateDaysUntilBirthday(person.birth_date) : null
           
           return (
-            <Card key={person.id} className="hover:shadow-md transition-shadow">
+            <Card 
+              key={person.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer" 
+              onClick={() => navigate(`/people/${person.id}`)}
+            >
               <CardHeader className="text-center pb-3">
                 <Avatar className="h-16 w-16 mx-auto mb-3">
                   <AvatarImage src={person.avatar_url || ''} />
