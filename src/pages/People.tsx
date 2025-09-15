@@ -109,11 +109,30 @@ export default function People() {
 
       if (storyLinksError) throw storyLinksError
 
-      // Build counts and mapping from story -> people
+      // Fetch answer links for each person
+      const { data: answerLinksData, error: answerLinksError } = await supabase
+        .from('person_answer_links')
+        .select('person_id, answer_id')
+        .eq('family_id', spaceId)
+
+      if (answerLinksError) throw answerLinksError
+
+      // Fetch recipe links for each person
+      const { data: recipeLinksData, error: recipeLinksError } = await supabase
+        .from('recipe_person_links')
+        .select('person_id, recipe_id')
+        .eq('family_id', spaceId)
+
+      if (recipeLinksError) throw recipeLinksError
+
+      // Build counts and mapping from content -> people
       const storyCounts: Record<string, number> = {}
       const mediaCounts: Record<string, number> = {}
       const storyIdToPeople: Record<string, string[]> = {}
+      const answerIdToPeople: Record<string, string[]> = {}
+      const recipeIdToPeople: Record<string, string[]> = {}
 
+      // Count stories per person and build story mapping
       storyLinksData?.forEach((link: any) => {
         storyCounts[link.person_id] = (storyCounts[link.person_id] || 0) + 1
         const sid = link.story_id as string | null
@@ -123,7 +142,25 @@ export default function People() {
         }
       })
 
-      // If we have any story IDs, count media per story and attribute to linked people
+      // Build answer mapping
+      answerLinksData?.forEach((link: any) => {
+        const aid = link.answer_id as string | null
+        if (aid) {
+          if (!answerIdToPeople[aid]) answerIdToPeople[aid] = []
+          answerIdToPeople[aid].push(link.person_id)
+        }
+      })
+
+      // Build recipe mapping
+      recipeLinksData?.forEach((link: any) => {
+        const rid = link.recipe_id as string | null
+        if (rid) {
+          if (!recipeIdToPeople[rid]) recipeIdToPeople[rid] = []
+          recipeIdToPeople[rid].push(link.person_id)
+        }
+      })
+
+      // Count media from stories
       const allStoryIds = Object.keys(storyIdToPeople)
       if (allStoryIds.length > 0) {
         const { data: mediaByStory, error: mediaByStoryError } = await supabase
@@ -136,6 +173,44 @@ export default function People() {
 
         mediaByStory?.forEach((m: any) => {
           const pids = storyIdToPeople[m.story_id as string] || []
+          pids.forEach((pid) => {
+            mediaCounts[pid] = (mediaCounts[pid] || 0) + 1
+          })
+        })
+      }
+
+      // Count media from answers
+      const allAnswerIds = Object.keys(answerIdToPeople)
+      if (allAnswerIds.length > 0) {
+        const { data: mediaByAnswer, error: mediaByAnswerError } = await supabase
+          .from('media')
+          .select('id, answer_id, mime_type')
+          .eq('family_id', spaceId)
+          .in('answer_id', allAnswerIds)
+
+        if (mediaByAnswerError) throw mediaByAnswerError
+
+        mediaByAnswer?.forEach((m: any) => {
+          const pids = answerIdToPeople[m.answer_id as string] || []
+          pids.forEach((pid) => {
+            mediaCounts[pid] = (mediaCounts[pid] || 0) + 1
+          })
+        })
+      }
+
+      // Count media from recipes
+      const allRecipeIds = Object.keys(recipeIdToPeople)
+      if (allRecipeIds.length > 0) {
+        const { data: mediaByRecipe, error: mediaByRecipeError } = await supabase
+          .from('media')
+          .select('id, recipe_id, mime_type')
+          .eq('family_id', spaceId)
+          .in('recipe_id', allRecipeIds)
+
+        if (mediaByRecipeError) throw mediaByRecipeError
+
+        mediaByRecipe?.forEach((m: any) => {
+          const pids = recipeIdToPeople[m.recipe_id as string] || []
           pids.forEach((pid) => {
             mediaCounts[pid] = (mediaCounts[pid] || 0) + 1
           })
