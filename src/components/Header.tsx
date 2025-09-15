@@ -195,7 +195,10 @@ export default function Header() {
           <div className="flex items-center gap-2">
             {/* Mic Button */}
             <div data-mic-button>
-              <MicButton />
+            <MicButton onStoryCreated={(storyId) => {
+              // TODO: Navigate to story or show success toast
+              console.log('Story created:', storyId)
+            }} />
             </div>
 
             {/* Mobile Search */}

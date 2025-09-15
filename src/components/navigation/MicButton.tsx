@@ -2,40 +2,40 @@ import { useState } from 'react'
 import { Mic, MicOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import VoiceCaptureModal from '../voice/VoiceCaptureModal'
 
-export default function MicButton() {
-  const [isRecording, setIsRecording] = useState(false)
+interface MicButtonProps {
+  onStoryCreated?: (storyId: string) => void
+}
+
+export default function MicButton({ onStoryCreated }: MicButtonProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { track } = useAnalytics()
 
-  const handleMicToggle = () => {
-    if (isRecording) {
-      setIsRecording(false)
-      track('voice_capture_stop')
-      // TODO: Stop voice recording
-    } else {
-      setIsRecording(true)
-      track('voice_capture_start')
-      // TODO: Start voice recording
-    }
+  const handleMicClick = () => {
+    setIsModalOpen(true)
+    track('voice_capture_start')
   }
 
   return (
-    <Button
-      variant={isRecording ? "destructive" : "default"}
-      size="sm"
-      onClick={handleMicToggle}
-      className={`gap-1 ${isRecording ? 'animate-pulse' : ''}`}
-      aria-label={isRecording ? "Stop recording" : "Start voice capture"}
-      data-mic-button
-    >
-      {isRecording ? (
-        <MicOff className="h-4 w-4" />
-      ) : (
+    <>
+      <Button
+        variant="default"
+        size="sm"
+        onClick={handleMicClick}
+        className="gap-1"
+        aria-label="Start voice capture"
+        data-mic-button
+      >
         <Mic className="h-4 w-4" />
-      )}
-      <span className="hidden sm:inline">
-        {isRecording ? 'Stop' : 'Mic'}
-      </span>
-    </Button>
+        <span className="hidden sm:inline">Mic</span>
+      </Button>
+      
+      <VoiceCaptureModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onStoryCreated={onStoryCreated}
+      />
+    </>
   )
 }
