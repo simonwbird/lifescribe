@@ -101,55 +101,46 @@ export default function People() {
 
       if (linksError) throw linksError
 
-      // Fetch story counts for each person
+      // Fetch story links for each person (to derive story and media counts)
       const { data: storyLinksData, error: storyLinksError } = await supabase
         .from('person_story_links')
-        .select('person_id')
+        .select('person_id, story_id')
         .eq('family_id', spaceId)
 
       if (storyLinksError) throw storyLinksError
 
-      // Fetch media counts for each person (photos, videos, etc.)
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .select('id, mime_type')
-        .eq('family_id', spaceId)
-        .not('story_id', 'is', null) // Media linked to stories
-
-      if (mediaError) throw mediaError
-
-      // Count stories and media for each person
+      // Build counts and mapping from story -> people
       const storyCounts: Record<string, number> = {}
       const mediaCounts: Record<string, number> = {}
+      const storyIdToPeople: Record<string, string[]> = {}
 
-      // Count stories per person
-      storyLinksData?.forEach(link => {
+      storyLinksData?.forEach((link: any) => {
         storyCounts[link.person_id] = (storyCounts[link.person_id] || 0) + 1
-      })
-
-      // Count media per person (we'll need to get media linked through stories)
-      const { data: storyMediaData, error: storyMediaError } = await supabase
-        .from('person_story_links')
-        .select(`
-          person_id,
-          stories!inner(
-            id,
-            media(id, mime_type)
-          )
-        `)
-        .eq('family_id', spaceId)
-
-      if (storyMediaError) throw storyMediaError
-
-      // Count media per person
-      storyMediaData?.forEach(link => {
-        if (link.stories?.media) {
-          const personMediaCount = Array.isArray(link.stories.media) 
-            ? link.stories.media.length 
-            : (link.stories.media ? 1 : 0)
-          mediaCounts[link.person_id] = (mediaCounts[link.person_id] || 0) + personMediaCount
+        const sid = link.story_id as string | null
+        if (sid) {
+          if (!storyIdToPeople[sid]) storyIdToPeople[sid] = []
+          storyIdToPeople[sid].push(link.person_id)
         }
       })
+
+      // If we have any story IDs, count media per story and attribute to linked people
+      const allStoryIds = Object.keys(storyIdToPeople)
+      if (allStoryIds.length > 0) {
+        const { data: mediaByStory, error: mediaByStoryError } = await supabase
+          .from('media')
+          .select('id, story_id, mime_type')
+          .eq('family_id', spaceId)
+          .in('story_id', allStoryIds)
+
+        if (mediaByStoryError) throw mediaByStoryError
+
+        mediaByStory?.forEach((m: any) => {
+          const pids = storyIdToPeople[m.story_id as string] || []
+          pids.forEach((pid) => {
+            mediaCounts[pid] = (mediaCounts[pid] || 0) + 1
+          })
+        })
+      }
 
       const peopleWithStatus = (peopleData || []).map((person: any) => {
         const gender = (person.gender as ('male' | 'female' | 'other' | 'unknown')) || undefined
