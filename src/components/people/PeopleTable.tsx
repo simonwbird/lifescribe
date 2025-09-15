@@ -2,17 +2,20 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart, Shield, Crown, User, ChevronUp, ChevronDown } from 'lucide-react'
+import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart, MessageSquare, Camera, ChevronUp, ChevronDown, Crown, User, Shield } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { calculateAge, calculateDaysUntilBirthday, formatUpcoming } from '@/utils/dateUtils'
 import PersonForm from './PersonForm'
 import InvitePersonModal from './InvitePersonModal'
+import MembershipChip from './MembershipChip'
+import MemorializeModal from './MemorializeModal'
 import type { Person } from '@/lib/familyTreeTypes'
 
 interface PeopleTableProps {
@@ -27,6 +30,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
   const [selectedPeople, setSelectedPeople] = useState<string[]>([])
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
+  const [memorizingPerson, setMemorizingPerson] = useState<Person | null>(null)
   const [inlineEditing, setInlineEditing] = useState<{personId: string, field: string} | null>(null)
   const [editValue, setEditValue] = useState('')
   const [sortField, setSortField] = useState<string>('name')
@@ -53,6 +57,10 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
   }
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase()
+  }
+
   const sortedPeople = [...people].sort((a, b) => {
     let aValue: any, bValue: any
 
@@ -66,8 +74,8 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         bValue = calculateAge(b.birth_date, b.death_date, b.is_living !== false) || 0
         break
       case 'stories':
-        aValue = (a as any).stories?.length || 0
-        bValue = (b as any).stories?.length || 0
+        aValue = (a as any).person_story_links?.length || 0
+        bValue = (b as any).person_story_links?.length || 0
         break
       case 'photos':
         aValue = (a as any).media?.length || 0
@@ -86,81 +94,15 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
     return 0
   })
 
-  const calculateAge = (birthDate: string | null, deathDate: string | null, isLiving: boolean) => {
-    if (!birthDate) return null
-    
-    const birth = new Date(birthDate)
-    const compareDate = deathDate ? new Date(deathDate) : new Date()
-    
-    const age = compareDate.getFullYear() - birth.getFullYear()
-    const monthDiff = compareDate.getMonth() - birth.getMonth()
-    
-    if (monthDiff < 0 || (monthDiff === 0 && compareDate.getDate() < birth.getDate())) {
-      return age - 1
-    }
-    
-    return age
-  }
-
-  const calculateDaysUntilBirthday = (birthDate: string | null) => {
-    if (!birthDate) return null
-    
-    const birth = new Date(birthDate)
-    const today = new Date()
-    const thisYear = today.getFullYear()
-    
-    // Handle Feb 29 on non-leap years
-    let nextBirthday = new Date(thisYear, birth.getMonth(), birth.getDate())
-    if (birth.getMonth() === 1 && birth.getDate() === 29 && !isLeapYear(thisYear)) {
-      nextBirthday = new Date(thisYear, 1, 28) // Feb 28
-    }
-    
-    if (nextBirthday < today) {
-      const nextYear = thisYear + 1
-      nextBirthday = new Date(nextYear, birth.getMonth(), birth.getDate())
-      if (birth.getMonth() === 1 && birth.getDate() === 29 && !isLeapYear(nextYear)) {
-        nextBirthday = new Date(nextYear, 1, 28)
-      }
-    }
-    
-    const diffTime = nextBirthday.getTime() - today.getTime()
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  }
-
-  const isLeapYear = (year: number) => {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
-  }
-
-  const getRoleBadge = (memberRole: string | null) => {
-    if (!memberRole) {
-      return <Badge variant="secondary">No Account</Badge>
-    }
-    
-    switch (memberRole) {
-      case 'admin':
-        return (
-          <Badge variant="default" className="bg-red-100 text-red-800 border-red-200">
-            <Crown className="h-3 w-3 mr-1" />
-            Admin
-          </Badge>
-        )
-      case 'member':
-        return (
-          <Badge variant="outline">
-            <User className="h-3 w-3 mr-1" />
-            Member
-          </Badge>
-        )
-      case 'guest':
-        return (
-          <Badge variant="secondary">
-            <Shield className="h-3 w-3 mr-1" />
-            Guest
-          </Badge>
-        )
-      default:
-        return <Badge variant="secondary">Unknown</Badge>
-    }
+  const copyInviteLink = async (person: Person) => {
+    // This would need to generate an invite link for the specific person
+    // For now, we'll just copy a placeholder
+    const inviteLink = `${window.location.origin}/invite/${person.id}`
+    await navigator.clipboard.writeText(inviteLink)
+    toast({
+      title: "Success",
+      description: "Invite link copied to clipboard"
+    })
   }
 
   const handleRoleChange = async (person: Person, newRole: 'admin' | 'member' | 'guest') => {
@@ -205,8 +147,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         variant: "destructive"
       })
     }
-  }
-
   const getStatusBadge = (person: any) => {
     if (person.is_living === false) {
       return <Badge variant="secondary">Deceased</Badge>
@@ -372,18 +312,18 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                   {getSortIcon('name')}
                 </div>
               </TableHead>
+              <TableHead>Relation</TableHead>
               <TableHead>Life Dates</TableHead>
               <TableHead 
                 className="cursor-pointer select-none hover:bg-muted/50"
                 onClick={() => handleSort('age')}
               >
                 <div className="flex items-center gap-2">
-                  Age
+                  Age / Would be
                   {getSortIcon('age')}
                 </div>
               </TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Membership</TableHead>
               <TableHead 
                 className="cursor-pointer select-none hover:bg-muted/50"
                 onClick={() => handleSort('stories')}
@@ -430,14 +370,31 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                     )}
                   </TableCell>
                   
-                  <TableCell>
-                    <div className="font-medium">{person.full_name}</div>
-                    {person.alt_names && person.alt_names.length > 0 && (
-                      <div className="text-xs text-muted-foreground">
-                        aka {person.alt_names.join(', ')}
-                      </div>
-                    )}
-                  </TableCell>
+                   <TableCell>
+                     <div className="flex items-center gap-3">
+                       <Avatar className="h-8 w-8">
+                         <AvatarImage src={person.avatar_url || ''} />
+                         <AvatarFallback className="text-xs">
+                           {getInitials(person.full_name || 'Unknown')}
+                         </AvatarFallback>
+                       </Avatar>
+                       <div>
+                         <div className="font-medium cursor-pointer hover:text-primary" 
+                              onClick={() => window.open(`/people/${person.id}`, '_blank')}>
+                           {person.full_name}
+                         </div>
+                         {person.alt_names && person.alt_names.length > 0 && (
+                           <div className="text-xs text-muted-foreground">
+                             aka {person.alt_names.join(', ')}
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </TableCell>
+
+                   <TableCell>
+                     <span className="text-muted-foreground">—</span>
+                   </TableCell>
                   
                   <TableCell>
                     <div className="space-y-1">
@@ -512,13 +469,9 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                     )}
                   </TableCell>
                   
-                  <TableCell>
-                    {getStatusBadge(person)}
-                  </TableCell>
-                  
-                  <TableCell>
-                    {getRoleBadge(person.member_role)}
-                  </TableCell>
+                   <TableCell>
+                     <MembershipChip person={person as any} />
+                   </TableCell>
                   
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -661,6 +614,22 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
             onPersonUpdated()
           }}
         />
+      )}
+
+      {/* Memorialize Modal */}
+      {memorizingPerson && (
+        <Dialog open={!!memorizingPerson} onOpenChange={() => setMemorizingPerson(null)}>
+          <DialogContent>
+            <MemorializeModal
+              person={memorizingPerson}
+              onClose={() => setMemorizingPerson(null)}
+              onSuccess={() => {
+                setMemorizingPerson(null)
+                onPersonUpdated()
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )
