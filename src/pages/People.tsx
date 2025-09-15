@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getCurrentSpaceId } from '@/lib/spaceUtils'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -189,14 +188,12 @@ export default function People() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
@@ -211,8 +208,7 @@ export default function People() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-7xl mx-auto">
@@ -350,6 +346,6 @@ export default function People() {
           }}
         />
       )}
-    </AuthGate>
+    </div>
   )
 }
