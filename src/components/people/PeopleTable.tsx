@@ -5,9 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { UserPlus, Mail, Edit } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { calculateAge, calculateDaysUntilBirthday, formatUpcoming } from '@/utils/dateUtils'
 import PersonForm from './PersonForm'
@@ -27,7 +25,6 @@ interface PeopleTableProps {
 }
 
 export default function PeopleTable({ people, onPersonUpdated, familyId, currentUserRole, currentUserId }: PeopleTableProps) {
-  const [selectedPeople, setSelectedPeople] = useState<string[]>([])
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
   const [memorizingPerson, setMemorizingPerson] = useState<Person | null>(null)
@@ -40,10 +37,10 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
   // Build personAccounts lookup for the new row actions component
   const personAccounts: PersonAccounts = {}
   people.forEach(person => {
-    if (person.account_status === 'joined' && person.member_role) {
+    if ((person as any).account_status === 'joined' && (person as any).member_role) {
       personAccounts[person.id] = {
         user_id: currentUserId || '',
-        member_role: person.member_role
+        member_role: (person as any).member_role
       }
     }
   })
@@ -108,90 +105,20 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
-  const copyInviteLink = async (person: Person) => {
-    // This would need to generate an invite link for the specific person
-    // For now, we'll just copy a placeholder
-    const inviteLink = `${window.location.origin}/invite/${person.id}`
-    await navigator.clipboard.writeText(inviteLink)
-    toast({
-      title: "Success",
-      description: "Invite link copied to clipboard"
-    })
-  }
-
-  const handleRoleChange = async (person: Person, newRole: 'admin' | 'member' | 'guest') => {
-    try {
-      // Find the person-user link
-      const { data: linkData, error: linkError } = await supabase
-        .from('person_user_links')
-        .select('user_id')
-        .eq('person_id', person.id)
-        .eq('family_id', familyId)
-        .single()
-
-      if (linkError || !linkData) {
-        toast({
-          title: "Error",
-          description: "This person is not linked to a user account",
-          variant: "destructive"
-        })
-        return
-      }
-
-      // Update the member role
-      const { error } = await supabase
-        .from('members')
-        .update({ role: newRole })
-        .eq('profile_id', linkData.user_id)
-        .eq('family_id', familyId)
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: `${person.full_name} is now a ${newRole}`
-      })
-      
-      onPersonUpdated()
-    } catch (error) {
-      console.error('Error updating role:', error)
-      toast({
-        title: "Error",
-        description: "Failed to update role",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const getStatusBadge = (person: any) => {
-    if (person.is_living === false) {
-      return <Badge variant="secondary">Deceased</Badge>
-    }
-    
-    if (person.account_status === 'joined') {
-      return <Badge variant="default">Joined</Badge>
-    } else if (person.account_status === 'invited') {
-      return <Badge variant="outline">Invited</Badge>
-    } else {
-      return <Badge variant="secondary">Not on app</Badge>
-    }
-  }
-
   const handleInlineEdit = (person: Person, field: string) => {
     setInlineEditing({ personId: person.id, field })
-    setEditValue((person as any)[field] || '')
+    const currentValue = field === 'birth_date' ? person.birth_date : 
+                        field === 'death_date' ? person.death_date : ''
+    setEditValue(currentValue || '')
   }
 
   const handleSaveInlineEdit = async () => {
     if (!inlineEditing) return
 
     try {
-      const updates: any = {}
-      updates[inlineEditing.field] = editValue
-
       const { error } = await supabase
         .from('people')
-        .update(updates)
+        .update({ [inlineEditing.field]: editValue || null })
         .eq('id', inlineEditing.personId)
 
       if (error) throw error
@@ -200,7 +127,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         title: "Success",
         description: "Person updated successfully"
       })
-      
+
       onPersonUpdated()
       setInlineEditing(null)
     } catch (error) {
@@ -213,159 +140,38 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
     }
   }
 
-  const handleMarkDeceased = async (person: Person) => {
-    try {
-      const { error } = await supabase
-        .from('people')
-        .update({ 
-          is_living: false,
-          death_date: new Date().toISOString().split('T')[0]
-        })
-        .eq('id', person.id)
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: `${person.full_name} marked as deceased`
-      })
-      
-      onPersonUpdated()
-    } catch (error) {
-      console.error('Error marking person as deceased:', error)
-      toast({
-        title: "Error",
-        description: "Failed to update person",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handleDeletePerson = async (person: Person) => {
-    try {
-      const { error } = await supabase
-        .from('people')
-        .delete()
-        .eq('id', person.id)
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: `${person.full_name} has been deleted`
-      })
-      
-      onPersonUpdated()
-    } catch (error) {
-      console.error('Error deleting person:', error)
-      toast({
-        title: "Error",
-        description: "Failed to delete person",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedPeople(people.map(p => p.id))
-    } else {
-      setSelectedPeople([])
-    }
-  }
-
-  const handleSelectPerson = (personId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedPeople([...selectedPeople, personId])
-    } else {
-      setSelectedPeople(selectedPeople.filter(id => id !== personId))
-    }
-  }
-
   return (
     <div className="space-y-4">
-      {/* Table */}
-      {/* Bulk Actions */}
-      {selectedPeople.length > 0 && canEdit() && (
-        <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
-          <span className="text-sm font-medium">{selectedPeople.length} selected</span>
-          {canInvite() && (
-            <Button variant="outline" size="sm">
-              <Mail className="h-4 w-4 mr-2" />
-              Bulk Invite
-            </Button>
-          )}
-          {canEdit() && (
-            <Button variant="outline" size="sm">
-              <Heart className="h-4 w-4 mr-2" />
-              Mark Deceased
-            </Button>
-          )}
-          <Button variant="outline" size="sm">
-            Export CSV
-          </Button>
-        </div>
-      )}
-
-      {/* Table */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">
-                {canEdit() && (
-                  <Checkbox
-                    checked={selectedPeople.length === people.length && people.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                )}
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer select-none hover:bg-muted/50" 
-                onClick={() => handleSort('name')}
-              >
-                <div className="flex items-center gap-2">
-                  Name
-                  {getSortIcon('name')}
+              <TableHead className="w-12"></TableHead>
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort('name')}>
+                  Name {getSortIcon('name')}
                 </div>
               </TableHead>
-              <TableHead>Relation</TableHead>
-              <TableHead>Life Dates</TableHead>
-              <TableHead 
-                className="cursor-pointer select-none hover:bg-muted/50"
-                onClick={() => handleSort('age')}
-              >
-                <div className="flex items-center gap-2">
-                  Age / Would be
-                  {getSortIcon('age')}
+              <TableHead>Status</TableHead>
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort('age')}>
+                  Age {getSortIcon('age')}
                 </div>
               </TableHead>
-              <TableHead>Membership</TableHead>
-              <TableHead 
-                className="cursor-pointer select-none hover:bg-muted/50"
-                onClick={() => handleSort('stories')}
-              >
-                <div className="flex items-center gap-2">
-                  Stories
-                  {getSortIcon('stories')}
+              <TableHead>Birth Date</TableHead>
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort('stories')}>
+                  Stories {getSortIcon('stories')}
                 </div>
               </TableHead>
-              <TableHead 
-                className="cursor-pointer select-none hover:bg-muted/50"
-                onClick={() => handleSort('photos')}
-              >
-                <div className="flex items-center gap-2">
-                  Photos
-                  {getSortIcon('photos')}
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort('photos')}>
+                  Media {getSortIcon('photos')}
                 </div>
               </TableHead>
-              <TableHead 
-                className="cursor-pointer select-none hover:bg-muted/50"
-                onClick={() => handleSort('birthday')}
-              >
-                <div className="flex items-center gap-2">
-                  Upcoming
-                  {getSortIcon('birthday')}
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort('birthday')}>
+                  Upcoming {getSortIcon('birthday')}
                 </div>
               </TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -379,39 +185,42 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
               return (
                 <TableRow key={person.id}>
                   <TableCell>
-                    {canEdit() && (
-                      <Checkbox
-                        checked={selectedPeople.includes(person.id)}
-                        onCheckedChange={(checked) => handleSelectPerson(person.id, checked as boolean)}
-                      />
-                    )}
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={person.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(person.full_name || 'Unknown')}
+                      </AvatarFallback>
+                    </Avatar>
                   </TableCell>
                   
-                   <TableCell>
-                     <div className="flex items-center gap-3">
-                       <Avatar className="h-8 w-8">
-                         <AvatarImage src={person.avatar_url || ''} />
-                         <AvatarFallback className="text-xs">
-                           {getInitials(person.full_name || 'Unknown')}
-                         </AvatarFallback>
-                       </Avatar>
-                       <div>
-                         <div className="font-medium cursor-pointer hover:text-primary" 
-                              onClick={() => window.open(`/people/${person.id}`, '_blank')}>
-                           {person.full_name}
-                         </div>
-                         {person.alt_names && person.alt_names.length > 0 && (
-                           <div className="text-xs text-muted-foreground">
-                             aka {person.alt_names.join(', ')}
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                   </TableCell>
-
-                   <TableCell>
-                     <span className="text-muted-foreground">—</span>
-                   </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="font-medium">{person.full_name}</div>
+                      {person.alt_names && person.alt_names.length > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          Also known as: {person.alt_names.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <MembershipChip 
+                      person={person as Person & { 
+                        account_status?: string
+                        member_role?: string | null
+                      }} 
+                    />
+                  </TableCell>
+                  
+                  <TableCell>
+                    {age !== null && (
+                      <div>
+                        <span className="font-medium">{age}</span>
+                        {person.is_living === false && <span className="text-muted-foreground"> (at death)</span>}
+                      </div>
+                    )}
+                  </TableCell>
                   
                   <TableCell>
                     <div className="space-y-1">
@@ -421,7 +230,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                             type="date"
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
-                            className="w-32"
+                            className="w-32 text-xs"
                             autoFocus
                           />
                           <Button size="sm" onClick={handleSaveInlineEdit}>Save</Button>
@@ -435,9 +244,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                         >
                           <div className="flex items-center justify-between">
                             <span>{person.birth_date ? new Date(person.birth_date).toLocaleDateString() : 'Unknown'}</span>
-                            {canEdit() && (
-                              <Edit className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
                           </div>
                         </div>
                       )}
@@ -464,9 +270,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                             >
                               <div className="flex items-center justify-between">
                                 <span>† {new Date(person.death_date).toLocaleDateString()}</span>
-                                {canEdit() && (
-                                  <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
-                                )}
                               </div>
                             </div>
                           )}
@@ -474,21 +277,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                       )}
                     </div>
                   </TableCell>
-                  
-                  <TableCell>
-                    {age !== null && (
-                      <div>
-                        {person.is_living === false ? `Was ${age}` : age}
-                        {person.is_living === false && (
-                          <div className="text-xs text-muted-foreground">(In memoriam)</div>
-                        )}
-                      </div>
-                    )}
-                  </TableCell>
-                  
-                   <TableCell>
-                     <MembershipChip person={person as any} />
-                   </TableCell>
                   
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -515,7 +303,12 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                   
                   <TableCell className="text-right">
                     <PeopleTableRowActions
-                      person={person}
+                      person={person as Person & { 
+                        account_status?: string
+                        member_role?: string | null
+                        stories_count?: number
+                        photos_count?: number
+                      }}
                       personAccounts={personAccounts}
                       currentUser={currentUser}
                       familyId={familyId}
@@ -529,7 +322,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         </Table>
       </div>
 
-      {/* Edit Person Modal */}
+      {/* Modals */}
       {editingPerson && (
         <Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -551,7 +344,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         </Dialog>
       )}
 
-      {/* Invite Person Modal */}
       {invitingPerson && (
         <InvitePersonModal
           person={invitingPerson}
@@ -564,7 +356,6 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         />
       )}
 
-      {/* Memorialize Modal */}
       {memorizingPerson && (
         <Dialog open={!!memorizingPerson} onOpenChange={() => setMemorizingPerson(null)}>
           <DialogContent>
