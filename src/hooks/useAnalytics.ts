@@ -74,7 +74,31 @@ export type AnalyticsEvent =
   | 'home_suggestion_click'
   | 'home_resume_click'
   | 'home_streak_capture'
-  | 'home_simple_mode_toggle';
+  | 'home_simple_mode_toggle'
+  // Voice capture events
+  | 'voice_capture_complete'
+  | 'voice_capture_error'
+  | 'voice_transcription_start'
+  | 'voice_transcription_complete'
+  | 'voice_story_published'
+  | 'voice_story_saved_draft'
+  | 'voice_suggestions_accepted'
+  | 'voice_modal_open'
+  | 'voice_modal_close'
+  | 'voice_hero_start'
+  // New home events
+  | 'draft_resumed'
+  | 'draft_deleted'
+  | 'activity_clicked'
+  | 'activity_reaction'
+  | 'invite_banner_dismissed'
+  | 'invite_link_copied'
+  | 'invite_email_clicked'
+  | 'birthday_quick_action'
+  | 'view_all_birthdays_clicked'
+  | 'weekly_digest_toggled'
+  | 'weekly_digest_schedule_changed'
+  | 'weekly_digest_settings_opened';
 
 export const useAnalytics = () => {
   const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {
