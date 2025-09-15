@@ -35,8 +35,20 @@ export default function InviteBanner({ className }: InviteBannerProps) {
   }
 
   const handleCopyLink = async () => {
-    const inviteLink = `${window.location.origin}/invite/family123` // Mock link
     try {
+      // Get current user and their family id
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data: member, error: memberError } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+
+      if (memberError || !member?.family_id) throw new Error('No family found')
+
+      const inviteLink = `${window.location.origin}/invite/${member.family_id}`
       await navigator.clipboard.writeText(inviteLink)
       toast({
         title: "Link copied!",
