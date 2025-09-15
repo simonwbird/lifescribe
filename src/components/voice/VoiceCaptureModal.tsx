@@ -56,6 +56,10 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated }: Voi
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
+  const isLoading = state === 'publishing' || state === 'drafting'
+  const isDrafting = state === 'drafting'
+  const isPublishing = state === 'publishing'
+
   const { track } = useAnalytics()
   const { labsEnabled } = useLabs()
 
@@ -499,18 +503,18 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated }: Voi
               <Button
                 variant="outline"
                 onClick={handleSaveDraft}
-                disabled={state !== 'review' || !reviewData.title.trim()}
+                disabled={isLoading || !reviewData.title.trim()}
                 className="gap-2"
               >
-                {(state === 'drafting' || state === 'publishing') && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isDrafting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Save Draft
               </Button>
               <Button
                 onClick={handlePublish}
-                disabled={state !== 'review' || !reviewData.title.trim()}
+                disabled={isLoading || !reviewData.title.trim()}
                 className="gap-2 flex-1"
               >
-                {(state === 'publishing' || state === 'drafting') && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isPublishing && <Loader2 className="h-4 w-4 animate-spin" />}
                 Publish Story
               </Button>
             </div>
