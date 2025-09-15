@@ -1,40 +1,30 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Search, Menu, BookHeart, Zap } from 'lucide-react'
+import { Search, BookHeart, Home, Users, GitBranch, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
-import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
 
 import { useLabs } from '@/hooks/useLabs'
 import { useMode } from '@/contexts/ModeContext'
 
-// Navigation components
+// MVP Navigation components
+import FamilySwitcher from '@/components/navigation/FamilySwitcher'
+import MicButton from '@/components/navigation/MicButton'
+import MoreMenu from '@/components/navigation/MoreMenu'
 import CreateDropdown from '@/components/navigation/CreateDropdown'
-import CollectionsDropdown from '@/components/navigation/CollectionsDropdown'
-import FamilyDropdown from '@/components/navigation/FamilyDropdown'
 import CapturesStreak from '@/components/navigation/CapturesStreak'
 import NotificationsBell from '@/components/navigation/NotificationsBell'
-import HelpDropdown from '@/components/navigation/HelpDropdown'
 import ProfileDropdown from '@/components/navigation/ProfileDropdown'
-import CommandPalette from '@/components/navigation/CommandPalette'
-import KeyboardShortcutsDialog from '@/components/navigation/KeyboardShortcutsDialog'
 import MobileBottomNav from '@/components/navigation/MobileBottomNav'
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
-  const { flags: modeFlags } = useMode()
+  const { flags: modeFlags, mode } = useMode()
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
@@ -51,14 +41,7 @@ export default function Header() {
         return
       }
 
-      // Command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault()
-        setCommandPaletteOpen(true)
-        return
-      }
-
-      // Search focus
+      // Search focus (/)
       if (event.key === '/') {
         event.preventDefault()
         track('search_slash_shortcut_used')
@@ -69,26 +52,17 @@ export default function Header() {
         return
       }
 
-      // Help shortcuts
-      if (event.key === '?') {
-        event.preventDefault()
-        track('keyboard_shortcut_help')
-        setShortcutsOpen(true)
-        return
-      }
-
-      // Create menu
+      // Mic shortcut (C)
       if (event.key.toLowerCase() === 'c' && !event.metaKey && !event.ctrlKey && !event.altKey) {
         event.preventDefault()
-        // Simulate click on create dropdown
-        const createButton = document.querySelector('[data-create-button]') as HTMLButtonElement
-        if (createButton) {
-          createButton.click()
+        const micButton = document.querySelector('[data-mic-button]') as HTMLButtonElement
+        if (micButton) {
+          micButton.click()
         }
         return
       }
 
-      // Go to home
+      // Navigation shortcuts (G + H/P/T)
       if (event.key.toLowerCase() === 'g') {
         const nextKey = new Promise(resolve => {
           const handler = (e: KeyboardEvent) => {
@@ -107,36 +81,23 @@ export default function Header() {
             event.preventDefault()
             track('nav_click_home', { source: 'keyboard' })
             navigate('/home')
+          } else if (key === 'p') {
+            event.preventDefault()
+            track('nav_click_people', { source: 'keyboard' })
+            navigate('/family/members')
+          } else if (key === 't') {
+            event.preventDefault()
+            track('nav_click_tree', { source: 'keyboard' })
+            navigate('/family/tree')
           }
         })
         return
-      }
-
-      // Direct creation shortcuts (only if not in command palette or other modals)
-      if (!commandPaletteOpen && !event.metaKey && !event.ctrlKey && !event.altKey) {
-        const key = event.key.toLowerCase()
-        const shortcuts: Record<string, string> = {
-          's': '/stories/new',
-          'p': '/photos/new', 
-          'v': '/audio/new',
-          'r': '/recipes/new',
-          'o': '/objects/new',
-          'y': '/properties/new',
-          't': '/pets/new',
-          'q': '/prompts/browse'
-        }
-
-        if (shortcuts[key]) {
-          event.preventDefault()
-          track(`create_select_${key === 'p' ? 'photo' : key === 'v' ? 'voice' : key === 'y' ? 'property' : key === 't' ? 'pet' : key === 'q' ? 'prompt' : key === 's' ? 'story' : key === 'r' ? 'recipe' : 'object'}`, { source: 'keyboard' })
-          navigate(shortcuts[key])
-        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [navigate, track, commandPaletteOpen])
+  }, [navigate, track])
 
   const isActivePath = (path: string) => {
     if (path === '/home') {
@@ -148,22 +109,13 @@ export default function Header() {
     return location.pathname === path
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      track('search_performed', { query: searchQuery })
-      // Implement search functionality
-      console.log('Searching for:', searchQuery)
-    }
-  }
-
   const handleLogoClick = () => {
     track('nav_click_home', { source: 'logo' })
   }
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="mvp-header sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         {/* Skip to content link */}
         <a 
           href="#main-content" 
@@ -172,196 +124,119 @@ export default function Header() {
           Skip to content
         </a>
 
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Left side - Logo and Nav */}
-          <div className="flex items-center gap-6">
-            {/* Logo and Quick Capture */}
-            <div className="flex flex-col gap-2">
-              <Link 
-                to="/home" 
-                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-                onClick={handleLogoClick}
-                aria-label="LifeScribe — go to Home"
-              >
-                <BookHeart className="h-8 w-8 text-brand-primary" />
-                <span className="text-2xl font-serif font-bold text-foreground">LifeScribe</span>
-              </Link>
-              
-              {/* Quick Capture Button */}
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
-                onClick={() => setQuickCaptureOpen(true)}
-              >
-                <Zap className="mr-2 h-3 w-3" />
-                Quick Capture
-              </Button>
-            </div>
+        <div className="container mx-auto px-4 h-full flex items-center">
+          {/* Left: Logo · Family Switcher · Nav (Home, People, Tree) */}
+          <div className="flex items-center gap-4">
+            {/* Logo */}
+            <Link 
+              to="/home" 
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              onClick={handleLogoClick}
+              aria-label="LifeScribe — go to Home"
+            >
+              <BookHeart className="h-6 w-6 text-primary" />
+              <span className="hidden sm:inline text-lg font-serif font-bold">LifeScribe</span>
+            </Link>
             
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1" role="navigation">
+            {/* Family Switcher */}
+            <div className="hidden md:block">
+              <FamilySwitcher />
+            </div>
+
+            {/* Navigation */}
+            <nav className="hidden lg:flex items-center gap-1" role="navigation">
               <Button
                 asChild
                 variant="ghost"
-                className={`hover:bg-accent hover:text-accent-foreground ${
-                  isActivePath('/home') 
-                    ? 'bg-accent text-accent-foreground font-medium' 
-                    : 'text-muted-foreground'
-                }`}
+                size="sm"
+                className={isActivePath('/home') ? 'bg-accent text-accent-foreground' : ''}
               >
-                <Link 
-                  to="/home"
-                  aria-current={isActivePath('/home') ? 'page' : undefined}
-                >
+                <Link to="/home" className="flex items-center gap-1">
+                  <Home className="h-4 w-4" />
                   Home
                 </Link>
               </Button>
+              
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className={isActivePath('/family') ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <Link to="/family/members" className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  People
+                </Link>
+              </Button>
+              
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className={isActivePath('/family/tree') ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <Link to="/family/tree" className="flex items-center gap-1">
+                  <GitBranch className="h-4 w-4" />
+                  Tree
+                </Link>
+              </Button>
 
-              {modeFlags.showCreateMenu && <CreateDropdown />}
-              {labsEnabled && flags.collections && <CollectionsDropdown />}
-              <FamilyDropdown />
+              {/* Labs More Menu */}
+              <MoreMenu />
             </nav>
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-expanded={mobileMenuOpen}
-              aria-label="Toggle navigation menu"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
           </div>
 
-          {/* Center - Search */}
-          <div className="hidden md:block max-w-md mx-4 flex-1">
+          {/* Center: Search */}
+          <div className="flex-1 max-w-md mx-8 hidden md:block">
             <GlobalSearch />
           </div>
 
-          {/* Right side - Actions */}
+          {/* Right: Mic · Create(+) (Studio only) · Notifications (Labs only) · Streak (Studio only) · Avatar */}
           <div className="flex items-center gap-2">
-            {/* Mobile Search Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label="Search"
-              onClick={() => {
-                track('search_open', { source: 'mobile' })
-                // Open mobile search modal
-              }}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center gap-2">
-              <CapturesStreak />
-              {labsEnabled && flags.notifications && <NotificationsBell />}
-              <HelpDropdown onShortcutsOpen={() => setShortcutsOpen(true)} />
+            {/* Mic Button */}
+            <div data-mic-button>
+              <MicButton />
             </div>
 
+            {/* Mobile Search */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              aria-label="Search"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+
+            {/* Create Button (Studio only) */}
+            {modeFlags.showCreateMenu && (
+              <div className="hidden sm:block">
+                <CreateDropdown />
+              </div>
+            )}
+
+            {/* Notifications (Labs only) */}
+            {labsEnabled && flags.notifications && (
+              <div className="hidden md:block">
+                <NotificationsBell />
+              </div>
+            )}
+
+            {/* Streak Chip (Studio only) */}
+            {mode === 'studio' && (
+              <div className="hidden lg:block">
+                <CapturesStreak />
+              </div>
+            )}
+
+            {/* Profile Avatar */}
             <ProfileDropdown />
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t bg-background">
-            <nav className="container mx-auto px-4 py-3 space-y-2">
-              <Link
-                to="/home"
-                className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                  isActivePath('/home')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-                aria-current={isActivePath('/home') ? 'page' : undefined}
-              >
-                Home
-              </Link>
-              
-              {modeFlags.showCreateMenu && (
-                <div className="pt-2">
-                  <CreateDropdown />
-                </div>
-              )}
-              
-              {labsEnabled && flags.collections && (
-                <Link
-                  to="/collections"
-                  className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                    isActivePath('/collections')
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Collections
-                </Link>
-              )}
-
-              <div className="space-y-2">
-                <Link
-                  to="/family/members"
-                  className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                    isActivePath('/family')
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  People
-                </Link>
-                <Link
-                  to="/family/tree"
-                  className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Tree
-                </Link>
-              </div>
-
-              <Link
-                to="/prompts"
-                className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                  isActivePath('/prompts')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Prompts
-              </Link>
-            </nav>
-          </div>
-        )}
       </header>
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
-
-      {/* Command Palette */}
-      <CommandPalette 
-        open={commandPaletteOpen} 
-        onOpenChange={setCommandPaletteOpen} 
-      />
-
-      {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcutsDialog
-        open={shortcutsOpen}
-        onOpenChange={setShortcutsOpen}
-      />
-
-      {/* Quick Capture Modal */}
-      <QuickCaptureComposer
-        isOpen={quickCaptureOpen}
-        onClose={() => setQuickCaptureOpen(false)}
-      />
 
       {/* Main content landmark */}
       <div id="main-content" className="sr-only" aria-hidden="true" />
