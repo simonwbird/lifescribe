@@ -19,13 +19,14 @@ import type { PersonAccounts, CurrentUser } from '@/utils/personState'
 
 interface PeopleTableProps {
   people: Person[]
+  personUserLinks: Array<{ person_id: string, user_id: string }>
   onPersonUpdated: () => void
   familyId: string
   currentUserRole: string | null
   currentUserId: string | null
 }
 
-export default function PeopleTable({ people, onPersonUpdated, familyId, currentUserRole, currentUserId }: PeopleTableProps) {
+export default function PeopleTable({ people, personUserLinks, onPersonUpdated, familyId, currentUserRole, currentUserId }: PeopleTableProps) {
   const navigate = useNavigate()
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [invitingPerson, setInvitingPerson] = useState<Person | null>(null)
@@ -323,6 +324,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                       personAccounts={personAccounts}
                       currentUser={currentUser}
                       familyId={familyId}
+                      personUserLink={personUserLinks.find(link => link.person_id === person.id)}
                       onPersonUpdated={onPersonUpdated}
                     />
                   </TableCell>

@@ -20,7 +20,8 @@ import {
   Trash2,
   Settings,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Monitor
 } from 'lucide-react'
 import type { Person } from '@/lib/familyTreeTypes'
 import { derivePersonState, getActionLabel, canDeletePerson, type PersonAccounts, type CurrentUser } from '@/utils/personState'
@@ -28,6 +29,7 @@ import PersonEditModal from './modals/PersonEditModal'
 import InviteManageModal from './modals/InviteManageModal'
 import MemorializeModal from './MemorializeModal'
 import DeleteConfirmDialog from './DeleteConfirmDialog'
+import UserModeManager from './UserModeManager'
 
 interface PeopleTableRowActionsProps {
   person: Person & { 
@@ -39,6 +41,9 @@ interface PeopleTableRowActionsProps {
   personAccounts: PersonAccounts
   currentUser: CurrentUser
   familyId: string
+  personUserLink?: {
+    user_id: string
+  } | null
   onPersonUpdated: () => void
 }
 
@@ -47,6 +52,7 @@ export default function PeopleTableRowActions({
   personAccounts, 
   currentUser, 
   familyId, 
+  personUserLink,
   onPersonUpdated 
 }: PeopleTableRowActionsProps) {
   const navigate = useNavigate()
@@ -54,6 +60,7 @@ export default function PeopleTableRowActions({
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showMemorializeModal, setShowMemorializeModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showModeManager, setShowModeManager] = useState(false)
 
   // Derive person state
   const personState = derivePersonState(person, personAccounts, currentUser)
@@ -81,6 +88,8 @@ export default function PeopleTableRowActions({
   }
 
   const handleMemorialize = () => setShowMemorializeModal(true)
+
+  const handleModeManager = () => setShowModeManager(true)
 
   const handleDelete = () => {
     if (deleteCheck.canDelete) {
@@ -128,6 +137,16 @@ export default function PeopleTableRowActions({
             icon: <Settings className="h-4 w-4" />,
             onClick: handleInviteManage
           })
+          
+          // Add mode management for admins when person has a user account
+          if (currentUser.role === 'admin' && personUserLink?.user_id) {
+            items.push({
+              key: 'manage_mode',
+              label: 'Manage Mode',
+              icon: <Monitor className="h-4 w-4" />,
+              onClick: handleModeManager
+            })
+          }
           break
       }
     }
@@ -296,6 +315,18 @@ export default function PeopleTableRowActions({
           onClose={() => setShowDeleteDialog(false)}
           onSuccess={() => {
             setShowDeleteDialog(false)
+            onPersonUpdated()
+          }}
+        />
+      )}
+
+      {showModeManager && (
+        <UserModeManager
+          person={person}
+          personUserLink={personUserLink}
+          open={showModeManager}
+          onOpenChange={setShowModeManager}
+          onSuccess={() => {
             onPersonUpdated()
           }}
         />

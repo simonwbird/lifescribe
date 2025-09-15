@@ -27,6 +27,7 @@ export default function People() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [people, setPeople] = useState<Person[]>([])
   const [filteredPeople, setFilteredPeople] = useState<Person[]>([])
+  const [personUserLinks, setPersonUserLinks] = useState<Array<{ person_id: string, user_id: string }>>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('living')
@@ -266,6 +267,7 @@ export default function People() {
 
       setPeople(peopleWithStatus)
       setFilteredPeople(peopleWithStatus)
+      setPersonUserLinks(linksData || [])
     } catch (error) {
       console.error('Error fetching people:', error)
       toast({
@@ -463,6 +465,7 @@ export default function People() {
             {(currentUserRole === 'admin' || currentUserRole === 'member') ? (
               <PeopleTable 
                 people={filteredPeople}
+                personUserLinks={personUserLinks}
                 onPersonUpdated={handlePersonUpdated}
                 familyId={currentSpaceId!}
                 currentUserRole={currentUserRole}
