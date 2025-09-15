@@ -186,7 +186,7 @@ export default function Header() {
           </div>
 
           {/* Right: Mic · Create(+) (Studio only) · Notifications (Labs only) · Streak (Studio only) · Avatar */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             {/* Mic Button */}
             <div data-mic-button>
             <MicButton onStoryCreated={(storyId) => {
