@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Copy, Mail, Check } from 'lucide-react'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 
 interface InviteModalEnhancedProps {
@@ -24,6 +25,7 @@ export default function InviteModalEnhanced({ familyId, familyName, onClose, onI
   const [success, setSuccess] = useState(false)
   const [magicLink, setMagicLink] = useState('')
   const { toast } = useToast()
+  const { track } = useAnalytics()
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,6 +60,13 @@ export default function InviteModalEnhanced({ familyId, familyName, onClose, onI
         toast({
           title: "Invitation sent!",
           description: `Magic link sent to ${email}`,
+        })
+
+        // Track analytics event
+        track('invite_sent', { 
+          familyId, 
+          recipientEmail: email, 
+          role 
         })
 
         setTimeout(() => {

@@ -98,15 +98,70 @@ export type AnalyticsEvent =
   | 'view_all_birthdays_clicked'
   | 'weekly_digest_toggled'
   | 'weekly_digest_schedule_changed'
-  | 'weekly_digest_settings_opened';
+  | 'weekly_digest_settings_opened'
+  // MVP Tracking Events
+  | 'invite_sent'
+  | 'invite_accepted'
+  | 'capture_start'
+  | 'capture_stop'
+  | 'transcribe_success'
+  | 'transcribe_error'
+  | 'publish_success'
+  | 'publish_error'
+  | 'comment_created'
+  | 'reaction_added'
+  | 'digest_scheduled'
+  | 'digest_sent'
+  | 'digest_opened';
+
+import { supabase } from '@/lib/supabase'
+import { useMode } from './useMode'
+import { useLabs } from './useLabs'
 
 export const useAnalytics = () => {
-  const track = (event: AnalyticsEvent, properties?: Record<string, any>) => {
-    // For now, just log to console - will be replaced with actual analytics
+  const { mode } = useMode()
+  const { labsEnabled } = useLabs()
+
+  const track = async (event: AnalyticsEvent, properties?: Record<string, any>) => {
+    // Log to console for debugging
     console.log(`Analytics: ${event}`, properties);
     
-    // In production, this would send to your analytics service
-    // analytics.track(event, properties);
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get user's family context
+      let familyId = null
+      const { data: membership } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .limit(1)
+        .single()
+      
+      if (membership) {
+        familyId = membership.family_id
+      }
+
+      // Store analytics event
+      await supabase
+        .from('analytics_events')
+        .insert({
+          event_name: event,
+          user_id: user.id,
+          family_id: familyId,
+          properties: {
+            ...properties,
+            userId: user.id,
+            familyId: familyId,
+            mode: mode,
+            labsEnabled: labsEnabled,
+            timestamp: new Date().toISOString(),
+          }
+        })
+    } catch (error) {
+      console.error('Analytics tracking error:', error)
+    }
   };
 
   return { track };

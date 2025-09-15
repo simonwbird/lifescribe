@@ -114,6 +114,8 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
   }, [audioUrl])
 
   const startRecording = async () => {
+    track('capture_start', { type: 'voice' })
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
@@ -163,8 +165,9 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
           })
           
           setState('review')
-        } catch (error) {
-          console.error('Transcription failed:', error)
+    } catch (error) {
+      track('transcribe_error', { error: (error as Error).message })
+      console.error('Transcription failed:', error)
           setState('idle')
         }
       }
@@ -179,6 +182,8 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
   }
 
   const stopRecording = () => {
+    track('capture_stop', { type: 'voice' })
+    
     if (mediaRecorderRef.current && state === 'recording') {
       mediaRecorderRef.current.stop()
       track('voice_capture_stop')

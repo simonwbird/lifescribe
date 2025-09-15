@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Users, Mail, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import ModeSelection from '@/components/ModeSelection'
 
 export default function InviteLanding() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { track } = useAnalytics()
   
   const [step, setStep] = useState<'loading' | 'auth' | 'mode' | 'complete'>('loading')
   const [invite, setInvite] = useState<any>(null)
@@ -135,6 +137,13 @@ export default function InviteLanding() {
         .from('invites')
         .update({ accepted_at: new Date().toISOString() })
         .eq('id', invite.id)
+
+      // Track analytics event
+      track('invite_accepted', {
+        familyId: invite.family_id,
+        inviteId: invite.id,
+        role: invite.role
+      })
 
       toast({
         title: "Welcome!",
