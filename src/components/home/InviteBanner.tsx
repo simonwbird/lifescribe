@@ -92,9 +92,15 @@ export default function InviteBanner({ className }: InviteBannerProps) {
         }
       })
 
-      if (error) {
-        const serverMsg = (data as any)?.error
-        throw new Error(serverMsg || error.message || 'Failed to send')
+      // Check if there's an error or the function returned an error response
+      if (error || (data && (data as any).error)) {
+        const serverMsg = (data as any)?.error || error?.message
+        throw new Error(serverMsg || 'Failed to send invitation')
+      }
+
+      // Verify we got a success response
+      if (!data || !(data as any).success) {
+        throw new Error('Unexpected response from server')
       }
 
       toast({
