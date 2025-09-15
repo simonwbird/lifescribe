@@ -71,6 +71,7 @@ export default function EnhancedFamilyTreeCanvas({
   const CANVAS_SIZE = 4000
   const MIN_ZOOM = 0.2
   const MAX_ZOOM = 2.0
+  const NODE_WIDTH = 264 // Width of person cards
 
   // Handle zoom
   const handleWheel = useCallback((e: WheelEvent) => {
@@ -244,31 +245,46 @@ export default function EnhancedFamilyTreeCanvas({
     // Create generations based on relationships
     const generations = new Map<number, Person[]>()
     const personLevels = new Map<string, number>()
-    const spouseGroups = new Map<string, string[]>() // Groups of spouses
+    const spouseMap = new Map<string, Set<string>>() // Track all spouses for each person
+    const parentMap = new Map<string, Set<string>>() // Track parents for each person
+    const childrenMap = new Map<string, Set<string>>() // Track children for each person
     
-    // Find all spouse relationships and group them
-    const spouseRelationships = relationships.filter(rel => rel.relationship_type === 'spouse')
-    const processedSpouses = new Set<string>()
-    
-    spouseRelationships.forEach(rel => {
-      if (!processedSpouses.has(rel.from_person_id) && !processedSpouses.has(rel.to_person_id)) {
-        const groupId = `spouse_group_${rel.from_person_id}`
-        spouseGroups.set(groupId, [rel.from_person_id, rel.to_person_id])
-        processedSpouses.add(rel.from_person_id)
-        processedSpouses.add(rel.to_person_id)
+    // Build relationship maps
+    relationships.forEach(rel => {
+      if (rel.relationship_type === 'spouse') {
+        if (!spouseMap.has(rel.from_person_id)) spouseMap.set(rel.from_person_id, new Set())
+        if (!spouseMap.has(rel.to_person_id)) spouseMap.set(rel.to_person_id, new Set())
+        spouseMap.get(rel.from_person_id)!.add(rel.to_person_id)
+        spouseMap.get(rel.to_person_id)!.add(rel.from_person_id)
+      } else if (rel.relationship_type === 'parent') {
+        if (!childrenMap.has(rel.from_person_id)) childrenMap.set(rel.from_person_id, new Set())
+        if (!parentMap.has(rel.to_person_id)) parentMap.set(rel.to_person_id, new Set())
+        childrenMap.get(rel.from_person_id)!.add(rel.to_person_id)
+        parentMap.get(rel.to_person_id)!.add(rel.from_person_id)
       }
     })
     
-    // Start with people who have no parents (roots)
-    const rootPeople = people.filter(person => 
-      !relationships.some(rel => 
-        rel.relationship_type === 'parent' && rel.to_person_id === person.id
-      )
-    )
+    // Find root generation (people with no parents)
+    const rootPeople = people.filter(person => !parentMap.has(person.id) || parentMap.get(person.id)!.size === 0)
     
-    // Assign levels using BFS
-    const queue = rootPeople.map(person => ({ person, level: 0 }))
+    // If no clear roots, start with oldest people by birth year
+    let startingPeople = rootPeople
+    if (startingPeople.length === 0) {
+      startingPeople = people.slice().sort((a, b) => {
+        const aYear = a.birth_year || 1900
+        const bYear = b.birth_year || 1900
+        return aYear - bYear
+      }).slice(0, 2) // Take 2 oldest as potential roots
+    }
+    
+    // Assign levels using BFS from roots
     const visited = new Set<string>()
+    const queue: { person: Person; level: number }[] = []
+    
+    // Start with root people
+    startingPeople.forEach(person => {
+      queue.push({ person, level: 0 })
+    })
     
     while (queue.length > 0) {
       const { person, level } = queue.shift()!
@@ -277,81 +293,129 @@ export default function EnhancedFamilyTreeCanvas({
       visited.add(person.id)
       
       personLevels.set(person.id, level)
-      if (!generations.has(level)) {
-        generations.set(level, [])
-      }
+      if (!generations.has(level)) generations.set(level, [])
       generations.get(level)!.push(person)
       
-      // Also assign the same level to all spouses
-      spouseGroups.forEach(spouseGroup => {
-        if (spouseGroup.includes(person.id)) {
-          spouseGroup.forEach(spouseId => {
-            if (!visited.has(spouseId) && spouseId !== person.id) {
-              visited.add(spouseId)
-              personLevels.set(spouseId, level)
-              const spousePerson = people.find(p => p.id === spouseId)
-              if (spousePerson) {
-                generations.get(level)!.push(spousePerson)
-              }
-            }
-          })
+      // Add spouses to the same level
+      const spouses = spouseMap.get(person.id) || new Set()
+      spouses.forEach(spouseId => {
+        const spouse = people.find(p => p.id === spouseId)
+        if (spouse && !visited.has(spouse.id)) {
+          queue.push({ person: spouse, level })
         }
       })
       
-      // Add children to next level
-      const children = relationships
-        .filter(rel => rel.relationship_type === 'parent' && rel.from_person_id === person.id)
-        .map(rel => people.find(p => p.id === rel.to_person_id))
-        .filter(Boolean) as Person[]
-      
-      children.forEach(child => {
-        if (!visited.has(child.id)) {
+      // Add children to the next level
+      const children = childrenMap.get(person.id) || new Set()
+      children.forEach(childId => {
+        const child = people.find(p => p.id === childId)
+        if (child && !visited.has(child.id)) {
           queue.push({ person: child, level: level + 1 })
         }
       })
     }
     
-    // Position people by generation, keeping spouses close together
+    // Handle any unvisited people (isolated nodes)
+    people.forEach(person => {
+      if (!visited.has(person.id)) {
+        const maxLevel = Math.max(...Array.from(generations.keys()), -1)
+        personLevels.set(person.id, maxLevel + 1)
+        if (!generations.has(maxLevel + 1)) generations.set(maxLevel + 1, [])
+        generations.get(maxLevel + 1)!.push(person)
+      }
+    })
+    
+    console.log('Generations built:', Array.from(generations.entries()))
+    
+    // Position people by generation with proper family grouping
+    const GENERATION_HEIGHT = 280
+    const FAMILY_GROUP_WIDTH = 280
+    const SPOUSE_SPACING = 300
+    const CHILD_OFFSET = 140
+    
     Array.from(generations.entries()).forEach(([level, levelPeople]) => {
-      // Group spouses together in positioning
-      const positionedPeople: Person[] = []
-      const processedInLevel = new Set<string>()
+      // Group people into family units (spouse pairs + singles)
+      const familyGroups: Person[][] = []
+      const processedPeople = new Set<string>()
       
       levelPeople.forEach(person => {
-        if (processedInLevel.has(person.id)) return
+        if (processedPeople.has(person.id)) return
         
-        // Check if this person has spouses in the same level
-        const personSpouses = spouseGroups.get(Array.from(spouseGroups.keys()).find(key => 
-          spouseGroups.get(key)?.includes(person.id)
-        ) || '') || []
+        const spouses = Array.from(spouseMap.get(person.id) || new Set())
+          .map(id => people.find(p => p.id === id))
+          .filter(p => p && levelPeople.includes(p) && !processedPeople.has(p.id)) as Person[]
         
-        const spousesInLevel = personSpouses.filter(spouseId => 
-          levelPeople.some(p => p.id === spouseId)
-        ).map(spouseId => levelPeople.find(p => p.id === spouseId)).filter(Boolean) as Person[]
-        
-        if (spousesInLevel.length > 1) {
-          // Add all spouses as a group
-          spousesInLevel.forEach(spouse => {
-            positionedPeople.push(spouse)
-            processedInLevel.add(spouse.id)
-          })
+        if (spouses.length > 0) {
+          // Create family group with person and their spouses
+          const familyGroup = [person, ...spouses]
+          familyGroups.push(familyGroup)
+          familyGroup.forEach(p => processedPeople.add(p.id))
         } else {
-          // Add single person
-          positionedPeople.push(person)
-          processedInLevel.add(person.id)
+          // Single person group
+          familyGroups.push([person])
+          processedPeople.add(person.id)
         }
       })
       
-      // Position the people/groups
-      positionedPeople.forEach((person, index) => {
-        const x = (index - (positionedPeople.length - 1) / 2) * 350 + CANVAS_SIZE / 2
-        const y = level * 250 + 200
-        onPersonMove(person.id, x, y)
+      console.log(`Level ${level} family groups:`, familyGroups.map(g => g.map(p => p.full_name)))
+      
+      // Position family groups across the level
+      const totalGroups = familyGroups.length
+      const startX = CANVAS_SIZE / 2 - ((totalGroups - 1) * FAMILY_GROUP_WIDTH) / 2
+      
+      familyGroups.forEach((group, groupIndex) => {
+        const groupCenterX = startX + groupIndex * FAMILY_GROUP_WIDTH
+        const y = level * GENERATION_HEIGHT + 200
+        
+        if (group.length === 1) {
+          // Single person - center in group
+          onPersonMove(group[0].id, groupCenterX - NODE_WIDTH/2, y)
+        } else {
+          // Multiple people (spouses) - spread them out
+          const groupWidth = (group.length - 1) * SPOUSE_SPACING
+          const groupStartX = groupCenterX - groupWidth / 2
+          
+          group.forEach((person, personIndex) => {
+            const x = groupStartX + personIndex * SPOUSE_SPACING
+            onPersonMove(person.id, x - NODE_WIDTH/2, y)
+          })
+        }
+      })
+    })
+    
+    // Second pass: Align children under their parents
+    Array.from(generations.entries()).forEach(([level, levelPeople]) => {
+      if (level === 0) return // Skip root level
+      
+      levelPeople.forEach(child => {
+        const parents = Array.from(parentMap.get(child.id) || new Set())
+          .map(id => people.find(p => p.id === id))
+          .filter(p => p && personLevels.get(p.id) === level - 1) as Person[]
+        
+        if (parents.length > 0) {
+          // Calculate center point between parents
+          const parentPositions = parents.map(p => positions[p.id] || { x: CANVAS_SIZE/2, y: 0 })
+          const avgX = parentPositions.reduce((sum, pos) => sum + pos.x, 0) / parentPositions.length
+          
+          // Position child centered under parents, with slight offset for multiple children
+          const siblings = parents.flatMap(parent => 
+            Array.from(childrenMap.get(parent.id) || new Set())
+              .map(id => people.find(p => p.id === id))
+              .filter(p => p && personLevels.get(p.id) === level)
+          ).filter(Boolean) as Person[]
+          
+          const childIndex = siblings.indexOf(child)
+          const siblingCount = siblings.length
+          const childOffsetX = (childIndex - (siblingCount - 1) / 2) * CHILD_OFFSET
+          
+          const currentPos = positions[child.id] || { x: 0, y: 0 }
+          onPersonMove(child.id, avgX + childOffsetX - NODE_WIDTH/2, currentPos.y)
+        }
       })
     })
     
     setHasUnsavedChanges(true)
-  }, [people, relationships, onPersonMove])
+  }, [people, relationships, onPersonMove, positions])
 
   const handleFitToScreen = useCallback(() => {
     if (people.length === 0) return
