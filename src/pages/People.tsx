@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Users, Search, UserPlus, Filter } from 'lucide-react'
+import { Users, Search, UserPlus, Filter, Mail } from 'lucide-react'
 import PeopleTable from '@/components/people/PeopleTable'
 import PeopleDirectory from '@/components/people/PeopleDirectory'
 import PersonForm from '@/components/people/PersonForm'
+import DirectInviteModal from '@/components/people/DirectInviteModal'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
@@ -32,6 +33,7 @@ export default function People() {
   const [statusFilter, setStatusFilter] = useState('living')
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [showPersonForm, setShowPersonForm] = useState(false)
+  const [showDirectInvite, setShowDirectInvite] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -227,26 +229,32 @@ export default function People() {
               </div>
               
               {(currentUserRole === 'admin' || currentUserRole === 'member') && (
-                <Dialog open={showPersonForm} onOpenChange={setShowPersonForm}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Person
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                    <DialogHeader>
-                      <DialogTitle>Add New Person</DialogTitle>
-                    </DialogHeader>
-                    <div className="overflow-y-auto flex-1 pr-2">
-                      <PersonForm
-                        familyId={currentSpaceId!}
-                        onSuccess={handlePersonCreated}
-                        onCancel={() => setShowPersonForm(false)}
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowDirectInvite(true)}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Invite Someone
+                  </Button>
+                  <Dialog open={showPersonForm} onOpenChange={setShowPersonForm}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Person
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle>Add New Person</DialogTitle>
+                      </DialogHeader>
+                      <div className="overflow-y-auto flex-1 pr-2">
+                        <PersonForm
+                          familyId={currentSpaceId!}
+                          onSuccess={handlePersonCreated}
+                          onCancel={() => setShowPersonForm(false)}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               )}
             </div>
 
@@ -328,6 +336,20 @@ export default function People() {
           </div>
         </div>
       </div>
+
+      {/* Direct Invite Modal */}
+      {showDirectInvite && (
+        <DirectInviteModal
+          familyId={currentSpaceId!}
+          onClose={() => setShowDirectInvite(false)}
+          onSuccess={() => {
+            setShowDirectInvite(false)
+            if (currentSpaceId) {
+              fetchPeople(currentSpaceId)
+            }
+          }}
+        />
+      )}
     </AuthGate>
   )
 }
