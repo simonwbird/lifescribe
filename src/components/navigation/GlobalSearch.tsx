@@ -79,13 +79,13 @@ export default function GlobalSearch({ variant = 'inline' }: GlobalSearchProps) 
             </DialogHeader>
             <form onSubmit={handleSubmit} className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   ref={inputRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search people, stories, places..."
-                  className="pl-10"
+                  placeholder="People, stories, places…"
+                  className="pl-14"
                   autoFocus
                 />
               </div>
@@ -100,13 +100,13 @@ export default function GlobalSearch({ variant = 'inline' }: GlobalSearchProps) 
 
   return (
     <form onSubmit={handleSubmit} className="relative hidden sm:block">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       <Input
         ref={inputRef}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search people, stories, places..."
-        className="pl-10 w-64 focus-visible:ring-2"
+        placeholder="People, stories, places…"
+        className="pl-14 w-64 focus-visible:ring-2"
         aria-label="Global search"
       />
     </form>
