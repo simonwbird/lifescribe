@@ -37,6 +37,32 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
 
   const handleReaction = (activityId: string, reaction: string) => {
     track('activity_reaction', { activityId, reaction })
+    
+    // Implement actual functionality based on reaction type
+    switch (reaction) {
+      case 'like':
+        // TODO: Implement like functionality
+        console.log('Liked story:', activityId)
+        break
+      case 'comment':
+        // Navigate to story detail to add comment
+        const storyId = activityId.replace('story-', '')
+        window.location.href = `/story/${storyId}#comments`
+        break
+      case 'share':
+        // Implement share functionality
+        if (navigator.share) {
+          navigator.share({
+            title: 'Family Story',
+            url: window.location.origin + `/story/${activityId.replace('story-', '')}`
+          })
+        } else {
+          // Fallback: copy to clipboard
+          navigator.clipboard.writeText(window.location.origin + `/story/${activityId.replace('story-', '')}`)
+          console.log('Story link copied to clipboard')
+        }
+        break
+    }
   }
 
   if (activities.length === 0) {
