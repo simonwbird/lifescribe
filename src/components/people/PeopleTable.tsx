@@ -199,7 +199,10 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                     <div className="space-y-1">
                       <div 
                         className="font-medium hover:text-primary cursor-pointer transition-colors"
-                        onClick={() => navigate(`/people/${person.id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigate(`/people/${person.id}`)
+                        }}
                         title={`View ${person.is_living === false ? 'Tribute' : 'Life'} Page for ${person.full_name}`}
                       >
                         {person.full_name}

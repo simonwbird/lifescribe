@@ -33,7 +33,7 @@ export default function PersonProfile() {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
-          navigate('/auth')
+          navigate('/login')
           return
         }
         setCurrentUserId(user.id)

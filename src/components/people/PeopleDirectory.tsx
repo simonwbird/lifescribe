@@ -93,7 +93,10 @@ export default function PeopleDirectory({ people, familyId }: PeopleDirectoryPro
             <Card 
               key={person.id} 
               className="hover:shadow-md transition-shadow cursor-pointer" 
-              onClick={() => navigate(`/people/${person.id}`)}
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/people/${person.id}`)
+              }}
             >
               <CardHeader className="text-center pb-3">
                 <Avatar className="h-16 w-16 mx-auto mb-3">
