@@ -2154,6 +2154,92 @@ export type Database = {
           },
         ]
       }
+      weekly_digest_logs: {
+        Row: {
+          created_at: string
+          digest_settings_id: string
+          error_message: string | null
+          family_id: string
+          id: string
+          sent_at: string
+          sent_to_emails: Json
+          status: string
+          story_count: number
+        }
+        Insert: {
+          created_at?: string
+          digest_settings_id: string
+          error_message?: string | null
+          family_id: string
+          id?: string
+          sent_at?: string
+          sent_to_emails?: Json
+          status?: string
+          story_count?: number
+        }
+        Update: {
+          created_at?: string
+          digest_settings_id?: string
+          error_message?: string | null
+          family_id?: string
+          id?: string
+          sent_at?: string
+          sent_to_emails?: Json
+          status?: string
+          story_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_digest_logs_digest_settings_id_fkey"
+            columns: ["digest_settings_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_digest_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_digest_settings: {
+        Row: {
+          created_at: string
+          created_by: string
+          delivery_day: number
+          delivery_hour: number
+          delivery_timezone: string
+          enabled: boolean
+          family_id: string
+          id: string
+          last_sent_at: string | null
+          recipients: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          delivery_day?: number
+          delivery_hour?: number
+          delivery_timezone?: string
+          enabled?: boolean
+          family_id: string
+          id?: string
+          last_sent_at?: string | null
+          recipients?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          delivery_day?: number
+          delivery_hour?: number
+          delivery_timezone?: string
+          enabled?: boolean
+          family_id?: string
+          id?: string
+          last_sent_at?: string | null
+          recipients?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       person_timeline_items: {
