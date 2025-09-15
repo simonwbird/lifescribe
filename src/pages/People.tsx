@@ -301,18 +301,6 @@ export default function People() {
                 ))}
               </div>
 
-              {/* Search Only */}
-              <div className="flex justify-start">
-                <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                  <Input
-                    placeholder="Search by name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12"
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Content */}
