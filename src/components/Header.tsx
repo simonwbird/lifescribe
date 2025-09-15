@@ -9,6 +9,7 @@ import GlobalSearch from '@/components/search/GlobalSearch'
 import QuickCaptureComposer from '@/components/capture/QuickCaptureComposer'
 
 import { useLabs } from '@/hooks/useLabs'
+import { useMode } from '@/contexts/ModeContext'
 
 // Navigation components
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -33,6 +34,7 @@ export default function Header() {
   const location = useLocation()
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
+  const { flags: modeFlags } = useMode()
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
@@ -216,7 +218,7 @@ export default function Header() {
                 </Link>
               </Button>
 
-              <CreateDropdown />
+              {modeFlags.showCreateMenu && <CreateDropdown />}
               {labsEnabled && flags.collections && <CollectionsDropdown />}
               <FamilyDropdown />
             </nav>
@@ -283,9 +285,11 @@ export default function Header() {
                 Home
               </Link>
               
-              <div className="pt-2">
-                <CreateDropdown />
-              </div>
+              {modeFlags.showCreateMenu && (
+                <div className="pt-2">
+                  <CreateDropdown />
+                </div>
+              )}
               
               {labsEnabled && flags.collections && (
                 <Link

@@ -10,6 +10,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useLabs } from '@/hooks/useLabs'
+import { useMode } from '@/contexts/ModeContext'
 
 const createItems = [
   {
@@ -57,6 +58,7 @@ export default function CreateDropdown() {
   const [open, setOpen] = useState(false)
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
+  const { flags: modeFlags } = useMode()
 
   const handleItemClick = (item: typeof createItems[0]) => {
     track('create_item_selected', { type: item.label.toLowerCase() })
@@ -107,6 +109,12 @@ export default function CreateDropdown() {
             </Link>
           </DropdownMenuItem>
         ))}
+        
+        {visibleItems.length === 0 && (
+          <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+            No creation options available. Enable Labs in your profile to access more features.
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

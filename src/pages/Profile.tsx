@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
+import ModeToggle from '@/components/navigation/ModeToggle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -104,7 +105,7 @@ export default function Profile() {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto space-y-6">
             <Card>
               <CardHeader className="text-center">
                 <ProfilePhotoUploader
@@ -150,6 +151,9 @@ export default function Profile() {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Mode Settings */}
+            <ModeToggle />
           </div>
         </div>
       </div>

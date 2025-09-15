@@ -12,6 +12,21 @@ All colors MUST be HSL.
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
 }
 
+/* Mode-specific typography scaling */
+body[data-typography="xl"] {
+  --text-base-size: 1.125em; /* 18px */
+  --text-sm-size: 1em; /* 16px */
+  --text-xs-size: 0.875em; /* 14px */
+  --heading-scale: 1.125;
+}
+
+body[data-typography="base"] {
+  --text-base-size: 1em; /* 16px */
+  --text-sm-size: 0.875em; /* 14px */
+  --text-xs-size: 0.75em; /* 12px */
+  --heading-scale: 1;
+}
+
 html { 
   font-size: 16px; 
 }
@@ -452,5 +467,96 @@ small, .overline {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
+}
+
+/* Mode-specific styles */
+
+/* Density settings */
+body[data-density="roomy"] {
+  --spacing-scale: 1.25;
+  --button-padding-x: 1.5rem;
+  --button-padding-y: 0.75rem;
+  --card-padding: 2rem;
+  --input-padding: 1rem;
+}
+
+body[data-density="cozy"] {
+  --spacing-scale: 1;
+  --button-padding-x: 1rem;
+  --button-padding-y: 0.5rem;
+  --card-padding: 1.5rem;
+  --input-padding: 0.75rem;
+}
+
+/* Apply density scaling to common elements */
+body[data-density="roomy"] .btn {
+  padding: var(--button-padding-y) var(--button-padding-x);
+}
+
+body[data-density="roomy"] .card {
+  padding: var(--card-padding);
+}
+
+body[data-density="roomy"] input,
+body[data-density="roomy"] textarea {
+  padding: var(--input-padding);
+}
+
+/* Motion preferences */
+body[data-motion="reduced"] * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+body[data-motion="reduced"] *:hover {
+  transition: none !important;
+}
+
+/* Typography mode adjustments */
+body[data-typography="xl"] .text-base {
+  font-size: var(--text-base-size);
+}
+
+body[data-typography="xl"] .text-sm {
+  font-size: var(--text-sm-size);
+}
+
+body[data-typography="xl"] .text-xs {
+  font-size: var(--text-xs-size);
+}
+
+body[data-typography="xl"] h1 {
+  font-size: calc(2.5rem * var(--heading-scale));
+}
+
+body[data-typography="xl"] h2 {
+  font-size: calc(2rem * var(--heading-scale));
+}
+
+body[data-typography="xl"] h3 {
+  font-size: calc(1.5rem * var(--heading-scale));
+}
+
+/* Simple mode specific adjustments */
+body[data-mode="simple"] {
+  --container-max-width: min(100%, 60rem);
+}
+
+body[data-mode="simple"] .complex-controls {
+  display: none;
+}
+
+body[data-mode="simple"] .simple-only {
+  display: block;
+}
+
+/* Studio mode specific adjustments */
+body[data-mode="studio"] .simple-only {
+  display: none;
+}
+
+body[data-mode="studio"] .studio-only {
+  display: block;
 }
 }

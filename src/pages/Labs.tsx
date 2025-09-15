@@ -15,10 +15,12 @@ import {
   BarChart3, 
   Bell, 
   Shield,
-  Info
+  Info,
+  Eye
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLabs } from '@/hooks/useLabs'
+import { useMode } from '@/contexts/ModeContext'
 import Header from '@/components/Header'
 
 const FEATURES = [
@@ -76,6 +78,8 @@ const FEATURES = [
 export default function Labs() {
   const navigate = useNavigate()
   const { labsEnabled, flags, loading, updateLabsEnabled, updateFlag } = useLabs()
+  const { mode } = useMode()
+  const isSimpleMode = mode === 'simple'
 
   if (loading) {
     return (
@@ -124,14 +128,19 @@ export default function Labs() {
                 <CardTitle className="flex items-center gap-2">
                   Enable Labs Features
                   <Badge variant="secondary">Experimental</Badge>
+                  {isSimpleMode && <Badge variant="outline">Simple Mode</Badge>}
                 </CardTitle>
                 <CardDescription>
-                  Turn on experimental features and get early access to new capabilities. Features may be unstable.
+                  {isSimpleMode 
+                    ? "Labs features are available but simplified in Simple Mode for easier use."
+                    : "Turn on experimental features and get early access to new capabilities. Features may be unstable."
+                  }
                 </CardDescription>
               </div>
               <Switch
                 checked={labsEnabled}
                 onCheckedChange={updateLabsEnabled}
+                disabled={isSimpleMode}
               />
             </div>
           </CardHeader>
@@ -141,7 +150,10 @@ export default function Labs() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Enable Labs to access experimental features. These features are in development and may change or be removed.
+              {isSimpleMode 
+                ? "Labs features are simplified in Simple Mode. Switch to Studio Mode in your profile for full access."
+                : "Enable Labs to access experimental features. These features are in development and may change or be removed."
+              }
             </AlertDescription>
           </Alert>
         )}
@@ -192,7 +204,7 @@ export default function Labs() {
                         <Switch
                           checked={flags[feature.id]}
                           onCheckedChange={(checked) => updateFlag(feature.id, checked)}
-                          disabled={isComingSoon}
+                          disabled={isComingSoon || (isSimpleMode && !labsEnabled)}
                         />
                       </div>
                     </CardContent>
@@ -215,6 +227,15 @@ export default function Labs() {
               </Button>
             </div>
           </>
+        )}
+
+        {isSimpleMode && (
+          <Alert>
+            <Eye className="h-4 w-4" />
+            <AlertDescription>
+              You're viewing Labs in Simple Mode. Advanced features are simplified for easier use. Switch to Studio Mode in your profile for full control over Labs features.
+            </AlertDescription>
+          </Alert>
         )}
       </div>
     </>
