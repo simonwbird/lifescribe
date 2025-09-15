@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart } from 'lucide-react'
+import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart, Shield, Crown, User } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import PersonForm from './PersonForm'
 import InvitePersonModal from './InvitePersonModal'
@@ -72,6 +72,82 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
 
   const isLeapYear = (year: number) => {
     return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
+  }
+
+  const getRoleBadge = (memberRole: string | null) => {
+    if (!memberRole) {
+      return <Badge variant="secondary">No Account</Badge>
+    }
+    
+    switch (memberRole) {
+      case 'admin':
+        return (
+          <Badge variant="default" className="bg-red-100 text-red-800 border-red-200">
+            <Crown className="h-3 w-3 mr-1" />
+            Admin
+          </Badge>
+        )
+      case 'member':
+        return (
+          <Badge variant="outline">
+            <User className="h-3 w-3 mr-1" />
+            Member
+          </Badge>
+        )
+      case 'guest':
+        return (
+          <Badge variant="secondary">
+            <Shield className="h-3 w-3 mr-1" />
+            Guest
+          </Badge>
+        )
+      default:
+        return <Badge variant="secondary">Unknown</Badge>
+    }
+  }
+
+  const handleRoleChange = async (person: Person, newRole: 'admin' | 'member' | 'guest') => {
+    try {
+      // Find the person-user link
+      const { data: linkData, error: linkError } = await supabase
+        .from('person_user_links')
+        .select('user_id')
+        .eq('person_id', person.id)
+        .eq('family_id', familyId)
+        .single()
+
+      if (linkError || !linkData) {
+        toast({
+          title: "Error",
+          description: "This person is not linked to a user account",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Update the member role
+      const { error } = await supabase
+        .from('members')
+        .update({ role: newRole })
+        .eq('profile_id', linkData.user_id)
+        .eq('family_id', familyId)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: `${person.full_name} is now a ${newRole}`
+      })
+      
+      onPersonUpdated()
+    } catch (error) {
+      console.error('Error updating role:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update role",
+        variant: "destructive"
+      })
+    }
   }
 
   const getStatusBadge = (person: any) => {
@@ -228,6 +304,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
               <TableHead>Life Dates</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Stories</TableHead>
               <TableHead>Photos</TableHead>
               <TableHead>Upcoming</TableHead>
@@ -303,6 +380,10 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                   </TableCell>
                   
                   <TableCell>
+                    {getRoleBadge(person.member_role)}
+                  </TableCell>
+                  
+                  <TableCell>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
                       {(person as any).stories?.length || 0}
@@ -342,6 +423,30 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                           <Mail className="h-4 w-4 mr-2" />
                           Invite/Manage
                         </DropdownMenuItem>
+                        
+                        {/* Role Management - Only show if person has an account */}
+                        {person.member_role && (
+                          <>
+                            {person.member_role !== 'admin' && (
+                              <DropdownMenuItem onClick={() => handleRoleChange(person, 'admin')}>
+                                <Crown className="h-4 w-4 mr-2" />
+                                Promote to Admin
+                              </DropdownMenuItem>
+                            )}
+                            {person.member_role !== 'member' && (
+                              <DropdownMenuItem onClick={() => handleRoleChange(person, 'member')}>
+                                <User className="h-4 w-4 mr-2" />
+                                Set as Member
+                              </DropdownMenuItem>
+                            )}
+                            {person.member_role !== 'guest' && (
+                              <DropdownMenuItem onClick={() => handleRoleChange(person, 'guest')}>
+                                <Shield className="h-4 w-4 mr-2" />
+                                Set as Guest
+                              </DropdownMenuItem>
+                            )}
+                          </>
+                        )}
                         
                         <DropdownMenuItem onClick={() => window.open(`/people/${person.id}`, '_blank')}>
                           <ExternalLink className="h-4 w-4 mr-2" />

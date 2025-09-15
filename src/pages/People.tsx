@@ -73,23 +73,46 @@ export default function People() {
 
   const fetchPeople = async (spaceId: string) => {
     try {
-      const { data, error } = await supabase
+      // Fetch people and their member roles
+      const { data: peopleData, error: peopleError } = await supabase
         .from('people')
         .select('*')
         .eq('family_id', spaceId)
         .order('given_name')
 
-      if (error) throw error
+      if (peopleError) throw peopleError
 
-      const peopleWithStatus = (data || []).map((person: any) => {
+      // Fetch member data to get roles
+      const { data: membersData, error: membersError } = await supabase
+        .from('members')
+        .select('profile_id, role')
+        .eq('family_id', spaceId)
+
+      if (membersError) throw membersError
+
+      // Fetch person-user links to connect people to users
+      const { data: linksData, error: linksError } = await supabase
+        .from('person_user_links')
+        .select('person_id, user_id')
+        .eq('family_id', spaceId)
+
+      if (linksError) throw linksError
+
+      const peopleWithStatus = (peopleData || []).map((person: any) => {
         const gender = (person.gender as ('male' | 'female' | 'other' | 'unknown')) || undefined
         // Prefer death_date to determine living status; if death_date exists, person is deceased
         const isLiving = person?.death_date ? false : (person.is_living !== false)
+        
+        // Find if this person is linked to a user account
+        const personLink = linksData?.find(link => link.person_id === person.id)
+        const memberRole = personLink ? membersData?.find(member => member.profile_id === personLink.user_id)?.role : null
+        
         return {
           ...person,
           gender,
           is_living: isLiving,
-          account_status: 'not_on_app' // Placeholder until invites/person_user_links are joined
+          account_status: personLink ? 'joined' : 'not_on_app',
+          member_role: memberRole // Add member role to person data
         }
       }) as Person[]
 

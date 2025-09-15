@@ -20,6 +20,7 @@ export interface Person {
   death_date_precision?: string
   is_living?: boolean
   account_status?: string
+  member_role?: string | null
   person_user_links?: any[]
   person_story_links?: any[]
   media?: any[]
