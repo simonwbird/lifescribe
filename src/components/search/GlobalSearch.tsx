@@ -173,9 +173,9 @@ export default function GlobalSearch() {
   }
 
   return (
-    <div ref={searchRef} className="relative w-full max-w-md">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+    <div ref={searchRef} className="relative w-full">
+      <div className="relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-colors group-focus-within:text-foreground" />
         <Input
           data-search-input
           ref={inputRef}
@@ -185,14 +185,14 @@ export default function GlobalSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          className="pl-12 pr-9 h-9 border-0 bg-muted/50 rounded-full text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-border focus-visible:ring-offset-0 focus-visible:bg-background transition-all duration-200"
+          className="pl-12 pr-10 h-10 w-full border border-input bg-background rounded-lg text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-ring transition-all duration-200 sm:w-80 md:w-96"
           role="combobox"
           aria-expanded={showSuggestions}
           aria-autocomplete="list"
           aria-controls={showSuggestions ? 'search-suggestions' : undefined}
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground/70" />
+          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
         )}
       </div>
 
