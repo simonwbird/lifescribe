@@ -73,23 +73,24 @@ export default function People() {
 
   const fetchPeople = async (spaceId: string) => {
     try {
-        const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('people')
         .select(`
           *,
-          person_user_links(user_id),
-          person_story_links(story_id),
-          media(id)
+          person_user_links!left(user_id),
+          person_story_links!left(story_id),
+          media!left(id)
         `)
         .eq('family_id', spaceId)
         .order('given_name')
 
       if (error) throw error
 
-      const peopleWithStatus = (data || []).map(person => ({
+      const peopleWithStatus = (data || []).map((person: any) => ({
         ...person,
+        gender: person.gender as ('male' | 'female' | 'other' | 'unknown') || undefined,
         account_status: person.person_user_links?.length > 0 ? 'joined' : 'not_on_app'
-      }))
+      })) as Person[]
 
       setPeople(peopleWithStatus)
       setFilteredPeople(peopleWithStatus)

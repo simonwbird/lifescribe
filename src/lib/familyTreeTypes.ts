@@ -9,7 +9,7 @@ export interface Person {
   death_date?: string
   birth_year?: number
   death_year?: number
-  gender?: 'male' | 'female' | 'other' | 'unknown'
+  gender?: 'male' | 'female' | 'other' | 'unknown' | string
   avatar_url?: string
   notes?: string
   created_at: string
@@ -20,6 +20,9 @@ export interface Person {
   death_date_precision?: string
   is_living?: boolean
   account_status?: string
+  person_user_links?: any[]
+  person_story_links?: any[]
+  media?: any[]
 }
 
 export interface Relationship {
