@@ -197,12 +197,13 @@ export default function InvitePersonModal({ person, familyId, onClose, onSuccess
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Invite {person.full_name}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="overflow-y-auto flex-1 pr-2">
+          <div className="space-y-6">
           {/* Send New Invite */}
           <Card>
             <CardHeader>
@@ -296,6 +297,7 @@ export default function InvitePersonModal({ person, familyId, onClose, onSuccess
               </CardContent>
             </Card>
           )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
