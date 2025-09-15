@@ -229,15 +229,17 @@ export default function People() {
                       Add Person
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                       <DialogTitle>Add New Person</DialogTitle>
                     </DialogHeader>
-                    <PersonForm
-                      familyId={currentSpaceId!}
-                      onSuccess={handlePersonCreated}
-                      onCancel={() => setShowPersonForm(false)}
-                    />
+                    <div className="overflow-y-auto flex-1 pr-2">
+                      <PersonForm
+                        familyId={currentSpaceId!}
+                        onSuccess={handlePersonCreated}
+                        onCancel={() => setShowPersonForm(false)}
+                      />
+                    </div>
                   </DialogContent>
                 </Dialog>
               )}

@@ -577,19 +577,21 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
       {/* Edit Person Modal */}
       {editingPerson && (
         <Dialog open={!!editingPerson} onOpenChange={() => setEditingPerson(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>Edit {editingPerson.full_name}</DialogTitle>
             </DialogHeader>
-            <PersonForm
-              person={editingPerson}
-              familyId={familyId}
-              onSuccess={() => {
-                setEditingPerson(null)
-                onPersonUpdated()
-              }}
-              onCancel={() => setEditingPerson(null)}
-            />
+            <div className="overflow-y-auto flex-1 pr-2">
+              <PersonForm
+                person={editingPerson}
+                familyId={familyId}
+                onSuccess={() => {
+                  setEditingPerson(null)
+                  onPersonUpdated()
+                }}
+                onCancel={() => setEditingPerson(null)}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       )}
