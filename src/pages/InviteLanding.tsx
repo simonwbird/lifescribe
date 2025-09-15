@@ -34,31 +34,28 @@ export default function InviteLanding() {
 
   const validateInvite = async () => {
     try {
-      const { data: inviteData, error } = await supabase
-        .from('invites')
-        .select(`
-          *,
-          families:family_id (name)
-        `)
-        .eq('token', token)
-        .is('accepted_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .single()
-
-      if (error || !inviteData) {
-        setError('Invalid or expired invitation link')
+      const { data, error } = await supabase.functions.invoke('invite-validate', {
+        body: { token }
+      })
+      if (error || !data || !(data as any).success) {
+        const msg = (data as any)?.error || error?.message || 'Invalid or expired invitation link'
+        setError(msg)
         return
       }
-
+      const payload = (data as any).invite
+      const inviteData = {
+        id: payload.id,
+        family_id: payload.family_id,
+        email: payload.email,
+        role: payload.role,
+        families: { name: payload.family_name }
+      }
       setInvite(inviteData)
-      // Clear placeholder invite-link email if present
       const isPlaceholder = typeof inviteData.email === 'string' && inviteData.email.endsWith('@lifescribe.local')
       setEmail(isPlaceholder ? '' : inviteData.email)
-      
-      // Check if user already exists
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // User is already logged in, proceed to join family
         await joinFamily(user.id)
       } else {
         setStep('auth')
