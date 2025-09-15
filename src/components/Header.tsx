@@ -10,7 +10,6 @@ import { useLabs } from '@/hooks/useLabs'
 import { useMode } from '@/contexts/ModeContext'
 
 // MVP Navigation components
-import FamilySwitcher from '@/components/navigation/FamilySwitcher'
 import MicButton from '@/components/navigation/MicButton'
 import MoreMenu from '@/components/navigation/MoreMenu'
 import CreateDropdown from '@/components/navigation/CreateDropdown'
@@ -125,7 +124,7 @@ export default function Header() {
         </a>
 
         <div className="container mx-auto px-4 h-full flex items-center">
-          {/* Left: Logo · Family Switcher · Nav (Home, People, Tree) */}
+          {/* Left: Logo · Nav (Home, People, Tree) */}
           <div className="flex items-center gap-4">
             {/* Logo */}
             <Link 
@@ -137,11 +136,6 @@ export default function Header() {
               <BookHeart className="h-6 w-6 text-primary" />
               <span className="hidden sm:inline text-lg font-serif font-bold">LifeScribe</span>
             </Link>
-            
-            {/* Family Switcher */}
-            <div className="hidden md:block">
-              <FamilySwitcher />
-            </div>
 
             {/* Navigation */}
             <nav className="hidden lg:flex items-center gap-1" role="navigation">
