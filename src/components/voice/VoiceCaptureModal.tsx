@@ -19,6 +19,7 @@ interface VoiceCaptureModalProps {
   open: boolean
   onClose: () => void
   onStoryCreated?: (storyId: string) => void
+  preselectedPeople?: Array<{ id: string; name: string }>
 }
 
 interface ReviewData {
@@ -31,7 +32,7 @@ interface ReviewData {
   tags: string[]
 }
 
-export default function VoiceCaptureModal({ open, onClose, onStoryCreated }: VoiceCaptureModalProps) {
+export default function VoiceCaptureModal({ open, onClose, onStoryCreated, preselectedPeople = [] }: VoiceCaptureModalProps) {
   const [state, setState] = useState<CaptureState>('idle')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
@@ -62,6 +63,16 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated }: Voi
 
   const { track } = useAnalytics()
   const { labsEnabled } = useLabs()
+
+  // Initialize review data with preselected people
+  useEffect(() => {
+    if (preselectedPeople.length > 0) {
+      setReviewData(prev => ({
+        ...prev,
+        people: preselectedPeople.map(p => ({ id: p.id, name: p.name }))
+      }))
+    }
+  }, [preselectedPeople])
 
   // Auto-stop at 90 seconds
   useEffect(() => {

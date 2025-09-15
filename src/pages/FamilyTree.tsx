@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
+import ProfessionalFamilyTree from '@/components/family-tree/ProfessionalFamilyTree'
 import EnhancedFamilyTreeCanvas from '@/components/family-tree/EnhancedFamilyTreeCanvas'
 import GenerationalFamilyTree from '@/components/family-tree/GenerationalFamilyTree'
+import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
+import { useLabs } from '@/hooks/useLabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,6 +43,10 @@ export default function FamilyTree() {
   const [loading, setLoading] = useState(true)
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false)
   const [layoutMode, setLayoutMode] = useState<'interactive' | 'professional'>('professional')
+  const [isVoiceCaptureOpen, setIsVoiceCaptureOpen] = useState(false)
+  const [preselectedPeople, setPreselectedPeople] = useState<Array<{ id: string; name: string }>>([])
+  
+  const { labsEnabled } = useLabs()
   const [newPersonForm, setNewPersonForm] = useState({
     given_name: '',
     surname: '',
@@ -195,6 +202,11 @@ export default function FamilyTree() {
     } catch (error) {
       console.error('Error creating initial people:', error)
     }
+  }
+
+  const handleRecordMemoryAbout = (personId: string, personName: string) => {
+    setPreselectedPeople([{ id: personId, name: personName }])
+    setIsVoiceCaptureOpen(true)
   }
 
   const handlePersonMove = (personId: string, x: number, y: number) => {
@@ -367,32 +379,36 @@ export default function FamilyTree() {
               </div>
               
               <div className="flex items-center gap-2">
-                {/* Layout Mode Toggle */}
-                <div className="flex items-center gap-1 border rounded-lg p-1">
-                  <Button
-                    variant={layoutMode === 'professional' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setLayoutMode('professional')}
-                    className="h-8 px-3"
-                  >
-                    <Layout className="h-4 w-4 mr-1" />
-                    Clean
-                  </Button>
-                  <Button
-                    variant={layoutMode === 'interactive' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setLayoutMode('interactive')}
-                    className="h-8 px-3"
-                  >
-                    <Move3D className="h-4 w-4 mr-1" />
-                    Interactive
-                  </Button>
-                </div>
+                {/* Layout Mode Toggle - only show if Labs enabled */}
+                {labsEnabled && (
+                  <>
+                    <div className="flex items-center gap-1 border rounded-lg p-1">
+                      <Button
+                        variant={layoutMode === 'professional' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setLayoutMode('professional')}
+                        className="h-8 px-3"
+                      >
+                        <Layout className="h-4 w-4 mr-1" />
+                        Clean
+                      </Button>
+                      <Button
+                        variant={layoutMode === 'interactive' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setLayoutMode('interactive')}
+                        className="h-8 px-3"
+                      >
+                        <Move3D className="h-4 w-4 mr-1" />
+                        Interactive
+                      </Button>
+                    </div>
 
-                {layoutMode === 'interactive' && (
-                  <Button onClick={handleSaveLayout} variant="outline" size="sm">
-                    Save Layout
-                  </Button>
+                    {layoutMode === 'interactive' && (
+                      <Button onClick={handleSaveLayout} variant="outline" size="sm">
+                        Save Layout
+                      </Button>
+                    )}
+                  </>
                 )}
                 
                 <Dialog open={isAddPersonOpen} onOpenChange={setIsAddPersonOpen}>
@@ -491,19 +507,15 @@ export default function FamilyTree() {
             </div>
           ) : (
             <>
-              {layoutMode === 'professional' ? (
-                <GenerationalFamilyTree
+              {layoutMode === 'professional' || !labsEnabled ? (
+                <ProfessionalFamilyTree
                   people={people}
                   relationships={relationships} 
                   onPersonClick={handleViewPerson}
                   onPersonEdit={(personId) => navigate(`/people/${personId}`)}
-                  onAddPerson={(parentId, type) => {
-                    console.log('Add person:', parentId, type)
-                    setIsAddPersonOpen(true)
-                  }}
-                  onBiologicalParentsUpdate={loadFamilyData}
+                  onRecordMemoryAbout={handleRecordMemoryAbout}
                 />
-              ) : (
+              ) : layoutMode === 'interactive' && labsEnabled ? (
                 <EnhancedFamilyTreeCanvas
                   people={people}
                   relationships={relationships}
@@ -517,10 +529,36 @@ export default function FamilyTree() {
                   shouldFitToScreen={shouldFitToScreen}
                   onFitToScreenComplete={() => setShouldFitToScreen(false)}
                 />
+              ) : (
+                <GenerationalFamilyTree
+                  people={people}
+                  relationships={relationships} 
+                  onPersonClick={handleViewPerson}
+                  onPersonEdit={(personId) => navigate(`/people/${personId}`)}
+                  onAddPerson={(parentId, type) => {
+                    console.log('Add person:', parentId, type)
+                    setIsAddPersonOpen(true)
+                  }}
+                  onBiologicalParentsUpdate={loadFamilyData}
+                />
               )}
             </>
           )}
         </div>
+
+        {/* Voice Capture Modal */}
+        <VoiceCaptureModal
+          open={isVoiceCaptureOpen}
+          onClose={() => {
+            setIsVoiceCaptureOpen(false)
+            setPreselectedPeople([])
+          }}
+          preselectedPeople={preselectedPeople}
+          onStoryCreated={(storyId) => {
+            console.log('Story created:', storyId)
+            // Optionally navigate to story or refresh data
+          }}
+        />
       </div>
     </AuthGate>
   )

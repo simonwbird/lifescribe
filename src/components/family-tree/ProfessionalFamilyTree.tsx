@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ZoomIn, ZoomOut, Home } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { ZoomIn, ZoomOut, Home, Mic, MoreHorizontal, Edit3 } from 'lucide-react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 
 interface FamilyNode {
@@ -18,13 +19,15 @@ interface ProfessionalFamilyTreeProps {
   relationships: Relationship[]
   onPersonClick?: (personId: string) => void
   onPersonEdit?: (personId: string) => void
+  onRecordMemoryAbout?: (personId: string, personName: string) => void
 }
 
 export default function ProfessionalFamilyTree({
   people,
   relationships,
   onPersonClick,
-  onPersonEdit
+  onPersonEdit,
+  onRecordMemoryAbout
 }: ProfessionalFamilyTreeProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [zoom, setZoom] = useState(0.8)
@@ -185,39 +188,64 @@ export default function ProfessionalFamilyTree({
     const lines: JSX.Element[] = []
 
     nodes.forEach(node => {
-      // Marriage lines (horizontal)
+      // Marriage lines (curved)
       node.spouses.forEach(spouse => {
         const spouseNode = nodes.find(n => n.person.id === spouse.id)
         if (spouseNode && node.person.id < spouse.id) { // Avoid duplicate lines
+          const midX = (node.x + NODE_WIDTH / 2 + spouseNode.x + NODE_WIDTH / 2) / 2
+          const midY = (node.y + NODE_HEIGHT / 2 + spouseNode.y + NODE_HEIGHT / 2) / 2
+          const heartSize = 8
+          
           lines.push(
-            <line
-              key={`marriage-${node.person.id}-${spouse.id}`}
-              x1={node.x + NODE_WIDTH / 2}
-              y1={node.y + NODE_HEIGHT / 2}
-              x2={spouseNode.x + NODE_WIDTH / 2}
-              y2={spouseNode.y + NODE_HEIGHT / 2}
-              stroke="#f59e0b"
-              strokeWidth="3"
-              strokeDasharray="8,4"
-            />
+            <g key={`marriage-${node.person.id}-${spouse.id}`}>
+              <path
+                d={`M ${node.x + NODE_WIDTH / 2} ${node.y + NODE_HEIGHT / 2} 
+                   Q ${midX} ${midY - 20} ${spouseNode.x + NODE_WIDTH / 2} ${spouseNode.y + NODE_HEIGHT / 2}`}
+                stroke="#e11d48"
+                strokeWidth="2.5"
+                fill="none"
+                strokeDasharray="6,3"
+              />
+              <circle
+                cx={midX}
+                cy={midY - 10}
+                r={heartSize}
+                fill="#fecaca"
+                stroke="#e11d48"
+                strokeWidth="2"
+              />
+              <text
+                x={midX}
+                y={midY - 6}
+                textAnchor="middle"
+                className="fill-red-600 text-xs font-bold"
+              >
+                ♥
+              </text>
+            </g>
           )
         }
       })
 
-      // Parent-child lines
+      // Parent-child lines (curved)
       node.children.forEach(child => {
         const childNode = nodes.find(n => n.person.id === child.id)
         if (childNode) {
-          // Simple direct line for now
+          const startX = node.x + NODE_WIDTH / 2
+          const startY = node.y + NODE_HEIGHT
+          const endX = childNode.x + NODE_WIDTH / 2
+          const endY = childNode.y
+          const midY = startY + (endY - startY) / 2
+          
           lines.push(
-            <line
+            <path
               key={`parent-child-${node.person.id}-${child.id}`}
-              x1={node.x + NODE_WIDTH / 2}
-              y1={node.y + NODE_HEIGHT}
-              x2={childNode.x + NODE_WIDTH / 2}
-              y2={childNode.y}
+              d={`M ${startX} ${startY} 
+                 Q ${startX} ${midY} ${(startX + endX) / 2} ${midY}
+                 Q ${endX} ${midY} ${endX} ${endY}`}
               stroke="#3b82f6"
               strokeWidth="2"
+              fill="none"
             />
           )
         }
@@ -235,49 +263,45 @@ export default function ProfessionalFamilyTree({
     const years = [person.birth_year, person.death_year].filter(Boolean).join(' - ') || ''
 
     return (
-      <g
-        key={person.id}
-        transform={`translate(${x}, ${y})`}
-        className="cursor-pointer"
-        onClick={() => onPersonClick?.(person.id)}
-      >
+      <g key={person.id} transform={`translate(${x}, ${y})`} className="group">
         {/* Background card */}
         <rect
           width={NODE_WIDTH}
           height={NODE_HEIGHT}
           rx="12"
           fill="white"
-          stroke="#e5e7eb"
-          strokeWidth="2"
-          className="hover:stroke-blue-400 transition-colors drop-shadow-md"
+          stroke="#e2e8f0"
+          strokeWidth="1.5"
+          className="hover:stroke-blue-400 transition-colors group-hover:stroke-blue-400"
+          style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.1))" }}
         />
         
         {/* Profile photo circle */}
         <circle
           cx={NODE_WIDTH / 2}
           cy={40}
-          r="28"
-          fill="#f3f4f6"
-          stroke="#d1d5db"
-          strokeWidth="2"
+          r="26"
+          fill="#f8fafc"
+          stroke="#cbd5e1"
+          strokeWidth="1.5"
         />
         
         {/* Profile image or initials */}
         {person.avatar_url ? (
           <image
             href={person.avatar_url}
-            x={NODE_WIDTH / 2 - 28}
-            y={12}
-            width="56"
-            height="56"
-            clipPath="circle(28px at center)"
+            x={NODE_WIDTH / 2 - 26}
+            y={14}
+            width="52"
+            height="52"
+            clipPath="circle(26px at center)"
           />
         ) : (
           <text
             x={NODE_WIDTH / 2}
-            y={48}
+            y={46}
             textAnchor="middle"
-            className="fill-gray-600 text-base font-bold"
+            className="fill-slate-600 text-sm font-semibold"
           >
             {displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
           </text>
@@ -286,34 +310,59 @@ export default function ProfessionalFamilyTree({
         {/* Name */}
         <text
           x={NODE_WIDTH / 2}
-          y={90}
+          y={85}
           textAnchor="middle"
-          className="fill-gray-900 text-sm font-semibold"
+          className="fill-slate-900 text-sm font-semibold"
         >
-          {displayName.length > 14 ? displayName.substring(0, 14) + '...' : displayName}
+          {displayName.length > 16 ? displayName.substring(0, 16) + '...' : displayName}
         </text>
         
         {/* Years */}
         {years && (
           <text
             x={NODE_WIDTH / 2}
-            y={110}
+            y={102}
             textAnchor="middle"
-            className="fill-gray-500 text-xs"
+            className="fill-slate-500 text-xs"
           >
             {years}
           </text>
         )}
-        
-        {/* Status indicator */}
-        <text
-          x={NODE_WIDTH / 2}
-          y={130}
-          textAnchor="middle"
-          className="fill-gray-400 text-xs"
-        >
-          Gen {node.generation}
-        </text>
+
+        {/* Action dropdown */}
+        <foreignObject x={NODE_WIDTH - 32} y={8} width="24" height="24">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost" 
+                size="sm"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
+              >
+                <MoreHorizontal className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onRecordMemoryAbout?.(person.id, displayName)}>
+                <Mic className="h-4 w-4 mr-2" />
+                Record about {displayName.split(' ')[0]}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onPersonEdit?.(person.id)}>
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit details
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </foreignObject>
+
+        {/* Clickable overlay */}
+        <rect
+          width={NODE_WIDTH}
+          height={NODE_HEIGHT}
+          rx="12"
+          fill="transparent"
+          className="cursor-pointer"
+          onClick={() => onPersonClick?.(person.id)}
+        />
       </g>
     )
   }
@@ -341,7 +390,7 @@ export default function ProfessionalFamilyTree({
   console.log('SVG dimensions:', { minX, maxX, minY, maxY, width, height })
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
+    <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
       {/* Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Button variant="outline" size="sm" onClick={handleZoomIn}>
@@ -355,13 +404,6 @@ export default function ProfessionalFamilyTree({
         </Button>
       </div>
 
-      {/* Debug info */}
-      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg text-xs">
-        <div>People: {people.length}</div>
-        <div>Nodes: {nodes.length}</div>
-        <div>Zoom: {zoom.toFixed(2)}</div>
-      </div>
-
       {/* Family Tree SVG */}
       <svg
         ref={svgRef}
@@ -373,14 +415,6 @@ export default function ProfessionalFamilyTree({
         viewBox={`${minX} ${minY} ${width} ${height}`}
       >
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-          {/* Grid background */}
-          <defs>
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.3"/>
-            </pattern>
-          </defs>
-          <rect x={minX} y={minY} width={width} height={height} fill="url(#grid)" />
-          
           {/* Connection lines */}
           {renderConnections()}
           
@@ -388,21 +422,6 @@ export default function ProfessionalFamilyTree({
           {nodes.map(renderPersonNode)}
         </g>
       </svg>
-
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
-        <h4 className="font-semibold text-sm mb-2">Connection Types</h4>
-        <div className="space-y-2 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-0 border-t-3 border-dashed border-amber-500"></div>
-            <span>Marriage</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-0 border-t-2 border-blue-500"></div>
-            <span>Parent-Child</span>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
