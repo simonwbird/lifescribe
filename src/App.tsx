@@ -18,6 +18,7 @@ import Prompts from "./pages/Prompts";
 import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import FamilyTree from "./pages/FamilyTree";
 import FamilyTreeExplorer from "./pages/FamilyTreeExplorer";
 import FamilyTreeFan from "./pages/FamilyTreeFan";
@@ -79,6 +80,7 @@ function AppContent() {
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
+      <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
       <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
       <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
       <Route path="/collections/:tab" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
