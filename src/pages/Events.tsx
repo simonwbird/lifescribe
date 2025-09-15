@@ -55,7 +55,7 @@ export default function Events() {
       day: 'numeric',
       year: 'numeric'
     }
-    return date.toLocaleDateString('en-US', options)
+    return date.toLocaleDateString('en-GB', options)
   }
 
   const formatDaysUntil = (daysUntil: number): string => {
