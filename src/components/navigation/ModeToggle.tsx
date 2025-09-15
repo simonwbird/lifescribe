@@ -42,11 +42,14 @@ export default function ModeToggle() {
       <CardContent>
         <div className="grid md:grid-cols-2 gap-4">
           {/* Simple Mode */}
-          <div className={`p-4 rounded-lg border-2 transition-colors ${
-            mode === 'simple' 
-              ? 'border-primary bg-primary/5' 
-              : 'border-border bg-background'
-          }`}>
+          <button 
+            className={`p-4 rounded-lg border-2 transition-colors cursor-pointer text-left hover:shadow-md ${
+              mode === 'simple' 
+                ? 'border-primary bg-primary/5' 
+                : 'border-border bg-background hover:border-primary/50'
+            }`}
+            onClick={() => setMode('simple')}
+          >
             <div className="flex items-center gap-2 mb-2">
               <Eye className="h-4 w-4" />
               <span className="font-semibold">Simple Mode</span>
@@ -68,14 +71,17 @@ export default function ModeToggle() {
                 Essential features only
               </div>
             </div>
-          </div>
+          </button>
 
           {/* Studio Mode */}
-          <div className={`p-4 rounded-lg border-2 transition-colors ${
-            mode === 'studio' 
-              ? 'border-primary bg-primary/5' 
-              : 'border-border bg-background'
-          }`}>
+          <button 
+            className={`p-4 rounded-lg border-2 transition-colors cursor-pointer text-left hover:shadow-md ${
+              mode === 'studio' 
+                ? 'border-primary bg-primary/5' 
+                : 'border-border bg-background hover:border-primary/50'
+            }`}
+            onClick={() => setMode('studio')}
+          >
             <div className="flex items-center gap-2 mb-2">
               <Palette className="h-4 w-4" />
               <span className="font-semibold">Studio Mode</span>
@@ -97,7 +103,7 @@ export default function ModeToggle() {
                 Advanced features
               </div>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Current Settings Display */}
