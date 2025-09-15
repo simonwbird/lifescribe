@@ -134,14 +134,27 @@ export function LifePageHeader({ person, userRole, pageType, onPersonUpdated }: 
             )}
 
             {canUserEdit && (
-              <MemorializeModal
-                person={person}
-                onClose={() => setShowMemorialDialog(false)}
-                onSuccess={() => {
-                  setShowMemorialDialog(false)
-                  onPersonUpdated()
-                }}
-              />
+              <>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => setShowMemorialDialog(true)}
+                >
+                  <Heart className="h-4 w-4" />
+                  {isMemorialized ? 'Revert memorialization' : 'Memorialize'}
+                </Button>
+
+                {showMemorialDialog && (
+                  <MemorializeModal
+                    person={person}
+                    onClose={() => setShowMemorialDialog(false)}
+                    onSuccess={() => {
+                      setShowMemorialDialog(false)
+                      onPersonUpdated()
+                    }}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>
