@@ -51,7 +51,9 @@ export default function InviteLanding() {
       }
 
       setInvite(inviteData)
-      setEmail(inviteData.email)
+      // Clear placeholder invite-link email if present
+      const isPlaceholder = typeof inviteData.email === 'string' && inviteData.email.endsWith('@lifescribe.local')
+      setEmail(isPlaceholder ? '' : inviteData.email)
       
       // Check if user already exists
       const { data: { user } } = await supabase.auth.getUser()

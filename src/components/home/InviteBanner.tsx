@@ -42,24 +42,34 @@ export default function InviteBanner({ className }: InviteBannerProps) {
 
       const { data: member, error: memberError } = await supabase
         .from('members')
-        .select('family_id')
+        .select('family_id, role')
         .eq('profile_id', user.id)
         .single()
 
       if (memberError || !member?.family_id) throw new Error('No family found')
 
-      const inviteLink = `${window.location.origin}/invite/${member.family_id}`
-      await navigator.clipboard.writeText(inviteLink)
+      // Ask server to create a tokenized invite link (no email sent)
+      const { data, error } = await supabase.functions.invoke('invite-link', {
+        body: { familyId: member.family_id, role: 'member' }
+      })
+
+      if (error || !data || !(data as any).joinUrl) {
+        const serverMsg = (data as any)?.error || error?.message
+        throw new Error(serverMsg || 'Failed to create invite link')
+      }
+
+      const joinUrl = (data as any).joinUrl as string
+      await navigator.clipboard.writeText(joinUrl)
       toast({
-        title: "Link copied!",
-        description: "Share this link with your family members"
+        title: 'Link copied!',
+        description: 'Share this link with your family members'
       })
       track('invite_link_copied')
     } catch (error) {
       toast({
-        title: "Copy failed", 
-        description: "Unable to copy link to clipboard",
-        variant: "destructive"
+        title: 'Copy failed',
+        description: (error as any)?.message || 'Unable to copy link to clipboard',
+        variant: 'destructive'
       })
     }
   }

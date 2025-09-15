@@ -15,6 +15,9 @@ verify_jwt = true
 [functions.transcribe]
 verify_jwt = true
 
+[functions.invite-link]
+verify_jwt = true
+
 [db]
 # Port to use for the local database URL.
 port = 54322
