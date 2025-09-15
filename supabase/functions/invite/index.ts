@@ -244,18 +244,26 @@ This link expires on ${expiresAtFormatted}. If you didn't expect this email, you
 LifeScribe — Private family memories, preserved.`;
 
     // Send email
-    const { error: emailError } = await resend.emails.send({
-      from: "LifeScribe <no-reply@lifescribe.app>",
+    const fromAddress = Deno.env.get("INVITE_FROM_EMAIL") || "LifeScribe <onboarding@resend.dev>";
+    const sendResult = await resend.emails.send({
+      from: fromAddress,
       to: [email],
       subject: "You've been invited to join LifeScribe",
       html: htmlContent,
       text: textContent,
     });
 
+    const emailError = (sendResult as any)?.error;
     if (emailError) {
       console.error("Email sending error:", emailError);
-      return new Response(JSON.stringify({ error: "Failed to send invitation email" }), {
-        status: 500,
+      // Provide clearer guidance when the domain isn't verified
+      const message = typeof emailError?.error === 'string' && emailError.error.includes('not verified')
+        ? 'Email domain is not verified in Resend. Please verify your domain at https://resend.com/domains or set INVITE_FROM_EMAIL to onboarding@resend.dev.'
+        : 'Failed to send invitation email';
+
+      const status = (typeof emailError?.statusCode === 'number' && emailError.statusCode !== 200) ? emailError.statusCode : 500;
+      return new Response(JSON.stringify({ error: message, code: 'email_failed' }), {
+        status,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }

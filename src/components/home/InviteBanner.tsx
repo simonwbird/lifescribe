@@ -92,7 +92,10 @@ export default function InviteBanner({ className }: InviteBannerProps) {
         }
       })
 
-      if (error) throw error
+      if (error) {
+        const serverMsg = (data as any)?.error
+        throw new Error(serverMsg || error.message || 'Failed to send')
+      }
 
       toast({
         title: "Invitation sent!",
