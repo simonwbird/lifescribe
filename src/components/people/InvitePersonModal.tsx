@@ -52,14 +52,7 @@ export default function InvitePersonModal({ person, familyId, onClose, onSuccess
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      
-      // Add status field if missing for compatibility
-      const invitesWithStatus = (data || []).map(invite => ({
-        ...invite,
-        status: invite.status || 'pending'
-      }))
-      
-      setExistingInvites(invitesWithStatus)
+      setExistingInvites(data || [])
     } catch (error) {
       console.error('Error fetching invites:', error)
     }
