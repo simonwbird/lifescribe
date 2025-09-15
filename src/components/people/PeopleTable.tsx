@@ -81,12 +81,12 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         bValue = calculateAge(b.birth_date, b.death_date, b.is_living !== false) || 0
         break
       case 'stories':
-        aValue = (a as any).person_story_links?.length || 0
-        bValue = (b as any).person_story_links?.length || 0
+        aValue = (a as any).stories_count || 0
+        bValue = (b as any).stories_count || 0
         break
       case 'photos':
-        aValue = (a as any).media?.length || 0
-        bValue = (b as any).media?.length || 0
+        aValue = (a as any).media_count || 0
+        bValue = (b as any).media_count || 0
         break
       case 'birthday':
         aValue = calculateDaysUntilBirthday(a.birth_date) || 999
@@ -281,14 +281,14 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <span>📖</span>
-                      {(person as any).stories?.length || 0}
+                      {(person as any).stories_count || 0}
                     </div>
                   </TableCell>
                   
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <span>📷</span>
-                      {(person as any).media?.length || 0}
+                      {(person as any).media_count || 0}
                     </div>
                   </TableCell>
                   

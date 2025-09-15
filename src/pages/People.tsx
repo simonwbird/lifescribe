@@ -101,6 +101,56 @@ export default function People() {
 
       if (linksError) throw linksError
 
+      // Fetch story counts for each person
+      const { data: storyLinksData, error: storyLinksError } = await supabase
+        .from('person_story_links')
+        .select('person_id')
+        .eq('family_id', spaceId)
+
+      if (storyLinksError) throw storyLinksError
+
+      // Fetch media counts for each person (photos, videos, etc.)
+      const { data: mediaData, error: mediaError } = await supabase
+        .from('media')
+        .select('id, mime_type')
+        .eq('family_id', spaceId)
+        .not('story_id', 'is', null) // Media linked to stories
+
+      if (mediaError) throw mediaError
+
+      // Count stories and media for each person
+      const storyCounts: Record<string, number> = {}
+      const mediaCounts: Record<string, number> = {}
+
+      // Count stories per person
+      storyLinksData?.forEach(link => {
+        storyCounts[link.person_id] = (storyCounts[link.person_id] || 0) + 1
+      })
+
+      // Count media per person (we'll need to get media linked through stories)
+      const { data: storyMediaData, error: storyMediaError } = await supabase
+        .from('person_story_links')
+        .select(`
+          person_id,
+          stories!inner(
+            id,
+            media(id, mime_type)
+          )
+        `)
+        .eq('family_id', spaceId)
+
+      if (storyMediaError) throw storyMediaError
+
+      // Count media per person
+      storyMediaData?.forEach(link => {
+        if (link.stories?.media) {
+          const personMediaCount = Array.isArray(link.stories.media) 
+            ? link.stories.media.length 
+            : (link.stories.media ? 1 : 0)
+          mediaCounts[link.person_id] = (mediaCounts[link.person_id] || 0) + personMediaCount
+        }
+      })
+
       const peopleWithStatus = (peopleData || []).map((person: any) => {
         const gender = (person.gender as ('male' | 'female' | 'other' | 'unknown')) || undefined
         // Prefer death_date to determine living status; if death_date exists, person is deceased
@@ -115,7 +165,9 @@ export default function People() {
           gender,
           is_living: isLiving,
           account_status: personLink ? 'joined' : 'not_on_app',
-          member_role: memberRole // Add member role to person data
+          member_role: memberRole,
+          stories_count: storyCounts[person.id] || 0,
+          media_count: mediaCounts[person.id] || 0
         }
       }) as Person[]
 
