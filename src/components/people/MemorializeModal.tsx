@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Heart, Calendar } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -112,57 +113,61 @@ export default function MemorializeModal({ person, onClose, onSuccess }: Memoria
   if (person.is_living === false) {
     // Show revert option for deceased people
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5" />
-            Revert Memorialization
-          </CardTitle>
-          <CardDescription>
-            {person.full_name} is currently marked as deceased. You can revert this if it was done in error.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {person.death_date && (
-            <div>
-              <Label>Current Death Date</Label>
-              <div className="p-2 bg-muted rounded-md text-sm">
-                {new Date(person.death_date).toLocaleDateString()}
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Revert Memorialization
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {person.full_name} is currently marked as deceased. You can revert this if it was done in error.
+            </p>
+            
+            {person.death_date && (
+              <div>
+                <Label>Current Death Date</Label>
+                <div className="p-2 bg-muted rounded-md text-sm">
+                  {new Date(person.death_date).toLocaleDateString()}
+                </div>
               </div>
+            )}
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleRevert}
+                disabled={loading}
+                variant="destructive"
+              >
+                {loading ? 'Reverting...' : 'Revert Memorialization'}
+              </Button>
             </div>
-          )}
-          
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleRevert}
-              disabled={loading}
-              variant="destructive"
-            >
-              {loading ? 'Reverting...' : 'Revert Memorialization'}
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     )
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5" />
             Memorialize {person.full_name}
-          </CardTitle>
-          <CardDescription>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
             This will mark {person.full_name} as no longer with us and convert their page to a tribute page.
             This action will change how they appear throughout the family space.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+          
           <div>
             <Label htmlFor="death_date">Date of Passing *</Label>
             <Input
@@ -197,8 +202,8 @@ export default function MemorializeModal({ person, onClose, onSuccess }: Memoria
               Memorialize
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </DialogContent>
 
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
@@ -220,6 +225,6 @@ export default function MemorializeModal({ person, onClose, onSuccess }: Memoria
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </Dialog>
   )
 }
