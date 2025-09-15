@@ -53,12 +53,13 @@ export default function InviteBanner({ className }: InviteBannerProps) {
         body: { familyId: member.family_id, role: 'member' }
       })
 
-      if (error || !data || !(data as any).joinUrl) {
+      if (error || !data || !(data as any).token) {
         const serverMsg = (data as any)?.error || error?.message
         throw new Error(serverMsg || 'Failed to create invite link')
       }
 
-      const joinUrl = (data as any).joinUrl as string
+      const token = (data as any).token as string
+      const joinUrl = `${window.location.origin}/invite/${token}`
       await navigator.clipboard.writeText(joinUrl)
       toast({
         title: 'Link copied!',
