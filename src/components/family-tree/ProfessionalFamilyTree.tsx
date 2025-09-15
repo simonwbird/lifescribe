@@ -336,17 +336,27 @@ export default function ProfessionalFamilyTree({
               <Button
                 variant="ghost" 
                 size="sm"
-                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 relative z-50"
               >
                 <MoreHorizontal className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onRecordMemoryAbout?.(person.id, displayName)}>
+            <DropdownMenuContent 
+              align="end" 
+              className="bg-white border border-gray-200 shadow-lg z-[100] min-w-[180px]"
+              sideOffset={5}
+            >
+              <DropdownMenuItem 
+                onClick={() => onRecordMemoryAbout?.(person.id, displayName)}
+                className="hover:bg-gray-100 cursor-pointer"
+              >
                 <Mic className="h-4 w-4 mr-2" />
                 Record about {displayName.split(' ')[0]}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onPersonEdit?.(person.id)}>
+              <DropdownMenuItem 
+                onClick={() => onPersonEdit?.(person.id)}
+                className="hover:bg-gray-100 cursor-pointer"
+              >
                 <Edit3 className="h-4 w-4 mr-2" />
                 Edit details
               </DropdownMenuItem>
