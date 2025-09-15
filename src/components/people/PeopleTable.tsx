@@ -324,7 +324,7 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
                       personAccounts={personAccounts}
                       currentUser={currentUser}
                       familyId={familyId}
-                      personUserLink={personUserLinks.find(link => link.person_id === person.id)}
+                      personUserLink={personUserLinks?.find(link => link.person_id === person.id)}
                       onPersonUpdated={onPersonUpdated}
                     />
                   </TableCell>
