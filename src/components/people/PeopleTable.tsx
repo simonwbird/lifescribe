@@ -7,16 +7,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Edit, MoreHorizontal, Mail, Copy, Calendar, Users, Image, ExternalLink, Trash2, Heart, MessageSquare, Camera, ChevronUp, ChevronDown, Crown, User, Shield } from 'lucide-react'
+import { UserPlus, Mail, Edit } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { calculateAge, calculateDaysUntilBirthday, formatUpcoming } from '@/utils/dateUtils'
 import PersonForm from './PersonForm'
 import InvitePersonModal from './InvitePersonModal'
 import MembershipChip from './MembershipChip'
 import MemorializeModal from './MemorializeModal'
+import PeopleTableRowActions from './PeopleTableRowActions'
 import type { Person } from '@/lib/familyTreeTypes'
+import type { PersonAccounts, CurrentUser } from '@/utils/personState'
 
 interface PeopleTableProps {
   people: Person[]
@@ -37,11 +37,25 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const { toast } = useToast()
 
-  // Permission helpers
+  // Build personAccounts lookup for the new row actions component
+  const personAccounts: PersonAccounts = {}
+  people.forEach(person => {
+    if (person.account_status === 'joined' && person.member_role) {
+      personAccounts[person.id] = {
+        user_id: currentUserId || '',
+        member_role: person.member_role
+      }
+    }
+  })
+
+  // Current user context
+  const currentUser: CurrentUser = {
+    role: currentUserRole as 'admin' | 'member' | 'guest' | null,
+    id: currentUserId
+  }
+
+  // Permission helpers (simplified since new component handles most logic)
   const canEdit = () => currentUserRole === 'admin' || currentUserRole === 'member'
-  const canInvite = () => currentUserRole === 'admin' || currentUserRole === 'member'
-  const canDelete = () => currentUserRole === 'admin'
-  const canManageRoles = () => currentUserRole === 'admin'
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -54,11 +68,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
 
   const getSortIcon = (field: string) => {
     if (sortField !== field) return null
-    return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-  }
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase()
+    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>
   }
 
   const sortedPeople = [...people].sort((a, b) => {
@@ -93,6 +103,10 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
     return 0
   })
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase()
+  }
 
   const copyInviteLink = async (person: Person) => {
     // This would need to generate an invite link for the specific person
@@ -270,6 +284,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
 
   return (
     <div className="space-y-4">
+      {/* Table */}
       {/* Bulk Actions */}
       {selectedPeople.length > 0 && canEdit() && (
         <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
@@ -450,7 +465,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                               <div className="flex items-center justify-between">
                                 <span>† {new Date(person.death_date).toLocaleDateString()}</span>
                                 {canEdit() && (
-                                  <Edit className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
                                 )}
                               </div>
                             </div>
@@ -477,14 +492,14 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                   
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
+                      <span>📖</span>
                       {(person as any).stories?.length || 0}
                     </div>
                   </TableCell>
                   
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Image className="h-4 w-4" />
+                      <span>📷</span>
                       {(person as any).media?.length || 0}
                     </div>
                   </TableCell>
@@ -492,89 +507,20 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                   <TableCell>
                     {daysUntilBirthday !== null && (
                       <Badge variant="outline">
-                        <Calendar className="h-3 w-3 mr-1" />
+                        <span className="mr-1">🎂</span>
                         {daysUntilBirthday === 0 ? 'Today!' : `${daysUntilBirthday} days`}
                       </Badge>
                     )}
                   </TableCell>
                   
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {canEdit() && (
-                          <DropdownMenuItem onClick={() => setEditingPerson(person)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Details
-                          </DropdownMenuItem>
-                        )}
-                        
-                        {canInvite() && (
-                          <DropdownMenuItem onClick={() => setInvitingPerson(person)}>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Invite/Manage
-                          </DropdownMenuItem>
-                        )}
-                        
-                        {/* Role Management - Only show for admins with person accounts */}
-                        {canManageRoles() && person.member_role && (
-                          <>
-                            {person.member_role !== 'admin' && (
-                              <DropdownMenuItem onClick={() => handleRoleChange(person, 'admin')}>
-                                <Crown className="h-4 w-4 mr-2" />
-                                Promote to Admin
-                              </DropdownMenuItem>
-                            )}
-                            {person.member_role !== 'member' && (
-                              <DropdownMenuItem onClick={() => handleRoleChange(person, 'member')}>
-                                <User className="h-4 w-4 mr-2" />
-                                Set as Member
-                              </DropdownMenuItem>
-                            )}
-                            {person.member_role !== 'guest' && (
-                              <DropdownMenuItem onClick={() => handleRoleChange(person, 'guest')}>
-                                <Shield className="h-4 w-4 mr-2" />
-                                Set as Guest
-                              </DropdownMenuItem>
-                            )}
-                          </>
-                        )}
-                        
-                        <DropdownMenuItem onClick={() => window.open(`/people/${person.id}`, '_blank')}>
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          {person.is_living === false ? "View Tribute Page" : "View Life Page"}
-                        </DropdownMenuItem>
-                        
-                        {canDelete() && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete {person.full_name}?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete this person and all associated data. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeletePerson(person)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <PeopleTableRowActions
+                      person={person}
+                      personAccounts={personAccounts}
+                      currentUser={currentUser}
+                      familyId={familyId}
+                      onPersonUpdated={onPersonUpdated}
+                    />
                   </TableCell>
                 </TableRow>
               )
