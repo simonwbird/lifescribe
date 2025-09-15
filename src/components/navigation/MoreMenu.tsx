@@ -49,12 +49,12 @@ export default function MoreMenu() {
           </Link>
         </DropdownMenuItem>
         {flags.analytics && (
-          <DropdownMenuItem asChild>
-            <Link to="/analytics">
-              <BarChart3 className="mr-2 h-4 w-4" />
-              Analytics
-            </Link>
-          </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/labs">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Analytics
+          </Link>
+        </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
