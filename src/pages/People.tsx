@@ -237,7 +237,7 @@ export default function People() {
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-gray-600">{stats.deceased}</div>
-                  <div className="text-xs text-muted-foreground">Deceased</div>
+                  <div className="text-xs text-muted-foreground">No longer with us</div>
                 </CardContent>
               </Card>
               <Card>
