@@ -180,7 +180,7 @@ export default function GlobalSearch() {
           data-search-input
           ref={inputRef}
           type="text"
-          placeholder="Search…"
+          placeholder="People, stories, places…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
