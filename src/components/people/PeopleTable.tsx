@@ -367,7 +367,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId }: Peopl
                   <TableCell>
                     {age !== null && (
                       <div>
-                        {person.is_living === false ? `Would be ${age}` : age}
+                        {person.is_living === false ? `Was ${age}` : age}
                         {person.is_living === false && (
                           <div className="text-xs text-muted-foreground">(In memoriam)</div>
                         )}
