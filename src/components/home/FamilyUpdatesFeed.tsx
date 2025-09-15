@@ -40,7 +40,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
     // Navigate to relevant destination
     if (activity.id.startsWith('story-') || activity.type === 'story' || activity.type === 'comment') {
       const storyId = activity.id.replace('story-', '')
-      navigate(`/story/${storyId}`)
+      navigate(`/stories/${storyId}`)
     }
   }
 
@@ -56,18 +56,18 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
       case 'comment':
         // Navigate to story detail to add comment
         const storyId = activityId.replace('story-', '')
-        window.location.href = `/story/${storyId}#comments`
+        navigate(`/stories/${storyId}#comments`)
         break
       case 'share':
         // Implement share functionality
         if (navigator.share) {
           navigator.share({
             title: 'Family Story',
-            url: window.location.origin + `/story/${activityId.replace('story-', '')}`
+            url: window.location.origin + `/stories/${activityId.replace('story-', '')}`
           })
         } else {
           // Fallback: copy to clipboard
-          navigator.clipboard.writeText(window.location.origin + `/story/${activityId.replace('story-', '')}`)
+          navigator.clipboard.writeText(window.location.origin + `/stories/${activityId.replace('story-', '')}`)
           console.log('Story link copied to clipboard')
         }
         break
@@ -187,7 +187,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation()
                           const storyId = activity.id.replace('story-', '')
-                          navigator.clipboard.writeText(window.location.origin + `/story/${storyId}`)
+                          navigator.clipboard.writeText(window.location.origin + `/stories/${storyId}`)
                           console.log('Story link copied to clipboard')
                         }}>
                           <Copy className="h-4 w-4 mr-2" />
