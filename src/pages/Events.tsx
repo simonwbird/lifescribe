@@ -48,14 +48,22 @@ export default function Events() {
   }
 
   const formatDateLabel = (event: UpcomingEvent): string => {
-    const date = new Date(event.date)
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric',
-      year: 'numeric'
+    // Parse YYYY-MM-DD safely in local time
+    const [y, m, d] = event.date.split('-').map(Number)
+    const date = new Date(y, (m || 1) - 1, d || 1)
+
+    const weekday = date.toLocaleString('en-GB', { weekday: 'long' })
+    const month = date.toLocaleString('en-GB', { month: 'long' })
+    const day = date.getDate()
+    const year = date.getFullYear()
+
+    const getOrdinal = (n: number) => {
+      const s = ['th', 'st', 'nd', 'rd']
+      const v = n % 100
+      return s[(v - 20) % 10] || s[v] || s[0]
     }
-    return date.toLocaleDateString('en-GB', options)
+
+    return `${weekday} ${day}${getOrdinal(day)} ${month} ${year}`
   }
 
   const formatDaysUntil = (daysUntil: number): string => {
