@@ -34,17 +34,23 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
   const { toast } = useToast()
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string; full_name?: string } | null>(null)
 
-  // Get current user's profile data
+  // Get current user's profile data (prefer auth metadata avatar)
   useEffect(() => {
     const getUserProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        const meta = user.user_metadata as any
+        const metaAvatar = meta?.avatar_url || meta?.picture
+        const metaName = meta?.full_name || meta?.name
+        if (metaAvatar || metaName) {
+          setUserProfile({ avatar_url: metaAvatar, full_name: metaName })
+          return
+        }
         const { data: profile } = await supabase
           .from('profiles')
           .select('avatar_url, full_name')
           .eq('id', user.id)
           .single()
-        
         if (profile) {
           setUserProfile(profile)
         }
@@ -167,7 +173,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || activity.actor} />
+                    <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="h-12 w-12 object-cover" referrerPolicy="no-referrer" />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                       {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
