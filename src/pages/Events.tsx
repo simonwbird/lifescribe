@@ -7,7 +7,7 @@ import { Calendar, Plus, Camera, PenTool, Heart, ArrowLeft } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
-import { getUpcomingEvents, type UpcomingEvent } from '@/lib/eventsService'
+import { getAllFamilyEvents, type UpcomingEvent } from '@/lib/eventsService'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import AddBirthdayModal from '@/components/home/AddBirthdayModal'
@@ -33,13 +33,13 @@ export default function Events() {
   const loadEvents = async () => {
     try {
       setLoading(true)
-      const upcomingEvents = await getUpcomingEvents(days)
-      setEvents(upcomingEvents)
+      const allEvents = await getAllFamilyEvents()
+      setEvents(allEvents)
     } catch (error) {
       console.error('Error loading events:', error)
       toast({
         title: "Error loading events",
-        description: "Failed to load upcoming events",
+        description: "Failed to load family events",
         variant: "destructive"
       })
     } finally {
@@ -154,7 +154,7 @@ export default function Events() {
                   Family Events
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  Birthdays and memorable dates for your family
+                  Birthdays and memorable dates for your family (past 12 months and next 12 months)
                 </p>
               </div>
               
@@ -297,7 +297,7 @@ export default function Events() {
                     <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium mb-2">No recent events</h3>
                     <p className="text-muted-foreground">
-                      Events from the past {days} days will appear here
+                      Events from the past 12 months will appear here
                     </p>
                   </CardContent>
                 </Card>

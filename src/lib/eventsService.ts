@@ -231,6 +231,171 @@ export async function getUpcomingEvents(days: number = 30): Promise<UpcomingEven
 }
 
 /**
+ * Get all family events for the past and future 12 months (24 months total)
+ */
+export async function getAllFamilyEvents(): Promise<UpcomingEvent[]> {
+  try {
+    const spaceId = await getCurrentSpaceId()
+    if (!spaceId) return []
+
+    const today = new Date()
+    const currentYear = today.getFullYear()
+    const lastYear = currentYear - 1
+    const nextYear = currentYear + 1
+    const events: UpcomingEvent[] = []
+
+    // Get all people with birth dates
+    const { data: people } = await supabase
+      .from('people')
+      .select('id, full_name, birth_date, death_date, is_living')
+      .eq('family_id', spaceId)
+      .not('birth_date', 'is', null)
+
+    if (people) {
+      for (const person of people) {
+        const birthDate = new Date(person.birth_date + 'T00:00:00')
+        const isDeceased = !person.is_living || !!person.death_date
+
+        // Check last year, this year, and next year birthdays
+        for (const year of [lastYear, currentYear, nextYear]) {
+          const birthdayThisYear = getNextOccurrence(birthDate, year)
+          const daysUntil = calculateDaysUntil(birthdayThisYear)
+          
+          // Include events within 365 days past or future
+          if (daysUntil >= -365 && daysUntil <= 365) {
+            const age = calculateAge(birthDate, birthdayThisYear)
+            
+            events.push({
+              id: `birthday-${person.id}-${year}`,
+              type: 'birthday',
+              person_id: person.id,
+              person_name: person.full_name,
+              title: `${person.full_name}'s Birthday`,
+              date: birthdayThisYear.toISOString().split('T')[0],
+              original_date: person.birth_date,
+              days_until: daysUntil,
+              age: isDeceased ? undefined : age,
+              would_be_age: isDeceased ? age : undefined,
+              is_deceased: isDeceased
+            })
+          }
+        }
+
+        // Also check death anniversaries if applicable
+        if (person.death_date) {
+          const deathDate = new Date(person.death_date + 'T00:00:00')
+          
+          for (const year of [lastYear, currentYear, nextYear]) {
+            const anniversaryThisYear = getNextOccurrence(deathDate, year)
+            const daysUntilAnniversary = calculateDaysUntil(anniversaryThisYear)
+
+            if (daysUntilAnniversary >= -365 && daysUntilAnniversary <= 365) {
+              const yearsGone = calculateAge(deathDate, anniversaryThisYear)
+              
+              events.push({
+                id: `death-anniversary-${person.id}-${year}`,
+                type: 'death_anniversary',
+                person_id: person.id,
+                person_name: person.full_name,
+                title: `${person.full_name}'s Memorial`,
+                date: anniversaryThisYear.toISOString().split('T')[0],
+                original_date: person.death_date,
+                days_until: daysUntilAnniversary,
+                age: yearsGone,
+                is_deceased: true
+              })
+            }
+          }
+        }
+      }
+    }
+
+    // Get life events
+    const { data: lifeEvents } = await supabase
+      .from('life_events')
+      .select(`
+        id, title, type, event_date, event_date_text, date_precision, 
+        recurrence, notes, person_id,
+        people:person_id(full_name),
+        with_people:with_person_id(full_name)
+      `)
+      .eq('family_id', spaceId)
+      .not('event_date', 'is', null)
+
+    if (lifeEvents) {
+      for (const event of lifeEvents) {
+        const eventDate = new Date(event.event_date + 'T00:00:00')
+        
+        if (event.recurrence === 'yearly') {
+          // Recurring yearly events for last, current, and next year
+          for (const year of [lastYear, currentYear, nextYear]) {
+            const occurrenceThisYear = getNextOccurrence(eventDate, year)
+            const daysUntil = calculateDaysUntil(occurrenceThisYear)
+
+            if (daysUntil >= -365 && daysUntil <= 365) {
+              const yearsAgo = calculateAge(eventDate, occurrenceThisYear)
+              const personName = (event as any).people?.full_name || (event as any).with_people?.full_name
+
+              events.push({
+                id: `${event.id}-${year}`,
+                type: 'life_event',
+                person_id: event.person_id || undefined,
+                person_name: personName || 'Family',
+                title: event.title,
+                date: occurrenceThisYear.toISOString().split('T')[0],
+                original_date: event.event_date,
+                days_until: daysUntil,
+                age: yearsAgo,
+                event_type: event.type as 'anniversary' | 'memorial' | 'custom',
+                notes: event.notes || undefined,
+                recurrence: event.recurrence || undefined
+              })
+            }
+          }
+        } else {
+          // One-time events
+          const daysUntil = calculateDaysUntil(eventDate)
+          
+          if (daysUntil >= -365 && daysUntil <= 365) {
+            const personName = (event as any).people?.full_name || (event as any).with_people?.full_name
+
+            events.push({
+              id: event.id,
+              type: 'life_event',
+              person_id: event.person_id || undefined,
+              person_name: personName || 'Family',
+              title: event.title,
+              date: event.event_date,
+              days_until: daysUntil,
+              event_type: event.type as 'anniversary' | 'memorial' | 'custom',
+              notes: event.notes || undefined,
+              recurrence: event.recurrence || undefined
+            })
+          }
+        }
+      }
+    }
+
+    // Remove duplicates and sort by days until, then by name
+    const uniqueEvents = events.filter((event, index, self) => 
+      index === self.findIndex((e) => e.id === event.id && e.date === event.date)
+    )
+
+    return uniqueEvents
+      .sort((a, b) => {
+        if (a.days_until !== b.days_until) {
+          return a.days_until - b.days_until
+        }
+        return a.person_name.localeCompare(b.person_name)
+      })
+
+  } catch (error) {
+    console.error('Error fetching all family events:', error)
+    return []
+  }
+}
+
+/**
  * Create a new life event
  */
 export async function createLifeEvent(eventData: {
