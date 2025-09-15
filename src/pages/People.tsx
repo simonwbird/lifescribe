@@ -81,11 +81,19 @@ export default function People() {
 
       if (error) throw error
 
-      const peopleWithStatus = (data || []).map((person: any) => ({
-        ...person,
-        gender: person.gender as ('male' | 'female' | 'other' | 'unknown') || undefined,
-        account_status: 'not_on_app' // For now, we'll set a default status
-      })) as Person[]
+      const peopleWithStatus = (data || []).map((person: any) => {
+        const gender = (person.gender as ('male' | 'female' | 'other' | 'unknown')) || undefined
+        const derivedLiving =
+          typeof person.is_living === 'boolean'
+            ? person.is_living
+            : (person.death_date ? false : true)
+        return {
+          ...person,
+          gender,
+          is_living: derivedLiving,
+          account_status: 'not_on_app' // Placeholder until invites/person_user_links are joined
+        }
+      }) as Person[]
 
       setPeople(peopleWithStatus)
       setFilteredPeople(peopleWithStatus)
