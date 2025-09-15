@@ -147,6 +147,8 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
         variant: "destructive"
       })
     }
+  }
+
   const getStatusBadge = (person: any) => {
     if (person.is_living === false) {
       return <Badge variant="secondary">Deceased</Badge>
