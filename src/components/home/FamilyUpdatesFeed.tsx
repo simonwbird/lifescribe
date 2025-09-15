@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { MessageCircle, Heart, Share, MoreHorizontal, Copy, EyeOff, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useNavigate } from 'react-router-dom'
 
 interface ActivityItem {
   id: string
@@ -27,6 +28,7 @@ interface FamilyUpdatesFeedProps {
 
 export default function FamilyUpdatesFeed({ activities, variant = 'simple', className }: FamilyUpdatesFeedProps) {
   const { track } = useAnalytics()
+  const navigate = useNavigate()
 
   const handleActivityClick = (activity: ActivityItem) => {
     track('activity_clicked', { 
@@ -34,6 +36,12 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
       type: activity.type,
       variant
     })
+
+    // Navigate to relevant destination
+    if (activity.id.startsWith('story-') || activity.type === 'story' || activity.type === 'comment') {
+      const storyId = activity.id.replace('story-', '')
+      navigate(`/story/${storyId}`)
+    }
   }
 
   const handleReaction = (activityId: string, reaction: string) => {
