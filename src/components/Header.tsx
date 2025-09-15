@@ -155,9 +155,9 @@ export default function Header() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className={isActivePath('/family') ? 'bg-accent text-accent-foreground' : ''}
+                className={isActivePath('/people') ? 'bg-accent text-accent-foreground' : ''}
               >
-                <Link to="/family/members" className="flex items-center gap-1">
+                <Link to="/people" className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
                   People
                 </Link>
