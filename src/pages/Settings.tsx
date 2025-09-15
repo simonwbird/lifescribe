@@ -203,11 +203,10 @@ export default function Settings() {
           </div>
 
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="privacy">Privacy</TabsTrigger>
-              <TabsTrigger value="family">Family</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
 
@@ -484,32 +483,6 @@ export default function Settings() {
                         <SelectItem value="hidden">Hide address completely</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="family" className="space-y-6">
-              {/* Family Management */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Family Management
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your family spaces and invitations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Family management features are available through the main navigation. 
-                    Use the family dropdown to switch between spaces and manage members.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <a href="/family/members">Manage Members</a>
-                    </Button>
                   </div>
                 </CardContent>
               </Card>

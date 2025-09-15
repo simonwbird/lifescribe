@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 
 export interface LabsFlags {
   collections: boolean
+  multiSpaces: boolean
   advancedComposer: boolean
   alternateTreeViews: boolean
   gedcomImport: boolean
@@ -13,6 +14,7 @@ export interface LabsFlags {
 
 const DEFAULT_FLAGS: LabsFlags = {
   collections: false,
+  multiSpaces: false,
   advancedComposer: false,
   alternateTreeViews: false,
   gedcomImport: false,

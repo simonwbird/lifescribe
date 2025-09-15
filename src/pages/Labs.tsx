@@ -20,7 +20,8 @@ import {
   Bell, 
   Shield,
   Info,
-  Eye
+  Eye,
+  Users
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLabs } from '@/hooks/useLabs'
@@ -33,6 +34,13 @@ const FEATURES = [
     description: 'Manage recipes, heirlooms/objects, homes/properties, and pets',
     icon: Archive,
     status: 'beta',
+  },
+  {
+    id: 'multiSpaces' as const,
+    title: 'Multiple Family Spaces',
+    description: 'Keep branches separate (e.g., in-laws, extended clan) with their own feeds and digests. May be unstable.',
+    icon: Users,
+    status: 'experimental',
   },
   {
     id: 'advancedComposer' as const,

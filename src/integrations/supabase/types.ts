@@ -1095,7 +1095,9 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          default_space_id: string | null
           email: string
+          feature_flags: Json | null
           full_name: string | null
           id: string
           settings: Json | null
@@ -1104,7 +1106,9 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          default_space_id?: string | null
           email: string
+          feature_flags?: Json | null
           full_name?: string | null
           id: string
           settings?: Json | null
@@ -1113,13 +1117,23 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          default_space_id?: string | null
           email?: string
+          feature_flags?: Json | null
           full_name?: string | null
           id?: string
           settings?: Json | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_default_space_id_fkey"
+            columns: ["default_space_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       properties: {
         Row: {

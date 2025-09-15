@@ -15,16 +15,14 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { getSignedMediaUrl } from '@/lib/media'
 import type { Profile } from '@/lib/types'
 
-// Mock family spaces data - would come from API
-const mockFamilySpaces = [
-  { id: '1', name: 'The Johnson Family', isActive: true },
-  { id: '2', name: 'Extended Family', isActive: false },
-]
+// Default family space will be stored in profile.default_space_id
 
 export default function ProfileDropdown() {
   const [open, setOpen] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [familyName, setFamilyName] = useState<string>('My Family')
+  const [enableMultiSpaces, setEnableMultiSpaces] = useState(false)
   const navigate = useNavigate()
   const { track } = useAnalytics()
 
@@ -32,13 +30,30 @@ export default function ProfileDropdown() {
     const getProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // Get profile data
+        // Get profile data with feature flags
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('*')
+          .select('*, default_space_id, settings')
           .eq('id', user.id)
           .single()
         setProfile(profileData)
+        
+        // Check multi-space feature flag from Labs settings
+        const settings = (profileData?.settings as any) || {}
+        const labsFlags = settings.labs_flags || {}
+        setEnableMultiSpaces(settings.labs_enabled && labsFlags.multiSpaces)
+        
+        // Get default family name
+        if (profileData?.default_space_id) {
+          const { data: familyData } = await supabase
+            .from('families')
+            .select('name')
+            .eq('id', profileData.default_space_id)
+            .single()
+          if (familyData) {
+            setFamilyName(familyData.name)
+          }
+        }
         
         // Get user's family ID from members table
         const { data: memberData } = await supabase
@@ -167,22 +182,27 @@ export default function ProfileDropdown() {
 
         <div className="my-2">
           <div className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Family Spaces
+            Your Family
           </div>
-          {mockFamilySpaces.map((space) => (
-            <DropdownMenuItem key={space.id} className="p-0">
-              <button
-                className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground text-left"
-                onClick={() => handleSwitchFamily(space.id)}
+          <DropdownMenuItem className="p-0">
+            <div className="flex items-center gap-3 px-3 py-2 w-full text-left">
+              <Users className="h-4 w-4" />
+              <span className="flex-1">{familyName}</span>
+              <div className="w-2 h-2 bg-brand-green rounded-full" />
+            </div>
+          </DropdownMenuItem>
+          {enableMultiSpaces && (
+            <DropdownMenuItem className="p-0">
+              <Link
+                to="/labs/spaces"
+                className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground text-xs text-muted-foreground"
+                onClick={() => handleMenuItemClick('labs_spaces')}
               >
-                <Users className="h-4 w-4" />
-                <span className="flex-1">{space.name}</span>
-                {space.isActive && (
-                  <div className="w-2 h-2 bg-brand-green rounded-full" />
-                )}
-              </button>
+                <Beaker className="h-3 w-3" />
+                Manage spaces (Labs)
+              </Link>
             </DropdownMenuItem>
-          ))}
+          )}
         </div>
 
         <DropdownMenuItem className="p-0">
