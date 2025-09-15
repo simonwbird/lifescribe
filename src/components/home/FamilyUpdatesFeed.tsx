@@ -1,9 +1,10 @@
 import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { MessageCircle, Heart, Share, MoreHorizontal } from 'lucide-react'
+import { MessageCircle, Heart, Share, MoreHorizontal, Copy, EyeOff, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
@@ -164,13 +165,42 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
                       <Share className="h-4 w-4" />
                     </Button>
                     
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation()
+                          const storyId = activity.id.replace('story-', '')
+                          navigator.clipboard.writeText(window.location.origin + `/story/${storyId}`)
+                          console.log('Story link copied to clipboard')
+                        }}>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Link
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation()
+                          console.log('Hide update:', activity.id)
+                        }}>
+                          <EyeOff className="h-4 w-4 mr-2" />
+                          Hide Update
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation()
+                          console.log('Report update:', activity.id)
+                        }}>
+                          <Flag className="h-4 w-4 mr-2" />
+                          Report
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
