@@ -453,6 +453,86 @@ export type Database = {
           },
         ]
       }
+      life_events: {
+        Row: {
+          created_at: string
+          created_by: string
+          date_precision: string | null
+          event_date: string | null
+          event_date_text: string | null
+          family_id: string
+          id: string
+          notes: string | null
+          person_id: string | null
+          recurrence: string | null
+          title: string
+          type: string
+          updated_at: string
+          with_person_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date_precision?: string | null
+          event_date?: string | null
+          event_date_text?: string | null
+          family_id: string
+          id?: string
+          notes?: string | null
+          person_id?: string | null
+          recurrence?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          with_person_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date_precision?: string | null
+          event_date?: string | null
+          event_date_text?: string | null
+          family_id?: string
+          id?: string
+          notes?: string | null
+          person_id?: string | null
+          recurrence?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          with_person_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "life_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "life_events_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "life_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "life_events_with_person_id_fkey"
+            columns: ["with_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media: {
         Row: {
           answer_id: string | null
@@ -613,6 +693,7 @@ export type Database = {
           gender: string | null
           given_name: string | null
           id: string
+          is_living: boolean | null
           middle_name: string | null
           notes: string | null
           surname: string | null
@@ -631,6 +712,7 @@ export type Database = {
           gender?: string | null
           given_name?: string | null
           id?: string
+          is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
           surname?: string | null
@@ -649,6 +731,7 @@ export type Database = {
           gender?: string | null
           given_name?: string | null
           id?: string
+          is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
           surname?: string | null

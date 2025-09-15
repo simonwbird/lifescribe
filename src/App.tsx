@@ -42,6 +42,7 @@ import StoryEdit from "./pages/StoryEdit";
 import SearchPage from "./pages/Search";
 import Capture from "./pages/Capture";
 import Media from "./pages/Media";
+import Events from "./pages/Events";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
@@ -82,6 +83,7 @@ function AppContent() {
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
       <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
+       <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
        <Route path="/labs/spaces" element={<AuthGate><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthGate>} />
       <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
