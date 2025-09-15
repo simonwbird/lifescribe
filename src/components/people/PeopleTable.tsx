@@ -559,7 +559,7 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                         
                         <DropdownMenuItem onClick={() => window.open(`/people/${person.id}`, '_blank')}>
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          View Wall
+                          {person.is_living === false ? "View Tribute Page" : "View Life Page"}
                         </DropdownMenuItem>
                         
                         {canDelete() && (
