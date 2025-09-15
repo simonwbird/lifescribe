@@ -309,7 +309,7 @@ export default function People() {
                     placeholder="Search by name..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-12"
                   />
                 </div>
               </div>
