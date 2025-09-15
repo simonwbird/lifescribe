@@ -72,78 +72,194 @@ export async function suggestPeople(text: string): Promise<Array<{ id?: string; 
 export function inferDate(text: string): { value: string; precision: 'day' | 'month' | 'year' | 'unknown' } {
   if (!text) return { value: '', precision: 'unknown' }
   
-  // Date patterns
+  const today = new Date()
+  const currentYear = today.getFullYear()
+  
+  // More comprehensive date patterns for natural speech
   const datePatterns = [
-    // Specific dates
-    { pattern: /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g, precision: 'day' as const },
-    { pattern: /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g, precision: 'day' as const },
+    // Specific dates with various formats
+    { pattern: /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g, precision: 'day' as const, type: 'mdy' },
+    { pattern: /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g, precision: 'day' as const, type: 'ymd' },
+    { pattern: /\b(\d{1,2})-(\d{1,2})-(\d{4})\b/g, precision: 'day' as const, type: 'mdy' },
     
-    // Month and year
-    { pattern: /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})\b/gi, precision: 'month' as const },
-    { pattern: /\b(\d{1,2})\/(\d{4})\b/g, precision: 'month' as const },
+    // Month day year patterns (common in speech)
+    { pattern: /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s+(\d{4})\b/gi, precision: 'day' as const, type: 'month_day_year' },
+    { pattern: /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(st|nd|rd|th),?\s+(\d{4})\b/gi, precision: 'day' as const, type: 'month_ordinal_year' },
     
-    // Just year
-    { pattern: /\bin\s+(\d{4})\b/gi, precision: 'year' as const },
-    { pattern: /\back\s+in\s+(\d{4})\b/gi, precision: 'year' as const },
+    // Month and year only
+    { pattern: /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})\b/gi, precision: 'month' as const, type: 'month_year' },
+    { pattern: /\bin\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+of\s+(\d{4})\b/gi, precision: 'month' as const, type: 'month_year' },
     
-    // Relative dates
-    { pattern: /\byesterday\b/gi, precision: 'day' as const },
-    { pattern: /\blast\s+(week|month|year)\b/gi, precision: 'month' as const },
-    { pattern: /\bthis\s+(morning|afternoon|evening)\b/gi, precision: 'day' as const }
+    // Year only patterns
+    { pattern: /\bin\s+(\d{4})\b/gi, precision: 'year' as const, type: 'year' },
+    { pattern: /\back\s+in\s+(\d{4})\b/gi, precision: 'year' as const, type: 'year' },
+    { pattern: /\bduring\s+(\d{4})\b/gi, precision: 'year' as const, type: 'year' },
+    { pattern: /\bthe\s+year\s+(\d{4})\b/gi, precision: 'year' as const, type: 'year' },
+    
+    // Relative date patterns
+    { pattern: /\byesterday\b/gi, precision: 'day' as const, type: 'yesterday' },
+    { pattern: /\btoday\b/gi, precision: 'day' as const, type: 'today' },
+    { pattern: /\bthis\s+(morning|afternoon|evening)\b/gi, precision: 'day' as const, type: 'today' },
+    { pattern: /\blast\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, precision: 'day' as const, type: 'last_weekday' },
+    { pattern: /\bthis\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, precision: 'day' as const, type: 'this_weekday' },
+    { pattern: /\blast\s+week\b/gi, precision: 'month' as const, type: 'last_week' },
+    { pattern: /\blast\s+month\b/gi, precision: 'month' as const, type: 'last_month' },
+    { pattern: /\blast\s+year\b/gi, precision: 'year' as const, type: 'last_year' },
+    
+    // Season patterns
+    { pattern: /\blast\s+(spring|summer|fall|autumn|winter)\b/gi, precision: 'month' as const, type: 'last_season' },
+    { pattern: /\bthis\s+(spring|summer|fall|autumn|winter)\b/gi, precision: 'month' as const, type: 'this_season' },
+    { pattern: /\bin\s+the\s+(spring|summer|fall|autumn|winter)\s+of\s+(\d{4})\b/gi, precision: 'month' as const, type: 'season_year' },
+    
+    // Holiday patterns
+    { pattern: /\bchristmas\s+(\d{4})\b/gi, precision: 'day' as const, type: 'christmas' },
+    { pattern: /\bthanksgiving\s+(\d{4})\b/gi, precision: 'day' as const, type: 'thanksgiving' },
+    { pattern: /\bnew\s+year'?s?\s+(\d{4})\b/gi, precision: 'day' as const, type: 'newyears' }
   ]
   
-  const today = new Date()
+  const months = ['january', 'february', 'march', 'april', 'may', 'june',
+                 'july', 'august', 'september', 'october', 'november', 'december']
   
-  for (const { pattern, precision } of datePatterns) {
-    const matches = text.matchAll(pattern)
+  for (const { pattern, precision, type } of datePatterns) {
+    const matches = Array.from(text.matchAll(pattern))
+    
     for (const match of matches) {
-      if (match[0].toLowerCase() === 'yesterday') {
-        const yesterday = new Date(today)
-        yesterday.setDate(yesterday.getDate() - 1)
-        return { value: yesterday.toISOString().split('T')[0], precision: 'day' }
-      }
-      
-      if (match[0].toLowerCase().includes('this morning') || 
-          match[0].toLowerCase().includes('this afternoon') || 
-          match[0].toLowerCase().includes('this evening')) {
-        return { value: today.toISOString().split('T')[0], precision: 'day' }
-      }
-      
-      if (match[1] && /^\d{4}$/.test(match[1])) {
-        // Year only
-        return { value: `${match[1]}-01-01`, precision: 'year' }
-      }
-      
-      if (match[1] && match[2] && /^\d{4}$/.test(match[2])) {
-        // Month and year
-        const monthName = match[1].toLowerCase()
-        const months = ['january', 'february', 'march', 'april', 'may', 'june',
-                       'july', 'august', 'september', 'october', 'november', 'december']
-        const monthIndex = months.indexOf(monthName)
-        if (monthIndex !== -1) {
-          return { value: `${match[2]}-${String(monthIndex + 1).padStart(2, '0')}-01`, precision: 'month' }
+      try {
+        let dateResult = { value: '', precision }
+        
+        switch (type) {
+          case 'mdy': // MM/DD/YYYY or MM-DD-YYYY
+            if (match[1] && match[2] && match[3]) {
+              const month = parseInt(match[1])
+              const day = parseInt(match[2])
+              const year = parseInt(match[3])
+              if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+              }
+            }
+            break
+            
+          case 'ymd': // YYYY-MM-DD
+            if (match[1] && match[2] && match[3]) {
+              const year = parseInt(match[1])
+              const month = parseInt(match[2])
+              const day = parseInt(match[3])
+              if (year >= 1900 && year <= currentYear + 10 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                dateResult.value = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+              }
+            }
+            break
+            
+          case 'month_day_year': // January 15, 2024
+            if (match[1] && match[2] && match[3]) {
+              const monthName = match[1].toLowerCase()
+              const monthIndex = months.indexOf(monthName)
+              const day = parseInt(match[2])
+              const year = parseInt(match[3])
+              if (monthIndex !== -1 && day >= 1 && day <= 31 && year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-${(monthIndex + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+              }
+            }
+            break
+            
+          case 'month_ordinal_year': // January 15th, 2024
+            if (match[1] && match[2] && match[4]) {
+              const monthName = match[1].toLowerCase()
+              const monthIndex = months.indexOf(monthName)
+              const day = parseInt(match[2])
+              const year = parseInt(match[4])
+              if (monthIndex !== -1 && day >= 1 && day <= 31 && year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-${(monthIndex + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+              }
+            }
+            break
+            
+          case 'month_year': // January 2024
+            if (match[1] && match[2]) {
+              const monthName = match[1].toLowerCase()
+              const monthIndex = months.indexOf(monthName)
+              const year = parseInt(match[2])
+              if (monthIndex !== -1 && year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-${(monthIndex + 1).toString().padStart(2, '0')}-01`
+              }
+            }
+            break
+            
+          case 'year': // 2024
+            if (match[1]) {
+              const year = parseInt(match[1])
+              if (year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-01-01`
+              }
+            }
+            break
+            
+          case 'yesterday':
+            const yesterday = new Date(today)
+            yesterday.setDate(yesterday.getDate() - 1)
+            dateResult.value = yesterday.toISOString().split('T')[0]
+            break
+            
+          case 'today':
+            dateResult.value = today.toISOString().split('T')[0]
+            break
+            
+          case 'last_week':
+            const lastWeek = new Date(today)
+            lastWeek.setDate(today.getDate() - 7)
+            dateResult.value = lastWeek.toISOString().split('T')[0]
+            dateResult.precision = 'month'
+            break
+            
+          case 'last_month':
+            const lastMonth = new Date(today)
+            lastMonth.setMonth(today.getMonth() - 1)
+            dateResult.value = lastMonth.toISOString().split('T')[0]
+            dateResult.precision = 'month'
+            break
+            
+          case 'last_year':
+            const lastYear = new Date(today)
+            lastYear.setFullYear(today.getFullYear() - 1)
+            dateResult.value = lastYear.toISOString().split('T')[0]
+            dateResult.precision = 'year'
+            break
+            
+          case 'christmas':
+            if (match[1]) {
+              const year = parseInt(match[1])
+              if (year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-12-25`
+              }
+            }
+            break
+            
+          case 'thanksgiving':
+            if (match[1]) {
+              const year = parseInt(match[1])
+              if (year >= 1900 && year <= currentYear + 10) {
+                // Approximate Thanksgiving as fourth Thursday of November
+                dateResult.value = `${year}-11-25`
+              }
+            }
+            break
+            
+          case 'newyears':
+            if (match[1]) {
+              const year = parseInt(match[1])
+              if (year >= 1900 && year <= currentYear + 10) {
+                dateResult.value = `${year}-01-01`
+              }
+            }
+            break
         }
-      }
-      
-      if (match[1] && match[2] && match[3]) {
-        // Full date MM/DD/YYYY or YYYY-MM-DD
-        try {
-          let dateStr: string
-          if (match[3].length === 4) {
-            // MM/DD/YYYY
-            dateStr = `${match[3]}-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`
-          } else {
-            // YYYY-MM-DD
-            dateStr = `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`
-          }
-          
-          const date = new Date(dateStr)
-          if (!isNaN(date.getTime())) {
-            return { value: dateStr, precision: 'day' }
-          }
-        } catch (e) {
-          // Invalid date, continue searching
+        
+        if (dateResult.value) {
+          return dateResult
         }
+      } catch (e) {
+        // Continue to next pattern if this one fails
+        continue
       }
     }
   }
