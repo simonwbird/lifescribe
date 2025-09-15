@@ -228,8 +228,10 @@ export default function PeopleTableRowActions({
                 disabled={item.disabled}
                 className={item.variant === 'destructive' ? 'text-destructive' : ''}
               >
-                {item.icon}
-                {item.label}
+                <span className="flex items-center gap-2">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </span>
               </DropdownMenuItem>
             )
 
