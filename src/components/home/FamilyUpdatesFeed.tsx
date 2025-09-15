@@ -1,14 +1,15 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MessageCircle, Heart, Share, MoreHorizontal, Copy, EyeOff, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/integrations/supabase/client'
 
 interface ActivityItem {
   id: string
@@ -31,6 +32,26 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
   const { track } = useAnalytics()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const [userProfile, setUserProfile] = useState<{ avatar_url?: string; full_name?: string } | null>(null)
+
+  // Get current user's profile data
+  useEffect(() => {
+    const getUserProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url, full_name')
+          .eq('id', user.id)
+          .single()
+        
+        if (profile) {
+          setUserProfile(profile)
+        }
+      }
+    }
+    getUserProfile()
+  }, [])
 
   const handleActivityClick = (activity: ActivityItem) => {
     track('activity_clicked', { 
@@ -146,6 +167,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   <Avatar className="h-12 w-12">
+                    <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || activity.actor} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                       {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
