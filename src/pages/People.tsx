@@ -28,7 +28,7 @@ export default function People() {
   const [filteredPeople, setFilteredPeople] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('living')
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [showPersonForm, setShowPersonForm] = useState(false)
   const { toast } = useToast()
@@ -278,30 +278,55 @@ export default function People() {
             </div>
 
             {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="space-y-4 mb-6">
+              {/* Quick Filter Chips */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium text-muted-foreground">Quick filters:</span>
+                {[
+                  { value: 'all', label: 'All People', count: stats.total },
+                  { value: 'living', label: 'Living', count: stats.living },
+                  { value: 'deceased', label: 'No longer with us', count: stats.deceased },
+                  { value: 'joined', label: 'On App', count: stats.invited },
+                  { value: 'not_on_app', label: 'Not on App', count: stats.not_on_app }
+                ].map(filter => (
+                  <Button
+                    key={filter.value}
+                    variant={statusFilter === filter.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setStatusFilter(filter.value)}
+                    className="h-8"
+                  >
+                    {filter.label} ({filter.count})
+                  </Button>
+                ))}
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All People</SelectItem>
-                  <SelectItem value="living">Living</SelectItem>
-                  <SelectItem value="deceased">Deceased</SelectItem>
-                  <SelectItem value="joined">Joined</SelectItem>
-                  <SelectItem value="invited">Invited</SelectItem>
-                  <SelectItem value="not_on_app">Not on App</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Search and Advanced Filter */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All People ({stats.total})</SelectItem>
+                    <SelectItem value="living">Living ({stats.living})</SelectItem>
+                    <SelectItem value="deceased">No longer with us ({stats.deceased})</SelectItem>
+                    <SelectItem value="joined">Joined ({stats.invited})</SelectItem>
+                    <SelectItem value="invited">Invited (0)</SelectItem>
+                    <SelectItem value="not_on_app">Not on App ({stats.not_on_app})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Content */}
