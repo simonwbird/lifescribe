@@ -370,7 +370,7 @@ export default function ProfessionalFamilyTree({
   // Calculate SVG dimensions
   if (!nodes.length) {
     return (
-      <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-600 mb-2">No Family Tree Data</h3>
           <p className="text-gray-500">Add people and relationships to see your family tree</p>
@@ -387,10 +387,10 @@ export default function ProfessionalFamilyTree({
   const width = maxX - minX
   const height = maxY - minY
 
-  console.log('SVG dimensions:', { minX, maxX, minY, maxY, width, height })
+  console.log('SVG dimensions:', { minX, maxX, minY, maxY, width, height, nodesCount: nodes.length })
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
+    <div className="relative w-full h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
       {/* Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Button variant="outline" size="sm" onClick={handleZoomIn}>
