@@ -18,7 +18,7 @@ import Prompts from "./pages/Prompts";
 import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
 import Profile from "./pages/Profile";
-import FamilyTreeV2 from "./pages/FamilyTreeV2";
+import FamilyTree from "./pages/FamilyTree";
 import FamilyTreeExplorer from "./pages/FamilyTreeExplorer";
 import FamilyTreeFan from "./pages/FamilyTreeFan";
 import PersonProfile from "./pages/PersonProfile";
@@ -67,7 +67,7 @@ function AppContent() {
       <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />
       <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
       <Route path="/family/members" element={<AuthGate><FamilyMembers /></AuthGate>} />
-      <Route path="/family/tree" element={<AuthGate><FamilyTreeV2 /></AuthGate>} />
+      <Route path="/family/tree" element={<AuthGate><FamilyTree /></AuthGate>} />
       <Route path="/family-tree/explorer" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthGate>} />
       <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
