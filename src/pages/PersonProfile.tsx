@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { Person, getUserRole, getPageType } from '@/utils/personUtils'
+import Header from '@/components/Header'
 import { LifePageHeader } from '@/components/people/LifePageHeader'
 import { PortraitAbout } from '@/components/people/PortraitAbout'
 import { PinnedStrip } from '@/components/people/PinnedStrip'
@@ -104,19 +105,22 @@ export default function PersonProfile() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-96" />
-          <Skeleton className="h-6 w-48" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-96 w-full" />
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-4xl mx-auto p-6 space-y-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-96" />
+            <Skeleton className="h-6 w-48" />
           </div>
-          <div className="space-y-6">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-32 w-full" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-96 w-full" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
           </div>
         </div>
       </div>
@@ -125,13 +129,16 @@ export default function PersonProfile() {
 
   if (error || !person) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {error || 'Person not found'}
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-4xl mx-auto p-6">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {error || 'Person not found'}
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
     )
   }
@@ -140,51 +147,54 @@ export default function PersonProfile() {
   const pageType = getPageType(person)
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <LifePageHeader 
-        person={person} 
-        userRole={userRole}
-        pageType={pageType}
-        onPersonUpdated={refreshPerson}
-      />
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        <LifePageHeader 
+          person={person} 
+          userRole={userRole}
+          pageType={pageType}
+          onPersonUpdated={refreshPerson}
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          <PortraitAbout 
-            person={person} 
-            userRole={userRole}
-            onPersonUpdated={refreshPerson}
-          />
-          
-          <PinnedStrip 
-            person={person}
-            userRole={userRole}
-            onPersonUpdated={refreshPerson}
-          />
-          
-          <PersonTimeline 
-            person={person}
-            userRole={userRole}
-            onRefresh={refreshPerson}
-          />
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            <PortraitAbout 
+              person={person} 
+              userRole={userRole}
+              onPersonUpdated={refreshPerson}
+            />
+            
+            <PinnedStrip 
+              person={person}
+              userRole={userRole}
+              onPersonUpdated={refreshPerson}
+            />
+            
+            <PersonTimeline 
+              person={person}
+              userRole={userRole}
+              onRefresh={refreshPerson}
+            />
+          </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <PhotosStrip person={person} />
-          
-          <DatesPanel 
-            person={person}
-            userRole={userRole}
-            onPersonUpdated={refreshPerson}
-          />
-          
-          <Contributions 
-            person={person}
-            userRole={userRole}
-            pageType={pageType}
-          />
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <PhotosStrip person={person} />
+            
+            <DatesPanel 
+              person={person}
+              userRole={userRole}
+              onPersonUpdated={refreshPerson}
+            />
+            
+            <Contributions 
+              person={person}
+              userRole={userRole}
+              pageType={pageType}
+            />
+          </div>
         </div>
       </div>
     </div>
