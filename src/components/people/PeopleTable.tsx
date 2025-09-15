@@ -448,21 +448,28 @@ export default function PeopleTable({ people, onPersonUpdated, familyId, current
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
                             className="w-32"
+                            autoFocus
                           />
                           <Button size="sm" onClick={handleSaveInlineEdit}>Save</Button>
                           <Button size="sm" variant="outline" onClick={() => setInlineEditing(null)}>Cancel</Button>
                         </div>
                       ) : (
                         <div 
-                          className="cursor-pointer hover:bg-muted rounded px-2 py-1"
-                          onClick={() => handleInlineEdit(person, 'birth_date')}
+                          className="cursor-pointer hover:bg-muted/50 rounded px-2 py-1 border border-transparent hover:border-border transition-colors group"
+                          onClick={() => canEdit() && handleInlineEdit(person, 'birth_date')}
+                          title={canEdit() ? "Click to edit birth date" : "View birth date"}
                         >
-                          {person.birth_date ? new Date(person.birth_date).toLocaleDateString() : 'Unknown'}
+                          <div className="flex items-center justify-between">
+                            <span>{person.birth_date ? new Date(person.birth_date).toLocaleDateString() : 'Unknown'}</span>
+                            {canEdit() && (
+                              <Edit className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </div>
                         </div>
                       )}
                       
                       {person.death_date && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground px-2">
                           † {new Date(person.death_date).toLocaleDateString()}
                         </div>
                       )}
