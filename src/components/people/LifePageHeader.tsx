@@ -133,7 +133,7 @@ export function LifePageHeader({ person, userRole, pageType, onPersonUpdated }: 
               </Dialog>
             )}
 
-            {canUserEdit && (
+            {canUserEdit && isMemorialized && (
               <>
                 <Button 
                   variant="outline" 
@@ -141,7 +141,7 @@ export function LifePageHeader({ person, userRole, pageType, onPersonUpdated }: 
                   onClick={() => setShowMemorialDialog(true)}
                 >
                   <Heart className="h-4 w-4" />
-                  {isMemorialized ? 'Revert memorialization' : 'Memorialize'}
+                  Revert memorialization
                 </Button>
 
                 {showMemorialDialog && (
