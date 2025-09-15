@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/integrations/supabase/client'
 
 interface InviteBannerProps {
   className?: string
@@ -13,6 +14,9 @@ interface InviteBannerProps {
 export default function InviteBanner({ className }: InviteBannerProps) {
   const [isDismissed, setIsDismissed] = useState(false)
   const [familyCount, setFamilyCount] = useState(2) // Mock count
+  const [isInviting, setIsInviting] = useState(false)
+  const [emailInput, setEmailInput] = useState('')
+  const [showEmailInput, setShowEmailInput] = useState(false)
   const { toast } = useToast()
   const { track } = useAnalytics()
 
@@ -48,13 +52,57 @@ export default function InviteBanner({ className }: InviteBannerProps) {
     }
   }
 
-  const handleEmailInvite = () => {
+  const handleEmailInvite = async () => {
+    if (!showEmailInput) {
+      setShowEmailInput(true)
+      return
+    }
+
+    if (!emailInput.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter an email address",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsInviting(true)
     track('invite_email_clicked')
-    // In real app, would open invite modal
-    toast({
-      title: "Email invite",
-      description: "Opening email invite modal..."
-    })
+
+    try {
+      // For now, use a mock family ID until we can resolve the typing issues
+      const mockFamilyId = 'family-123'
+
+      // Call the invite edge function
+      const { data, error } = await supabase.functions.invoke('invite', {
+        body: {
+          familyId: mockFamilyId,
+          email: emailInput.trim(),
+          role: 'member'
+        }
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Invitation sent!",
+        description: `We've sent an invitation to ${emailInput}`
+      })
+
+      setEmailInput('')
+      setShowEmailInput(false)
+
+    } catch (error: any) {
+      console.error('Error sending invite:', error)
+      toast({
+        title: "Failed to send invite",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      })
+    } finally {
+      setIsInviting(false)
+    }
   }
 
   if (isDismissed || familyCount >= 5) {
@@ -70,6 +118,30 @@ export default function InviteBanner({ className }: InviteBannerProps) {
       className
     )}>
       <CardContent className="p-4">
+        {showEmailInput && (
+          <div className="mb-3 flex gap-2">
+            <input
+              type="email"
+              placeholder="Enter email address"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              className="flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background"
+              onKeyPress={(e) => e.key === 'Enter' && handleEmailInvite()}
+              disabled={isInviting}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowEmailInput(false)
+                setEmailInput('')
+              }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex-shrink-0">
@@ -102,10 +174,11 @@ export default function InviteBanner({ className }: InviteBannerProps) {
             <Button
               size="sm"
               onClick={handleEmailInvite}
-              className="gap-2 text-xs h-8 bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isInviting}
+              className="gap-2 text-xs h-8 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
               <Mail className="h-3 w-3" />
-              Invite via email
+              {isInviting ? 'Sending...' : showEmailInput ? 'Send invite' : 'Invite via email'}
             </Button>
 
             <Button
