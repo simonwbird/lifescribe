@@ -185,7 +185,7 @@ export default function GlobalSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          className="pl-12 pr-10 h-10 w-full border border-input bg-background rounded-lg text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-ring transition-all duration-200 sm:w-80 md:w-96"
+          className="pl-14 pr-10 h-10 w-full border border-input bg-background rounded-lg text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-ring transition-all duration-200 sm:w-80 md:w-96"
           role="combobox"
           aria-expanded={showSuggestions}
           aria-autocomplete="list"
