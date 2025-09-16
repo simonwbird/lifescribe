@@ -330,7 +330,7 @@ export default function Home() {
       })
     })
     
-    navigate(`/new-story?${searchParams.toString()}`)
+    navigate(`/stories/new?${searchParams.toString()}`)
   }
 
   const handlePermissionRetry = async () => {
@@ -360,7 +360,7 @@ export default function Home() {
       })
     })
     
-    navigate(`/new-story?${searchParams.toString()}`)
+    navigate(`/stories/new?${searchParams.toString()}`)
   }
 
   const handleOfflineProceed = () => {

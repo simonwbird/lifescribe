@@ -39,11 +39,11 @@ export function LifePageHeader({ person, userRole, pageType, onPersonUpdated }: 
       ? `Memory of ${person.given_name || person.full_name}`
       : `Memory for ${person.given_name || person.full_name}`
     
-    navigate(`/new-story?personId=${person.id}&title=${encodeURIComponent(title)}`)
+    navigate(`/stories/new?personId=${person.id}&title=${encodeURIComponent(title)}`)
   }
 
   const handleAddPhoto = () => {
-    navigate(`/new-story?personId=${person.id}&mode=photo`)
+    navigate(`/stories/new?personId=${person.id}&mode=photo`)
   }
 
   const handleInviteToClaim = () => {

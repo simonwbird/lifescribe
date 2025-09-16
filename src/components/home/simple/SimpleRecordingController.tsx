@@ -73,7 +73,7 @@ function SimpleRecordingController({
       })
     })
     
-    navigate(`/new-story?${searchParams.toString()}`)
+    navigate(`/stories/new?${searchParams.toString()}`)
   }
 
   const handlePermissionRetry = async () => {
@@ -103,7 +103,7 @@ function SimpleRecordingController({
       })
     })
     
-    navigate(`/new-story?${searchParams.toString()}`)
+    navigate(`/stories/new?${searchParams.toString()}`)
   }
 
   const handleOfflineProceed = () => {

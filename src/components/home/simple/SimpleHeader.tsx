@@ -105,7 +105,7 @@ export function SimpleHeader({
   const handleRecordWithoutPrompt = () => {
     track('simple_mode.record_without_prompt')
     // Navigate to free recording mode
-    navigate('/new-story')
+    navigate('/stories/new')
   }
 
   if (loading) {

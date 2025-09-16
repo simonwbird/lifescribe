@@ -222,7 +222,7 @@ export default function OnboardingWizard({ user }: OnboardingWizardProps) {
     // Navigate to the appropriate first action based on focus
     const focusRoutes = {
       tree: `/family-tree?first-action=add-person`,
-      stories: `/new-story?first-action=memory-prompt`,
+      stories: `/stories/new?first-action=memory-prompt`,
       recipes: `/archive?tab=recipes&first-action=add-recipe`,
       things: `/archive?tab=things&first-action=add-item`
     }
