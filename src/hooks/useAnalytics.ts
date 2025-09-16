@@ -112,7 +112,16 @@ export type AnalyticsEvent =
   | 'reaction_added'
   | 'digest_scheduled'
   | 'digest_sent'
-  | 'digest_opened';
+  | 'digest_opened'
+  // Elder Simple Mode events
+  | 'simple_mode.header_view'
+  | 'prompt.impression' 
+  | 'prompt.shuffle'
+  | 'prompt.tts_play'
+  | 'prompt.record_start'
+  | 'story.created_from_prompt'
+  | 'recorder.permission_denied'
+  | 'recorder.offline_queue';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

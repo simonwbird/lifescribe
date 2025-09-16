@@ -63,6 +63,7 @@ export default function Settings() {
     profileVisibility: true,
     addressVisibility: 'exact'
   })
+  const [profile, setProfile] = useState<{simple_mode?: boolean} | null>(null)
 
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   const hourNames = Array.from({ length: 24 }, (_, i) => {
@@ -80,22 +81,24 @@ export default function Settings() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: profile } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('settings')
+        .select('settings, simple_mode')
         .eq('id', user.id)
         .single()
 
-      if (profile?.settings) {
-        const settings = profile.settings as any
+      if (profileData) {
+        setProfile({ simple_mode: profileData.simple_mode })
+        
+        const settings = profileData.settings as any
         
         // Load notification settings
-        if (settings.notifications) {
+        if (settings?.notifications) {
           setNotifications({ ...notifications, ...settings.notifications })
         }
         
         // Load privacy settings
-        if (settings.privacy) {
+        if (settings?.privacy) {
           setPrivacy({ ...privacy, ...settings.privacy })
         }
       }
@@ -213,6 +216,55 @@ export default function Settings() {
             <TabsContent value="general" className="space-y-6">
               {/* Interface Mode */}
               <ModeToggle />
+
+              {/* Simple Mode for Accessibility */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Accessibility
+                  </CardTitle>
+                  <CardDescription>
+                    Adjust the interface to make it more comfortable and easier to use
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="simple-mode-toggle" className="text-base font-medium">
+                        Simple Mode
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Larger buttons, clearer prompts, and guided recording to make sharing stories easier
+                      </p>
+                    </div>
+                    <Switch
+                      id="simple-mode-toggle"
+                      checked={profile?.simple_mode || false}
+                      onCheckedChange={async (enabled) => {
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (!user) return
+
+                          const { error } = await supabase
+                            .from('profiles')
+                            .update({ simple_mode: enabled })
+                            .eq('id', user.id)
+
+                          if (error) throw error
+
+                          setProfile(prev => prev ? { ...prev, simple_mode: enabled } : null)
+                          toast.success(enabled ? 'Simple Mode enabled' : 'Simple Mode disabled')
+                        } catch (error) {
+                          console.error('Error updating simple mode:', error)
+                          toast.error('Failed to update Simple Mode setting')
+                        }
+                      }}
+                      disabled={loading}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Labs Features */}
               <Card>

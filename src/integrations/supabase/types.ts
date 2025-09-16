@@ -1249,6 +1249,7 @@ export type Database = {
           full_name: string | null
           id: string
           settings: Json | null
+          simple_mode: boolean | null
           updated_at: string
         }
         Insert: {
@@ -1260,6 +1261,7 @@ export type Database = {
           full_name?: string | null
           id: string
           settings?: Json | null
+          simple_mode?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -1271,6 +1273,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           settings?: Json | null
+          simple_mode?: boolean | null
           updated_at?: string
         }
         Relationships: [
@@ -1867,6 +1870,8 @@ export type Database = {
             | Database["public"]["Enums"]["date_precision"]
             | null
           profile_id: string
+          prompt_id: string | null
+          prompt_text: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -1883,6 +1888,8 @@ export type Database = {
             | Database["public"]["Enums"]["date_precision"]
             | null
           profile_id: string
+          prompt_id?: string | null
+          prompt_text?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -1899,6 +1906,8 @@ export type Database = {
             | Database["public"]["Enums"]["date_precision"]
             | null
           profile_id?: string
+          prompt_id?: string | null
+          prompt_text?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string

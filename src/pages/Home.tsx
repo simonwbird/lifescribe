@@ -7,11 +7,14 @@ import FamilyUpdatesFeed from '@/components/home/FamilyUpdatesFeed'
 import WeeklyDigest from '@/components/home/WeeklyDigest'
 import Upcoming from '@/components/home/Upcoming'
 import DraftsRow from '@/components/home/DraftsRow'
+import { SimpleInspirationBar } from '@/components/home/simple/SimpleInspirationBar'
+import SimpleRecordingController from '@/components/home/simple/SimpleRecordingController'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMode } from '@/hooks/useMode'
+import { ElderPrompt } from '@/lib/prompts/getElderPrompts'
 
 // Types
 interface ActivityItem {
@@ -56,18 +59,33 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Get user's family
-      const { data: member } = await supabase
-        .from('members')
-        .select('family_id')
-        .eq('profile_id', user.id)
-        .single()
+      setProfileId(user.id)
 
-      if (!member) return
+      // Get user's profile and family
+      const [profileResult, memberResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('simple_mode')
+          .eq('id', user.id)
+          .single(),
+        supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .single()
+      ])
+
+      if (profileResult.data) {
+        setIsSimpleMode(profileResult.data.simple_mode || false)
+      }
+
+      if (!memberResult.data) return
+
+      setSpaceId(memberResult.data.family_id)
 
       await Promise.all([
-        loadActivities(member.family_id),
-        loadDrafts(user.id, member.family_id)
+        loadActivities(memberResult.data.family_id),
+        loadDrafts(user.id, memberResult.data.family_id)
       ])
     } catch (error) {
       console.error('Error loading home data:', error)
@@ -237,6 +255,12 @@ export default function Home() {
     setDrafts(prev => prev.filter(d => d.id !== draftId))
   }
 
+  // Simple Mode Recording Integration
+  const handlePromptSelected = (prompt: ElderPrompt) => {
+    // This will be handled by the SimpleRecordingController
+    console.log('Prompt selected:', prompt)
+  }
+
   if (loading || modeLoading) {
     return (
       <AuthGate>
@@ -267,9 +291,26 @@ export default function Home() {
         <div className="min-h-screen bg-background">
           <Header />
           <main className="container mx-auto px-4 py-6 space-y-6">
+            {/* Simple Mode: Inspiration Bar */}
+            {isSimpleMode && profileId && spaceId && (
+              <SimpleInspirationBar
+                profileId={profileId}
+                spaceId={spaceId}
+                onRecordPrompt={handlePromptSelected}
+              />
+            )}
+
+            {/* Recording Controller */}
+            {isSimpleMode && profileId && spaceId && (
+              <SimpleRecordingController
+                profileId={profileId}
+                spaceId={spaceId}
+              />
+            )}
+
             {/* Voice-first Hero */}
             <VoiceFirstHero 
-              mode="simple"
+              mode={isSimpleMode ? 'simple' : mode}
               onStoryCreated={handleStoryCreated}
             />
 
