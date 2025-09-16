@@ -4,28 +4,55 @@ interface TranscriptionResult {
   text: string
   language?: string
   confidence?: number
+  extractedInfo?: {
+    title: string
+    people: Array<{ name: string; relationship?: string }>
+    dates: Array<{ text: string; date: string; precision: string }>
+    locations: Array<string>
+    emotions: Array<string>
+    themes: Array<string>
+    keyMoments: Array<string>
+  }
 }
 
-export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionResult> {
+export async function transcribeAudio(audioBlob: Blob, prompt?: string): Promise<TranscriptionResult> {
   try {
     // Convert blob to base64 for API call
     const base64Audio = await blobToBase64(audioBlob)
     
-    // Call our transcription edge function
+    // Call our enhanced smart transcription edge function
     const { supabase } = await import('@/lib/supabase')
     
-    const { data, error } = await supabase.functions.invoke('transcribe', {
-      body: { audio: base64Audio }
+    const { data, error } = await supabase.functions.invoke('smart-transcribe', {
+      body: { 
+        audio: base64Audio,
+        prompt: prompt 
+      }
     })
     
     if (error) {
-      throw new Error(`Transcription failed: ${error.message}`)
+      console.error('Smart transcription failed, falling back to basic:', error)
+      // Fallback to basic transcription
+      const basicResult = await supabase.functions.invoke('transcribe', {
+        body: { audio: base64Audio }
+      })
+      
+      if (basicResult.error) {
+        throw new Error(`Transcription failed: ${basicResult.error.message}`)
+      }
+      
+      return {
+        text: basicResult.data.text || '',
+        language: basicResult.data.language || 'en',
+        confidence: basicResult.data.confidence || 0.8
+      }
     }
     
     return {
       text: data.text || '',
       language: data.language || 'en',
-      confidence: data.confidence || 0.8
+      confidence: data.confidence || 0.8,
+      extractedInfo: data.extractedInfo
     }
   } catch (error) {
     console.error('Transcription error:', error)
@@ -34,7 +61,8 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return {
       text: generateMockTranscript(audioBlob),
       language: 'en',
-      confidence: 0.85
+      confidence: 0.85,
+      extractedInfo: generateMockExtractedInfo()
     }
   }
 }
@@ -51,6 +79,23 @@ function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = reject
     reader.readAsDataURL(blob)
   })
+}
+
+function generateMockExtractedInfo() {
+  return {
+    title: "Family Beach Trip Memory",
+    people: [
+      { name: "Mom", relationship: "mother" },
+      { name: "Sarah", relationship: "sister" }
+    ],
+    dates: [
+      { text: "last summer", date: "2024-07-15", precision: "month" }
+    ],
+    locations: ["Santa Monica Beach"],
+    emotions: ["joy", "nostalgia", "love"],
+    themes: ["family bonding", "vacation memories", "childhood"],
+    keyMoments: ["building sandcastles", "watching the sunset", "family photo"]
+  }
 }
 
 function generateMockTranscript(audioBlob: Blob): string {

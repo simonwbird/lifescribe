@@ -183,24 +183,38 @@ export default function VoiceCaptureModal({
         // Start transcription
         setState('transcribing')
         try {
-          const result = await transcribeAudio(blob)
+          const result = await transcribeAudio(blob, prompt?.text)
           setTranscript(result.text)
           setConfidence(result.confidence || 0)
           
-          // Generate smart suggestions
-          const suggestedTitle = autoTitle(result.text)
-          const suggestedPeople = await suggestPeople(result.text)
-          const inferredDate = inferDate(result.text)
-          
-          setReviewData({
-            title: suggestedTitle,
-            content: result.text,
-            people: suggestedPeople,
-            date: inferredDate.value,
-            datePrecision: inferredDate.precision,
-            privacy: 'family',
-            tags: []
-          })
+          // Use extracted info if available, otherwise fall back to basic helpers
+          if (result.extractedInfo) {
+            const info = result.extractedInfo
+            setReviewData({
+              title: info.title,
+              content: result.text,
+              people: info.people.map(p => ({ name: p.name })),
+              date: info.dates[0]?.date || '',
+              datePrecision: (info.dates[0]?.precision as any) || 'unknown',
+              privacy: 'family',
+              tags: [...(info.themes || []), ...(info.emotions || [])].slice(0, 5)
+            })
+          } else {
+            // Fallback to basic helpers
+            const suggestedTitle = autoTitle(result.text)
+            const suggestedPeople = await suggestPeople(result.text)
+            const inferredDate = inferDate(result.text)
+            
+            setReviewData({
+              title: suggestedTitle,
+              content: result.text,
+              people: suggestedPeople,
+              date: inferredDate.value,
+              datePrecision: inferredDate.precision,
+              privacy: 'family',
+              tags: []
+            })
+          }
           
           setState('review')
     } catch (error) {
