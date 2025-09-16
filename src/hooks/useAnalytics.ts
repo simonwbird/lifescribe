@@ -50,6 +50,8 @@ export type AnalyticsEvent =
   | 'prompts_open'
   | 'prompt.swap'
   | 'simple_mode.record_without_prompt'
+  | 'recorder.offline_queue'
+  | 'recorder.permission_denied'
   | 'streak_open'
   | 'profile_open'
   | 'switch_family_success'

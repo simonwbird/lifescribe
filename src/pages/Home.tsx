@@ -14,7 +14,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMode } from '@/hooks/useMode'
+import { useNavigate } from 'react-router-dom'
 import { ElderPrompt } from '@/lib/prompts/getElderPrompts'
+import { 
+  checkMicrophonePermission, 
+  isOnline, 
+  getPromptTitle 
+} from '@/lib/recorder/startFromPrompt'
+import { CountdownModal } from '@/components/home/simple/CountdownModal'
+import { PermissionDeniedCard } from '@/components/home/simple/PermissionDeniedCard'
+import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard'
 
 // Types
 interface ActivityItem {
@@ -45,9 +54,16 @@ export default function Home() {
   const [isSimpleMode, setIsSimpleMode] = useState<boolean>(false)
   const [hasOtherMembers, setHasOtherMembers] = useState<boolean>(false)
   
+  // Recording controller state for Simple Mode
+  const [currentPrompt, setCurrentPrompt] = useState<ElderPrompt | null>(null)
+  const [showCountdown, setShowCountdown] = useState(false)
+  const [showPermissionDenied, setShowPermissionDenied] = useState(false)
+  const [showOfflineQueue, setShowOfflineQueue] = useState(false)
+  
   // Track analytics
   const { track } = useAnalytics()
   const { mode, flags, loading: modeLoading } = useMode()
+  const navigate = useNavigate()
 
   // Handle URL param for voice focus after invite flow
   const urlParams = new URLSearchParams(window.location.search)
@@ -268,9 +284,97 @@ export default function Home() {
   }
 
   // Simple Mode Recording Integration
-  const handlePromptSelected = (prompt: ElderPrompt) => {
-    // This will be handled by the SimpleRecordingController
-    console.log('Prompt selected:', prompt)
+  const handlePromptSelected = async (prompt: ElderPrompt) => {
+    setCurrentPrompt(prompt)
+    
+    // Check if online
+    if (!isOnline()) {
+      setShowOfflineQueue(true)
+      track('recorder.offline_queue', {
+        prompt_id: prompt.id,
+        prompt_kind: prompt.kind
+      })
+      return
+    }
+
+    // Check microphone permission
+    const permission = await checkMicrophonePermission()
+    
+    if (permission === 'denied') {
+      setShowPermissionDenied(true)
+      track('recorder.permission_denied', {
+        prompt_id: prompt.id,
+        prompt_kind: prompt.kind
+      })
+      return
+    }
+
+    // Start countdown if permission granted or will be prompted
+    setShowCountdown(true)
+  }
+
+  const handleCountdownComplete = () => {
+    if (!currentPrompt) return
+    
+    setShowCountdown(false)
+    
+    // Navigate to story creation with prompt data
+    const title = getPromptTitle(currentPrompt)
+    const searchParams = new URLSearchParams({
+      mode: 'voice',
+      title: title,
+      prompt_id: currentPrompt.id,
+      prompt_text: currentPrompt.text,
+      ...(currentPrompt.context?.personId && { 
+        person_id: currentPrompt.context.personId 
+      })
+    })
+    
+    navigate(`/new-story?${searchParams.toString()}`)
+  }
+
+  const handlePermissionRetry = async () => {
+    if (!currentPrompt) return
+    
+    const permission = await checkMicrophonePermission()
+    if (permission !== 'denied') {
+      setShowPermissionDenied(false)
+      setShowCountdown(true)
+    }
+  }
+
+  const handleTypeInstead = () => {
+    if (!currentPrompt) return
+    
+    setShowPermissionDenied(false)
+    
+    // Navigate to text story creation
+    const title = getPromptTitle(currentPrompt)
+    const searchParams = new URLSearchParams({
+      mode: 'text',
+      title: title,
+      prompt_id: currentPrompt.id,
+      prompt_text: currentPrompt.text,
+      ...(currentPrompt.context?.personId && { 
+        person_id: currentPrompt.context.personId 
+      })
+    })
+    
+    navigate(`/new-story?${searchParams.toString()}`)
+  }
+
+  const handleOfflineProceed = () => {
+    if (!currentPrompt) return
+    
+    setShowOfflineQueue(false)
+    setShowCountdown(true)
+  }
+
+  const handleCancel = () => {
+    setShowCountdown(false)
+    setShowPermissionDenied(false)
+    setShowOfflineQueue(false)
+    setCurrentPrompt(null)
   }
 
   if (loading || modeLoading) {
@@ -310,11 +414,35 @@ export default function Home() {
               onRecordPrompt={handlePromptSelected}
             />
 
-            {/* Recording Controller */}
-            <SimpleRecordingController
-              profileId={profileId || 'default'}
-              spaceId={spaceId || 'default'}
-            />
+            {/* Recording Controller Modals */}
+            {currentPrompt && (
+              <CountdownModal
+                isOpen={showCountdown}
+                prompt={currentPrompt}
+                onComplete={handleCountdownComplete}
+                onCancel={handleCancel}
+              />
+            )}
+
+            {showPermissionDenied && currentPrompt && (
+              <div className="mb-6">
+                <PermissionDeniedCard
+                  prompt={currentPrompt}
+                  onTryAgain={handlePermissionRetry}
+                  onTypeInstead={handleTypeInstead}
+                  onDismiss={handleCancel}
+                />
+              </div>
+            )}
+
+            {showOfflineQueue && (
+              <div className="mb-6">
+                <OfflineQueueCard
+                  onProceed={handleOfflineProceed}
+                  onCancel={handleCancel}
+                />
+              </div>
+            )}
 
             {/* Invite Banner */}
             {!hasOtherMembers && (
