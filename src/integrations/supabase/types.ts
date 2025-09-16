@@ -595,6 +595,7 @@ export type Database = {
           recipe_id: string | null
           story_id: string | null
           thing_id: string | null
+          transcript_text: string | null
         }
         Insert: {
           answer_id?: string | null
@@ -613,6 +614,7 @@ export type Database = {
           recipe_id?: string | null
           story_id?: string | null
           thing_id?: string | null
+          transcript_text?: string | null
         }
         Update: {
           answer_id?: string | null
@@ -631,6 +633,7 @@ export type Database = {
           recipe_id?: string | null
           story_id?: string | null
           thing_id?: string | null
+          transcript_text?: string | null
         }
         Relationships: [
           {

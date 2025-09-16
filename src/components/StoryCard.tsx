@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import ReactionBar from './ReactionBar'
 import CommentThread from './CommentThread'
 import { Link } from 'react-router-dom'
-import { Calendar, MapPin, Users, MessageSquare, Clock } from 'lucide-react'
+import { Calendar, MapPin, Users, MessageSquare, Mic2 } from 'lucide-react'
 import type { Story, Profile, Media } from '@/lib/types'
 
 interface ExtendedStory extends Story {
@@ -18,15 +18,20 @@ interface ExtendedStory extends Story {
   prompt_text?: string
 }
 
+interface ExtendedMedia extends Media {
+  transcript_text?: string
+}
+
 interface StoryCardProps {
   story: ExtendedStory & { profiles: Profile }
 }
 
 export default function StoryCard({ story }: StoryCardProps) {
-  const [media, setMedia] = useState<Media[]>([])
+  const [media, setMedia] = useState<ExtendedMedia[]>([])
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
   const [linkedPeople, setLinkedPeople] = useState<any[]>([])
   const [property, setProperty] = useState<any>(null)
+  const [transcript, setTranscript] = useState<string | null>(null)
 
   useEffect(() => {
     const loadStoryData = async () => {
@@ -50,6 +55,12 @@ export default function StoryCard({ story }: StoryCardProps) {
           })
         )
         setMediaUrls(urls.filter(Boolean))
+
+        // Check for transcript in voice recordings
+        const voiceMedia = mediaData.find(item => item.mime_type?.startsWith('audio/'))
+        if (voiceMedia?.transcript_text) {
+          setTranscript(voiceMedia.transcript_text)
+        }
       }
 
       // Load linked people
@@ -149,6 +160,18 @@ export default function StoryCard({ story }: StoryCardProps) {
         <div className="prose max-w-none">
           <p className="whitespace-pre-wrap">{story.content}</p>
         </div>
+
+        {transcript && (
+          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Mic2 size={14} />
+              <span>Original Transcript</span>
+            </div>
+            <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">
+              "{transcript}"
+            </p>
+          </div>
+        )}
 
         {mediaUrls.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
