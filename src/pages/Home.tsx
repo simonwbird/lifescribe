@@ -295,25 +295,19 @@ export default function Home() {
           <Header />
           <main className="container mx-auto px-4 py-6 space-y-6">
             {/* Simple Mode: Inspiration Bar */}
-            {isSimpleMode && profileId && spaceId ? (
+            {isSimpleMode && (
               <SimpleInspirationBar
-                profileId={profileId}
-                spaceId={spaceId}
+                profileId={profileId || 'default'}
+                spaceId={spaceId || 'default'}
                 onRecordPrompt={handlePromptSelected}
               />
-            ) : (
-              // Debug info (remove in production)
-              <div className="mb-4 p-3 bg-muted/20 rounded text-xs text-muted-foreground">
-                Simple Mode Debug: isSimpleMode={String(isSimpleMode)}, profileId={profileId ? 'set' : 'empty'}, spaceId={spaceId ? 'set' : 'empty'}
-                {!isSimpleMode && <div>→ Enable Simple Mode in Settings → Accessibility to see Inspiration Bar</div>}
-              </div>
             )}
 
             {/* Recording Controller */}
-            {isSimpleMode && profileId && spaceId && (
+            {isSimpleMode && (
               <SimpleRecordingController
-                profileId={profileId}
-                spaceId={spaceId}
+                profileId={profileId || 'default'}
+                spaceId={spaceId || 'default'}
               />
             )}
 
@@ -360,25 +354,19 @@ export default function Home() {
         <Header />
         <main className="container mx-auto px-4 py-6 space-y-6">
           {/* Simple Mode: Inspiration Bar */}
-          {isSimpleMode && profileId && spaceId ? (
+          {isSimpleMode && (
             <SimpleInspirationBar
-              profileId={profileId}
-              spaceId={spaceId}
+              profileId={profileId || 'default'}
+              spaceId={spaceId || 'default'}
               onRecordPrompt={handlePromptSelected}
             />
-          ) : (
-            // Debug info (remove in production)
-            <div className="mb-4 p-3 bg-muted/20 rounded text-xs text-muted-foreground">
-              Simple Mode Debug: isSimpleMode={String(isSimpleMode)}, profileId={profileId ? 'set' : 'empty'}, spaceId={spaceId ? 'set' : 'empty'}
-              {!isSimpleMode && <div>→ Enable Simple Mode in Settings → Accessibility to see Inspiration Bar</div>}
-            </div>
           )}
 
           {/* Recording Controller */}
-          {isSimpleMode && profileId && spaceId && (
+          {isSimpleMode && (
             <SimpleRecordingController
-              profileId={profileId}
-              spaceId={spaceId}
+              profileId={profileId || 'default'}
+              spaceId={spaceId || 'default'}
             />
           )}
 
