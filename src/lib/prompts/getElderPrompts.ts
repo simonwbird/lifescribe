@@ -49,6 +49,39 @@ const GENERAL_PROMPTS: Omit<ElderPrompt, 'id'>[] = [
   { text: "Describe a time you helped someone.", kind: 'general' },
 ]
 
+// Family-specific prompts for Simon's family
+const SIMON_FAMILY_PROMPTS: Omit<ElderPrompt, 'id'>[] = [
+  // About Zuzana (wife)
+  { text: "Tell us about how you first met Zuzana.", kind: 'personal' },
+  { text: "What's your favorite memory with Zuzana?", kind: 'personal' },
+  { text: "Describe what makes Zuzana special.", kind: 'personal' },
+  { text: "Tell us about your wedding day with Zuzana.", kind: 'personal' },
+  
+  // About the kids - Jamie and Lucy
+  { text: "Share a funny story about Jamie as a child.", kind: 'personal' },
+  { text: "Tell us about Lucy's personality growing up.", kind: 'personal' },
+  { text: "Describe a special moment with Jamie and Lucy together.", kind: 'personal' },
+  { text: "What are you most proud of about Jamie?", kind: 'personal' },
+  { text: "What are you most proud of about Lucy?", kind: 'personal' },
+  { text: "Tell us about a family vacation with Jamie and Lucy.", kind: 'personal' },
+  
+  // About parents - Helen and David Bird
+  { text: "Tell us about a lesson your mum Helen taught you.", kind: 'personal' },
+  { text: "Share a favorite memory of your dad David.", kind: 'personal' },
+  { text: "Describe what Helen and David were like as parents.", kind: 'personal' },
+  { text: "Tell us about a family tradition from Helen and David.", kind: 'personal' },
+  
+  // About brothers
+  { text: "Share a story about growing up with your brothers.", kind: 'personal' },
+  { text: "Tell us about something you and your brothers got up to.", kind: 'personal' },
+  { text: "Describe what it was like being part of the Bird family.", kind: 'personal' },
+  
+  // Family moments
+  { text: "Tell us about a special Christmas with the family.", kind: 'personal' },
+  { text: "Describe a family gathering that was memorable.", kind: 'personal' },
+  { text: "Share a story about when you became a dad to Jamie and Lucy.", kind: 'personal' },
+]
+
 export async function getElderPrompts(profileId: string, spaceId: string): Promise<ElderPrompt[]> {
   const today = new Date()
   const twoWeeksFromNow = new Date(today)
@@ -142,22 +175,23 @@ export async function getElderPrompts(profileId: string, spaceId: string): Promi
 
     const recentPromptIds = new Set(recentStories?.map(s => s.prompt_id) || [])
 
-    // Fill remaining slots with general prompts (avoid recent repeats)
-    const availableGeneral = GENERAL_PROMPTS.filter(p => !recentPromptIds.has(p.text))
-    const shuffledGeneral = availableGeneral.sort(() => Math.random() - 0.5)
+    // Fill remaining slots with mixed prompts (family-specific + general)
+    const allAvailablePrompts = [...SIMON_FAMILY_PROMPTS, ...GENERAL_PROMPTS]
+    const availablePrompts = allAvailablePrompts.filter(p => !recentPromptIds.has(p.text))
+    const shuffledPrompts = availablePrompts.sort(() => Math.random() - 0.5)
 
-    // Add general prompts to reach exactly 3 total
+    // Add prompts to reach exactly 3 total, with preference for family prompts
     const needed = Math.max(0, 3 - prompts.length)
-    for (let i = 0; i < needed && i < shuffledGeneral.length; i++) {
+    for (let i = 0; i < needed && i < shuffledPrompts.length; i++) {
       prompts.push({
-        ...shuffledGeneral[i],
-        id: `general-${i}-${Date.now()}`
+        ...shuffledPrompts[i],
+        id: `prompt-${i}-${Date.now()}`
       })
     }
 
     // Ensure we always have at least 3 prompts
     while (prompts.length < 3) {
-      const fallback = GENERAL_PROMPTS[prompts.length % GENERAL_PROMPTS.length]
+      const fallback = allAvailablePrompts[prompts.length % allAvailablePrompts.length]
       prompts.push({
         ...fallback,
         id: `fallback-${prompts.length}-${Date.now()}`
@@ -167,8 +201,9 @@ export async function getElderPrompts(profileId: string, spaceId: string): Promi
   } catch (error) {
     console.error('Error generating elder prompts:', error)
     
-    // Fallback to general prompts
-    const shuffled = GENERAL_PROMPTS.sort(() => Math.random() - 0.5)
+    // Fallback to mixed prompts (family + general)
+    const allPrompts = [...SIMON_FAMILY_PROMPTS, ...GENERAL_PROMPTS]
+    const shuffled = allPrompts.sort(() => Math.random() - 0.5)
     return shuffled.slice(0, 3).map((prompt, index) => ({
       ...prompt,
       id: `fallback-${index}-${Date.now()}`
