@@ -143,33 +143,33 @@ export function SimpleHeader({
     <div className="w-full mb-8 space-y-4">
       {/* Main Hero Card */}
       <Card className="w-full border-2 hover:border-primary/20 transition-colors">
-        <CardContent className="p-8">
-          <div className="space-y-6">
+        <CardContent className="p-4 sm:p-6 lg:p-8 xl:p-10">
+          <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Card Title */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-medium text-muted-foreground">
+            <div className="space-y-3 sm:space-y-4">
+              <h2 className="text-base sm:text-lg lg:text-xl font-medium text-muted-foreground">
                 Today's prompt
               </h2>
               
               {/* Main Prompt Text */}
-              <div className="space-y-2" aria-live="polite">
-                <p className="text-2xl sm:text-3xl font-medium leading-relaxed text-foreground">
+              <div className="space-y-2 sm:space-y-3" aria-live="polite">
+                <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-medium leading-relaxed text-foreground">
                   {truncatePrompt(primaryPrompt.text, 90)}
                 </p>
-                <p className="text-base text-muted-foreground">
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
                   No need to be perfect—just talk.
                 </p>
               </div>
             </div>
 
             {/* Primary Action */}
-            <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
               <Button
                 onClick={() => handleRecordWithPrompt(primaryPrompt)}
                 size="lg"
-                className="w-full sm:w-auto h-14 text-lg font-medium px-8 bg-primary hover:bg-primary/90 min-w-44"
+                className="w-full sm:w-auto h-12 sm:h-14 lg:h-16 text-base sm:text-lg lg:text-xl font-medium px-6 sm:px-8 lg:px-10 bg-primary hover:bg-primary/90 min-w-44"
               >
-                <Mic className="w-6 h-6 mr-3" />
+                <Mic className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mr-2 sm:mr-3" />
                 Start with this
               </Button>
 
@@ -177,7 +177,7 @@ export function SimpleHeader({
               <div className="text-center sm:text-left">
                 <button
                   onClick={handleRecordWithoutPrompt}
-                  className="text-primary hover:text-primary/80 underline underline-offset-4 text-base font-medium"
+                  className="text-primary hover:text-primary/80 underline underline-offset-4 text-sm sm:text-base lg:text-lg font-medium"
                 >
                   Record without a prompt
                 </button>
@@ -185,7 +185,7 @@ export function SimpleHeader({
             </div>
 
             {/* Controls Row */}
-            <div className="flex justify-between items-center pt-2">
+            <div className="flex justify-between items-center pt-2 sm:pt-4">
               <div className="flex-1" />
               <PromptControls
                 prompt={primaryPrompt}
