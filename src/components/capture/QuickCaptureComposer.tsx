@@ -527,8 +527,10 @@ export default function QuickCaptureComposer({
                 file_path: filePath,
                 file_name: fileName,
                 file_size: data.audioBlob.size,
-                mime_type: data.audioBlob.type || 'audio/webm'
-              }),
+                mime_type: data.audioBlob.type || 'audio/webm',
+                // @ts-ignore - column exists in DB but may not be reflected in types
+                transcript_text: data.text.trim()
+              } as any),
             supabase
               .from('media')
               .insert({
@@ -538,8 +540,10 @@ export default function QuickCaptureComposer({
                 file_path: filePath,
                 file_name: fileName,
                 file_size: data.audioBlob.size,
-                mime_type: data.audioBlob.type || 'audio/webm'
-              })
+                mime_type: data.audioBlob.type || 'audio/webm',
+                // @ts-ignore - column exists in DB but may not be reflected in types
+                transcript_text: data.text.trim()
+              } as any)
           ])
         } else {
           // Create a voice story
@@ -567,8 +571,10 @@ export default function QuickCaptureComposer({
               file_path: filePath,
               file_name: fileName,
               file_size: data.audioBlob.size,
-              mime_type: data.audioBlob.type || 'audio/webm'
-            })
+              mime_type: data.audioBlob.type || 'audio/webm',
+              // @ts-ignore - column exists in DB but may not be reflected in types
+              transcript_text: data.text.trim()
+            } as any)
         }
       }
 

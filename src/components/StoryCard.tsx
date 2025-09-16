@@ -32,6 +32,7 @@ export default function StoryCard({ story }: StoryCardProps) {
   const [linkedPeople, setLinkedPeople] = useState<any[]>([])
   const [property, setProperty] = useState<any>(null)
   const [transcript, setTranscript] = useState<string | null>(null)
+  const [transcriptFallback, setTranscriptFallback] = useState<boolean>(false)
 
   useEffect(() => {
     const loadStoryData = async () => {
@@ -56,10 +57,16 @@ export default function StoryCard({ story }: StoryCardProps) {
         )
         setMediaUrls(urls.filter(Boolean))
 
-        // Check for transcript in voice recordings
-        const voiceMedia = mediaData.find(item => item.mime_type?.startsWith('audio/'))
-        if (voiceMedia?.transcript_text) {
-          setTranscript(voiceMedia.transcript_text)
+        // Check for transcript in voice recordings (fallback to story content if missing)
+        const voiceMedia = mediaData.find(item => item.mime_type?.startsWith('audio/')) as ExtendedMedia | undefined
+        if (voiceMedia) {
+          if ((voiceMedia as any).transcript_text) {
+            setTranscript((voiceMedia as any).transcript_text as string)
+            setTranscriptFallback(false)
+          } else if (story.content) {
+            setTranscript(story.content)
+            setTranscriptFallback(true)
+          }
         }
       }
 
@@ -170,6 +177,9 @@ export default function StoryCard({ story }: StoryCardProps) {
             <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">
               "{transcript}"
             </p>
+            {transcriptFallback && (
+              <p className="text-xs text-muted-foreground">Auto-filled from story content</p>
+            )}
           </div>
         )}
 

@@ -98,8 +98,11 @@ export async function createStoryFromVoice(audioBlob: Blob, reviewData: ReviewDa
         file_path: audioPath,
         file_name: `voice-recording-${story.id}.webm`,
         mime_type: 'audio/webm',
-        file_size: audioBlob.size
-      })
+        file_size: audioBlob.size,
+        // Store original transcript alongside audio
+        // @ts-ignore - column exists in DB but may not be in generated types yet
+        transcript_text: reviewData.content
+      } as any)
     
     if (mediaError) {
       console.error('Media creation failed:', mediaError)
