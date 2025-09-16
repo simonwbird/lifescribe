@@ -21,6 +21,13 @@ interface VoiceCaptureModalProps {
   onClose: () => void
   onStoryCreated?: (storyId: string) => void
   preselectedPeople?: Array<{ id: string; name: string }>
+  prompt?: {
+    id: string
+    text: string
+    kind: string
+    context?: { personId?: string }
+  }
+  autoStart?: boolean
 }
 
 interface ReviewData {
@@ -33,7 +40,14 @@ interface ReviewData {
   tags: string[]
 }
 
-export default function VoiceCaptureModal({ open, onClose, onStoryCreated, preselectedPeople = [] }: VoiceCaptureModalProps) {
+export default function VoiceCaptureModal({ 
+  open, 
+  onClose, 
+  onStoryCreated, 
+  preselectedPeople = [], 
+  prompt, 
+  autoStart = false 
+}: VoiceCaptureModalProps) {
   const [state, setState] = useState<CaptureState>('idle')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
@@ -65,7 +79,7 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
   const { track } = useAnalytics()
   const { labsEnabled } = useLabs()
 
-  // Initialize review data with preselected people
+  // Initialize review data with preselected people and prompt
   useEffect(() => {
     if (preselectedPeople.length > 0) {
       setReviewData(prev => ({
@@ -73,7 +87,31 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
         people: preselectedPeople.map(p => ({ id: p.id, name: p.name }))
       }))
     }
-  }, [preselectedPeople])
+    
+    // If there's a prompt, set initial title and content
+    if (prompt) {
+      const title = prompt.text.length > 50 
+        ? prompt.text.substring(0, 50) + '...' 
+        : prompt.text
+      setReviewData(prev => ({
+        ...prev,
+        title: title,
+        content: prompt.text,
+        tags: ['memory-prompt']
+      }))
+    }
+  }, [preselectedPeople, prompt])
+
+  // Auto-start recording if autoStart is true
+  useEffect(() => {
+    if (open && autoStart && state === 'idle') {
+      // Small delay to ensure modal is fully rendered
+      const timer = setTimeout(() => {
+        startRecording()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [open, autoStart, state])
 
   // Auto-stop at 90 seconds
   useEffect(() => {
@@ -271,7 +309,7 @@ export default function VoiceCaptureModal({ open, onClose, onStoryCreated, prese
           </DialogTitle>
         </DialogHeader>
 
-        {state === 'idle' && (
+        {state === 'idle' && !autoStart && (
           <div className="space-y-6 py-4">
             <div className="text-center space-y-4">
               <div className="w-24 h-24 mx-auto bg-primary/10 rounded-full flex items-center justify-center">

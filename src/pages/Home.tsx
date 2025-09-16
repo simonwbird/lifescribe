@@ -24,6 +24,7 @@ import {
 import { CountdownModal } from '@/components/home/simple/CountdownModal'
 import { PermissionDeniedCard } from '@/components/home/simple/PermissionDeniedCard'
 import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard'
+import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
 
 // Types
 interface ActivityItem {
@@ -59,6 +60,7 @@ export default function Home() {
   const [showCountdown, setShowCountdown] = useState(false)
   const [showPermissionDenied, setShowPermissionDenied] = useState(false)
   const [showOfflineQueue, setShowOfflineQueue] = useState(false)
+  const [showVoiceModal, setShowVoiceModal] = useState(false)
   
   // Track analytics
   const { track } = useAnalytics()
@@ -318,20 +320,8 @@ export default function Home() {
     
     setShowCountdown(false)
     
-    // Navigate to story creation with prompt data
-    const title = getPromptTitle(currentPrompt)
-    const searchParams = new URLSearchParams({
-      type: 'voice',
-      promptTitle: title,
-      description: currentPrompt.text,
-      prompt_id: currentPrompt.id,
-      prompt_text: currentPrompt.text,
-      ...(currentPrompt.context?.personId && { 
-        person_id: currentPrompt.context.personId 
-      })
-    })
-    
-    navigate(`/stories/new?${searchParams.toString()}`)
+    // Open voice recording modal and start recording immediately
+    setShowVoiceModal(true)
   }
 
   const handlePermissionRetry = async () => {
@@ -375,6 +365,7 @@ export default function Home() {
     setShowCountdown(false)
     setShowPermissionDenied(false)
     setShowOfflineQueue(false)
+    setShowVoiceModal(false)
     setCurrentPrompt(null)
   }
 
@@ -444,6 +435,18 @@ export default function Home() {
                 />
               </div>
             )}
+
+            {/* Voice Recording Modal */}
+            <VoiceCaptureModal
+              open={showVoiceModal}
+              onClose={() => {
+                setShowVoiceModal(false)
+                setCurrentPrompt(null)
+              }}
+              onStoryCreated={handleStoryCreated}
+              prompt={currentPrompt || undefined}
+              autoStart={true}
+            />
 
             {/* Invite Banner */}
             {!hasOtherMembers && (
