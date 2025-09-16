@@ -16,7 +16,7 @@ interface SimpleRecordingControllerProps {
   spaceId: string
 }
 
-export function SimpleRecordingController({ 
+function SimpleRecordingController({ 
   profileId, 
   spaceId 
 }: SimpleRecordingControllerProps) {
