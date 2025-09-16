@@ -542,12 +542,13 @@ export default function VoiceCaptureModal({
               )}
 
               {/* Transcript */}
-              <div className="space-y-2">
+              <div className="space-y-2" aria-live="polite">
                 <Label htmlFor="content">Transcript</Label>
                 <Textarea
                   id="content"
-                  value={reviewData.content}
-                  onChange={(e) => setReviewData(prev => ({ ...prev, content: e.target.value }))}
+                  value={reviewData.content || transcript}
+                  onChange={(e) => setReviewData(prev => ({ ...prev, content: e.target.value }))
+                  }
                   rows={4}
                   placeholder="Your transcribed story will appear here..."
                 />
