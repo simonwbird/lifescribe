@@ -64,8 +64,9 @@ function SimpleRecordingController({
     // Navigate to story creation with prompt data
     const title = getPromptTitle(currentPrompt)
     const searchParams = new URLSearchParams({
-      mode: 'voice',
-      title: title,
+      type: 'voice',
+      promptTitle: title,
+      description: currentPrompt.text,
       prompt_id: currentPrompt.id,
       prompt_text: currentPrompt.text,
       ...(currentPrompt.context?.personId && { 
@@ -94,8 +95,8 @@ function SimpleRecordingController({
     // Navigate to text story creation
     const title = getPromptTitle(currentPrompt)
     const searchParams = new URLSearchParams({
-      mode: 'text',
-      title: title,
+      type: 'text',
+      promptTitle: title,
       prompt_id: currentPrompt.id,
       prompt_text: currentPrompt.text,
       ...(currentPrompt.context?.personId && { 
