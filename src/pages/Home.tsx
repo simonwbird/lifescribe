@@ -295,12 +295,18 @@ export default function Home() {
           <Header />
           <main className="container mx-auto px-4 py-6 space-y-6">
             {/* Simple Mode: Inspiration Bar */}
-            {isSimpleMode && profileId && spaceId && (
+            {isSimpleMode && profileId && spaceId ? (
               <SimpleInspirationBar
                 profileId={profileId}
                 spaceId={spaceId}
                 onRecordPrompt={handlePromptSelected}
               />
+            ) : (
+              // Debug info (remove in production)
+              <div className="mb-4 p-3 bg-muted/20 rounded text-xs text-muted-foreground">
+                Simple Mode Debug: isSimpleMode={String(isSimpleMode)}, profileId={profileId ? 'set' : 'empty'}, spaceId={spaceId ? 'set' : 'empty'}
+                {!isSimpleMode && <div>→ Enable Simple Mode in Settings → Accessibility to see Inspiration Bar</div>}
+              </div>
             )}
 
             {/* Recording Controller */}
@@ -353,6 +359,29 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-6 space-y-6">
+          {/* Simple Mode: Inspiration Bar */}
+          {isSimpleMode && profileId && spaceId ? (
+            <SimpleInspirationBar
+              profileId={profileId}
+              spaceId={spaceId}
+              onRecordPrompt={handlePromptSelected}
+            />
+          ) : (
+            // Debug info (remove in production)
+            <div className="mb-4 p-3 bg-muted/20 rounded text-xs text-muted-foreground">
+              Simple Mode Debug: isSimpleMode={String(isSimpleMode)}, profileId={profileId ? 'set' : 'empty'}, spaceId={spaceId ? 'set' : 'empty'}
+              {!isSimpleMode && <div>→ Enable Simple Mode in Settings → Accessibility to see Inspiration Bar</div>}
+            </div>
+          )}
+
+          {/* Recording Controller */}
+          {isSimpleMode && profileId && spaceId && (
+            <SimpleRecordingController
+              profileId={profileId}
+              spaceId={spaceId}
+            />
+          )}
+
           {/* Voice Hero + Segmented Controls */}
           <VoiceFirstHero 
             mode="studio"
