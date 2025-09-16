@@ -40,6 +40,9 @@ export default function Home() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [drafts, setDrafts] = useState<DraftItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [profileId, setProfileId] = useState<string>('')
+  const [spaceId, setSpaceId] = useState<string>('')
+  const [isSimpleMode, setIsSimpleMode] = useState<boolean>(false)
   
   // Track analytics
   const { track } = useAnalytics()

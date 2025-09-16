@@ -16,7 +16,7 @@ interface SimpleRecordingControllerProps {
   spaceId: string
 }
 
-export default function SimpleRecordingController({ 
+export function SimpleRecordingController({ 
   profileId, 
   spaceId 
 }: SimpleRecordingControllerProps) {
@@ -168,5 +168,5 @@ export default function SimpleRecordingController({
 }
 
 // Export the handler for use by SimpleInspirationBar
-export { SimpleRecordingController as default }
+export default SimpleRecordingController
 export type { SimpleRecordingControllerProps }
