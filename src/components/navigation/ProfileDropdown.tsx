@@ -110,6 +110,18 @@ export default function ProfileDropdown() {
       }
     }
     getProfile()
+    
+    // Listen for profile photo updates
+    const handleProfilePhotoUpdate = (event: CustomEvent) => {
+      const { avatarUrl } = event.detail
+      setAvatarUrl(avatarUrl)
+    }
+    
+    window.addEventListener('profilePhotoUpdated', handleProfilePhotoUpdate as EventListener)
+    
+    return () => {
+      window.removeEventListener('profilePhotoUpdated', handleProfilePhotoUpdate as EventListener)
+    }
   }, [])
 
   const handleProfileOpen = () => {

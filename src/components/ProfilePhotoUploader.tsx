@@ -393,6 +393,11 @@ export default function ProfilePhotoUploader({
 
       onPhotoUploaded(signedUrl)
       
+      // Dispatch custom event to notify header profile circle
+      window.dispatchEvent(new CustomEvent('profilePhotoUpdated', { 
+        detail: { avatarUrl: signedUrl } 
+      }))
+      
       toast({
         title: "Photo uploaded!",
         description: "Your profile photo has been updated successfully.",
