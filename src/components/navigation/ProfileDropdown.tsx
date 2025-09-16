@@ -102,10 +102,28 @@ export default function ProfileDropdown() {
             resolved = user.user_metadata.avatar_url
           }
 
-          setAvatarUrl(resolved)
+          // If resolved is a Storage signed URL, refresh to ensure validity
+          if (resolved && /object\/sign\//.test(resolved)) {
+            try {
+              const m = resolved.match(/object\/sign\/([^/]+)\/([^?]+)/)
+              if (m) {
+                const bucket = m[1]
+                const objectPath = decodeURIComponent(m[2])
+                const { data } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 3600)
+                if (data?.signedUrl) resolved = data.signedUrl
+              }
+            } catch (e) {
+              console.warn('Avatar re-sign failed', e)
+            }
+          }
+
+          const cacheBusted = resolved ? `${resolved}${resolved.includes('?') ? '&' : '?'}v=${Date.now()}` : null
+          setAvatarUrl(cacheBusted)
         } else if (user?.user_metadata?.avatar_url) {
           // No profile avatar set, use auth provider avatar
-          setAvatarUrl(user.user_metadata.avatar_url)
+          const fallbackUrl = user.user_metadata.avatar_url
+          const cacheBusted = fallbackUrl ? `${fallbackUrl}${fallbackUrl.includes('?') ? '&' : '?'}v=${Date.now()}` : null
+          setAvatarUrl(cacheBusted)
         }
       }
     }
@@ -114,7 +132,8 @@ export default function ProfileDropdown() {
     // Listen for profile photo updates
     const handleProfilePhotoUpdate = (event: CustomEvent) => {
       const { avatarUrl } = event.detail
-      setAvatarUrl(avatarUrl)
+      const cacheBusted = avatarUrl ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}v=${Date.now()}` : null
+      setAvatarUrl(cacheBusted)
     }
     
     window.addEventListener('profilePhotoUpdated', handleProfilePhotoUpdate as EventListener)

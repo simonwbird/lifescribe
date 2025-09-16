@@ -364,14 +364,14 @@ export default function ProfilePhotoUploader({
       if (isUserProfile) {
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ avatar_url: signedUrl })
+          .update({ avatar_url: path })
           .eq('id', user.id)
         
         if (updateError) throw updateError
       } else if (personId) {
         const { error: updateError } = await supabase
           .from('people')
-          .update({ avatar_url: signedUrl })
+          .update({ avatar_url: path })
           .eq('id', personId)
           .eq('family_id', member.family_id)
         
