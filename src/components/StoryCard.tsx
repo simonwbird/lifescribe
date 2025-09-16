@@ -6,30 +6,43 @@ import { Badge } from '@/components/ui/badge'
 import ReactionBar from './ReactionBar'
 import CommentThread from './CommentThread'
 import { Link } from 'react-router-dom'
+import { Calendar, MapPin, Users, MessageSquare, Clock } from 'lucide-react'
 import type { Story, Profile, Media } from '@/lib/types'
 
+interface ExtendedStory extends Story {
+  occurred_on?: string
+  occurred_precision?: string
+  is_approx?: boolean
+  happened_at_property_id?: string
+  prompt_id?: string
+  prompt_text?: string
+}
+
 interface StoryCardProps {
-  story: Story & { profiles: Profile }
+  story: ExtendedStory & { profiles: Profile }
 }
 
 export default function StoryCard({ story }: StoryCardProps) {
   const [media, setMedia] = useState<Media[]>([])
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
+  const [linkedPeople, setLinkedPeople] = useState<any[]>([])
+  const [property, setProperty] = useState<any>(null)
 
   useEffect(() => {
-    const getMedia = async () => {
-      const { data } = await supabase
+    const loadStoryData = async () => {
+      // Load media
+      const { data: mediaData } = await supabase
         .from('media')
         .select('*')
         .eq('story_id', story.id)
         .order('created_at')
 
-      if (data) {
-        setMedia(data)
+      if (mediaData) {
+        setMedia(mediaData)
         
         // Get signed URLs for media
         const urls = await Promise.all(
-          data.map(async (item) => {
+          mediaData.map(async (item) => {
             const { data: { signedUrl } } = await supabase.storage
               .from('media')
               .createSignedUrl(item.file_path, 3600)
@@ -38,10 +51,39 @@ export default function StoryCard({ story }: StoryCardProps) {
         )
         setMediaUrls(urls.filter(Boolean))
       }
+
+      // Load linked people
+      const { data: peopleLinks } = await supabase
+        .from('person_story_links')
+        .select(`
+          people:person_id (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('story_id', story.id)
+
+      if (peopleLinks) {
+        setLinkedPeople(peopleLinks.map(link => link.people).filter(Boolean))
+      }
+
+      // Load property if story happened at a property
+      if (story.happened_at_property_id) {
+        const { data: propertyData } = await supabase
+          .from('properties')
+          .select('name, address')
+          .eq('id', story.happened_at_property_id)
+          .single()
+
+        if (propertyData) {
+          setProperty(propertyData)
+        }
+      }
     }
 
-    getMedia()
-  }, [story.id])
+    loadStoryData()
+  }, [story.id, story.happened_at_property_id])
 
   return (
     <Card>
@@ -67,6 +109,43 @@ export default function StoryCard({ story }: StoryCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Story metadata */}
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          {story.occurred_on && (
+            <div className="flex items-center gap-1">
+              <Calendar size={14} />
+              <span>
+                {story.occurred_precision === 'year' ? new Date(story.occurred_on).getFullYear() : 
+                 story.occurred_precision === 'month' ? new Date(story.occurred_on).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) :
+                 new Date(story.occurred_on).toLocaleDateString()}
+                {story.is_approx && ' (approximate)'}
+                {story.occurred_precision && ` • ${story.occurred_precision} precision`}
+              </span>
+            </div>
+          )}
+          
+          {linkedPeople.length > 0 && (
+            <div className="flex items-center gap-1">
+              <Users size={14} />
+              <span>{linkedPeople.map(p => p.full_name).join(', ')}</span>
+            </div>
+          )}
+          
+          {property && (
+            <div className="flex items-center gap-1">
+              <MapPin size={14} />
+              <span>{property.name}</span>
+            </div>
+          )}
+          
+          {story.prompt_text && (
+            <div className="flex items-center gap-1">
+              <MessageSquare size={14} />
+              <span className="italic">"{story.prompt_text}"</span>
+            </div>
+          )}
+        </div>
+
         <div className="prose max-w-none">
           <p className="whitespace-pre-wrap">{story.content}</p>
         </div>
