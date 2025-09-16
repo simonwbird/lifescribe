@@ -71,15 +71,28 @@ const SIMON_FAMILY_PROMPTS: Omit<ElderPrompt, 'id'>[] = [
   { text: "Describe what Helen and David were like as parents.", kind: 'personal' },
   { text: "Tell us about a family tradition from Helen and David.", kind: 'personal' },
   
-  // About brothers
-  { text: "Share a story about growing up with your brothers.", kind: 'personal' },
-  { text: "Tell us about something you and your brothers got up to.", kind: 'personal' },
-  { text: "Describe what it was like being part of the Bird family.", kind: 'personal' },
+  // About brothers - James, Matthew, and Adam
+  { text: "Share a story about growing up with James, Matthew, and Adam.", kind: 'personal' },
+  { text: "Tell us about something you and James got up to as kids.", kind: 'personal' },
+  { text: "Describe a memory with your brother Matthew.", kind: 'personal' },
+  { text: "Share a funny story about your brother Adam.", kind: 'personal' },
+  { text: "Tell us about what it was like being the oldest/youngest of the Bird boys.", kind: 'personal' },
+  { text: "Describe a time when you and your brothers James, Matthew, and Adam got into trouble.", kind: 'personal' },
+  
+  // About grandparents
+  { text: "Tell us about your grandfather Edward Ellis Bird.", kind: 'personal' },
+  { text: "Share a memory of your grandmother Helen Dorothy Viccars.", kind: 'personal' },
+  { text: "Describe what Henry George Kemter was like as a grandfather.", kind: 'personal' },
+  { text: "Tell us about Shirley Lenore Thomas and her role in the family.", kind: 'personal' },
+  { text: "Share a story about visiting your grandparents.", kind: 'personal' },
+  { text: "Describe a family gathering with the grandparents.", kind: 'personal' },
+  { text: "Tell us about something a grandparent taught you.", kind: 'personal' },
   
   // Family moments
-  { text: "Tell us about a special Christmas with the family.", kind: 'personal' },
+  { text: "Tell us about a special Christmas with the Bird family.", kind: 'personal' },
   { text: "Describe a family gathering that was memorable.", kind: 'personal' },
   { text: "Share a story about when you became a dad to Jamie and Lucy.", kind: 'personal' },
+  { text: "Tell us about a family tradition that involved all the Bird brothers.", kind: 'personal' },
 ]
 
 export async function getElderPrompts(profileId: string, spaceId: string): Promise<ElderPrompt[]> {
