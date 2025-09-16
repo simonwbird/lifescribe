@@ -203,11 +203,12 @@ export function SimpleHeader({
           {alternatePrompts.map((prompt) => (
             <Button
               key={prompt.id}
-              onClick={() => handleSwapPrompt(prompt)}
+              onClick={() => handleRecordWithPrompt(prompt)}
               variant="outline"
               size="lg"
-              className="flex-1 h-14 px-6 text-base font-medium text-left justify-start min-w-0 bg-background hover:bg-accent/50 border-2"
+              className="flex-1 h-14 px-6 text-base font-medium text-left justify-start min-w-0 bg-background hover:bg-accent/50 border-2 gap-3"
             >
+              <Mic className="w-5 h-5 flex-shrink-0 text-primary" />
               <span className="truncate">
                 {truncatePrompt(prompt.text, 60)}
               </span>
