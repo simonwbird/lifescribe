@@ -57,6 +57,26 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Rate limiting: Check recent invites from this user (max 10 per hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const { data: recentInvites, error: rateLimitError } = await supabase
+      .from("invites")
+      .select("id")
+      .eq("invited_by", user.id)
+      .gte("created_at", oneHourAgo.toISOString());
+
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+    } else if (recentInvites && recentInvites.length >= 10) {
+      console.warn("Rate limit exceeded for user:", user.id);
+      return new Response(JSON.stringify({ 
+        error: "Rate limit exceeded. Please wait before sending more invitations." 
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // Parse request body
     const { familyId, email, role = "member" }: InviteRequest = await req.json();
 
@@ -269,6 +289,16 @@ LifeScribe — Private family memories, preserved.`;
     }
 
     console.log("Invitation sent successfully to:", email);
+    
+    // Security audit log
+    console.log("SECURITY_EVENT: invite_sent", {
+      action: "invite_sent",
+      inviter_id: user.id,
+      family_id: familyId,
+      target_email: email.replace(/(.{2}).*(@.*)/, "$1***$2"), // Mask email in logs
+      role,
+      timestamp: new Date().toISOString()
+    });
 
     return new Response(JSON.stringify({ 
       success: true, 

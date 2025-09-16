@@ -74,6 +74,27 @@ serve(async (req) => {
       });
     }
 
+    // Rate limiting: Check recent invite links from this user (max 5 per hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const { data: recentLinks, error: rateLimitError } = await supabase
+      .from("invites")
+      .select("id")
+      .eq("invited_by", user.id)
+      .eq("email", "shareable-link@lifescribe.local")
+      .gte("created_at", oneHourAgo.toISOString());
+
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+    } else if (recentLinks && recentLinks.length >= 5) {
+      console.warn("Rate limit exceeded for invite links, user:", user.id);
+      return new Response(JSON.stringify({ 
+        error: "Rate limit exceeded. Please wait before creating more invite links." 
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // Create a token-backed invite row usable by link
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -104,6 +125,15 @@ serve(async (req) => {
 
     const appUrl = Deno.env.get("APP_URL") || supabaseUrl.replace(".supabase.co", ".lovable.app");
     const joinUrl = `${appUrl}/invite/${token}`;
+
+    // Security audit log
+    console.log("SECURITY_EVENT: invite_link_created", {
+      action: "invite_link_created",
+      creator_id: user.id,
+      family_id: familyId,
+      role,
+      timestamp: new Date().toISOString()
+    });
 
     return new Response(
       JSON.stringify({ success: true, inviteId: invite.id, token, joinUrl, expiresAt: expiresAt.toISOString() }),

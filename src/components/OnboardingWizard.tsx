@@ -190,8 +190,7 @@ export default function OnboardingWizard({ user }: OnboardingWizardProps) {
       
       try {
         const invitePromises = validEmails.map(email => {
-          const token = Math.random().toString(36).substring(2, 15) + 
-                       Math.random().toString(36).substring(2, 15)
+          const token = crypto.randomUUID()
           const expiresAt = new Date()
           expiresAt.setDate(expiresAt.getDate() + 7)
 
