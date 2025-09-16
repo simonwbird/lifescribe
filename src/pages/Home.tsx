@@ -76,6 +76,33 @@ export default function Home() {
     track('home_v2_load')
   }, [])
 
+  // Set up real-time updates for new stories
+  useEffect(() => {
+    if (!spaceId) return
+
+    const channel = supabase
+      .channel('family-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stories',
+          filter: `family_id=eq.${spaceId}`
+        },
+        (payload) => {
+          console.log('New story published:', payload)
+          // Refresh the activities when a new story is added
+          loadActivities(spaceId)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [spaceId])
+
   const loadHomeData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -156,6 +183,11 @@ export default function Home() {
           })
         })
       }
+
+      // Sort activities by creation time (most recent first)
+      activities.sort((a, b) => parseTimeAgo(a.time) - parseTimeAgo(b.time))
+
+      setActivities(activities)
 
       // Get recent comments
       const { data: comments } = await supabase
