@@ -295,21 +295,17 @@ export default function Home() {
           <Header />
           <main className="container mx-auto px-4 py-6 space-y-6">
             {/* Simple Mode: Inspiration Bar */}
-            {isSimpleMode && (
-              <SimpleInspirationBar
-                profileId={profileId || 'default'}
-                spaceId={spaceId || 'default'}
-                onRecordPrompt={handlePromptSelected}
-              />
-            )}
+            <SimpleInspirationBar
+              profileId={profileId || 'default'}
+              spaceId={spaceId || 'default'}
+              onRecordPrompt={handlePromptSelected}
+            />
 
             {/* Recording Controller */}
-            {isSimpleMode && (
-              <SimpleRecordingController
-                profileId={profileId || 'default'}
-                spaceId={spaceId || 'default'}
-              />
-            )}
+            <SimpleRecordingController
+              profileId={profileId || 'default'}
+              spaceId={spaceId || 'default'}
+            />
 
             {/* Voice-first Hero */}
             <VoiceFirstHero 
