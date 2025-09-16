@@ -187,34 +187,32 @@ export default function VoiceCaptureModal({
           setTranscript(result.text)
           setConfidence(result.confidence || 0)
           
-          // Use extracted info if available, otherwise fall back to basic helpers
-          if (result.extractedInfo) {
-            const info = result.extractedInfo
-            setReviewData({
-              title: info.title,
-              content: result.text,
-              people: info.people.map(p => ({ name: p.name })),
-              date: info.dates[0]?.date || '',
-              datePrecision: (info.dates[0]?.precision as any) || 'unknown',
-              privacy: 'family',
-              tags: [...(info.themes || []), ...(info.emotions || [])].slice(0, 5)
-            })
-          } else {
-            // Fallback to basic helpers
-            const suggestedTitle = autoTitle(result.text)
-            const suggestedPeople = await suggestPeople(result.text)
-            const inferredDate = inferDate(result.text)
-            
-            setReviewData({
-              title: suggestedTitle,
-              content: result.text,
-              people: suggestedPeople,
-              date: inferredDate.value,
-              datePrecision: inferredDate.precision,
-              privacy: 'family',
-              tags: []
-            })
-          }
+          // Merge AI extraction with heuristic fallbacks
+          const suggestedTitle = autoTitle(result.text)
+          const suggestedPeople = await suggestPeople(result.text)
+          const inferredDate = inferDate(result.text)
+
+          const info = (result as any).extractedInfo || {}
+          const mergedTitle = info.title && info.title.trim() ? info.title : suggestedTitle
+          const mergedPeople = (info.people && info.people.length)
+            ? info.people.map((p: any) => ({ name: p.name }))
+            : suggestedPeople
+          const mergedDate = (info.dates && info.dates[0]?.date) ? info.dates[0].date : inferredDate.value
+          const mergedPrecision = (info.dates && info.dates[0]?.precision) ? info.dates[0].precision as any : inferredDate.precision
+          const mergedTags = [
+            ...((info.themes || []) as string[]),
+            ...((info.emotions || []) as string[])
+          ].slice(0, 5)
+          
+          setReviewData({
+            title: mergedTitle || suggestedTitle || 'Untitled story',
+            content: result.text,
+            people: mergedPeople,
+            date: mergedDate,
+            datePrecision: mergedPrecision,
+            privacy: 'family',
+            tags: mergedTags
+          })
           
           setState('review')
     } catch (error) {
