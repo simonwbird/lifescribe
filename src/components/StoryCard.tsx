@@ -60,12 +60,37 @@ export default function StoryCard({ story }: StoryCardProps) {
         // Check for transcript in voice recordings (fallback to story content if missing)
         const voiceMedia = mediaData.find(item => item.mime_type?.startsWith('audio/')) as ExtendedMedia | undefined
         if (voiceMedia) {
-          if ((voiceMedia as any).transcript_text) {
-            setTranscript((voiceMedia as any).transcript_text as string)
+          const t = (voiceMedia as any).transcript_text as string | undefined
+          if (t && t.trim()) {
+            setTranscript(t)
             setTranscriptFallback(false)
-          } else if (story.content) {
-            setTranscript(story.content)
-            setTranscriptFallback(true)
+          } else {
+            // Try to find a matching media record linked to an answer (older captures)
+            const { data: answerMedia } = await supabase
+              .from('media')
+              .select('answer_id')
+              .eq('file_path', voiceMedia.file_path)
+              .not('answer_id', 'is', null)
+              .maybeSingle()
+
+            if (answerMedia?.answer_id) {
+              const { data: answer } = await supabase
+                .from('answers')
+                .select('answer_text')
+                .eq('id', answerMedia.answer_id)
+                .maybeSingle()
+
+              if (answer?.answer_text) {
+                setTranscript(answer.answer_text)
+                setTranscriptFallback(false)
+              } else if (story.content) {
+                setTranscript(story.content)
+                setTranscriptFallback(true)
+              }
+            } else if (story.content) {
+              setTranscript(story.content)
+              setTranscriptFallback(true)
+            }
           }
         }
       }
@@ -175,7 +200,7 @@ export default function StoryCard({ story }: StoryCardProps) {
               <span>Original Transcript</span>
             </div>
             <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">
-              "{transcript}"
+              {transcript}
             </p>
             {transcriptFallback && (
               <p className="text-xs text-muted-foreground">Auto-filled from story content</p>
