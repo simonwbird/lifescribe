@@ -1860,6 +1860,39 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          family_id: string | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          family_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          family_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       stories: {
         Row: {
           content: string
@@ -2484,6 +2517,57 @@ export type Database = {
       }
     }
     Views: {
+      invites_masked: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          family_id: string | null
+          id: string | null
+          invited_by: string | null
+          role: Database["public"]["Enums"]["role_type"] | null
+          status: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: never
+          expires_at?: string | null
+          family_id?: string | null
+          id?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["role_type"] | null
+          status?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: never
+          expires_at?: string | null
+          family_id?: string | null
+          id?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["role_type"] | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person_timeline_items: {
         Row: {
           excerpt: string | null
@@ -2505,6 +2589,21 @@ export type Database = {
       get_user_family_ids: {
         Args: { user_id: string }
         Returns: string[]
+      }
+      is_family_admin: {
+        Args: { family_id: string; user_id: string }
+        Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_family_id: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
