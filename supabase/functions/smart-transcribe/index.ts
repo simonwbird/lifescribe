@@ -79,7 +79,7 @@ serve(async (req) => {
     // Step 1: Transcribe the audio using Whisper
     const formData = new FormData()
     const blob = new Blob([binaryAudio], { type: 'audio/webm' })
-    formData.append('file', blob, 'audio.webv')
+    formData.append('file', blob, 'audio.webm')
     formData.append('model', 'whisper-1')
     formData.append('response_format', 'json')
     formData.append('language', 'en')
