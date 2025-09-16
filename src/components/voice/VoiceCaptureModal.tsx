@@ -266,7 +266,7 @@ export default function VoiceCaptureModal({
     
     setState('publishing')
     try {
-      const storyId = await createStoryFromVoice(audioBlob, reviewData)
+      const storyId = await createStoryFromVoice(audioBlob, reviewData, transcript)
       onStoryCreated?.(storyId)
       handleClose()
     } catch (error) {
@@ -280,7 +280,7 @@ export default function VoiceCaptureModal({
     
     setState('drafting')
     try {
-      const storyId = await createStoryFromVoice(audioBlob, { ...reviewData, isDraft: true })
+      const storyId = await createStoryFromVoice(audioBlob, { ...reviewData, isDraft: true }, transcript)
       onStoryCreated?.(storyId)
       handleClose()
     } catch (error) {

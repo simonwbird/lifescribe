@@ -38,7 +38,7 @@ export async function uploadVoiceRecording(audioBlob: Blob, familyId: string, us
   }
 }
 
-export async function createStoryFromVoice(audioBlob: Blob, reviewData: ReviewData): Promise<string> {
+export async function createStoryFromVoice(audioBlob: Blob, reviewData: ReviewData, originalTranscript?: string): Promise<string> {
   try {
     // Get current user and family
     const { data: { user } } = await supabase.auth.getUser()
@@ -101,7 +101,7 @@ export async function createStoryFromVoice(audioBlob: Blob, reviewData: ReviewDa
         file_size: audioBlob.size,
         // Store original transcript alongside audio
         // @ts-ignore - column exists in DB but may not be in generated types yet
-        transcript_text: reviewData.content
+        transcript_text: originalTranscript || reviewData.content
       } as any)
     
     if (mediaError) {
