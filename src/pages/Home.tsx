@@ -7,7 +7,7 @@ import FamilyUpdatesFeed from '@/components/home/FamilyUpdatesFeed'
 import WeeklyDigest from '@/components/home/WeeklyDigest'
 import Upcoming from '@/components/home/Upcoming'
 import DraftsRow from '@/components/home/DraftsRow'
-import { SimpleInspirationBar } from '@/components/home/simple/SimpleInspirationBar'
+import { SimpleHeader } from '@/components/home/simple/SimpleHeader'
 import SimpleRecordingController from '@/components/home/simple/SimpleRecordingController'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -43,6 +43,7 @@ export default function Home() {
   const [profileId, setProfileId] = useState<string>('')
   const [spaceId, setSpaceId] = useState<string>('')
   const [isSimpleMode, setIsSimpleMode] = useState<boolean>(false)
+  const [hasOtherMembers, setHasOtherMembers] = useState<boolean>(false)
   
   // Track analytics
   const { track } = useAnalytics()
@@ -85,6 +86,14 @@ export default function Home() {
       if (!memberResult.data) return
 
       setSpaceId(memberResult.data.family_id)
+
+      // Check if family has other members
+      const { data: memberCount } = await supabase
+        .from('members')
+        .select('id')
+        .eq('family_id', memberResult.data.family_id)
+      
+      setHasOtherMembers((memberCount?.length || 0) > 1)
 
       await Promise.all([
         loadActivities(memberResult.data.family_id),
@@ -294,8 +303,8 @@ export default function Home() {
         <div className="min-h-screen bg-background">
           <Header />
           <main className="container mx-auto px-4 py-6 space-y-6">
-            {/* Simple Mode: Inspiration Bar */}
-            <SimpleInspirationBar
+            {/* Simple Mode: Unified Header */}
+            <SimpleHeader
               profileId={profileId || 'default'}
               spaceId={spaceId || 'default'}
               onRecordPrompt={handlePromptSelected}
@@ -307,14 +316,10 @@ export default function Home() {
               spaceId={spaceId || 'default'}
             />
 
-            {/* Voice-first Hero */}
-            <VoiceFirstHero 
-              mode={isSimpleMode ? 'simple' : mode}
-              onStoryCreated={handleStoryCreated}
-            />
-
             {/* Invite Banner */}
-            <InviteBanner />
+            {!hasOtherMembers && (
+              <InviteBanner />
+            )}
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -349,15 +354,6 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-6 space-y-6">
-          {/* Simple Mode: Inspiration Bar */}
-          {isSimpleMode && (
-            <SimpleInspirationBar
-              profileId={profileId || 'default'}
-              spaceId={spaceId || 'default'}
-              onRecordPrompt={handlePromptSelected}
-            />
-          )}
-
           {/* Recording Controller */}
           {isSimpleMode && (
             <SimpleRecordingController

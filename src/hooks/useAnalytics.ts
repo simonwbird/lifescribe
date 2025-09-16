@@ -48,6 +48,8 @@ export type AnalyticsEvent =
   | 'collections_open'
   | 'family_open'
   | 'prompts_open'
+  | 'prompt.swap'
+  | 'simple_mode.record_without_prompt'
   | 'streak_open'
   | 'profile_open'
   | 'switch_family_success'
