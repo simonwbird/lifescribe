@@ -632,55 +632,61 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                             </button>
                           ))}
                           
-                          {/* Add New Person Option */}
-                          {matchingMembers.length === 0 && peopleSearchQuery.trim() && (
-                            <button
-                              type="button"
-                              className="w-full px-3 py-2 text-left hover:bg-accent flex items-center gap-2 text-muted-foreground"
-                              onClick={async () => {
-                                const newName = peopleSearchQuery.trim()
-                                if (!newName) return
-                                
-                                try {
-                                  const { data: { user } } = await supabase.auth.getUser()
-                                  if (!user) return
-                                  
-                                  const { data: newPerson, error } = await supabase
-                                    .from('people')
-                                    .insert({
-                                      full_name: newName,
-                                      family_id: (person as any).family_id,
-                                      created_by: user.id
-                                    })
-                                    .select()
-                                    .single()
-                                    
-                                  if (error) throw error
-                                  
-                                  const newMember = { id: newPerson.id, full_name: newPerson.full_name }
-                                  setFamilyMembers(prev => [...prev, newMember])
-                                  setTaggedPeople(prev => [...prev, newPerson.id])
-                                  setPeopleSearchQuery('')
-                                  setShowPeopleDropdown(false)
-                                  
-                                  toast({
-                                    title: "Person added",
-                                    description: `${newName} has been added to your family tree.`
-                                  })
-                                } catch (error) {
-                                  console.error('Failed to add person:', error)
-                                  toast({
-                                    title: "Failed to add person",
-                                    description: "Could not add the person. Please try again.",
-                                    variant: "destructive"
-                                  })
-                                }
-                              }}
-                            >
-                              <Plus className="h-4 w-4" />
-                              <span>Add "{peopleSearchQuery.trim()}" to family tree</span>
-                            </button>
-                          )}
+                           {/* Add New Person Option */}
+                           {matchingMembers.length === 0 && peopleSearchQuery.trim() && (
+                             <div className="border-t pt-2">
+                               <button
+                                 type="button"
+                                 className="w-full px-3 py-2 text-left hover:bg-accent flex items-center gap-2 text-muted-foreground"
+                                 onClick={async () => {
+                                   const newName = peopleSearchQuery.trim()
+                                   if (!newName) return
+                                   
+                                   try {
+                                     const { data: { user } } = await supabase.auth.getUser()
+                                     if (!user) return
+                                     
+                                     const { data: newPerson, error } = await supabase
+                                       .from('people')
+                                       .insert({
+                                         full_name: newName,
+                                         family_id: (person as any).family_id,
+                                         created_by: user.id,
+                                         person_type: 'reference'
+                                       })
+                                       .select()
+                                       .single()
+                                       
+                                     if (error) throw error
+                                     
+                                     const newMember = { id: newPerson.id, full_name: newPerson.full_name }
+                                     setFamilyMembers(prev => [...prev, newMember])
+                                     setTaggedPeople(prev => [...prev, newPerson.id])
+                                     setPeopleSearchQuery('')
+                                     setShowPeopleDropdown(false)
+                                     
+                                     toast({
+                                       title: "Person added",
+                                       description: `${newName} has been added as a reference (won't appear in family tree).`
+                                     })
+                                   } catch (error) {
+                                     console.error('Failed to add person:', error)
+                                     toast({
+                                       title: "Failed to add person",
+                                       description: "Could not add the person. Please try again.",
+                                       variant: "destructive"
+                                     })
+                                   }
+                                 }}
+                               >
+                                 <Plus className="h-4 w-4" />
+                                 <span>Add "{peopleSearchQuery.trim()}" as reference</span>
+                               </button>
+                               <p className="px-3 py-1 text-xs text-muted-foreground">
+                                 This won't add them to your family tree
+                               </p>
+                             </div>
+                           )}
                           
                           {matchingMembers.length === 0 && !peopleSearchQuery.trim() && (
                             <div className="px-3 py-2 text-muted-foreground text-sm">

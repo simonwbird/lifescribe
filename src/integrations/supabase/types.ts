@@ -752,6 +752,7 @@ export type Database = {
           is_living: boolean | null
           middle_name: string | null
           notes: string | null
+          person_type: string
           pinned_story_ids: string[] | null
           surname: string | null
           updated_at: string | null
@@ -778,6 +779,7 @@ export type Database = {
           is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
+          person_type?: string
           pinned_story_ids?: string[] | null
           surname?: string | null
           updated_at?: string | null
@@ -804,6 +806,7 @@ export type Database = {
           is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
+          person_type?: string
           pinned_story_ids?: string[] | null
           surname?: string | null
           updated_at?: string | null
