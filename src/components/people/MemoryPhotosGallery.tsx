@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
-import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight, Trash2, MoreHorizontal } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
@@ -53,6 +53,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [taggedPeople, setTaggedPeople] = useState<string[]>([person.id])
   const [peopleSearchQuery, setPeopleSearchQuery] = useState('')
   const [showPeopleDropdown, setShowPeopleDropdown] = useState(false)
+  const [selectedStoryForAdd, setSelectedStoryForAdd] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Fetch photos when component mounts or person changes
@@ -260,6 +261,114 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     }
   }
 
+  const handleDeletePhoto = async (photoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', photoId)
+        .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Photo deleted",
+        description: "The photo has been removed from this memory."
+      })
+
+      // Refresh photos and close lightbox if this was the current photo
+      fetchPhotos()
+      setShowLightbox(false)
+    } catch (error) {
+      console.error('Failed to delete photo:', error)
+      toast({
+        title: "Delete failed",
+        description: "Could not delete the photo. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleAddPhotosToStory = (storyId: string) => {
+    setSelectedStoryForAdd(storyId)
+    // Trigger file selection
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.multiple = true
+    fileInput.accept = 'image/jpeg,image/jpg,image/png,image/webp,image/gif'
+    fileInput.onchange = (e) => {
+      const files = Array.from((e.target as HTMLInputElement).files || [])
+      if (files.length > 0) {
+        handleAddPhotosToExistingStory(storyId, files)
+      }
+    }
+    fileInput.click()
+  }
+
+  const handleAddPhotosToExistingStory = async (storyId: string, files: File[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      let uploadedCount = 0
+      for (const file of files) {
+        try {
+          const { path, error: uploadError } = await uploadMediaFile(
+            file,
+            (person as any).family_id,
+            user.id
+          )
+
+          if (uploadError) {
+            console.error('Failed to upload file:', uploadError)
+            continue
+          }
+
+          // Create media record linked to existing story
+          const { error: mediaError } = await supabase
+            .from('media')
+            .insert({
+              file_path: path,
+              file_name: file.name,
+              mime_type: file.type,
+              file_size: file.size,
+              family_id: (person as any).family_id,
+              profile_id: user.id,
+              story_id: storyId
+            })
+
+          if (mediaError) {
+            console.error('Failed to create media record:', mediaError)
+            continue
+          }
+
+          uploadedCount++
+        } catch (error) {
+          console.error('Error uploading file:', file.name, error)
+        }
+      }
+
+      if (uploadedCount > 0) {
+        toast({
+          title: "Photos added",
+          description: `${uploadedCount} photo${uploadedCount > 1 ? 's' : ''} added to the memory.`
+        })
+        fetchPhotos()
+      } else {
+        throw new Error('No photos were uploaded successfully')
+      }
+    } catch (error) {
+      console.error('Failed to add photos:', error)
+      toast({
+        title: "Upload failed",
+        description: "Could not add photos to the memory. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setSelectedStoryForAdd(null)
+    }
+  }
+
   const fetchPhotos = async () => {
     try {
       const { data, error } = await supabase
@@ -411,10 +520,12 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                     return (
                       <div 
                         key={primaryPhoto.id} 
-                        className="group relative cursor-pointer" 
-                        onClick={() => openLightbox(photos.indexOf(primaryPhoto))}
+                        className="group relative" 
                       >
-                        <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                        <div 
+                          className="aspect-square bg-muted rounded-lg overflow-hidden relative cursor-pointer"
+                          onClick={() => openLightbox(photos.indexOf(primaryPhoto))}
+                        >
                           {photoUrls[primaryPhoto.id] ? (
                             <img
                               src={photoUrls[primaryPhoto.id]}
@@ -431,6 +542,19 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                               +{additionalCount}
                             </div>
                           )}
+
+                          {/* Add more photos button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/90 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAddPhotosToStory(primaryPhoto.story_id!)
+                            }}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
                         </div>
                         
                         <div className="mt-2">
@@ -774,6 +898,16 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                     </Button>
                   </>
                 )}
+
+                {/* Delete Photo Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 left-4 bg-black/20 hover:bg-black/40 text-white"
+                  onClick={() => handleDeletePhoto(currentPhoto.id)}
+                >
+                  <Trash2 className="h-6 w-6" />
+                </Button>
 
                 {/* Close Button */}
                 <Button
