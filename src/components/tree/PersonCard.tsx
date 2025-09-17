@@ -1,6 +1,8 @@
 import React, { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { Person } from '@/lib/familyTreeTypes'
+import maleDefaultAvatar from '@/assets/avatar-male-default.png'
+import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
 
 interface PersonCardProps {
   person: Person
@@ -32,6 +34,14 @@ function PersonCardBase({
     : `${birthYear || '?'}–${deathYear || '?'}`
 
   const isDeceased = person.is_living === false || !!deathYear
+
+  // Get default avatar based on gender
+  const getDefaultAvatar = () => {
+    if (person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f') {
+      return femaleDefaultAvatar
+    }
+    return maleDefaultAvatar // Default to male avatar for unknown/male genders
+  }
 
   return (
     <div
@@ -78,7 +88,7 @@ function PersonCardBase({
       >
         <div className="p-2.5 flex flex-col items-center gap-1.5 h-full">
           {/* Avatar area */}
-          <div className="w-24 h-24 rounded-lg bg-neutral-100 overflow-hidden flex-shrink-0 border border-neutral-200">
+          <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-neutral-200">
             {person.avatar_url ? (
               <img
                 src={person.avatar_url}
@@ -87,11 +97,12 @@ function PersonCardBase({
                 draggable={false}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-neutral-400">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-              </div>
+              <img
+                src={getDefaultAvatar()}
+                alt={`${displayName} avatar`}
+                className="w-full h-full object-cover object-center"
+                draggable={false}
+              />
             )}
           </div>
           
