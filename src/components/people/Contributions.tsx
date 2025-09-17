@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MessageSquare, Heart, Send } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { MessageSquare, Heart, Send, User } from 'lucide-react'
 import { Person, UserRole, canAddContent, canModerate } from '@/utils/personUtils'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
@@ -21,11 +22,17 @@ interface GuestbookEntry {
   author_profile_id: string
   created_at: string
   is_hidden: boolean
+  is_anonymous: boolean
+  author_profile?: {
+    full_name: string
+    avatar_url?: string
+  } | null
 }
 
 export function Contributions({ person, userRole, pageType }: ContributionsProps) {
   const [entries, setEntries] = useState<GuestbookEntry[]>([])
   const [newEntry, setNewEntry] = useState('')
+  const [isAnonymous, setIsAnonymous] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -50,14 +57,33 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
           body,
           author_profile_id,
           created_at,
-          is_hidden
+          is_hidden,
+          is_anonymous
         `)
         .eq('person_id', person.id)
         .eq('is_hidden', false)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setEntries(data || [])
+      
+      // Fetch profile data for non-anonymous entries
+      const entriesWithProfiles = await Promise.all(
+        (data || []).map(async (entry) => {
+          if (entry.is_anonymous) {
+            return { ...entry, author_profile: null }
+          }
+          
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', entry.author_profile_id)
+            .single()
+            
+          return { ...entry, author_profile: profile }
+        })
+      )
+      
+      setEntries(entriesWithProfiles)
     } catch (error) {
       console.error('Error fetching guestbook entries:', error)
     } finally {
@@ -79,12 +105,14 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
           person_id: person.id,
           family_id: person.family_id,
           author_profile_id: user.id,
-          body: newEntry.trim()
+          body: newEntry.trim(),
+          is_anonymous: isAnonymous
         })
 
       if (error) throw error
 
       setNewEntry('')
+      setIsAnonymous(false)
       fetchEntries()
       toast({
         title: "Success",
@@ -145,9 +173,24 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
               maxLength={500}
             />
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {newEntry.length}/500 characters
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {newEntry.length}/500 characters
+                </span>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="anonymous" 
+                    checked={isAnonymous}
+                    onCheckedChange={(checked) => setIsAnonymous(checked === true)}
+                  />
+                  <label 
+                    htmlFor="anonymous" 
+                    className="text-xs text-muted-foreground cursor-pointer"
+                  >
+                    Post anonymously
+                  </label>
+                </div>
+              </div>
               <Button 
                 onClick={handleSubmit} 
                 disabled={!newEntry.trim() || isSubmitting}
@@ -179,41 +222,48 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
               </p>
             </div>
           ) : (
-            entries.map((entry) => (
-              <div key={entry.id} className="flex gap-3 p-3 rounded-lg bg-muted/50">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={undefined} />
-                  <AvatarFallback className="text-xs">
-                    AU
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">
-                      Anonymous User
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
-                      </span>
-                      {canUserModerate && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleHide(entry.id)}
-                          className="text-xs h-6"
-                        >
-                          Hide
-                        </Button>
-                      )}
+            entries.map((entry) => {
+              const isAnonymousEntry = entry.is_anonymous
+              const authorName = isAnonymousEntry ? 'Anonymous' : (entry.author_profile?.full_name || 'Unknown User')
+              const authorInitials = isAnonymousEntry ? 'AU' : getInitials(authorName)
+              
+              return (
+                <div key={entry.id} className="flex gap-3 p-3 rounded-lg bg-muted/50">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={isAnonymousEntry ? undefined : entry.author_profile?.avatar_url} />
+                    <AvatarFallback className="text-xs">
+                      {authorInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium flex items-center gap-1">
+                        {authorName}
+                        {isAnonymousEntry && <User className="h-3 w-3 opacity-50" />}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                        </span>
+                        {canUserModerate && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleHide(entry.id)}
+                            className="text-xs h-6"
+                          >
+                            Hide
+                          </Button>
+                        )}
+                      </div>
                     </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {entry.body}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {entry.body}
-                  </p>
                 </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </CardContent>

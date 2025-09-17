@@ -409,6 +409,7 @@ export type Database = {
           created_at: string | null
           family_id: string
           id: string
+          is_anonymous: boolean | null
           is_hidden: boolean | null
           person_id: string
           visibility: string | null
@@ -419,6 +420,7 @@ export type Database = {
           created_at?: string | null
           family_id: string
           id?: string
+          is_anonymous?: boolean | null
           is_hidden?: boolean | null
           person_id: string
           visibility?: string | null
@@ -429,6 +431,7 @@ export type Database = {
           created_at?: string | null
           family_id?: string
           id?: string
+          is_anonymous?: boolean | null
           is_hidden?: boolean | null
           person_id?: string
           visibility?: string | null
