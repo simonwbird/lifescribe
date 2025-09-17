@@ -130,22 +130,29 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
       async function resolve() {
         setHasError(false)
         const raw = person.avatar_url || null
-        if (!raw) {
-          setAvatarUrl(null)
-          return
+        if (!raw) { setAvatarUrl(null); return }
+        
+        // If it's a Supabase signed URL, prefer a fresh proxied URL immediately
+        if (raw.startsWith('http') && raw.includes('/storage/v1/object/sign/')) {
+          const filePath = AvatarService.extractFilePath(raw)
+          if (filePath) {
+            const proxied = await getSignedMediaUrl(filePath, familyId)
+            if (!cancelled && proxied) { setAvatarUrl(proxied); return }
+          }
+          if (!cancelled) { setAvatarUrl(raw); return }
         }
-        if (raw.startsWith('http')) {
-          setAvatarUrl(raw)
-          return
+        
+        // If it's a raw storage path, sign via media-proxy
+        if (!raw.startsWith('http')) {
+          const proxied = await getSignedMediaUrl(raw, familyId)
+          if (!cancelled) { setAvatarUrl(proxied || null); return }
         }
-        // Raw storage path -> get proxied signed URL
-        const proxied = await getSignedMediaUrl(raw, familyId)
-        if (!cancelled) setAvatarUrl(proxied || null)
+        
+        // Otherwise just use the raw http URL
+        if (!cancelled) setAvatarUrl(raw)
       }
       resolve()
-      return () => {
-        cancelled = true
-      }
+      return () => { cancelled = true }
     }, [person.avatar_url, familyId])
 
     const handleError = async () => {
