@@ -131,9 +131,13 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
         .from('media')
         .select(`
           id, file_name, mime_type, created_at, story_id, individual_story_id, file_path,
-          stories!story_id(id, title, content)
+          stories!story_id(
+            id, title, content,
+            person_story_links!inner(person_id)
+          )
         `)
         .eq('family_id', (person as any).family_id)
+        .eq('stories.person_story_links.person_id', (person as any).id)
         .order('created_at', { ascending: false })
 
       console.log('🎵 Raw media query result:', media)
