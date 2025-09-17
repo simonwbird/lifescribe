@@ -375,6 +375,8 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       const video = document.createElement('video')
       video.src = item.signed_url
       video.controls = true
+      video.muted = false // Enable audio
+      video.volume = 1.0 // Set full volume
       video.style.width = '100%'
       video.style.maxHeight = '300px'
       video.style.borderRadius = '8px'
