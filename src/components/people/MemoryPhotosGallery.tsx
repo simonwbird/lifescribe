@@ -44,10 +44,13 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const { toast } = useToast()
 
-  // Fetch photos on component mount
+  // Fetch photos when component mounts or person changes
   useEffect(() => {
+    // Clear existing photos to avoid showing stale data
+    setPhotos([])
+    setPhotoUrls({})
     fetchPhotos()
-  }, [])
+  }, [person.id])
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
