@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,10 @@ import {
   Pin,
   Heart,
   User,
-  X
+  X,
+  Play,
+  Pause,
+  Volume2
 } from 'lucide-react'
 import { Person, UserRole, canAddContent } from '@/utils/personUtils'
 import { format, parseISO } from 'date-fns'
@@ -53,6 +56,8 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
   const [displayCount, setDisplayCount] = useState(10) // Show 10 items initially
   const [hasMore, setHasMore] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState<TimelineItem | null>(null)
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const canUserAddContent = canAddContent(userRole)
 
   const filters: { key: TimelineFilter; label: string; icon: any }[] = [
@@ -138,7 +143,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
           const isAudio = mediaItem.mime_type?.startsWith('audio/')
           
           let signedUrl = undefined
-          if (isPhoto && mediaItem.file_path) {
+          if ((isPhoto || isAudio) && mediaItem.file_path) {
             try {
               signedUrl = await getSignedMediaUrl(mediaItem.file_path, (person as any).family_id)
             } catch (error) {
@@ -239,9 +244,55 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
     } else if (item.type === 'media' && item.media_type === 'photo') {
       // Open photo in lightbox
       setSelectedPhoto(item)
+    } else if (item.type === 'media' && item.media_type === 'voice') {
+      // Handle voice playback or navigation
+      if (activeFilter === 'voice') {
+        handleVoicePlay(item)
+      } else {
+        // Navigate to story if available
+        if (item.story_id) {
+          navigate(`/stories/${item.story_id}`)
+        }
+      }
     } else if (item.type === 'media' && item.media_id) {
       // For now, stay on the same page - could implement media lightbox later
       console.log('Media clicked:', item.media_id)
+    }
+  }
+
+  function handleVoicePlay(item: TimelineItem) {
+    if (!item.signed_url) return
+
+    if (playingAudio === item.id) {
+      // Stop current audio
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      setPlayingAudio(null)
+    } else {
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      
+      // Create and play new audio
+      const audio = new Audio(item.signed_url)
+      audioRef.current = audio
+      setPlayingAudio(item.id)
+      
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error)
+        setPlayingAudio(null)
+      })
+      
+      audio.onended = () => {
+        setPlayingAudio(null)
+      }
+
+      audio.onerror = () => {
+        console.error('Error loading audio:', item.id)
+        setPlayingAudio(null)
+      }
     }
   }
 
@@ -310,6 +361,54 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                               {item.title}
                             </p>
                           </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : activeFilter === 'voice' ? (
+                /* Voice Recording Wall */
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {displayedItems.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="bg-muted rounded-lg p-4 cursor-pointer hover:bg-muted/80 transition-all group border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleVoicePlay(item)
+                          }}
+                        >
+                          {playingAudio === item.id ? (
+                            <Pause className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Play className="h-5 w-5 text-primary ml-0.5" />
+                          )}
+                        </div>
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => {
+                            // Navigate to story if available
+                            if (item.story_id) {
+                              navigate(`/stories/${item.story_id}`)
+                            }
+                          }}
+                        >
+                          <h4 className="font-medium text-sm leading-tight truncate">{item.title}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Volume2 className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(item.date, item.date_precision)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {playingAudio === item.id && (
+                        <div className="mt-2 w-full h-1 bg-primary/20 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '100%' }} />
                         </div>
                       )}
                     </div>
