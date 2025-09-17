@@ -172,8 +172,8 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
               rows={3}
               maxLength={500}
             />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
                   {newEntry.length}/500 characters
                 </span>
@@ -191,14 +191,16 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
                   </label>
                 </div>
               </div>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={!newEntry.trim() || isSubmitting}
-                size="sm"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {pageType === 'tribute' ? 'Leave tribute' : 'Send message'}
-              </Button>
+              <div className="flex justify-end">
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={!newEntry.trim() || isSubmitting}
+                  size="sm"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {pageType === 'tribute' ? 'Leave tribute' : 'Send message'}
+                </Button>
+              </div>
             </div>
           </div>
         )}
