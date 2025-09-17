@@ -176,9 +176,9 @@ export function FamilyTreeCanvas({
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
     
-    // Calculate new position from pointer with better precision
-    const worldX = (lastPointer.x - rect.left - pan.x) / zoom
-    const worldY = (lastPointer.y - rect.top - pan.y) / zoom
+    // Correct coordinate transformation - canvas is already transformed
+    const worldX = (lastPointer.x - rect.left) / zoom - pan.x / zoom
+    const worldY = (lastPointer.y - rect.top) / zoom - pan.y / zoom
     
     const newX = snapToGridHelper(worldX - dragOffset.x)
     const newY = snapToGridHelper(worldY - dragOffset.y)
@@ -308,8 +308,9 @@ export function FamilyTreeCanvas({
           setStartPointer({ x: e.clientX, y: e.clientY })
           setLastPointer({ x: e.clientX, y: e.clientY })
           
-          const worldX = (e.clientX - rect.left - pan.x) / zoom
-          const worldY = (e.clientY - rect.top - pan.y) / zoom
+          // Correct coordinate transformation - canvas is already transformed
+          const worldX = (e.clientX - rect.left) / zoom - pan.x / zoom
+          const worldY = (e.clientY - rect.top) / zoom - pan.y / zoom
           setDragStartNodePos({ x: personPos.x, y: personPos.y })
           setDragOffset({ x: worldX - personPos.x, y: worldY - personPos.y })
           document.body.style.userSelect = 'none'
