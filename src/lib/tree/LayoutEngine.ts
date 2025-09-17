@@ -316,6 +316,9 @@ export class LayoutEngine {
         node.x += centerOffset
       })
     }
+
+    // IMPORTANT: Adjust child positions to center under parent hearts
+    this.centerChildrenUnderParents(nodes)
     
     // Calculate bounds
     const bounds = nodes.length > 0 ? {
@@ -381,6 +384,76 @@ export class LayoutEngine {
     })
     
     return groups
+  }
+
+  private centerChildrenUnderParents(nodes: LayoutNode[]): void {
+    console.log('🎯 Centering children under parent hearts...')
+    
+    // Group nodes by generation
+    const nodesByGeneration = new Map<number, LayoutNode[]>()
+    nodes.forEach(node => {
+      if (!nodesByGeneration.has(node.depth)) nodesByGeneration.set(node.depth, [])
+      nodesByGeneration.get(node.depth)!.push(node)
+    })
+
+    // Process each generation and adjust the next generation's children
+    Array.from(nodesByGeneration.keys()).sort((a, b) => a - b).forEach(generation => {
+      const currentGenNodes = nodesByGeneration.get(generation) || []
+      const nextGenNodes = nodesByGeneration.get(generation + 1) || []
+      
+      if (nextGenNodes.length === 0) return
+
+      console.log(`🎯 Processing generation ${generation} to adjust generation ${generation + 1}`)
+
+      // Find spouse pairs in current generation
+      currentGenNodes.forEach(parentNode => {
+        const parent = this.people.find(p => p.id === parentNode.personId)
+        if (!parent) return
+
+        const spouses = this.spouseMap.get(parent.id) || []
+        spouses.forEach(spouseId => {
+          const spouseNode = currentGenNodes.find(n => n.personId === spouseId)
+          if (!spouseNode) return
+
+          // Calculate heart position (center between spouses)
+          const heartX = (parentNode.x + spouseNode.x) / 2
+          
+          console.log(`🎯 Found couple: ${parent.full_name} & ${this.people.find(p => p.id === spouseId)?.full_name}`)
+          console.log(`🎯   Heart position: ${heartX}`)
+
+          // Find their children
+          const parent1Children = this.childrenMap.get(parent.id) || []
+          const parent2Children = this.childrenMap.get(spouseId) || []
+          const coupleChildren = Array.from(new Set<string>([...parent1Children, ...parent2Children]))
+
+          if (coupleChildren.length > 0) {
+            console.log(`🎯   Children: ${coupleChildren.length}`)
+            
+            // Find child nodes in next generation
+            const childNodes = coupleChildren
+              .map(childId => nextGenNodes.find(n => n.personId === childId))
+              .filter(Boolean) as LayoutNode[]
+
+            if (childNodes.length > 0) {
+              // Calculate total width needed for children
+              const spouseGap = 30 // Same gap used for spouses
+              const totalChildrenWidth = childNodes.length * this.options.cardWidth + (childNodes.length - 1) * spouseGap
+              
+              // Center children under the heart
+              const startX = heartX - totalChildrenWidth / 2
+              
+              console.log(`🎯   Repositioning ${childNodes.length} children under heart at ${heartX}`)
+              
+              childNodes.forEach((childNode, index) => {
+                const newX = startX + index * (this.options.cardWidth + spouseGap)
+                console.log(`🎯     ${this.people.find(p => p.id === childNode.personId)?.full_name}: ${childNode.x} → ${newX}`)
+                childNode.x = newX
+              })
+            }
+          }
+        })
+      })
+    })
   }
 
   private findSpousePairs(people: Person[]): Person[][] {
