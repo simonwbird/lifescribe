@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
 import type { Person } from '@/lib/familyTreeTypes'
 
 interface PersonFormProps {
@@ -80,6 +81,10 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
       ...prev,
       alt_names: prev.alt_names.filter(n => n !== name)
     }))
+  }
+
+  const handlePhotoUploaded = (newPhotoUrl: string) => {
+    setFormData(prev => ({ ...prev, avatar_url: newPhotoUrl }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -315,13 +320,16 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="avatar_url">Profile Photo URL</Label>
-            <Input
-              id="avatar_url"
-              value={formData.avatar_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, avatar_url: e.target.value }))}
-              placeholder="https://example.com/photo.jpg"
-            />
+            <Label>Profile Photo</Label>
+            <div className="mt-2">
+              <ProfilePhotoUploader
+                currentPhotoUrl={formData.avatar_url}
+                fallbackText={formData.full_name ? formData.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
+                onPhotoUploaded={handlePhotoUploaded}
+                personId={person?.id}
+                size="lg"
+              />
+            </div>
           </div>
 
           <div>
