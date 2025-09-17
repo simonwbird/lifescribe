@@ -150,9 +150,9 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
   }
 
   if (variant === 'simple') {
-    // Animated News Reel
+    // Vertical scrollable feed that fits the container height
     return (
-      <div className={cn('relative', className)}>
+      <div className={cn('relative h-full', className)}>
         {/* Header */}
         <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-2 rounded-t-lg">
           <div className="flex items-center gap-2">
@@ -162,112 +162,61 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
           </div>
         </div>
 
-        {/* Scrolling track container */}
-        <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative min-h-[320px]" >
-          <div className="relative overflow-hidden">
-            <div ref={tickerRef} className="flex whitespace-nowrap will-change-transform" style={{ transform: 'translateX(0px)' }}>
-              {/* Block A */}
-              <div className="ticker-block flex">
-                {activities.map((activity, index) => (
-                  <div
-                    key={`a-${activity.id}-${index}`}
-                    className="flex-shrink-0 flex items-center gap-3 px-6 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[350px]"
-                    onClick={() => handleActivityClick(activity)}
-                  >
-                    {/* Live */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-xs font-mono text-muted-foreground">LIVE</span>
-                    </div>
-
-                    <Avatar className="h-8 w-8 border-2 border-primary/20">
-                      <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                        {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
-                        </p>
-                        {activity.unread && (<Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>)}
-                      </div>
-                      <p className="text-xs text-muted-foreground font-mono">{activity.time} • Breaking</p>
-                      {activity.snippet && (<p className="text-xs text-foreground mt-1 truncate max-w-[200px]">{activity.snippet}</p>)}
-                    </div>
-
-                    <div className="flex items-center gap-1 opacity-60">
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'like') }}>
-                        <Heart className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'share') }}>
-                        <Share className="h-3 w-3" />
-                      </Button>
-                    </div>
+        {/* Scrollable content area */}
+        <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative flex-1 min-h-[320px]">
+          <div className="h-full overflow-y-auto scrollbar-thin">
+            <div className="space-y-1">
+              {activities.map((activity, index) => (
+                <div
+                  key={`${activity.id}-${index}`}
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors border-b border-muted/30 last:border-b-0"
+                  onClick={() => handleActivityClick(activity)}
+                >
+                  {/* Live indicator */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-mono text-muted-foreground">LIVE</span>
                   </div>
-                ))}
-              </div>
 
-              {/* Block B (duplicate for seamless loop) */}
-              <div className="ticker-block flex" aria-hidden="true">
-                {activities.map((activity, index) => (
-                  <div
-                    key={`b-${activity.id}-${index}`}
-                    className="flex-shrink-0 flex items-center gap-3 px-6 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[350px]"
-                    onClick={() => handleActivityClick(activity)}
-                  >
-                    {/* Live */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-xs font-mono text-muted-foreground">LIVE</span>
+                  <Avatar className="h-8 w-8 border-2 border-primary/20 flex-shrink-0">
+                    <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                      {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
+                      </p>
+                      {activity.unread && (<Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>)}
                     </div>
-
-                    <Avatar className="h-8 w-8 border-2 border-primary/20">
-                      <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                        {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
-                        </p>
-                        {activity.unread && (<Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>)}
-                      </div>
-                      <p className="text-xs text-muted-foreground font-mono">{activity.time} • Breaking</p>
-                      {activity.snippet && (<p className="text-xs text-foreground mt-1 truncate max-w-[200px]">{activity.snippet}</p>)}
-                    </div>
-
-                    <div className="flex items-center gap-1 opacity-60">
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'like') }}>
-                        <Heart className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'share') }}>
-                        <Share className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <p className="text-xs text-muted-foreground font-mono">{activity.time}</p>
+                    {activity.snippet && (<p className="text-xs text-foreground mt-1 truncate">{activity.snippet}</p>)}
                   </div>
-                ))}
-              </div>
+
+                  <div className="flex items-center gap-1 opacity-60 flex-shrink-0">
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'like') }}>
+                      <Heart className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'share') }}>
+                      <Share className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* Gradient fades */}
-            <div className="absolute top-0 left-0 w-8 h-full bg-gradient-to-r from-card to-transparent pointer-events-none" />
-            <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-card to-transparent pointer-events-none" />
           </div>
         </div>
 
-        {/* Breaking bar */}
+        {/* Status bar */}
         <div className="bg-red-600 text-white px-4 py-1 text-xs font-semibold animate-pulse rounded-b-lg">
           <div className="flex items-center justify-center gap-2">
             <span>🔴</span>
             <span>LIVE FAMILY UPDATES</span>
             <span>•</span>
-            <span>{activities.length} NEW STORIES</span>
+            <span>{activities.length} STORIES</span>
             <span>🔴</span>
           </div>
         </div>
