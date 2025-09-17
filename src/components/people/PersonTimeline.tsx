@@ -139,7 +139,8 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
         .order('created_at', { ascending: false })
 
       if (media) {
-        for (const mediaItem of media) {
+        // Process media items in parallel but don't let failures block the UI
+        const mediaPromises = media.map(async (mediaItem) => {
           const isPhoto = mediaItem.mime_type?.startsWith('image/')
           const isAudio = mediaItem.mime_type?.startsWith('audio/')
           
@@ -148,7 +149,8 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
             try {
               signedUrl = await getSignedMediaUrl(mediaItem.file_path, (person as any).family_id)
             } catch (error) {
-              console.error('Failed to get signed URL for media:', mediaItem.id, error)
+              console.warn('Failed to get signed URL for media:', mediaItem.id, 'Error:', error)
+              // Continue without signed URL - we'll show a placeholder
             }
           }
 
@@ -158,20 +160,30 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
           const storyContent = storyData?.content
           const excerpt = storyContent ? storyContent.substring(0, 100) + (storyContent.length > 100 ? '...' : '') : undefined
           
-          items.push({
+          return {
             id: mediaItem.id,
-            type: 'media',
+            type: 'media' as const,
             title: displayTitle,
             content: storyContent,
             excerpt: excerpt,
             date: mediaItem.created_at,
-            media_type: isPhoto ? 'photo' : isAudio ? 'voice' : 'other',
+            media_type: isPhoto ? 'photo' as const : isAudio ? 'voice' as const : 'other' as const,
             media_id: mediaItem.id,
             story_id: mediaItem.story_id,
             file_path: mediaItem.file_path,
             signed_url: signedUrl || undefined
-          })
-        }
+          }
+        })
+
+        // Wait for all media processing to complete, but don't fail if some items fail
+        const processedMedia = await Promise.allSettled(mediaPromises)
+        processedMedia.forEach(result => {
+          if (result.status === 'fulfilled') {
+            items.push(result.value)
+          } else {
+            console.warn('Failed to process media item:', result.reason)
+          }
+        })
       }
 
       // Sort all items by date (newest first)
@@ -180,6 +192,8 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       setTimelineItems(items)
     } catch (error) {
       console.error('Failed to fetch timeline data:', error)
+      // Still show whatever we managed to load
+      setTimelineItems([])
     } finally {
       setLoading(false)
     }
