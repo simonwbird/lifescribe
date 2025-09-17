@@ -40,13 +40,20 @@ interface MemoryPhoto {
   file_size: number
   created_at: string
   profile_id: string
-  story_id: string
+  story_id: string | null
+  individual_story_id?: string | null
   story?: {
     id: string
     title: string
     content: string
     occurred_on: string | null
-  }
+  } | null
+  individual_story?: {
+    id: string
+    title: string
+    content: string
+    occurred_on: string | null
+  } | null
   face_tags?: FaceTag[]
 }
 
@@ -457,10 +464,10 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
       if (storyError) throw storyError
 
-      // Link photo to story
+      // Link photo to individual story (not group story)
       const { error: updateError } = await supabase
         .from('media')
-        .update({ story_id: newStory.id })
+        .update({ individual_story_id: newStory.id })
         .eq('id', currentPhotoForStory.id)
 
       if (updateError) throw updateError
@@ -572,12 +579,10 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
   const fetchPhotos = async () => {
     try {
-      const { data, error } = await supabase
+      // First get the basic media records
+      const { data: mediaData, error: mediaError } = await supabase
         .from('media')
-        .select(`
-          *,
-          story:stories(id, title, content, occurred_on)
-        `)
+        .select('*')
         .eq('family_id', (person as any).family_id)
         .in('mime_type', [
           'image/jpeg',
@@ -586,24 +591,52 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
           'image/webp',
           'image/gif'
         ])
-        .not('story_id', 'is', null)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (mediaError) throw mediaError
       
-      // Filter to only show photos linked to this person
+      // Filter to only show photos linked to this person (either through group stories or individual stories)
       const { data: personStories } = await supabase
         .from('person_story_links')
         .select('story_id')
         .eq('person_id', person.id)
 
       const personStoryIds = personStories?.map(link => link.story_id) || []
-      const filteredPhotos = (data || []).filter(photo => 
-        photo.story_id && personStoryIds.includes(photo.story_id)
-      )
+      
+      const filteredPhotos = (mediaData || []).filter(photo => {
+        // Include if linked to person through group story
+        if (photo.story_id && personStoryIds.includes(photo.story_id)) {
+          return true
+        }
+        // Include if has individual story linked to person
+        if (photo.individual_story_id && personStoryIds.includes(photo.individual_story_id)) {
+          return true
+        }
+        return false
+      })
+
+      // Now fetch the stories separately
+      const storyIds = [...new Set([
+        ...filteredPhotos.filter(p => p.story_id).map(p => p.story_id),
+        ...filteredPhotos.filter(p => p.individual_story_id).map(p => p.individual_story_id)
+      ].filter(Boolean))]
+
+      const { data: storiesData } = storyIds.length > 0 ? await supabase
+        .from('stories')
+        .select('id, title, content, occurred_on')
+        .in('id', storyIds) : { data: [] }
+
+      const storiesMap = new Map(storiesData?.map(s => [s.id, s] as [string, any]) || [])
+
+      // Combine media with stories
+      const photosWithStories = filteredPhotos.map(photo => ({
+        ...photo,
+        story: photo.story_id ? storiesMap.get(photo.story_id) || null : null,
+        individual_story: photo.individual_story_id ? storiesMap.get(photo.individual_story_id) || null : null,
+      })) as MemoryPhoto[]
 
       // Fetch face tags for all photos
-      const photoIds = filteredPhotos.map(photo => photo.id)
+      const photoIds = photosWithStories.map(photo => photo.id)
       if (photoIds.length > 0) {
         const { data: faceTagsData } = await supabase
           .from('face_tags')
@@ -641,17 +674,17 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
           })
 
           // Add face tags to photos
-          const photosWithTags = filteredPhotos.map(photo => ({
+          const photosWithTags = photosWithStories.map(photo => ({
             ...photo,
             face_tags: faceTagsByMedia[photo.id] || []
           }))
 
           setPhotos(photosWithTags)
         } else {
-          setPhotos(filteredPhotos)
+          setPhotos(photosWithStories)
         }
       } else {
-        setPhotos(filteredPhotos)
+        setPhotos(photosWithStories)
       }
     } catch (error) {
       console.error('Failed to fetch photos:', error)
@@ -1453,42 +1486,77 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
               {/* Story Details */}
               <div className="p-6 bg-background flex-shrink-0">
-                <div className="space-y-3">
-                  {currentPhoto.story?.title && (
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">
-                        {currentPhoto.story.title}
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditStory(currentPhoto.story)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
+                <div className="space-y-4">
+                  {/* Group Story */}
+                  {currentPhoto.story && (
+                    <div className="border-b pb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold">
+                          {currentPhoto.story.title}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditStory(currentPhoto.story)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {currentPhoto.story.occurred_on && (
+                        <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                          <Calendar className="h-4 w-4" />
+                          <span className="text-sm">
+                            {format(new Date(currentPhoto.story.occurred_on), 'MMMM d, yyyy')}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {currentPhoto.story.content && (
+                        <p className="text-muted-foreground leading-relaxed">
+                          {currentPhoto.story.content}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  
-                  {currentPhoto.story?.occurred_on && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span className="text-sm">
-                        {format(new Date(currentPhoto.story.occurred_on), 'MMMM d, yyyy')}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {currentPhoto.story?.content && (
-                    <p className="text-muted-foreground leading-relaxed">
-                      {currentPhoto.story.content}
-                    </p>
                   )}
 
-                  {!currentPhoto.story?.title && !currentPhoto.story?.content && !currentPhoto.story?.occurred_on && (
+                  {/* Individual Photo Story */}
+                  {currentPhoto.individual_story ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-base font-medium text-primary">
+                          Individual Story: {currentPhoto.individual_story.title}
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditStory(currentPhoto.individual_story)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {currentPhoto.individual_story.occurred_on && (
+                        <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                          <Calendar className="h-4 w-4" />
+                          <span className="text-sm">
+                            {format(new Date(currentPhoto.individual_story.occurred_on), 'MMMM d, yyyy')}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {currentPhoto.individual_story.content && (
+                        <p className="text-muted-foreground leading-relaxed">
+                          {currentPhoto.individual_story.content}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-4">
                       <p className="text-muted-foreground mb-3">
-                        No story added yet for this photo
+                        {currentPhoto.story ? 'Add an individual story for this photo' : 'No story added yet for this photo'}
                       </p>
                       <Button 
                         onClick={() => handleAddStory(currentPhoto)}
@@ -1496,7 +1564,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                         className="bg-primary hover:bg-primary/90"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Quick Story
+                        {currentPhoto.story ? 'Add Individual Story' : 'Add Quick Story'}
                       </Button>
                     </div>
                   )}

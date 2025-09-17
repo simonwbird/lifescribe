@@ -631,6 +631,7 @@ export type Database = {
           file_path: string
           file_size: number
           id: string
+          individual_story_id: string | null
           mime_type: string
           profile_id: string
           property_id: string | null
@@ -650,6 +651,7 @@ export type Database = {
           file_path: string
           file_size: number
           id?: string
+          individual_story_id?: string | null
           mime_type: string
           profile_id: string
           property_id?: string | null
@@ -669,6 +671,7 @@ export type Database = {
           file_path?: string
           file_size?: number
           id?: string
+          individual_story_id?: string | null
           mime_type?: string
           profile_id?: string
           property_id?: string | null
@@ -693,6 +696,13 @@ export type Database = {
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_individual_story_id_fkey"
+            columns: ["individual_story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
             referencedColumns: ["id"]
           },
           {
