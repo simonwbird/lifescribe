@@ -196,6 +196,8 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
     return (
       <Avatar className="h-8 w-8">
         <AvatarImage 
+          key={avatarUrl || 'default'}
+          alt={`${person.full_name} avatar`}
           src={avatarUrl || getDefaultAvatar(person)}
           onError={handleError}
         />

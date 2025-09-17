@@ -149,11 +149,13 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
         <CardTitle className="flex items-center gap-3">
           <Avatar className="h-16 w-16">
             <AvatarImage 
+              key={avatarSrc || 'default'}
+              alt={`${person.full_name} profile photo`}
               src={avatarSrc || getDefaultAvatar()} 
               onError={async (e) => {
                 const target = e.currentTarget as HTMLImageElement
                 
-                // If we have a signed URL, try to refresh it
+                // If we have a signed or http URL, try to refresh/sign
                 if (avatarSrc && avatarSrc.startsWith('http')) {
                   const refreshedUrl = await AvatarService.refreshSignedUrl(avatarSrc)
                   if (refreshedUrl && refreshedUrl !== avatarSrc) {
@@ -162,7 +164,6 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
                     setAvatarSrc(refreshedUrl)
                     return
                   }
-                  // Try media-proxy using extracted path from signed URL
                   const filePath = AvatarService.extractFilePath(avatarSrc)
                   if (filePath) {
                     const proxied = await getSignedMediaUrl(filePath, (person as any).family_id)
