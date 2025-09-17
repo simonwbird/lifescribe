@@ -521,39 +521,49 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       if (photoIds.length > 0) {
         const { data: faceTagsData } = await supabase
           .from('face_tags')
-          .select(`
-            *,
-            people:person_id (full_name)
-          `)
+          .select('*')
           .in('media_id', photoIds)
           .eq('family_id', (person as any).family_id)
 
-        // Group face tags by media_id and add to photos
-        const faceTagsByMedia: Record<string, FaceTag[]> = {}
-        faceTagsData?.forEach(tag => {
-          const mediaId = tag.media_id
-          if (!faceTagsByMedia[mediaId]) {
-            faceTagsByMedia[mediaId] = []
-          }
-          faceTagsByMedia[mediaId].push({
-            id: tag.id,
-            media_id: tag.media_id,
-            person_id: tag.person_id,
-            person_name: (tag.people as any)?.full_name || 'Unknown',
-            x_percent: Number(tag.x_percent),
-            y_percent: Number(tag.y_percent),
-            width_percent: Number(tag.width_percent),
-            height_percent: Number(tag.height_percent)
+        if (faceTagsData && faceTagsData.length > 0) {
+          // Get person names separately
+          const personIds = [...new Set(faceTagsData.map(tag => tag.person_id))]
+          const { data: peopleData } = await supabase
+            .from('people')
+            .select('id, full_name')
+            .in('id', personIds)
+
+          const peopleMap = new Map(peopleData?.map(p => [p.id, p.full_name]) || [])
+
+          // Group face tags by media_id and add to photos
+          const faceTagsByMedia: Record<string, FaceTag[]> = {}
+          faceTagsData.forEach(tag => {
+            const mediaId = tag.media_id
+            if (!faceTagsByMedia[mediaId]) {
+              faceTagsByMedia[mediaId] = []
+            }
+            faceTagsByMedia[mediaId].push({
+              id: tag.id,
+              media_id: tag.media_id,
+              person_id: tag.person_id,
+              person_name: peopleMap.get(tag.person_id) || 'Unknown',
+              x_percent: Number(tag.x_percent),
+              y_percent: Number(tag.y_percent),
+              width_percent: Number(tag.width_percent),
+              height_percent: Number(tag.height_percent)
+            })
           })
-        })
 
-        // Add face tags to photos
-        const photosWithTags = filteredPhotos.map(photo => ({
-          ...photo,
-          face_tags: faceTagsByMedia[photo.id] || []
-        }))
+          // Add face tags to photos
+          const photosWithTags = filteredPhotos.map(photo => ({
+            ...photo,
+            face_tags: faceTagsByMedia[photo.id] || []
+          }))
 
-        setPhotos(photosWithTags)
+          setPhotos(photosWithTags)
+        } else {
+          setPhotos(filteredPhotos)
+        }
       } else {
         setPhotos(filteredPhotos)
       }
@@ -613,24 +623,34 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
           x_percent,
           y_percent,
           width_percent,
-          height_percent,
-          people:person_id (full_name)
+          height_percent
         `)
         .eq('media_id', mediaId)
         .eq('family_id', (person as any).family_id)
 
       if (error) throw error
 
-      return data?.map(tag => ({
+      if (!data || data.length === 0) return []
+
+      // Get person names separately
+      const personIds = data.map(tag => tag.person_id)
+      const { data: peopleData } = await supabase
+        .from('people')
+        .select('id, full_name')
+        .in('id', personIds)
+
+      const peopleMap = new Map(peopleData?.map(p => [p.id, p.full_name]) || [])
+
+      return data.map(tag => ({
         id: tag.id,
         media_id: tag.media_id,
         person_id: tag.person_id,
-        person_name: (tag.people as any)?.full_name || 'Unknown',
+        person_name: peopleMap.get(tag.person_id) || 'Unknown',
         x_percent: Number(tag.x_percent),
         y_percent: Number(tag.y_percent),
         width_percent: Number(tag.width_percent),
         height_percent: Number(tag.height_percent)
-      })) || []
+      }))
     } catch (error) {
       console.error('Failed to fetch face tags:', error)
       return []
