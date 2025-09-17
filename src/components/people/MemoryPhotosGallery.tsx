@@ -876,22 +876,21 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                             <div className="w-full h-full bg-muted animate-pulse" />
                           )}
                           
-                          {/* Face Tags on Hover */}
+                          {/* Face Tags on Hover - Subtle Names Only */}
                           {hoveredPhotoId === primaryPhoto.id && primaryPhoto.face_tags && primaryPhoto.face_tags.length > 0 && (
                             <div className="absolute inset-0 pointer-events-none">
                               {primaryPhoto.face_tags.map((tag) => (
                                 <div
                                   key={tag.id}
-                                  className="absolute border-2 border-blue-400 bg-blue-400/20"
+                                  className="absolute"
                                   style={{
-                                    left: `${tag.x_percent}%`,
+                                    left: `${tag.x_percent + tag.width_percent / 2}%`,
                                     top: `${tag.y_percent}%`,
-                                    width: `${tag.width_percent}%`,
-                                    height: `${tag.height_percent}%`,
+                                    transform: 'translateX(-50%)',
                                   }}
                                 >
-                                  {/* Name Label */}
-                                  <div className="absolute -top-6 left-0 bg-blue-500 text-white px-1 py-0.5 rounded text-xs whitespace-nowrap">
+                                  {/* Subtle Name Label */}
+                                  <div className="bg-black/75 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium shadow-lg animate-in fade-in-0 slide-in-from-top-1 duration-200">
                                     {tag.person_name}
                                   </div>
                                 </div>
@@ -1252,11 +1251,11 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                     />
                   )}
                   
-                  {/* Existing Face Tags */}
+                  {/* Existing Face Tags - Subtle Hover Areas */}
                   {faceTags.map((tag) => (
                     <div
                       key={tag.id}
-                      className="absolute border-2 border-blue-400 bg-blue-400/20 group"
+                      className="absolute group"
                       style={{
                         left: `${tag.x_percent}%`,
                         top: `${tag.y_percent}%`,
@@ -1264,15 +1263,20 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                         height: `${tag.height_percent}%`,
                       }}
                     >
-                      {/* Name Label */}
-                      <div className="absolute -top-8 left-0 bg-blue-500 text-white px-2 py-1 rounded text-sm opacity-90">
+                      {/* Invisible hover area */}
+                      <div className="absolute inset-0 cursor-pointer" />
+                      
+                      {/* Subtle Name Label - appears on hover */}
+                      <div 
+                        className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-full mb-1 bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded text-sm font-medium shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10"
+                      >
                         {tag.person_name}
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             deleteFaceTag(tag.id, currentPhoto.id)
                           }}
-                          className="ml-2 hover:text-red-300"
+                          className="ml-2 text-white/80 hover:text-white text-xs"
                         >
                           ×
                         </button>
