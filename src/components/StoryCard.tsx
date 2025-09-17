@@ -33,9 +33,20 @@ export default function StoryCard({ story }: StoryCardProps) {
   const [property, setProperty] = useState<any>(null)
   const [transcript, setTranscript] = useState<string | null>(null)
   const [transcriptFallback, setTranscriptFallback] = useState<boolean>(false)
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
     const loadStoryData = async () => {
+      // Load profile avatar if it exists in storage
+      if (story.profiles.avatar_url && story.profiles.avatar_url.startsWith('profiles/')) {
+        const { data: { signedUrl } } = await supabase.storage
+          .from('media')
+          .createSignedUrl(story.profiles.avatar_url, 3600)
+        setProfileAvatarUrl(signedUrl || story.profiles.avatar_url)
+      } else {
+        setProfileAvatarUrl(story.profiles.avatar_url)
+      }
+
       // Load media
       const { data: mediaData } = await supabase
         .from('media')
@@ -145,7 +156,7 @@ export default function StoryCard({ story }: StoryCardProps) {
       <CardHeader>
         <div className="flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src={story.profiles.avatar_url || ''} />
+            <AvatarImage src={profileAvatarUrl || ''} />
             <AvatarFallback>
               {story.profiles.full_name?.charAt(0) || 'U'}
             </AvatarFallback>
