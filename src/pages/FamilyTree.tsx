@@ -508,12 +508,16 @@ export default function FamilyTree() {
           ) : (
             <>
               {layoutMode === 'professional' || !labsEnabled ? (
-                <ProfessionalFamilyTree
+                <GenerationalFamilyTree
                   people={people}
                   relationships={relationships} 
                   onPersonClick={handleViewPerson}
                   onPersonEdit={(personId) => navigate(`/people/${personId}`)}
-                  onRecordMemoryAbout={handleRecordMemoryAbout}
+                  onAddPerson={(parentId, type) => {
+                    console.log('Add person:', parentId, type)
+                    setIsAddPersonOpen(true)
+                  }}
+                  onBiologicalParentsUpdate={loadFamilyData}
                 />
               ) : layoutMode === 'interactive' && labsEnabled ? (
                 <EnhancedFamilyTreeCanvas
