@@ -116,13 +116,39 @@ export class LayoutEngine {
   public generateLayout(rootPersonId?: string): TreeLayout {
     console.log('🌳 ═══ STARTING HIERARCHICAL LAYOUT GENERATION ═══')
     
-    // Find root people (those with no parents)
+    // Strategy 1: Find people with no parents (true roots)
     let rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
-    console.log('🌳 Found root people (no parents):', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
+    console.log('🌳 People with no parents:', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
     
-    // If no clear roots, find oldest by birth year as fallback
+    // Strategy 2: If we have too many "roots" or the years don't make sense, use birth year approach
+    if (rootPeople.length > 10 || this.shouldUseBirthYearApproach(rootPeople)) {
+      console.log('🌳 Using birth year approach to find true oldest generation...')
+      
+      // Find the oldest generation by birth year (people born in similar era)
+      const peopleWithYears = this.people.filter(p => p.birth_year && p.birth_year > 1800)
+      if (peopleWithYears.length > 0) {
+        // Sort by birth year and find the oldest cluster
+        peopleWithYears.sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))
+        
+        const oldestYear = peopleWithYears[0].birth_year!
+        const generationSpan = 30 // People born within 30 years are likely same generation
+        
+        rootPeople = peopleWithYears.filter(p => 
+          p.birth_year! <= oldestYear + generationSpan
+        )
+        
+        console.log('🌳 Oldest generation by birth year:', {
+          oldestYear,
+          generationSpan,
+          count: rootPeople.length,
+          people: rootPeople.map(p => `${p.full_name} (${p.birth_year})`)
+        })
+      }
+    }
+    
+    // Fallback: if still no good roots, use the very oldest people
     if (rootPeople.length === 0 && this.people.length > 0) {
-      console.log('🌳 No clear roots found, using fallback logic...')
+      console.log('🌳 Fallback: using oldest individual by birth year')
       const oldestByYear = this.people
         .filter(p => p.birth_year)
         .sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))[0]
@@ -130,6 +156,8 @@ export class LayoutEngine {
       rootPeople = oldestByYear ? [oldestByYear] : [this.people[0]]
       console.log('🌳 Fallback root selected:', rootPeople[0]?.full_name)
     }
+    
+    console.log('🌳 Final root generation:', rootPeople.map(p => `${p.full_name} (${p.birth_year})`))
     
     // Assign generations using ancestry-based BFS
     const generations = new Map<number, Person[]>()
@@ -404,6 +432,31 @@ export class LayoutEngine {
     })
     
     return pairs
+  }
+
+  private shouldUseBirthYearApproach(rootPeople: Person[]): boolean {
+    // Use birth year approach if:
+    // 1. We have many "roots" (suggests missing relationships)
+    // 2. The birth year spread in roots is too wide (suggests wrong grouping)
+    if (rootPeople.length === 0) return true
+    
+    const yearsWithData = rootPeople.filter(p => p.birth_year).map(p => p.birth_year!)
+    if (yearsWithData.length === 0) return true
+    
+    const minYear = Math.min(...yearsWithData)
+    const maxYear = Math.max(...yearsWithData)
+    const yearSpread = maxYear - minYear
+    
+    console.log('🌳 Root analysis:', {
+      rootCount: rootPeople.length,
+      yearSpread,
+      minYear,
+      maxYear,
+      shouldUseBirthYear: rootPeople.length > 8 || yearSpread > 50
+    })
+    
+    // If birth year spread is > 50 years in "roots", probably wrong
+    return rootPeople.length > 8 || yearSpread > 50
   }
   
   public updateLayout(nodes: LayoutNode[], personId: string, x: number, y: number): LayoutNode[] {
