@@ -253,11 +253,11 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
 
   const handleActivityClick = (activity: ActivityItem) => {
     if (activity.type === 'story' && activity.item_id) {
-      navigate(`/story/${activity.item_id}`)
+      navigate(`/stories/${activity.item_id}`)
     } else if (activity.type === 'recipe' && activity.item_id) {
       navigate(`/recipe/${activity.item_id}`)
     } else if (activity.type === 'person' && activity.item_id) {
-      navigate(`/person/${activity.item_id}`)
+      navigate(`/people/${activity.item_id}`)
     }
   }
 

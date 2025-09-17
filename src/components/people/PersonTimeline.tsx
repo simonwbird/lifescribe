@@ -215,7 +215,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
   function handleItemClick(item: TimelineItem) {
     // Navigate to the appropriate content based on item type
     if (item.type === 'story' && item.story_id) {
-      navigate(`/story/${item.story_id}`)
+      navigate(`/stories/${item.story_id}`)
     } else if (item.type === 'life_event' && item.event_id) {
       // For now, stay on the same page - could implement event modal later
       console.log('Life event clicked:', item.event_id)

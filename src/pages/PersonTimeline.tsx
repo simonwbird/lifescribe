@@ -102,14 +102,14 @@ export function PersonTimeline() {
     setShowComposer(true)
   }
 
-  const handleItemClick = (item: TimelineItem) => {
-    if (item.item_type === 'story') {
-      navigate(`/story/${item.item_id}`)
-    } else {
-      // Navigate to answer detail or show in modal
-      toast({ title: "Answer details coming soon!" })
+    const handleItemClick = (item: TimelineItem) => {
+      if (item.item_type === 'story') {
+        navigate(`/stories/${item.item_id}`)
+      } else {
+        // Navigate to answer detail or show in modal
+        toast({ title: "Answer details coming soon!" })
+      }
     }
-  }
 
   const handleSuccess = () => {
     loadPersonAndTimeline()
