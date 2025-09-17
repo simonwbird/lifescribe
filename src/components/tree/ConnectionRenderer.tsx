@@ -112,10 +112,10 @@ export function ConnectionRenderer({
           <path
             key={`spouse-${pathIndex++}`}
             d={spousePath}
-            stroke="#C9CCD6"
-            strokeWidth="2"
+            stroke="#FFFFFF"
+            strokeWidth="3"
             fill="none"
-            className="hover:stroke-[#9AA3B2] hover:stroke-[3px] transition-all"
+            className="hover:stroke-[#FFD700] hover:stroke-[4px] transition-all"
           />
         )
         
@@ -128,9 +128,10 @@ export function ConnectionRenderer({
             x={heartX}
             y={heartY + 4}
             textAnchor="middle"
-            fontSize="12"
-            fill="#F45B69"
-            className="pointer-events-none"
+            fontSize="16"
+            fill="#FF69B4"
+            className="pointer-events-none font-bold"
+            style={{ filter: 'drop-shadow(0 0 3px rgba(255,105,180,0.8))' }}
           >
             ❤
           </text>
@@ -169,10 +170,10 @@ export function ConnectionRenderer({
           <path
             key={`parent-child-${pathIndex++}`}
             d={pathData}
-            stroke="#C9CCD6"
-            strokeWidth="2"
+            stroke="#FFFFFF"
+            strokeWidth="3"
             fill="none"
-            className="hover:stroke-[#9AA3B2] hover:stroke-[3px] transition-all"
+            className="hover:stroke-[#FFD700] hover:stroke-[4px] transition-all"
           />
         )
       })
@@ -189,11 +190,6 @@ export function ConnectionRenderer({
 
   return (
     <>
-      {/* Test rectangle to confirm ConnectionRenderer is rendering */}
-      <rect x="100" y="100" width="200" height="50" fill="red" opacity="0.5" />
-      <text x="200" y="125" textAnchor="middle" fill="white" fontSize="12">
-        ConnectionRenderer Active ({people.length}p, {relationships.length}r)
-      </text>
       {renderConnections()}
     </>
   )
