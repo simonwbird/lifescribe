@@ -40,10 +40,11 @@ export function FamilyTreeCanvas({
   const [pendingDragId, setPendingDragId] = useState<string | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [layoutNodes, setLayoutNodes] = useState<LayoutNode[]>([])
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [versionsDialogOpen, setVersionsDialogOpen] = useState(false)
-  const [versionName, setVersionName] = useState('')
   const [versions, setVersions] = useState<TreeVersion[]>([])
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // Smooth dragging state
   const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 })
@@ -103,6 +104,45 @@ export function FamilyTreeCanvas({
     const versionsList = await versionService.list()
     setVersions(versionsList)
   }
+
+  // Autosave functionality
+  const performAutoSave = async () => {
+    if (layoutNodes.length === 0) return
+    
+    setIsAutoSaving(true)
+    try {
+      const autoSaveName = `Autosave - ${new Date().toLocaleString()}`
+      await versionService.save(autoSaveName, layoutNodes, {
+        hGap: 100,
+        vGap: 140,
+        zoom,
+        pan
+      })
+      setLastSaved(new Date())
+    } catch (error) {
+      console.error('Autosave failed:', error)
+    } finally {
+      setIsAutoSaving(false)
+    }
+  }
+
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      performAutoSave()
+    }, 2000) // Debounce for 2 seconds
+  }, [layoutNodes, zoom, pan])
+
+  // Cleanup autosave timeout
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Convert layout nodes to positions (apply transient drag overrides)
   const positions = useMemo(() => {
@@ -282,6 +322,7 @@ export function FamilyTreeCanvas({
           prev.map(n => (n.personId === draggingPersonId ? { ...n, x: override.x, y: override.y } : n))
         )
         delete dragOverridesRef.current[draggingPersonId]
+        triggerAutoSave() // Trigger autosave after layout change
       }
       setDraggingPersonId(null)
     }
@@ -434,6 +475,7 @@ export function FamilyTreeCanvas({
               : node
           )
         )
+        triggerAutoSave() // Trigger autosave after nudging
       }
     }
     
@@ -466,35 +508,6 @@ export function FamilyTreeCanvas({
       return () => canvas.removeEventListener('wheel', handleWheel)
     }
   }, [handleWheel])
-
-  // Save layout with default name
-  const handleSaveLayout = async () => {
-    const defaultName = versionName.trim() || "Classic Layout — elbows & hearts (v2)"
-    
-    try {
-      await versionService.save(defaultName, layoutNodes, {
-        hGap: 100,
-        vGap: 140,
-        zoom,
-        pan
-      })
-      
-      toast({
-        title: "Success",
-        description: `Tree version "${defaultName}" saved successfully.`
-      })
-      
-      setVersionName('')
-      setSaveDialogOpen(false)
-      loadVersions()
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save tree version.",
-        variant: "destructive"
-      })
-    }
-  }
 
   // Load layout
   const handleLoadVersion = async (version: TreeVersion) => {
@@ -706,34 +719,27 @@ export function FamilyTreeCanvas({
           </svg>
         </Button>
 
-        {/* Save Layout */}
-        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="bg-white/90 text-neutral-800">
-              <Save className="w-4 h-4 mr-1" />
-              Save Layout
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Save Tree Layout</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="version-name">Version Name</Label>
-                <Input
-                  id="version-name"
-                  value={versionName}
-                  onChange={(e) => setVersionName(e.target.value)}
-                  placeholder="Enter a name for this layout..."
-                />
-              </div>
-              <Button onClick={handleSaveLayout} className="w-full">
-                Save Layout
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Autosave Status */}
+        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 text-sm">
+          {isAutoSaving ? (
+            <>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              <span className="text-neutral-600">Saving...</span>
+            </>
+          ) : lastSaved ? (
+            <>
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <span className="text-neutral-600">
+                Saved {lastSaved.toLocaleTimeString()}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="w-2 h-2 bg-neutral-400 rounded-full" />
+              <span className="text-neutral-500">Ready to save</span>
+            </>
+          )}
+        </div>
 
         {/* Tree Versions */}
         <Dialog open={versionsDialogOpen} onOpenChange={setVersionsDialogOpen}>
