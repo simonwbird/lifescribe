@@ -145,7 +145,7 @@ export function FamilyTreeCanvas({
 
   // Auto-fit when layout nodes are first set or when canvas is ready
   useEffect(() => {
-    if (layoutNodes.length > 0 && canvasRef.current) {
+    if (layoutNodes.length > 0 && canvasRef.current && !draggingPersonId && !pendingDragId) {
       // Small delay to ensure DOM is ready, then auto-fit
       const timer = setTimeout(() => {
         console.log('🎯 Auto-fitting tree to screen on initial load')
@@ -153,7 +153,7 @@ export function FamilyTreeCanvas({
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [layoutNodes.length > 0 ? layoutNodes.length : 0, autoFit]) // Trigger on initial load and when autoFit changes
+  }, [layoutNodes.length > 0 ? layoutNodes.length : 0]) // Only trigger on initial load, removed autoFit dependency
 
   // Zoom handlers
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
