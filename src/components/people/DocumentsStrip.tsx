@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { FileText, Upload, Eye, Download, X } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
@@ -95,7 +95,31 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
 
       if (uploadError) throw new Error(uploadError)
 
-      // Save to media table with description
+      // Create a lightweight story to satisfy media parent constraint
+      const { data: story, error: storyError } = await supabase
+        .from('stories')
+        .insert({
+          title: selectedFile.name,
+          content: description.trim() || null,
+          family_id: (person as any).family_id,
+          profile_id: user.id
+        })
+        .select()
+        .single()
+
+      if (storyError || !story) throw storyError || new Error('Failed to create story container')
+
+      // Link story to this person
+      const { error: linkError } = await supabase
+        .from('person_story_links')
+        .insert({
+          person_id: person.id,
+          story_id: story.id,
+          family_id: (person as any).family_id
+        })
+      if (linkError) throw linkError
+
+      // Save to media table with description (attach to story)
       const { error: dbError } = await supabase
         .from('media')
         .insert({
@@ -105,7 +129,8 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
           file_size: selectedFile.size,
           family_id: (person as any).family_id,
           profile_id: user.id,
-          transcript_text: description.trim() || null // Store description in transcript_text field
+          story_id: story.id,
+          transcript_text: description.trim() || null
         })
 
       if (dbError) throw dbError
@@ -289,6 +314,9 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
+            <DialogDescription>
+              Add a brief description so family knows what this document is for.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
