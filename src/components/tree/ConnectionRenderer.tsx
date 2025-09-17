@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 
 interface ConnectionRendererProps {
@@ -10,6 +10,7 @@ interface ConnectionRendererProps {
 }
 
 type Point = { x: number; y: number }
+const DEBUG = false
 
 function elbowPath(from: Point, to: Point): string {
   const midY = (from.y + to.y) / 2
@@ -32,13 +33,15 @@ export function ConnectionRenderer({
   cardWidth = 150,
   cardHeight = 180
 }: ConnectionRendererProps) {
-  console.log('🔧 ConnectionRenderer Props:', { 
-    peopleCount: people.length, 
-    relationshipsCount: relationships.length,
-    positionsCount: Object.keys(positions).length,
-    sampleRelationship: relationships[0],
-    samplePosition: Object.entries(positions)[0]
-  })
+  if (DEBUG) {
+    console.log('🔧 ConnectionRenderer Props:', { 
+      peopleCount: people.length, 
+      relationshipsCount: relationships.length,
+      positionsCount: Object.keys(positions).length,
+      sampleRelationship: relationships[0],
+      samplePosition: Object.entries(positions)[0]
+    })
+  }
 
   // Create maps for quick lookups
   const spouseMap = new Map<string, string[]>()
@@ -56,12 +59,14 @@ export function ConnectionRenderer({
     }
   })
 
-  console.log('🔧 Relationship Maps:', { 
-    spouseMapSize: spouseMap.size, 
-    parentChildMapSize: parentChildMap.size,
-    spouseMapEntries: Array.from(spouseMap.entries()).slice(0, 3),
-    parentChildMapEntries: Array.from(parentChildMap.entries()).slice(0, 3)
-  })
+  if (DEBUG) {
+    console.log('🔧 Relationship Maps:', { 
+      spouseMapSize: spouseMap.size, 
+      parentChildMapSize: parentChildMap.size,
+      spouseMapEntries: Array.from(spouseMap.entries()).slice(0, 3),
+      parentChildMapEntries: Array.from(parentChildMap.entries()).slice(0, 3)
+    })
+  }
 
   const renderConnections = () => {
     const paths: JSX.Element[] = []
@@ -79,7 +84,7 @@ export function ConnectionRenderer({
     people.forEach(person => {
       const personPos = positions[person.id]
       if (!personPos) {
-        console.log('❌ No position for person:', person.full_name, person.id)
+        if (DEBUG) console.log('❌ No position for person:', person.full_name, person.id)
         return
       }
       
@@ -91,7 +96,7 @@ export function ConnectionRenderer({
         
         const spousePos = positions[spouseId]
         if (!spousePos) {
-          console.log('❌ No position for spouse:', spouseId)
+          if (DEBUG) console.log('❌ No position for spouse:', spouseId)
           return
         }
         
@@ -106,7 +111,7 @@ export function ConnectionRenderer({
         spouseCount++
         if (debugPaths.length < 3) debugPaths.push(`Spouse: ${spousePath}`)
         
-        console.log('✅ Creating spouse connection:', person.full_name, '↔', people.find(p => p.id === spouseId)?.full_name)
+        if (DEBUG) console.log('✅ Creating spouse connection:', person.full_name, '↔', people.find(p => p.id === spouseId)?.full_name)
         
         paths.push(
           <path
@@ -143,7 +148,7 @@ export function ConnectionRenderer({
     people.forEach(parent => {
       const parentPos = positions[parent.id]
       if (!parentPos) {
-        console.log('❌ No position for parent:', parent.full_name, parent.id)
+        if (DEBUG) console.log('❌ No position for parent:', parent.full_name, parent.id)
         return
       }
       
@@ -152,7 +157,7 @@ export function ConnectionRenderer({
         const child = people.find(p => p.id === childId)
         const childPos = positions[childId]
         if (!childPos || !child) {
-          console.log('❌ No position or person for child:', childId, child?.full_name)
+          if (DEBUG) console.log('❌ No position or person for child:', childId, child?.full_name)
           return
         }
         
@@ -164,7 +169,7 @@ export function ConnectionRenderer({
         parentChildCount++
         if (debugPaths.length < 3) debugPaths.push(`Parent-Child: ${pathData}`)
         
-        console.log('✅ Creating parent-child connection:', parent.full_name, '→', child.full_name)
+        if (DEBUG) console.log('✅ Creating parent-child connection:', parent.full_name, '→', child.full_name)
         
         paths.push(
           <path
@@ -180,10 +185,12 @@ export function ConnectionRenderer({
     })
 
     // Debug output
-    console.log(`🔧 ConnectionRenderer Debug:`)
-    console.log(`  - Parent→Child edges: ${parentChildCount}`)
-    console.log(`  - Spouse edges: ${spouseCount}`)
-    console.log(`  - First 3 paths:`, debugPaths)
+    if (DEBUG) {
+      console.log(`🔧 ConnectionRenderer Debug:`)
+      console.log(`  - Parent→Child edges: ${parentChildCount}`)
+      console.log(`  - Spouse edges: ${spouseCount}`)
+      console.log(`  - First 3 paths:`, debugPaths)
+    }
 
     return [...paths, ...hearts]
   }

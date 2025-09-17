@@ -217,6 +217,33 @@ export function FamilyTreeCanvas({
     }
   }
 
+  // Global pointer listeners during drag for smoothness
+  useEffect(() => {
+    if (!draggingPersonId) return
+
+    const onMove = (e: PointerEvent) => {
+      setLastPointer({ x: e.clientX, y: e.clientY })
+      if (!animationFrame.current) {
+        animationFrame.current = requestAnimationFrame(tick)
+      }
+    }
+
+    const onUp = () => {
+      handleCanvasPointerUp()
+      document.body.style.userSelect = ''
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+  }, [draggingPersonId, tick])
+
   // Person drag handlers
   const handlePersonDragStart = (e: React.PointerEvent, personId: string) => {
     e.stopPropagation()

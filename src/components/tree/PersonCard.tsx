@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { Person } from '@/lib/familyTreeTypes'
 
@@ -12,7 +12,7 @@ interface PersonCardProps {
   onClick?: (personId: string) => void
 }
 
-export function PersonCard({
+function PersonCardBase({
   person,
   x,
   y,
@@ -35,10 +35,12 @@ export function PersonCard({
     <div
       className="absolute cursor-pointer"
       style={{
-        left: x - 75, // Center the 150px card
-        top: y - 90,  // Center the 180px card
+        left: 0,
+        top: 0,
         width: '150px',
         height: '180px',
+        transform: `translate3d(${x - 75}px, ${y - 90}px, 0)`,
+        willChange: 'transform'
       }}
     >
       <article
@@ -91,3 +93,15 @@ export function PersonCard({
     </div>
   )
 }
+
+export const PersonCard = memo(PersonCardBase, (prev, next) => {
+  return (
+    prev.person.id === next.person.id &&
+    prev.x === next.x &&
+    prev.y === next.y &&
+    prev.selected === next.selected &&
+    prev.isDragging === next.isDragging
+  )
+})
+
+export type { PersonCardProps }
