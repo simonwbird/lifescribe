@@ -35,7 +35,7 @@ function PersonCardBase({
 
   return (
     <div
-      className="absolute cursor-pointer"
+      className="absolute"
       style={{
         left: 0,
         top: 0,

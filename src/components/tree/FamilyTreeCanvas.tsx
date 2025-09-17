@@ -576,7 +576,7 @@ export function FamilyTreeCanvas({
         </svg>
 
         {/* Person cards - above connections (z-index: 1) */}
-        <div className="absolute inset-0" style={{ zIndex: 1 }}>
+        <div className={`absolute inset-0 ${isDragging && !draggingPersonId ? 'pointer-events-none' : 'pointer-events-auto'}`} style={{ zIndex: 1 }}>
           {people.map((person) => {
             const position = positions[person.id]
             if (!position) return null
