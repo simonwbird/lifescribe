@@ -8,6 +8,7 @@ import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas'
 import GenerationalFamilyTree from '@/components/family-tree/GenerationalFamilyTree'
 import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
 import { FamilyDataEditor } from '@/components/family-tree/FamilyDataEditor'
+import { DuplicateDetector } from '@/components/family-tree/DuplicateDetector'
 import { useLabs } from '@/hooks/useLabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -413,14 +414,21 @@ export default function FamilyTree() {
         {/* Controls */}
         <div className="container mx-auto px-4 py-2">
           <div className="flex justify-between items-center">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDataEditor(true)}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Edit Relationships
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDataEditor(true)}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Edit Relationships
+              </Button>
+              
+              <DuplicateDetector 
+                people={people} 
+                onPersonsUpdated={loadFamilyData}
+              />
+            </div>
           </div>
         </div>
 
