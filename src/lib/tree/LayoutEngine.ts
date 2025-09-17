@@ -48,32 +48,56 @@ export class LayoutEngine {
   }
   
   private buildRelationshipMaps() {
+    console.log('🌳 Building relationship maps from relationships:', this.relationships.length)
+    
     this.relationships.forEach(rel => {
+      const fromPerson = this.people.find(p => p.id === rel.from_person_id)
+      const toPerson = this.people.find(p => p.id === rel.to_person_id)
+      
+      console.log(`🌳 Processing: ${fromPerson?.full_name} --${rel.relationship_type}--> ${toPerson?.full_name}`)
+      
       if (rel.relationship_type === 'spouse') {
         if (!this.spouseMap.has(rel.from_person_id)) this.spouseMap.set(rel.from_person_id, [])
         if (!this.spouseMap.has(rel.to_person_id)) this.spouseMap.set(rel.to_person_id, [])
         this.spouseMap.get(rel.from_person_id)!.push(rel.to_person_id)
         this.spouseMap.get(rel.to_person_id)!.push(rel.from_person_id)
+        console.log(`🌳   Added spouse relationship: ${fromPerson?.full_name} ↔ ${toPerson?.full_name}`)
       } else if (rel.relationship_type === 'parent') {
         if (!this.childrenMap.has(rel.from_person_id)) this.childrenMap.set(rel.from_person_id, [])
         if (!this.parentsMap.has(rel.to_person_id)) this.parentsMap.set(rel.to_person_id, [])
         this.childrenMap.get(rel.from_person_id)!.push(rel.to_person_id)
         this.parentsMap.get(rel.to_person_id)!.push(rel.from_person_id)
+        console.log(`🌳   Added parent-child: ${fromPerson?.full_name} (parent) → ${toPerson?.full_name} (child)`)
       }
     })
+    
+    console.log('🌳 Final relationship maps:')
+    console.log('🌳   Parents Map:', Array.from(this.parentsMap.entries()).map(([childId, parentIds]) => ({
+      child: this.people.find(p => p.id === childId)?.full_name,
+      parents: parentIds.map(id => this.people.find(p => p.id === id)?.full_name)
+    })))
+    console.log('🌳   Children Map:', Array.from(this.childrenMap.entries()).map(([parentId, childIds]) => ({
+      parent: this.people.find(p => p.id === parentId)?.full_name,
+      children: childIds.map(id => this.people.find(p => p.id === id)?.full_name)
+    })))
   }
   
   public generateLayout(rootPersonId?: string): TreeLayout {
+    console.log('🌳 ═══ STARTING HIERARCHICAL LAYOUT GENERATION ═══')
+    
     // Find root people (those with no parents)
     let rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
+    console.log('🌳 Found root people (no parents):', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
     
     // If no clear roots, find oldest by birth year as fallback
     if (rootPeople.length === 0 && this.people.length > 0) {
+      console.log('🌳 No clear roots found, using fallback logic...')
       const oldestByYear = this.people
         .filter(p => p.birth_year)
         .sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))[0]
       
       rootPeople = oldestByYear ? [oldestByYear] : [this.people[0]]
+      console.log('🌳 Fallback root selected:', rootPeople[0]?.full_name)
     }
     
     // Assign generations using ancestry-based BFS
@@ -85,24 +109,34 @@ export class LayoutEngine {
       if (visited.has(person.id)) return
       visited.add(person.id)
       
+      console.log(`🌳 Assigning ${person.full_name} to generation ${depth}`)
+      
       personDepth.set(person.id, depth)
       if (!generations.has(depth)) generations.set(depth, [])
       generations.get(depth)!.push(person)
       
       // Add spouses to same generation
       const spouses = this.spouseMap.get(person.id) || []
+      if (spouses.length > 0) {
+        console.log(`🌳   ${person.full_name} has spouses:`, spouses.map(id => this.people.find(p => p.id === id)?.full_name))
+      }
       spouses.forEach(spouseId => {
         const spouse = this.people.find(p => p.id === spouseId)
         if (spouse && !visited.has(spouse.id)) {
+          console.log(`🌳   Adding spouse ${spouse.full_name} to same generation ${depth}`)
           assignGeneration(spouse, depth)
         }
       })
       
       // Add children to next generation
       const children = this.childrenMap.get(person.id) || []
+      if (children.length > 0) {
+        console.log(`🌳   ${person.full_name} has children:`, children.map(id => this.people.find(p => p.id === id)?.full_name))
+      }
       children.forEach(childId => {
         const child = this.people.find(p => p.id === childId)
         if (child && !visited.has(child.id)) {
+          console.log(`🌳   Adding child ${child.full_name} to generation ${depth + 1}`)
           assignGeneration(child, depth + 1)
         }
       })
