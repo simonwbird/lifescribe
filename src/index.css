@@ -558,6 +558,8 @@ body[data-typography="xl"] h3 {
   font-size: calc(1.5rem * var(--heading-scale));
 }
 
+}
+
 /* Simple mode specific adjustments */
 body[data-mode="simple"] {
   --container-max-width: min(100%, 60rem);
@@ -579,4 +581,13 @@ body[data-mode="studio"] .simple-only {
 body[data-mode="studio"] .studio-only {
   display: block;
 }
+
+/* News Reel Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }

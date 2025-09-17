@@ -172,8 +172,8 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
         {/* Scrolling News Container */}
         <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative">
           {/* Moving news ticker */}
-          <div className="flex animate-[slide-in-right_60s_linear_infinite] hover:pause">
-            {[...activities, ...activities].slice(0, 10).map((activity, index) => (
+          <div className="animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused] flex">
+            {[...activities, ...activities, ...activities].slice(0, 15).map((activity, index) => (
               <div 
                 key={`${activity.id}-${index}`}
                 className="flex-shrink-0 flex items-center gap-4 px-8 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[400px]"
