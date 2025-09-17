@@ -43,6 +43,8 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
   const [activeFilter, setActiveFilter] = useState<TimelineFilter>('all')
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [displayCount, setDisplayCount] = useState(10) // Show 10 items initially
+  const [hasMore, setHasMore] = useState(false)
   const canUserAddContent = canAddContent(userRole)
 
   const filters: { key: TimelineFilter; label: string; icon: any }[] = [
@@ -159,6 +161,29 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
     return false
   })
 
+  // Display limited items with pagination
+  const displayedItems = filteredItems.slice(0, displayCount)
+  const remainingItems = filteredItems.length - displayCount
+
+  // Reset display count when filter changes
+  useEffect(() => {
+    setDisplayCount(10)
+  }, [activeFilter])
+
+  // Update hasMore when items change
+  useEffect(() => {
+    setHasMore(filteredItems.length > displayCount)
+  }, [filteredItems.length, displayCount])
+
+  function loadMore() {
+    setDisplayCount(prev => prev + 10)
+  }
+
+  function handleFilterChange(filter: TimelineFilter) {
+    setActiveFilter(filter)
+    setDisplayCount(10) // Reset to show first 10 items when filter changes
+  }
+
   function getItemIcon(item: TimelineItem) {
     switch (item.type) {
       case 'story':
@@ -209,11 +234,22 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
               key={key}
               variant={activeFilter === key ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setActiveFilter(key)}
+              onClick={() => handleFilterChange(key)}
               className="gap-2"
             >
               <Icon className="h-4 w-4" />
               {label}
+              {key !== 'all' && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {timelineItems.filter(item => {
+                    if (key === 'stories' && item.type === 'story') return true
+                    if (key === 'events' && item.type === 'life_event') return true
+                    if (key === 'photos' && item.type === 'media' && item.media_type === 'photo') return true
+                    if (key === 'voice' && item.type === 'media' && item.media_type === 'voice') return true
+                    return false
+                  }).length}
+                </Badge>
+              )}
             </Button>
           ))}
         </div>
@@ -228,7 +264,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
             </div>
           ) : filteredItems.length > 0 ? (
             <div className="space-y-4">
-              {filteredItems.map((item) => {
+              {displayedItems.map((item) => {
                 const Icon = getItemIcon(item)
                 return (
                   <div 
@@ -267,6 +303,29 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                   </div>
                 )
               })}
+              
+              {/* Show more button */}
+              {hasMore && (
+                <div className="text-center pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={loadMore}
+                    className="gap-2"
+                  >
+                    Show {Math.min(remainingItems, 10)} more
+                    {remainingItems > 10 && ` (${remainingItems} remaining)`}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Items counter */}
+              {filteredItems.length > 10 && (
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">
+                    Showing {displayedItems.length} of {filteredItems.length} items
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
