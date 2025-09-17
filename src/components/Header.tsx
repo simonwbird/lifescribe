@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Search, BookHeart, Home, Users, GitBranch, Plus } from 'lucide-react'
+import { Search, BookHeart, Home, Users, GitBranch, Plus, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import { supabase } from '@/lib/supabase'
 
 import { useLabs } from '@/hooks/useLabs'
 import { useMode } from '@/contexts/ModeContext'
@@ -24,11 +25,31 @@ export default function Header() {
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
   const { flags: modeFlags, mode } = useMode()
+  const [currentUserPersonId, setCurrentUserPersonId] = useState<string | null>(null)
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
     return null
   }
+
+  // Get current user's person ID
+  useEffect(() => {
+    const getCurrentUserPerson = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: personLink } = await supabase
+          .from('person_user_links')
+          .select('person_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        if (personLink) {
+          setCurrentUserPersonId(personLink.person_id)
+        }
+      }
+    }
+    getCurrentUserPerson()
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -175,18 +196,32 @@ export default function Header() {
                 </Link>
               </Button>
 
+              {/* MyLifePage - only show if user has a linked person */}
+              {currentUserPersonId && (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className={location.pathname === `/people/${currentUserPersonId}` ? 'bg-accent text-accent-foreground' : ''}
+                >
+                  <Link to={`/people/${currentUserPersonId}`} className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    MyLifePage
+                  </Link>
+                </Button>
+              )}
+
               {/* Labs More Menu */}
               <MoreMenu />
             </nav>
           </div>
 
-          {/* Center: Search */}
-          <div className="flex-1 max-w-md mx-8 hidden md:block">
-            <GlobalSearch />
-          </div>
-
-          {/* Right: Mic · Create(+) (Studio only) · Notifications (Labs only) · Streak (Studio only) · Avatar */}
+          {/* Right: Search · Mic · Create(+) (Studio only) · Notifications (Labs only) · Streak (Studio only) · Avatar */}
           <div className="flex items-center gap-2 ml-auto">
+            {/* Search - moved to right */}
+            <div className="hidden md:block">
+              <GlobalSearch />
+            </div>
             {/* Mic Button */}
             <div data-mic-button>
             <MicButton onStoryCreated={(storyId) => {
