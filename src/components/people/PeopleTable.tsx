@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -118,6 +118,46 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
       : maleDefaultAvatar
   }
 
+  // Avatar component with proper state management
+  const PersonAvatar = ({ person }: { person: Person }) => {
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(person.avatar_url)
+    const [hasError, setHasError] = useState(false)
+
+    useEffect(() => {
+      setAvatarUrl(person.avatar_url)
+      setHasError(false)
+    }, [person.avatar_url])
+
+    const handleError = async () => {
+      if (hasError) return // Prevent infinite loops
+      
+      if (avatarUrl && avatarUrl.includes('supabase.co/storage/v1/object/sign')) {
+        // Try to refresh the signed URL
+        const refreshedUrl = await AvatarService.refreshSignedUrl(avatarUrl)
+        if (refreshedUrl && refreshedUrl !== avatarUrl) {
+          setAvatarUrl(refreshedUrl)
+          return
+        }
+      }
+      
+      // Use gender default
+      setHasError(true)
+      setAvatarUrl(getDefaultAvatar(person))
+    }
+
+    return (
+      <Avatar className="h-8 w-8">
+        <AvatarImage 
+          src={avatarUrl || getDefaultAvatar(person)}
+          onError={handleError}
+        />
+        <AvatarFallback className="text-xs">
+          {getInitials(person.full_name || 'Unknown')}
+        </AvatarFallback>
+      </Avatar>
+    )
+  }
+
   const handleInlineEdit = (person: Person, field: string) => {
     setInlineEditing({ personId: person.id, field })
     const currentValue = field === 'birth_date' ? person.birth_date : 
@@ -198,40 +238,7 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
               return (
                 <TableRow key={person.id}>
                   <TableCell>
-                    <Avatar className="h-8 w-8">
-                      {person.avatar_url ? (
-                        <AvatarImage 
-                          src={person.avatar_url}
-                          onError={async (e) => {
-                            const target = e.currentTarget as HTMLImageElement
-                            
-                            // Try to refresh the signed URL
-                            const refreshedUrl = await AvatarService.refreshSignedUrl(person.avatar_url!)
-                            if (refreshedUrl && refreshedUrl !== person.avatar_url) {
-                              target.onerror = null
-                              target.src = refreshedUrl
-                              return
-                            }
-                            
-                            // If refresh failed, use gender default
-                            target.onerror = null
-                            target.src = getDefaultAvatar(person)
-                          }}
-                        />
-                      ) : (
-                        <AvatarImage 
-                          src={getDefaultAvatar(person)}
-                          onError={(e) => {
-                            // Fallback to initials if default avatar fails
-                            const target = e.currentTarget as HTMLImageElement
-                            target.style.display = 'none'
-                          }}
-                        />
-                      )}
-                      <AvatarFallback className="text-xs">
-                        {getInitials(person.full_name || 'Unknown')}
-                      </AvatarFallback>
-                    </Avatar>
+                    <PersonAvatar person={person} />
                   </TableCell>
                   
                   <TableCell>
