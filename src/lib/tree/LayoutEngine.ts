@@ -306,11 +306,14 @@ export class LayoutEngine {
     const nodes: LayoutNode[] = []
     const generationEntries = Array.from(generations.entries()).sort(([a], [b]) => a - b)
     
-    console.log('🌳 Hierarchical Layout - Generations:', generationEntries.map(([depth, people]) => ({
-      generation: depth,
-      count: people.length,
-      names: people.map(p => p.full_name)
-    })))
+    console.log('🌳 ═══ HIERARCHICAL LAYOUT - ALL GENERATIONS ═══')
+    generationEntries.forEach(([depth, people]) => {
+      console.log(`🌳 GENERATION ${depth}: ${people.length} people`)
+      people.forEach(person => {
+        console.log(`🌳   • ${person.full_name} (${person.birth_year || 'no year'})`)
+      })
+      console.log('') // Empty line for readability
+    })
     
     generationEntries.forEach(([depth, genPeople]) => {
       // Group families: siblings together, spouses side-by-side
@@ -393,6 +396,21 @@ export class LayoutEngine {
         currentX += this.options.hGap
       })
     })
+    
+    console.log('🌳 ═══ FINAL SUMMARY: ALL GENERATIONS 0-4 ═══')
+    for (let gen = 0; gen <= 4; gen++) {
+      const genPeople = generations.get(gen) || []
+      console.log(`🌳 GENERATION ${gen}: ${genPeople.length} people`)
+      if (genPeople.length > 0) {
+        genPeople.forEach(person => {
+          console.log(`🌳   • ${person.full_name} (${person.birth_year || 'no year'})`)
+        })
+      } else {
+        console.log(`🌳   (no people in this generation)`)
+      }
+      console.log('') // Empty line for readability
+    }
+    console.log('🌳 ═══ END GENERATION SUMMARY ═══')
     
     // Center the entire layout horizontally
     if (nodes.length > 0) {
