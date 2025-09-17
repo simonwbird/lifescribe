@@ -34,60 +34,71 @@ export default function HierarchicalPersonCard({
   const deathYear = person.death_year || (person.death_date ? new Date(person.death_date).getFullYear() : null)
   const years = deathYear ? `${birthYear || '?'} - ${deathYear}` : (birthYear ? `${birthYear} - Living` : 'Living')
 
-  // Determine card background color based on gender
-  const getCardColor = () => {
-    if (person.gender === 'male') return '#93C5FD' // Light blue
-    if (person.gender === 'female') return '#FCA5A5' // Light pink/salmon
-    return '#D1D5DB' // Light gray for unknown
-  }
-
-  const cardColor = getCardColor()
+  const photoWidth = width - 16
+  const photoHeight = 50
 
   return (
     <g
       transform={`translate(${x - width/2}, ${y})`}
       className={`cursor-pointer transition-all duration-200 ${isDragging ? 'opacity-75' : ''}`}
     >
-      {/* Card background with rounded corners */}
+      {/* Card background - clean white */}
       <rect
         width={width}
         height={height}
-        rx="8"
-        ry="8"
-        fill={cardColor}
-        stroke={isHovered ? '#374151' : '#9CA3AF'}
+        rx="12"
+        ry="12"
+        fill="white"
+        stroke={isHovered ? '#6B7280' : '#E5E7EB'}
         strokeWidth={isHovered ? 2 : 1}
         className="drop-shadow-lg"
       />
       
-      {/* Profile photo circle */}
-      <circle
-        cx={width / 2}
-        cy={35}
-        r="25"
-        fill="white"
-        stroke="#6B7280"
-        strokeWidth="2"
+      {/* Photo background area */}
+      <rect
+        x={8}
+        y={8}
+        width={photoWidth}
+        height={photoHeight}
+        rx="8"
+        ry="8"
+        fill="#F3F4F6"
+        stroke="#E5E7EB"
+        strokeWidth="1"
       />
       
-      {/* Profile image or initials */}
+      {/* Profile image or initials background */}
       {person.avatar_url ? (
-        <image
-          href={person.avatar_url}
-          x={width / 2 - 25}
-          y={10}
-          width="50"
-          height="50"
-          clipPath={`circle(25px at ${width / 2}px 35px)`}
-          preserveAspectRatio="xMidYMid slice"
-        />
+        <g>
+          <defs>
+            <clipPath id={`photo-clip-${person.id}`}>
+              <rect
+                x={8}
+                y={8}
+                width={photoWidth}
+                height={photoHeight}
+                rx="8"
+                ry="8"
+              />
+            </clipPath>
+          </defs>
+          <image
+            href={person.avatar_url}
+            x={8}
+            y={8}
+            width={photoWidth}
+            height={photoHeight}
+            preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#photo-clip-${person.id})`}
+          />
+        </g>
       ) : (
         <text
           x={width / 2}
-          y={40}
+          y={35}
           textAnchor="middle"
-          className="fill-gray-600 text-sm font-bold"
-          fontSize="14"
+          className="fill-gray-500 font-bold"
+          fontSize="16"
         >
           {displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
         </text>
@@ -96,24 +107,109 @@ export default function HierarchicalPersonCard({
       {/* Name */}
       <text
         x={width / 2}
-        y={75}
+        y={78}
         textAnchor="middle"
         className="fill-gray-900 font-semibold"
-        fontSize="12"
+        fontSize="13"
       >
-        {displayName.length > 14 ? displayName.substring(0, 14) + '...' : displayName}
+        {displayName.length > 16 ? displayName.substring(0, 16) + '...' : displayName}
       </text>
       
-      {/* Years */}
+      {/* Years in lighter color */}
       <text
         x={width / 2}
-        y={90}
+        y={94}
         textAnchor="middle"
-        className="fill-gray-700 text-xs"
-        fontSize="10"
+        className="fill-gray-500"
+        fontSize="11"
       >
         {years}
       </text>
+
+      {/* Connection buttons around the card */}
+      {isHovered && (
+        <>
+          {/* Top connection button */}
+          <circle
+            cx={width / 2}
+            cy={-8}
+            r="8"
+            fill="white"
+            stroke="#9CA3AF"
+            strokeWidth="2"
+            className="cursor-pointer hover:fill-gray-100"
+          />
+          <text
+            x={width / 2}
+            y={-4}
+            textAnchor="middle"
+            className="fill-gray-600 text-xs font-bold pointer-events-none"
+            fontSize="12"
+          >
+            +
+          </text>
+          
+          {/* Right connection button */}
+          <circle
+            cx={width + 8}
+            cy={height / 2}
+            r="8"
+            fill="white"
+            stroke="#9CA3AF"
+            strokeWidth="2"
+            className="cursor-pointer hover:fill-gray-100"
+          />
+          <text
+            x={width + 8}
+            y={height / 2 + 4}
+            textAnchor="middle"
+            className="fill-gray-600 text-xs font-bold pointer-events-none"
+            fontSize="12"
+          >
+            +
+          </text>
+          
+          {/* Bottom connection button */}
+          <circle
+            cx={width / 2}
+            cy={height + 8}
+            r="8"
+            fill="white"
+            stroke="#9CA3AF"
+            strokeWidth="2"
+            className="cursor-pointer hover:fill-gray-100"
+          />
+          <text
+            x={width / 2}
+            y={height + 12}
+            textAnchor="middle"
+            className="fill-gray-600 text-xs font-bold pointer-events-none"
+            fontSize="12"
+          >
+            +
+          </text>
+          
+          {/* Left connection button */}
+          <circle
+            cx={-8}
+            cy={height / 2}
+            r="8"
+            fill="white"
+            stroke="#9CA3AF"
+            strokeWidth="2"
+            className="cursor-pointer hover:fill-gray-100"
+          />
+          <text
+            x={-8}
+            y={height / 2 + 4}
+            textAnchor="middle"
+            className="fill-gray-600 text-xs font-bold pointer-events-none"
+            fontSize="12"
+          >
+            +
+          </text>
+        </>
+      )}
 
       {/* Action dropdown - only visible on hover */}
       {isHovered && (
@@ -165,8 +261,8 @@ export default function HierarchicalPersonCard({
       <rect
         width={width}
         height={height}
-        rx="8"
-        ry="8"
+        rx="12"
+        ry="12"
         fill="transparent"
         className="cursor-pointer"
         onClick={(e) => {

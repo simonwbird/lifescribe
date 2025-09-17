@@ -235,19 +235,24 @@ export default function EnhancedFamilyTreeCanvas({
             if (!position) return null
             
             return (
-              <HierarchicalPersonCard
+              <g
                 key={person.id}
-                person={person}
-                x={position.x}
-                y={position.y}
-                width={CARD_WIDTH}
-                height={CARD_HEIGHT}
-                onPersonClick={onViewProfile}
-                onPersonEdit={onEditPerson}
-                onRecordMemoryAbout={onRecordMemoryAbout}
-                isDragging={draggingPerson === person.id}
-                isHovered={hoveredPerson === person.id}
-              />
+                onMouseEnter={() => setHoveredPerson(person.id)}
+                onMouseLeave={() => setHoveredPerson(null)}
+              >
+                <HierarchicalPersonCard
+                  person={person}
+                  x={position.x}
+                  y={position.y}
+                  width={CARD_WIDTH}
+                  height={CARD_HEIGHT}
+                  onPersonClick={onViewProfile}
+                  onPersonEdit={onEditPerson}
+                  onRecordMemoryAbout={onRecordMemoryAbout}
+                  isDragging={draggingPerson === person.id}
+                  isHovered={hoveredPerson === person.id}
+                />
+              </g>
             )
           })}
         </svg>
