@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +41,7 @@ interface PersonTimelineProps {
 type TimelineFilter = 'all' | 'stories' | 'voice' | 'photos' | 'events'
 
 export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelineProps) {
+  const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState<TimelineFilter>('all')
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -213,14 +215,13 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
   function handleItemClick(item: TimelineItem) {
     // Navigate to the appropriate content based on item type
     if (item.type === 'story' && item.story_id) {
-      // TODO: Navigate to story detail page
-      console.log('Navigate to story:', item.story_id)
+      navigate(`/story/${item.story_id}`)
     } else if (item.type === 'life_event' && item.event_id) {
-      // TODO: Open life event modal or navigate to detail
-      console.log('Show life event:', item.event_id)
+      // For now, stay on the same page - could implement event modal later
+      console.log('Life event clicked:', item.event_id)
     } else if (item.type === 'media' && item.media_id) {
-      // TODO: Open media lightbox or detail view
-      console.log('Show media:', item.media_id)
+      // For now, stay on the same page - could implement media lightbox later
+      console.log('Media clicked:', item.media_id)
     }
   }
 
