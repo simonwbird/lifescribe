@@ -265,45 +265,71 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
             </div>
           ) : filteredItems.length > 0 ? (
             <div className="space-y-4">
-              {displayedItems.map((item) => {
-                const Icon = getItemIcon(item)
-                return (
-                  <div 
-                    key={item.id} 
-                    className="flex gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer hover:shadow-sm active:scale-[0.98]"
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm leading-tight">{item.title}</h4>
-                          {item.excerpt && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                              {item.excerpt}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
-                              {item.type === 'story' ? 'Story' : 
-                               item.type === 'life_event' ? 'Event' :
-                               item.media_type === 'photo' ? 'Photo' :
-                               item.media_type === 'voice' ? 'Voice' : 'Media'}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDate(item.date, item.date_precision)}
-                            </span>
-                          </div>
+              {/* Photo Gallery Wall */}
+              {activeFilter === 'photos' ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  {displayedItems.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity group"
+                      onClick={() => handleItemClick(item)}
+                    >
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
+                        <Camera className="h-8 w-8 text-primary/60" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                        <div className="absolute bottom-1 left-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-xs text-white bg-black/60 px-1 py-0.5 rounded truncate">
+                            {item.title}
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  ))}
+                </div>
+              ) : (
+                /* Regular Timeline List */
+                <>
+                  {displayedItems.map((item) => {
+                    const Icon = getItemIcon(item)
+                    return (
+                      <div 
+                        key={item.id} 
+                        className="flex gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer hover:shadow-sm active:scale-[0.98]"
+                        onClick={() => handleItemClick(item)}
+                      >
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon className="h-4 w-4 text-primary" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm leading-tight">{item.title}</h4>
+                              {item.excerpt && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                                  {item.excerpt}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
+                                  {item.type === 'story' ? 'Story' : 
+                                   item.type === 'life_event' ? 'Event' :
+                                   item.media_type === 'photo' ? 'Photo' :
+                                   item.media_type === 'voice' ? 'Voice' : 'Media'}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDate(item.date, item.date_precision)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
               
               {/* Show more button */}
               {hasMore && (
