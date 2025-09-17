@@ -563,11 +563,11 @@ export function FamilyTreeCanvas({
       </div>
 
       {/* Controls */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
+      <div className="absolute top-4 right-4 z-50 flex gap-2 pointer-events-auto">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowGrid(!showGrid)}
+          onClick={() => { console.log('🔲 Show Grid clicked'); setShowGrid((prev) => !prev) }}
           className={`${showGrid ? 'bg-neutral-700 text-white border-neutral-600' : 'bg-white/90 text-neutral-800'}`}
         >
           <Grid className="w-4 h-4 mr-1" />
