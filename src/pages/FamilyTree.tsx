@@ -30,8 +30,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   TreePine,
   UserPlus,
-  Layout,
-  Move3D,
 } from 'lucide-react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { useToast } from '@/hooks/use-toast'
@@ -42,7 +40,7 @@ export default function FamilyTree() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false)
-  const [layoutMode, setLayoutMode] = useState<'interactive' | 'professional'>('professional')
+  // Removed layout mode - always use interactive
   const [isVoiceCaptureOpen, setIsVoiceCaptureOpen] = useState(false)
   const [preselectedPeople, setPreselectedPeople] = useState<Array<{ id: string; name: string }>>([])
   
@@ -379,37 +377,9 @@ export default function FamilyTree() {
               </div>
               
               <div className="flex items-center gap-2">
-                {/* Layout Mode Toggle - only show if Labs enabled */}
-                {labsEnabled && (
-                  <>
-                    <div className="flex items-center gap-1 border rounded-lg p-1">
-                      <Button
-                        variant={layoutMode === 'professional' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setLayoutMode('professional')}
-                        className="h-8 px-3"
-                      >
-                        <Layout className="h-4 w-4 mr-1" />
-                        Clean
-                      </Button>
-                      <Button
-                        variant={layoutMode === 'interactive' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setLayoutMode('interactive')}
-                        className="h-8 px-3"
-                      >
-                        <Move3D className="h-4 w-4 mr-1" />
-                        Interactive
-                      </Button>
-                    </div>
-
-                    {layoutMode === 'interactive' && (
-                      <Button onClick={handleSaveLayout} variant="outline" size="sm">
-                        Save Layout
-                      </Button>
-                    )}
-                  </>
-                )}
+                <Button onClick={handleSaveLayout} variant="outline" size="sm">
+                  Save Layout
+                </Button>
                 
                 <Dialog open={isAddPersonOpen} onOpenChange={setIsAddPersonOpen}>
                   <DialogTrigger asChild>
@@ -506,48 +476,20 @@ export default function FamilyTree() {
               </Card>
             </div>
           ) : (
-            <>
-              {layoutMode === 'professional' || !labsEnabled ? (
-                <GenerationalFamilyTree
-                  people={people}
-                  relationships={relationships} 
-                  onPersonClick={handleViewPerson}
-                  onPersonEdit={(personId) => navigate(`/people/${personId}`)}
-                  onAddPerson={(parentId, type) => {
-                    console.log('Add person:', parentId, type)
-                    setIsAddPersonOpen(true)
-                  }}
-                  onBiologicalParentsUpdate={loadFamilyData}
-                />
-              ) : layoutMode === 'interactive' && labsEnabled ? (
-                <EnhancedFamilyTreeCanvas
-                  people={people}
-                  relationships={relationships}
-                  positions={nodePositions}
-                  onPersonMove={handlePersonMove}
-                  onPersonSelect={(personId) => console.log('Selected:', personId)}
-                  onAddRelation={handleAddRelation}
-                  onDeleteRelation={handleDeleteRelation}
-                  onViewProfile={handleViewPerson}
-                  onEditPerson={(personId) => navigate(`/people/${personId}`)}
-                  shouldFitToScreen={shouldFitToScreen}
-                  onFitToScreenComplete={() => setShouldFitToScreen(false)}
-                  onRecordMemoryAbout={handleRecordMemoryAbout}
-                />
-              ) : (
-                <GenerationalFamilyTree
-                  people={people}
-                  relationships={relationships} 
-                  onPersonClick={handleViewPerson}
-                  onPersonEdit={(personId) => navigate(`/people/${personId}`)}
-                  onAddPerson={(parentId, type) => {
-                    console.log('Add person:', parentId, type)
-                    setIsAddPersonOpen(true)
-                  }}
-                  onBiologicalParentsUpdate={loadFamilyData}
-                />
-              )}
-            </>
+            <EnhancedFamilyTreeCanvas
+              people={people}
+              relationships={relationships}
+              positions={nodePositions}
+              onPersonMove={handlePersonMove}
+              onPersonSelect={(personId) => console.log('Selected:', personId)}
+              onAddRelation={handleAddRelation}
+              onDeleteRelation={handleDeleteRelation}
+              onViewProfile={handleViewPerson}
+              onEditPerson={(personId) => navigate(`/people/${personId}`)}
+              shouldFitToScreen={shouldFitToScreen}
+              onFitToScreenComplete={() => setShouldFitToScreen(false)}
+              onRecordMemoryAbout={handleRecordMemoryAbout}
+            />
           )}
         </div>
 
