@@ -167,7 +167,19 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
           // Use story title and content if available, otherwise fall back to filename
           const storyData = mediaItem.stories
           console.log('🎵 Media item:', mediaItem.id, 'story data:', storyData, 'file_name:', mediaItem.file_name)
-          const displayTitle = storyData?.title || mediaItem.file_name || 'Untitled'
+          
+          // Prioritize story title, then first line of content, then filename
+          let displayTitle = 'Untitled'
+          if (storyData?.title && storyData.title.trim()) {
+            displayTitle = storyData.title
+          } else if (storyData?.content && storyData.content.trim()) {
+            // Use first line of story content as title if no title exists
+            displayTitle = storyData.content.split('\n')[0].substring(0, 60).trim()
+            if (displayTitle.length === 60) displayTitle += '...'
+          } else if (mediaItem.file_name) {
+            displayTitle = mediaItem.file_name.replace(/\.[^/.]+$/, '') // Remove file extension
+          }
+          
           console.log('🎵 Display title for media', mediaItem.id, ':', displayTitle)
           const storyContent = storyData?.content
           const excerpt = storyContent ? storyContent.substring(0, 100) + (storyContent.length > 100 ? '...' : '') : undefined
@@ -530,15 +542,34 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                           />
                         ) : (
                           <div 
-                            className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-primary/10 transition-all"
+                            className="w-full h-full relative cursor-pointer group/video"
                             onClick={() => handleVideoPlay(item)}
                           >
-                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors backdrop-blur-sm">
-                              {playingVideo === item.id ? (
-                                <Pause className="h-8 w-8 text-primary" />
-                              ) : (
-                                <Play className="h-8 w-8 text-primary ml-1" />
-                              )}
+                            {/* Video thumbnail background */}
+                            {item.signed_url ? (
+                              <video
+                                className="w-full h-full object-cover"
+                                preload="metadata"
+                                muted
+                              >
+                                <source src={item.signed_url} />
+                              </video>
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                            )}
+                            
+                            {/* Dark overlay for better play button visibility */}
+                            <div className="absolute inset-0 bg-black/20 group-hover/video:bg-black/30 transition-all" />
+                            
+                            {/* Play button overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors border-2 border-white/20">
+                                {playingVideo === item.id ? (
+                                  <Pause className="h-8 w-8 text-white" />
+                                ) : (
+                                  <Play className="h-8 w-8 text-white ml-1" />
+                                )}
+                              </div>
                             </div>
                           </div>
                         )}
