@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -51,6 +51,8 @@ export function FamilyTreeCanvas({
   const [dragStartNodePos, setDragStartNodePos] = useState({ x: 0, y: 0 })
   const [isAltPressed, setIsAltPressed] = useState(false)
   const animationFrame = useRef<number>(0)
+  const dragOverridesRef = useRef<Record<string, { x: number; y: number }>>({})
+  const [visualTick, setVisualTick] = useState(0)
   
   const { toast } = useToast()
   const versionService = new VersionService(familyId)
@@ -83,11 +85,17 @@ export function FamilyTreeCanvas({
     setVersions(versionsList)
   }
 
-  // Convert layout nodes to positions
-  const positions = layoutNodes.reduce((acc, node) => {
-    acc[node.personId] = { x: node.x, y: node.y, depth: node.depth }
-    return acc
-  }, {} as Record<string, { x: number; y: number; depth: number }>)
+  // Convert layout nodes to positions (apply transient drag overrides)
+  const positions = useMemo(() => {
+    const base: Record<string, { x: number; y: number; depth: number }> = {}
+    layoutNodes.forEach(n => { base[n.personId] = { x: n.x, y: n.y, depth: n.depth } })
+    const overrides = dragOverridesRef.current
+    for (const id in overrides) {
+      const existing = base[id]
+      if (existing) base[id] = { ...existing, ...overrides[id] }
+    }
+    return base
+  }, [layoutNodes, visualTick])
 
   // Auto-fit functionality
   const autoFit = useCallback(() => {
@@ -147,7 +155,7 @@ export function FamilyTreeCanvas({
     return snapToGrid ? Math.round(value / gridSize) * gridSize : value
   }
 
-  // Smooth drag animation
+  // Smooth drag animation - update overrides only
   const tick = useCallback(() => {
     animationFrame.current = 0
     if (!draggingPersonId) return
@@ -155,28 +163,21 @@ export function FamilyTreeCanvas({
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
     
-    const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
-    if (!draggedNode) return
-    
     // Calculate new position from pointer with better precision
     const worldX = (lastPointer.x - rect.left - pan.x) / zoom
     const worldY = (lastPointer.y - rect.top - pan.y) / zoom
     
     const newX = snapToGridHelper(worldX - dragOffset.x)
-    let newY = snapToGridHelper(worldY - dragOffset.y)
+    const newY = snapToGridHelper(worldY - dragOffset.y)
     
-    // Allow free vertical movement; we'll snap to generation on drop
-    // (no Y lock during drag for smoother feel)
-    // console.debug disabled for performance
-    
-    setLayoutNodes(prev => 
-      prev.map(node => 
-        node.personId === draggingPersonId 
-          ? { ...node, x: newX, y: newY }
-          : node
-      )
-    )
-  }, [draggingPersonId, lastPointer, pan, zoom, dragOffset, snapToGrid, isAltPressed, layoutNodes])
+    // Update override ref and bump tick (lightweight)
+    if (!dragOverridesRef.current[draggingPersonId] ||
+        dragOverridesRef.current[draggingPersonId].x !== newX ||
+        dragOverridesRef.current[draggingPersonId].y !== newY) {
+      dragOverridesRef.current[draggingPersonId] = { x: newX, y: newY }
+      setVisualTick(v => v + 1)
+    }
+  }, [draggingPersonId, lastPointer, pan, zoom, dragOffset])
 
   // Pointer handlers for canvas panning
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
@@ -203,16 +204,12 @@ export function FamilyTreeCanvas({
   const handleCanvasPointerUp = () => {
     setIsDragging(false)
     if (draggingPersonId) {
-      const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
-      if (draggedNode) {
-        const generationY = draggedNode.depth * 140 + 90
-        setLayoutNodes(prev => 
-          prev.map(node => 
-            node.personId === draggingPersonId 
-              ? { ...node, y: generationY }
-              : node
-          )
+      const override = dragOverridesRef.current[draggingPersonId]
+      if (override) {
+        setLayoutNodes(prev =>
+          prev.map(n => (n.personId === draggingPersonId ? { ...n, x: override.x, y: override.y } : n))
         )
+        delete dragOverridesRef.current[draggingPersonId]
       }
       setDraggingPersonId(null)
     }
