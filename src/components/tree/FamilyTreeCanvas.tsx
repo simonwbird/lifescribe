@@ -99,9 +99,8 @@ export function FamilyTreeCanvas({
     const canvas = canvasRef.current
     if (!canvas) return
     
-    // Get viewport dimensions
-    const viewportRect = canvas.getBoundingClientRect()
-    const viewport = { w: viewportRect.width, h: viewportRect.height }
+    // Get viewport dimensions (use clientWidth/Height to ignore current transform)
+    const viewport = { w: canvas.clientWidth, h: canvas.clientHeight }
     
     // Card dimensions and padding
     const cardWidth = 150, cardHeight = 180
