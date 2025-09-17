@@ -54,16 +54,22 @@ export function FamilyTreeCanvas({
   const versionService = new VersionService(familyId)
   const layoutEngine = new LayoutEngine(people, relationships)
 
-  // Initialize layout with auto-fit
+  // Initialize layout
   useEffect(() => {
     if (people.length > 0) {
       const layout = layoutEngine.generateLayout()
       setLayoutNodes(layout.nodes)
-      
-      // Auto-fit after layout is set
-      setTimeout(() => autoFit(), 100)
     }
   }, [people, relationships])
+
+  // Auto-fit when layout nodes are first set
+  useEffect(() => {
+    if (layoutNodes.length > 0) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => autoFit(), 200)
+      return () => clearTimeout(timer)
+    }
+  }, [layoutNodes.length > 0 ? layoutNodes.length : 0]) // Only trigger on initial load
 
   // Load versions
   useEffect(() => {
@@ -89,7 +95,7 @@ export function FamilyTreeCanvas({
     if (!canvas) return
     
     // Calculate bounding box of all nodes
-    const padding = 80
+    const padding = 100 // Increased padding for better view
     const minX = Math.min(...layoutNodes.map(n => n.x - 75)) - padding
     const maxX = Math.max(...layoutNodes.map(n => n.x + 75)) + padding
     const minY = Math.min(...layoutNodes.map(n => n.y - 90)) - padding
@@ -105,12 +111,12 @@ export function FamilyTreeCanvas({
     const viewportRect = canvas.getBoundingClientRect()
     const viewport = { w: viewportRect.width, h: viewportRect.height }
     
-    // Calculate scale to fit
+    // Calculate scale to fit with some margin
     const scale = Math.min(
-      viewport.w / bbox.width,
-      viewport.h / bbox.height
+      (viewport.w * 0.9) / bbox.width,  // Use 90% of viewport width
+      (viewport.h * 0.9) / bbox.height  // Use 90% of viewport height
     )
-    const clampedScale = Math.max(0.3, Math.min(2.0, scale))
+    const clampedScale = Math.max(0.2, Math.min(2.0, scale)) // Allow smaller zoom for large trees
     
     // Calculate pan to center
     const scaledWidth = bbox.width * clampedScale
@@ -119,6 +125,8 @@ export function FamilyTreeCanvas({
       x: (viewport.w - scaledWidth) / 2 - bbox.x * clampedScale,
       y: (viewport.h - scaledHeight) / 2 - bbox.y * clampedScale
     }
+    
+    console.log('🎯 Auto-fit:', { bbox, viewport, scale: clampedScale, pan: newPan })
     
     setZoom(clampedScale)
     setPan(newPan)
