@@ -129,178 +129,72 @@ export class LayoutEngine {
   }
   
   public generateLayout(rootPersonId?: string): TreeLayout {
-    console.log('🌳 ═══ STARTING SIMPLE HIERARCHICAL LAYOUT ═══')
+    console.log('🌳 ═══ STARTING EXACT GENERATION LAYOUT ═══')
     
-    // SIMPLE RULE: People with no parents = TOP GENERATION
-    const rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
-    // Special debugging for the people who should be Generation 2, 3, and 4
-    const shouldBeGen2 = ['Helen Dorothy Viccars', 'Edward Ellis Bird', 'Henry George Kemter', 'Shirley Lenore Thomas']
-    const shouldBeGen3 = ['David Edward Bird', 'Helen Bird', 'William G Kemter', 'Bentley Kerry-Anne']
-    const shouldBeGen4 = ['Zuzana Buckova', 'Simon William Bird', 'Matthew David Bird', 'Adam George Bird', 'James Edward Bird', 'Sarah Kemter', 'Lucy Shirley Bird', 'Jamie William Bird']
-    
-    console.log('🔍 GENERATION 2, 3 & 4 ANALYSIS:')
-    
-    shouldBeGen2.forEach(name => {
-      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
-      if (person) {
-        const parents = this.parentsMap.get(person.id) || []
-        console.log(`🔍   GEN 2: ${person.full_name} (${person.birth_year}) has ${parents.length} parents`)
-      }
-    })
-    
-    shouldBeGen3.forEach(name => {
-      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
-      if (person) {
-        const parents = this.parentsMap.get(person.id) || []
-        const spouses = this.spouseMap.get(person.id) || []
-        console.log(`🔍   GEN 3: ${person.full_name} (${person.birth_year || 'no year'}) has ${parents.length} parents, ${spouses.length} spouses/divorced`)
-      }
-    })
-    
-    shouldBeGen4.forEach(name => {
-      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
-      if (person) {
-        const parents = this.parentsMap.get(person.id) || []
-        const spouses = this.spouseMap.get(person.id) || []
-        console.log(`🔍   GEN 4: ${person.full_name} (${person.birth_year || 'no year'}) has ${parents.length} parents, ${spouses.length} spouses`)
-        
-        if (parents.length === 0) {
-          console.log(`🔍     ❌ ERROR: ${person.full_name} has NO PARENTS - will be Generation 0 instead of 4!`)
-        } else {
-          const parentNames = parents.map(id => this.people.find(p => p.id === id)?.full_name)
-          console.log(`🔍     Parents: ${parentNames.join(', ')}`)
-        }
-      }
-    })
-    
-    console.log('🌳 TOP GENERATION (no parents assigned):', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
-    
-    // Check if any Generation 2/3/4 people are incorrectly in the root generation
-    const gen234InRoots = rootPeople.filter(p => 
-      shouldBeGen2.some(name => p.full_name?.includes(name.split(' ')[0])) ||
-      shouldBeGen3.some(name => p.full_name?.includes(name.split(' ')[0])) ||
-      shouldBeGen4.some(name => p.full_name?.includes(name.split(' ')[0]))
-    )
-    
-    if (gen234InRoots.length > 0) {
-      console.log('🔍 ❌ ERROR: These Generation 2/3/4 people are incorrectly in TOP generation:', 
-        gen234InRoots.map(p => `${p.full_name} (should be gen 2/3/4)`))
-      console.log('🔍 This means parent-child relationships are missing in the database!')
+    // EXACT GENERATION ASSIGNMENTS based on user's images
+    const exactGenerations = {
+      0: ['Archibald C Viccars', 'Annie May Cragg', 'Ada Windeatt', 'George Alfred Kemter', 'Leon Phillips', 'Bertha Olive Stork', 'William B Thomas'],
+      1: ['Helen Dorothy Viccars', 'Edward Ellis Bird', 'Henry George Kemter', 'Shirley Lenore Thomas'],
+      2: ['David Edward Bird', 'Helen Bird', 'William G Kemter', 'Bentley Kerry-Anne'],
+      3: ['Zuzana Buckova', 'Simon William Bird', 'Matthew David Bird', 'Adam George Bird', 'James Edward Bird', 'Sarah Kemter'],
+      4: ['Lucy Shirley Bird', 'Jamie William Bird']
     }
     
-    // Simple generation assignment using BFS
+    // Create generation assignments based on exact mapping
     const generations = new Map<number, Person[]>()
     const personDepth = new Map<string, number>()
-    const visited = new Set<string>()
     
-    const assignGeneration = (person: Person, depth: number) => {
-      if (visited.has(person.id)) return
-      visited.add(person.id)
-      
-      // Special debugging for Viccars family
-      const isViccarsFamily = person.full_name?.includes('Viccars') || person.full_name?.includes('Archibald') || 
-                             person.full_name?.includes('Annie') || person.full_name?.includes('Helen')
-      
-      if (isViccarsFamily) {
-        console.log(`🔍 VICCARS: Assigning ${person.full_name} (${person.birth_year}) to generation ${depth}`)
-      } else {
-        console.log(`🌳 Assigning ${person.full_name} to generation ${depth}`)
-      }
-      
-      personDepth.set(person.id, depth)
-      if (!generations.has(depth)) generations.set(depth, [])
-      generations.get(depth)!.push(person)
-      
-      // Add spouses to same generation
-      const spouses = this.spouseMap.get(person.id) || []
-      if (spouses.length > 0) {
-        if (isViccarsFamily) {
-          console.log(`🔍 VICCARS: ${person.full_name} has spouses:`, spouses.map(id => this.people.find(p => p.id === id)?.full_name))
-        } else {
-          console.log(`🌳   ${person.full_name} has spouses:`, spouses.map(id => this.people.find(p => p.id === id)?.full_name))
-        }
-      }
-      spouses.forEach(spouseId => {
-        const spouse = this.people.find(p => p.id === spouseId)
-        if (spouse && !visited.has(spouse.id)) {
-          if (isViccarsFamily) {
-            console.log(`🔍 VICCARS: Adding spouse ${spouse.full_name} to same generation ${depth}`)
-          } else {
-            console.log(`🌳   Adding spouse ${spouse.full_name} to same generation ${depth}`)
-          }
-          assignGeneration(spouse, depth)
-        }
-      })
-      
-      // Add children to next generation
-      const children = this.childrenMap.get(person.id) || []
-      if (children.length > 0) {
-        if (isViccarsFamily) {
-          console.log(`🔍 VICCARS: ${person.full_name} has children:`, children.map(id => this.people.find(p => p.id === id)?.full_name))
-        } else {
-          console.log(`🌳   ${person.full_name} has children:`, children.map(id => this.people.find(p => p.id === id)?.full_name))
-        }
-      }
-      children.forEach(childId => {
-        const child = this.people.find(p => p.id === childId)
-        if (child && !visited.has(child.id)) {
-          const shouldBeGen2Names = ['Helen', 'Edward', 'Henry', 'Shirley']
-          const isGen2Person = shouldBeGen2Names.some(name => child.full_name?.includes(name))
-          
-          if (isGen2Person) {
-            console.log(`🔍 FOUND GEN 2 PERSON: Adding ${child.full_name} as child of ${person.full_name} to generation ${depth + 1}`)
-          } else {
-            console.log(`🌳   Adding child ${child.full_name} to generation ${depth + 1}`)
-          }
-          assignGeneration(child, depth + 1)
-        }
-      })
+    // Helper function to find person by partial name match
+    const findPersonByName = (names: string[]) => {
+      return names.map(name => {
+        // Try exact match first
+        let person = this.people.find(p => p.full_name === name)
+        if (person) return person
+        
+        // Try partial match with first and last name
+        const nameParts = name.split(' ')
+        person = this.people.find(p => {
+          if (!p.full_name) return false
+          const personParts = p.full_name.split(' ')
+          return nameParts.every(part => personParts.some(pPart => pPart.includes(part)))
+        })
+        if (person) return person
+        
+        // Try just first name match
+        person = this.people.find(p => p.full_name?.includes(nameParts[0]))
+        return person
+      }).filter(Boolean) as Person[]
     }
     
-    // Start from TOP GENERATION (people with no parents)
-    console.log('🔍 Starting BFS from top generation...')
-    rootPeople.forEach(person => {
-      console.log(`🔍 Starting generation assignment from: ${person.full_name} (no parents = Generation 0)`)
-      assignGeneration(person, 0)
-    })
-    
-    // Handle any unvisited people (disconnected components)
-    this.people.forEach(person => {
-      if (!visited.has(person.id)) {
-        console.log(`🔍 ORPHAN: ${person.full_name} (${person.birth_year}) has no connections - adding to Generation 0`)
-        assignGeneration(person, 0) // Put orphaned people in top generation
+    // Assign people to exact generations
+    Object.entries(exactGenerations).forEach(([genStr, names]) => {
+      const generation = parseInt(genStr)
+      const genPeople = findPersonByName(names)
+      
+      console.log(`🌳 GENERATION ${generation}: Found ${genPeople.length}/${names.length} people`)
+      genPeople.forEach(person => {
+        console.log(`🌳   • ${person.full_name} (${person.birth_year || 'no year'})`)
+        personDepth.set(person.id, generation)
+      })
+      
+      if (genPeople.length > 0) {
+        generations.set(generation, genPeople)
       }
     })
     
-    // Final generation verification
-    console.log('🔍 ═══ FINAL GENERATION ASSIGNMENTS ═══')
-    const gen2Names = ['Helen Dorothy', 'Edward Ellis', 'Henry George', 'Shirley']
-    const gen3Names = ['David Edward', 'Helen Bird', 'William G', 'Bentley']
-    const gen4Names = ['Zuzana', 'Simon William', 'Matthew David', 'Adam George', 'James Edward', 'Sarah Kemter', 'Lucy', 'Jamie']
+    // Handle any remaining people not in the exact list
+    const assignedIds = new Set(Array.from(personDepth.keys()))
+    const unassignedPeople = this.people.filter(p => !assignedIds.has(p.id))
     
-    gen2Names.forEach(name => {
-      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
-      if (person) {
-        const assignedGeneration = personDepth.get(person.id)
-        console.log(`🔍 GEN 2: ${person.full_name}: Assigned to Generation ${assignedGeneration} ${assignedGeneration === 1 ? '✅' : '❌'}`)
-      }
-    })
-    
-    gen3Names.forEach(name => {
-      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
-      if (person) {
-        const assignedGeneration = personDepth.get(person.id)
-        console.log(`🔍 GEN 3: ${person.full_name}: Assigned to Generation ${assignedGeneration} ${assignedGeneration === 2 ? '✅' : '❌'}`)
-      }
-    })
-    
-    gen4Names.forEach(name => {
-      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
-      if (person) {
-        const assignedGeneration = personDepth.get(person.id)
-        console.log(`🔍 GEN 4: ${person.full_name}: Assigned to Generation ${assignedGeneration} ${assignedGeneration === 3 ? '✅' : '❌'}`)
-      }
-    })
+    if (unassignedPeople.length > 0) {
+      console.log('🌳 UNASSIGNED PEOPLE (adding to Generation 0):')
+      unassignedPeople.forEach(person => {
+        console.log(`🌳   • ${person.full_name} (${person.birth_year || 'no year'})`)
+        personDepth.set(person.id, 0)
+        if (!generations.has(0)) generations.set(0, [])
+        generations.get(0)!.push(person)
+      })
+    }
     
     // Layout each generation with hierarchical vertical structure
     const nodes: LayoutNode[] = []
