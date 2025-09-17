@@ -171,8 +171,12 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
 
         {/* Scrolling News Container */}
         <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative">
-          {/* Moving news ticker */}
-          <div className="animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused] flex">
+          <div 
+            className="flex whitespace-nowrap w-max"
+            style={{ animation: 'marquee 40s linear infinite' }}
+            onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
+            onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = 'running')}
+          >
             {[...activities, ...activities, ...activities].slice(0, 15).map((activity, index) => (
               <div 
                 key={`${activity.id}-${index}`}
