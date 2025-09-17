@@ -73,6 +73,39 @@ export default function GlobalSearch() {
           setSuggestions(results)
           setShowSuggestions(true)
           setActiveIndex(-1)
+          
+          // Auto-navigate to person if there's an exact or very close match
+          const firstResult = results[0]
+          if (firstResult && firstResult.type === 'person') {
+            const queryLower = query.toLowerCase().trim()
+            const nameLower = firstResult.title.toLowerCase()
+            
+            // Check for exact match or very close match
+            const isExactMatch = nameLower === queryLower
+            const isCloseMatch = nameLower.includes(queryLower) && queryLower.length >= 3
+            const isFirstNameMatch = nameLower.split(' ')[0] === queryLower || 
+                                   nameLower.split(' ').slice(-1)[0] === queryLower
+            
+            // Auto-navigate after a short delay if it's a good match
+            if (isExactMatch || (isCloseMatch && query.length >= 4) || isFirstNameMatch) {
+              setTimeout(() => {
+                // Check if user hasn't changed the query in the meantime
+                if (inputRef.current?.value.toLowerCase().trim() === queryLower) {
+                  track('search_result_click', { 
+                    query: queryLower,
+                    person_name: firstResult.title,
+                    match_type: isExactMatch ? 'exact' : isFirstNameMatch ? 'first_name' : 'partial',
+                    auto_navigate: true
+                  })
+                  navigate(firstResult.url!)
+                  setShowSuggestions(false)
+                  setActiveIndex(-1)
+                  setQuery('')
+                  inputRef.current?.blur()
+                }
+              }, isExactMatch ? 500 : 1000) // Faster for exact matches
+            }
+          }
         } catch (error) {
           console.error('Search error:', error)
         } finally {
@@ -90,7 +123,7 @@ export default function GlobalSearch() {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [query, familyId])
+  }, [query, familyId, navigate, track])
 
   // Handle clicks outside to close suggestions
   useEffect(() => {
