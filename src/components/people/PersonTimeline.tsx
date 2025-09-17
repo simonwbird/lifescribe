@@ -185,6 +185,20 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
     return format(date, 'MMM d, yyyy')
   }
 
+  function handleItemClick(item: TimelineItem) {
+    // Navigate to the appropriate content based on item type
+    if (item.type === 'story' && item.story_id) {
+      // TODO: Navigate to story detail page
+      console.log('Navigate to story:', item.story_id)
+    } else if (item.type === 'life_event' && item.event_id) {
+      // TODO: Open life event modal or navigate to detail
+      console.log('Show life event:', item.event_id)
+    } else if (item.type === 'media' && item.media_id) {
+      // TODO: Open media lightbox or detail view
+      console.log('Show media:', item.media_id)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -217,27 +231,31 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
               {filteredItems.map((item) => {
                 const Icon = getItemIcon(item)
                 return (
-                  <div key={item.id} className="flex gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                  <div 
+                    key={item.id} 
+                    className="flex gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer hover:shadow-sm active:scale-[0.98]"
+                    onClick={() => handleItemClick(item)}
+                  >
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-primary" />
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Icon className="h-4 w-4 text-primary" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
-                          <h4 className="font-medium text-sm">{item.title}</h4>
+                          <h4 className="font-medium text-sm leading-tight">{item.title}</h4>
                           {item.excerpt && (
-                            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                               {item.excerpt}
                             </p>
                           )}
                           <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
                               {item.type === 'story' ? 'Story' : 
-                               item.type === 'life_event' ? 'Life Event' :
+                               item.type === 'life_event' ? 'Event' :
                                item.media_type === 'photo' ? 'Photo' :
-                               item.media_type === 'voice' ? 'Voice Note' : 'Media'}
+                               item.media_type === 'voice' ? 'Voice' : 'Media'}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {formatDate(item.date, item.date_precision)}
