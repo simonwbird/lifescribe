@@ -244,23 +244,15 @@ export default function StoryCard({ story }: StoryCardProps) {
                 )
               } else if (mediaItem?.mime_type.startsWith('audio/')) {
                 return (
-                  <div key={index} className="bg-muted/50 rounded-lg p-4 flex items-center gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Mic2 size={16} className="text-primary/70" />
-                        <p className="text-sm font-semibold text-foreground/90 truncate">
-                          {mediaItem.file_name?.replace(/\.[^/.]+$/, '') || 'Voice Recording'}
-                        </p>
-                      </div>
-                      <audio
-                        src={url}
-                        controls
-                        className="w-full"
-                        preload="metadata"
-                      >
-                        Your browser does not support the audio element.
-                      </audio>
-                    </div>
+                  <div key={index} className="bg-muted/50 rounded-lg p-4">
+                    <audio
+                      src={url}
+                      controls
+                      className="w-full"
+                      preload="metadata"
+                    >
+                      Your browser does not support the audio element.
+                    </audio>
                   </div>
                 )
               }
