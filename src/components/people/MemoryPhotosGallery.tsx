@@ -1487,7 +1487,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       <Dialog open={showLightbox} onOpenChange={setShowLightbox}>
         <DialogContent className="max-w-6xl w-[95vw] h-[95vh] p-0 overflow-hidden">
           {currentPhoto && (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full min-h-0">
               {/* Photo Display Area */}
               <div className="relative h-[60vh] bg-black overflow-hidden z-0">
                 <div 
@@ -1620,8 +1620,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               </div>
 
               {/* Inline Story Editor */}
-              <div className="flex-1 overflow-y-auto relative z-10 pointer-events-auto">
-                <div className="p-6 bg-background border-t max-h-[40vh] overflow-y-auto">
+              <div className="flex-1 overflow-y-auto relative z-10 pointer-events-auto min-h-0 overscroll-contain scroll-smooth">
+                <div className="p-6 bg-background border-t pb-24">
                   <div className="space-y-4 max-w-2xl">
                     {/* Group Story (Read-only display) */}
                     {currentPhoto.story && (
