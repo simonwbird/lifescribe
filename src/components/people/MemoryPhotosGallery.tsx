@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
-import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight, Trash2, MoreHorizontal } from 'lucide-react'
+import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight, Trash2, MoreHorizontal, Edit2 } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
@@ -54,6 +54,11 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [peopleSearchQuery, setPeopleSearchQuery] = useState('')
   const [showPeopleDropdown, setShowPeopleDropdown] = useState(false)
   const [selectedStoryForAdd, setSelectedStoryForAdd] = useState<string | null>(null)
+  const [showEditStoryModal, setShowEditStoryModal] = useState(false)
+  const [editingStory, setEditingStory] = useState<any>(null)
+  const [editStoryTitle, setEditStoryTitle] = useState('')
+  const [editStoryContent, setEditStoryContent] = useState('')
+  const [editStoryDate, setEditStoryDate] = useState('')
   const { toast } = useToast()
 
   // Fetch photos when component mounts or person changes
@@ -366,6 +371,50 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       })
     } finally {
       setSelectedStoryForAdd(null)
+    }
+  }
+
+  const handleEditStory = (story: any) => {
+    setEditingStory(story)
+    setEditStoryTitle(story.title || '')
+    setEditStoryContent(story.content || '')
+    setEditStoryDate(story.occurred_on || '')
+    setShowEditStoryModal(true)
+  }
+
+  const handleUpdateStory = async () => {
+    if (!editingStory) return
+
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .update({
+          title: editStoryTitle.trim(),
+          content: editStoryContent.trim(),
+          occurred_on: editStoryDate || null
+        })
+        .eq('id', editingStory.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Story updated",
+        description: "The memory story has been updated successfully."
+      })
+
+      setShowEditStoryModal(false)
+      setEditingStory(null)
+      setEditStoryTitle('')
+      setEditStoryContent('')
+      setEditStoryDate('')
+      fetchPhotos() // Refresh to show updated story
+    } catch (error) {
+      console.error('Failed to update story:', error)
+      toast({
+        title: "Update failed",
+        description: "Could not update the story. Please try again.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -931,9 +980,19 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               <div className="p-6 bg-background flex-shrink-0">
                 <div className="space-y-3">
                   {currentPhoto.story?.title && (
-                    <h3 className="text-lg font-semibold">
-                      {currentPhoto.story.title}
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">
+                        {currentPhoto.story.title}
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditStory(currentPhoto.story)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                   
                   {currentPhoto.story?.occurred_on && (
@@ -960,6 +1019,73 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Story Modal */}
+      <Dialog open={showEditStoryModal} onOpenChange={setShowEditStoryModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Memory Story</DialogTitle>
+            <DialogDescription>
+              Update the details of this memory story.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Story Title
+              </label>
+              <Input
+                placeholder="Enter story title..."
+                value={editStoryTitle}
+                onChange={(e) => setEditStoryTitle(e.target.value)}
+                maxLength={100}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Date
+              </label>
+              <Input
+                type="date"
+                value={editStoryDate}
+                onChange={(e) => setEditStoryDate(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Story Description
+              </label>
+              <Textarea
+                placeholder="Tell the story behind this memory..."
+                value={editStoryContent}
+                onChange={(e) => setEditStoryContent(e.target.value)}
+                rows={4}
+                maxLength={1000}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {editStoryContent.length}/1000 characters
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditStoryModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateStory}
+            >
+              Update Story
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
