@@ -37,6 +37,7 @@ export function FamilyTreeCanvas({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [draggingPersonId, setDraggingPersonId] = useState<string | null>(null)
+  const [pendingDragId, setPendingDragId] = useState<string | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [layoutNodes, setLayoutNodes] = useState<LayoutNode[]>([])
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
@@ -46,6 +47,7 @@ export function FamilyTreeCanvas({
   
   // Smooth dragging state
   const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 })
+  const [startPointer, setStartPointer] = useState({ x: 0, y: 0 })
   const [dragStartNodePos, setDragStartNodePos] = useState({ x: 0, y: 0 })
   const [isAltPressed, setIsAltPressed] = useState(false)
   const animationFrame = useRef<number>(0)
@@ -163,17 +165,9 @@ export function FamilyTreeCanvas({
     const newX = snapToGridHelper(worldX - dragOffset.x)
     let newY = snapToGridHelper(worldY - dragOffset.y)
     
-    // Lock to generation Y unless Alt is pressed
-    if (!isAltPressed) {
-      newY = draggedNode.depth * 140 + 90 // Use generation Y
-    }
-    
-    console.log('🎯 Tick update:', {
-      pointer: lastPointer,
-      world: { x: worldX, y: worldY },
-      newPos: { x: newX, y: newY },
-      offset: dragOffset
-    })
+    // Allow free vertical movement; we'll snap to generation on drop
+    // (no Y lock during drag for smoother feel)
+    // console.debug disabled for performance
     
     setLayoutNodes(prev => 
       prev.map(node => 
@@ -209,38 +203,52 @@ export function FamilyTreeCanvas({
   const handleCanvasPointerUp = () => {
     setIsDragging(false)
     if (draggingPersonId) {
-      // Snap to generation on drop if Alt was pressed during drag
-      if (isAltPressed) {
-        const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
-        if (draggedNode) {
-          const generationY = draggedNode.depth * 140 + 90
-          setLayoutNodes(prev => 
-            prev.map(node => 
-              node.personId === draggingPersonId 
-                ? { ...node, y: generationY }
-                : node
-            )
+      const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
+      if (draggedNode) {
+        const generationY = draggedNode.depth * 140 + 90
+        setLayoutNodes(prev => 
+          prev.map(node => 
+            node.personId === draggingPersonId 
+              ? { ...node, y: generationY }
+              : node
           )
-        }
+        )
       }
       setDraggingPersonId(null)
     }
+    setPendingDragId(null)
+    document.body.style.userSelect = ''
   }
 
   // Global pointer listeners during drag for smoothness
   useEffect(() => {
-    if (!draggingPersonId) return
+    if (!pendingDragId && !draggingPersonId) return
 
     const onMove = (e: PointerEvent) => {
       setLastPointer({ x: e.clientX, y: e.clientY })
+      // If drag hasn't started yet, check for threshold
+      if (!draggingPersonId && pendingDragId) {
+        const dx = e.clientX - startPointer.x
+        const dy = e.clientY - startPointer.y
+        if (Math.hypot(dx, dy) > 3) {
+          setDraggingPersonId(pendingDragId)
+        }
+        return
+      }
+      // Active drag -> schedule frame
       if (!animationFrame.current) {
         animationFrame.current = requestAnimationFrame(tick)
       }
     }
 
     const onUp = () => {
-      handleCanvasPointerUp()
-      document.body.style.userSelect = ''
+      if (draggingPersonId) {
+        handleCanvasPointerUp()
+      } else {
+        // No drag occurred; just clear pending
+        setPendingDragId(null)
+        document.body.style.userSelect = ''
+      }
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
     }
@@ -252,44 +260,28 @@ export function FamilyTreeCanvas({
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
     }
-  }, [draggingPersonId, tick])
+  }, [pendingDragId, draggingPersonId, startPointer, tick])
 
   // Person drag handlers
   const handlePersonDragStart = (e: React.PointerEvent, personId: string) => {
     e.stopPropagation()
-    
-    // Only start dragging on primary button (left mouse button)
     if (e.button !== 0) return
     
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       const personPos = positions[personId]
       if (personPos) {
-        console.log('🎯 Starting drag for:', personId, 'at position:', personPos)
-        
-        setDraggingPersonId(personId)
+        ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
+        setPendingDragId(personId)
         setSelectedPersonId(personId)
-        setDragStartNodePos({ x: personPos.x, y: personPos.y })
+        setStartPointer({ x: e.clientX, y: e.clientY })
         setLastPointer({ x: e.clientX, y: e.clientY })
         
-        // Calculate drag offset more carefully
-        const cardCenterX = (e.clientX - rect.left - pan.x) / zoom
-        const cardCenterY = (e.clientY - rect.top - pan.y) / zoom
-        
-        setDragOffset({
-          x: cardCenterX - personPos.x,
-          y: cardCenterY - personPos.y
-        })
-        
-        // Disable text selection while dragging
+        const worldX = (e.clientX - rect.left - pan.x) / zoom
+        const worldY = (e.clientY - rect.top - pan.y) / zoom
+        setDragStartNodePos({ x: personPos.x, y: personPos.y })
+        setDragOffset({ x: worldX - personPos.x, y: worldY - personPos.y })
         document.body.style.userSelect = 'none'
-        
-        console.log('🎯 Drag setup complete:', {
-          pointer: { x: e.clientX, y: e.clientY },
-          offset: { x: cardCenterX - personPos.x, y: cardCenterY - personPos.y },
-          rect: { left: rect.left, top: rect.top },
-          pan, zoom
-        })
       }
     }
   }
