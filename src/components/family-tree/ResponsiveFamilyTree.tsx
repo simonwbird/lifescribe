@@ -361,132 +361,175 @@ export default function ResponsiveFamilyTree({
               {/* Connection lines to next generation */}
               {generation < generationData.length - 1 && (
                 <div className="flex justify-center relative" style={{ height: '100px' }}>
-                  {/* Render spouse connections and hearts */}
-                  {(() => {
-                    const spousePairs: Array<{person1: Person, person2: Person, children: string[]}> = []
-                    const processedPeople = new Set<string>()
-                    
-                    // Find spouse pairs in this generation
-                    genPeople.forEach(person => {
-                      if (processedPeople.has(person.id)) return
+                  <svg 
+                    width="100%" 
+                    height="100" 
+                    className="absolute top-0 left-0"
+                    viewBox={`0 0 ${dimensions.width} 100`}
+                  >
+                    {(() => {
+                      const currentGen = generationData[generation].people
+                      const nextGen = generationData[generation + 1].people
+                      const gapBetweenCards = isMobile ? 12 : dimensions.width < 1024 ? 16 : 24
                       
-                      const spouses = findSpouses(person.id)
-                      const spouseInGeneration = spouses.find(spouseId => 
-                        genPeople.some(p => p.id === spouseId)
-                      )
+                      // Calculate positions for current generation
+                      const currentGenWidth = (currentGen.length * cardSize.width) + ((currentGen.length - 1) * gapBetweenCards)
+                      const currentGenStartX = (dimensions.width - currentGenWidth) / 2
                       
-                      if (spouseInGeneration) {
-                        const spouse = genPeople.find(p => p.id === spouseInGeneration)
-                        if (spouse) {
-                          const children = findChildren(person.id, spouse.id)
-                          spousePairs.push({ person1: person, person2: spouse, children })
-                          processedPeople.add(person.id)
-                          processedPeople.add(spouse.id)
-                        }
-                      }
-                    })
+                      // Calculate positions for next generation  
+                      const nextGenWidth = (nextGen.length * cardSize.width) + ((nextGen.length - 1) * gapBetweenCards)
+                      const nextGenStartX = (dimensions.width - nextGenWidth) / 2
 
-                    // Calculate positions for people in this generation
-                    const gapBetweenCards = isMobile ? 12 : dimensions.width < 1024 ? 16 : 24
-                    const totalWidth = (genPeople.length * cardSize.width) + ((genPeople.length - 1) * gapBetweenCards)
-                    const startX = (dimensions.width - totalWidth) / 2
+                      const elements: JSX.Element[] = []
+                      const processedPeople = new Set<string>()
 
-                    return (
-                      <svg 
-                        width="100%" 
-                        height="100" 
-                        className="absolute top-0"
-                        style={{ left: 0 }}
-                      >
-                        {/* Draw hearts between spouses and lines to children */}
-                        {spousePairs.map((pair, pairIndex) => {
-                          const person1Index = genPeople.findIndex(p => p.id === pair.person1.id)
-                          const person2Index = genPeople.findIndex(p => p.id === pair.person2.id)
-                          
-                          const person1X = startX + (person1Index * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
-                          const person2X = startX + (person2Index * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
-                          
-                          const heartX = (person1X + person2X) / 2
-                          const heartY = 20
+                      // Find and render spouse pairs with hearts and children connections
+                      currentGen.forEach((person, personIndex) => {
+                        if (processedPeople.has(person.id)) return
 
-                          return (
-                            <g key={pairIndex}>
-                              {/* Line between spouses */}
-                              <line 
-                                x1={person1X} 
-                                y1={10} 
-                                x2={person2X} 
-                                y2={10} 
-                                stroke="hsl(var(--primary))" 
-                                strokeWidth="2"
-                              />
-                              
-                              {/* Heart symbol */}
-                              <g transform={`translate(${heartX - 6}, ${heartY - 6})`}>
-                                <path 
-                                  d="M6,12 C6,12 0,8 0,4 C0,1.8 1.8,0 4,0 C5.1,0 6,0.5 6,0.5 C6,0.5 6.9,0 8,0 C10.2,0 12,1.8 12,4 C12,8 6,12 6,12 Z" 
-                                  fill="hsl(var(--destructive))"
-                                  stroke="hsl(var(--destructive))"
-                                  strokeWidth="0.5"
-                                />
-                              </g>
-                              
-                              {/* Lines to children */}
-                              {pair.children.length > 0 && (
-                                <>
-                                  <line 
-                                    x1={heartX} 
-                                    y1={heartY + 6} 
-                                    x2={heartX} 
-                                    y2={85} 
-                                    stroke="hsl(var(--border))" 
-                                    strokeWidth="2"
-                                    strokeDasharray="4,4"
-                                  />
-                                  {/* Connection point for children */}
-                                  <circle 
-                                    cx={heartX} 
-                                    cy={85} 
-                                    r="3" 
-                                    fill="hsl(var(--primary))"
-                                  />
-                                </>
-                              )}
-                            </g>
-                          )
-                        })}
-                        
-                        {/* Lines for single parents */}
-                        {genPeople
-                          .filter(person => !processedPeople.has(person.id))
-                          .map(person => {
-                            const personIndex = genPeople.findIndex(p => p.id === person.id)
-                            const personX = startX + (personIndex * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
-                            
-                            // Check if this person has children in next generation
-                            const hasChildren = relationships.some(rel => 
-                              rel.relationship_type === 'parent' && rel.from_person_id === person.id
+                        const spouses = findSpouses(person.id)
+                        const spouseInCurrentGen = spouses.find(spouseId => 
+                          currentGen.some(p => p.id === spouseId)
+                        )
+
+                        if (spouseInCurrentGen) {
+                          const spouseIndex = currentGen.findIndex(p => p.id === spouseInCurrentGen)
+                          if (spouseIndex !== -1) {
+                            // Calculate spouse positions
+                            const person1X = currentGenStartX + (personIndex * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
+                            const person2X = currentGenStartX + (spouseIndex * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
+                            const heartX = (person1X + person2X) / 2
+
+                            // Find their children in next generation
+                            const children = findChildren(person.id, spouseInCurrentGen)
+                            const childrenInNextGen = children.filter(childId => 
+                              nextGen.some(p => p.id === childId)
                             )
-                            
-                            if (hasChildren) {
-                              return (
+
+                            elements.push(
+                              <g key={`spouse-pair-${person.id}-${spouseInCurrentGen}`}>
+                                {/* Line between spouses */}
                                 <line 
-                                  key={person.id}
-                                  x1={personX} 
-                                  y1={0} 
-                                  x2={personX} 
-                                  y2={100} 
-                                  stroke="hsl(var(--border))" 
+                                  x1={Math.min(person1X, person2X)} 
+                                  y1={15} 
+                                  x2={Math.max(person1X, person2X)} 
+                                  y2={15} 
+                                  stroke="hsl(var(--primary))" 
                                   strokeWidth="2"
-                                  strokeDasharray="4,4"
                                 />
-                              )
-                            }
-                            return null
-                          })}
-                      </svg>
-                    )
-                  })()}
+                                
+                                {/* Heart symbol */}
+                                <circle cx={heartX} cy={15} r={8} fill="#ff69b4" stroke="#ff1493" strokeWidth="1"/>
+                                <text x={heartX} y={19} textAnchor="middle" fontSize="10" fill="white">♥</text>
+                                
+                                {/* Vertical line from heart down if there are children */}
+                                {childrenInNextGen.length > 0 && (
+                                  <>
+                                    <line 
+                                      x1={heartX} 
+                                      y1={23} 
+                                      x2={heartX} 
+                                      y2={70} 
+                                      stroke="hsl(var(--border))" 
+                                      strokeWidth="2"
+                                    />
+                                    
+                                    {/* Horizontal line to distribute to children */}
+                                    {childrenInNextGen.length > 1 && (() => {
+                                      const childXPositions = childrenInNextGen.map(childId => {
+                                        const childIndex = nextGen.findIndex(p => p.id === childId)
+                                        return nextGenStartX + (childIndex * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
+                                      })
+                                      const minX = Math.min(...childXPositions)
+                                      const maxX = Math.max(...childXPositions)
+                                      
+                                      return (
+                                        <>
+                                          <line 
+                                            x1={minX} 
+                                            y1={70} 
+                                            x2={maxX} 
+                                            y2={70} 
+                                            stroke="hsl(var(--border))" 
+                                            strokeWidth="2"
+                                          />
+                                          {/* Vertical lines down to each child */}
+                                          {childXPositions.map((childX, idx) => (
+                                            <line 
+                                              key={idx}
+                                              x1={childX} 
+                                              y1={70} 
+                                              x2={childX} 
+                                              y2={100} 
+                                              stroke="hsl(var(--border))" 
+                                              strokeWidth="2"
+                                            />
+                                          ))}
+                                        </>
+                                      )
+                                    })()}
+                                    
+                                    {/* Single child - direct line */}
+                                    {childrenInNextGen.length === 1 && (() => {
+                                      const childIndex = nextGen.findIndex(p => p.id === childrenInNextGen[0])
+                                      const childX = nextGenStartX + (childIndex * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
+                                      
+                                      return (
+                                        <line 
+                                          x1={childX} 
+                                          y1={70} 
+                                          x2={childX} 
+                                          y2={100} 
+                                          stroke="hsl(var(--border))" 
+                                          strokeWidth="2"
+                                        />
+                                      )
+                                    })()}
+                                  </>
+                                )}
+                              </g>
+                            )
+
+                            processedPeople.add(person.id)
+                            processedPeople.add(spouseInCurrentGen)
+                          }
+                        }
+                      })
+
+                      // Handle single parents (no spouse in current generation)
+                      currentGen.forEach((person, personIndex) => {
+                        if (processedPeople.has(person.id)) return
+
+                        const personX = currentGenStartX + (personIndex * (cardSize.width + gapBetweenCards)) + (cardSize.width / 2)
+                        
+                        // Check if this person has children in next generation
+                        const children = relationships
+                          .filter(rel => rel.relationship_type === 'parent' && rel.from_person_id === person.id)
+                          .map(rel => rel.to_person_id)
+                        
+                        const childrenInNextGen = children.filter(childId => 
+                          nextGen.some(p => p.id === childId)
+                        )
+
+                        if (childrenInNextGen.length > 0) {
+                          elements.push(
+                            <line 
+                              key={`single-parent-${person.id}`}
+                              x1={personX} 
+                              y1={0} 
+                              x2={personX} 
+                              y2={100} 
+                              stroke="hsl(var(--border))" 
+                              strokeWidth="2"
+                              strokeDasharray="4,4"
+                            />
+                          )
+                        }
+                      })
+
+                      return elements
+                    })()}
+                  </svg>
                 </div>
               )}
             </div>
