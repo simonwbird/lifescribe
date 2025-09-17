@@ -136,22 +136,25 @@ export function ConnectionRenderer({
             const barY = childrenTopY - 40
 
             if (childAnchors.length > 1) {
-              // Multiple children: trunk → horizontal bar → stems
+              // Multiple children: trunk → center of horizontal bar → stems
               
-              // Trunk from heart down to bar
+              // Calculate horizontal bar position and center
+              const minX = Math.min(...xs)
+              const maxX = Math.max(...xs)
+              const barCenterX = (minX + maxX) / 2  // Center of the horizontal bar
+              
+              // Trunk from heart down to center of bar
               paths.push(
                 <path
                   key={`trunk-${pathIndex++}`}
-                  d={`M ${heartX} ${heartY + 8} L ${heartX} ${barY}`}
+                  d={`M ${heartX} ${heartY + 8} L ${heartX} ${barY} L ${barCenterX} ${barY}`}
                   stroke="#FFFFFF"
                   strokeWidth="3"
                   fill="none"
                 />
               )
 
-              // Horizontal bar
-              const minX = Math.min(...xs)
-              const maxX = Math.max(...xs)
+              // Horizontal bar spanning all children
               paths.push(
                 <path
                   key={`bar-${pathIndex++}`}
@@ -162,21 +165,7 @@ export function ConnectionRenderer({
                 />
               )
 
-              // Connector if heart is outside child range
-              if (heartX < minX || heartX > maxX) {
-                const connectorX = heartX < minX ? minX : maxX
-                paths.push(
-                  <path
-                    key={`connector-${pathIndex++}`}
-                    d={`M ${heartX} ${barY} L ${connectorX} ${barY}`}
-                    stroke="#FFFFFF"
-                    strokeWidth="3"
-                    fill="none"
-                  />
-                )
-              }
-
-              // Stems to children
+              // Stems to children (no connector needed since we go to bar center)
               childAnchors.forEach((c) => {
                 paths.push(
                   <path
@@ -189,7 +178,7 @@ export function ConnectionRenderer({
                 )
               })
             } else {
-              // Single child: heart → vertical → horizontal → vertical to child
+              // Single child: heart → vertical → horizontal → vertical to child  
               const childAnchor = childAnchors[0]
               paths.push(
                 <path
