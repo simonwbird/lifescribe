@@ -523,14 +523,17 @@ export function FamilyTreeCanvas({
           />
         )}
 
-        {/* SVG for connections - below cards (z-index: 0) */}
+        {/* SVG for connections - below cards, with proper bounds */}
         <svg
-          className="absolute inset-0 pointer-events-none"
+          className="absolute pointer-events-none"
           style={{ 
             zIndex: 0,
-            width: '100%',
-            height: '100%'
+            left: '-2000px',
+            top: '-2000px', 
+            width: '6000px',
+            height: '6000px'
           }}
+          viewBox="-2000 -2000 6000 6000"
         >
           {(() => {
             console.log('🎯 FamilyTreeCanvas - Rendering ConnectionRenderer with:', {
