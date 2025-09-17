@@ -78,7 +78,10 @@ export function ConnectionRenderer({
     let spouseCount = 0
     const debugPaths: string[] = []
 
-    // Render spouse connections (horizontal lines with hearts)
+    // We'll collect parent->child edges to skip when routed through hearts
+    const skipEdges = new Set<string>()
+
+    // Render spouse connections (horizontal lines with hearts) and prepare couple->children routing
     const processedSpouses = new Set<string>()
     
     people.forEach(person => {
@@ -111,8 +114,6 @@ export function ConnectionRenderer({
         spouseCount++
         if (debugPaths.length < 3) debugPaths.push(`Spouse: ${spousePath}`)
         
-        if (DEBUG) console.log('✅ Creating spouse connection:', person.full_name, '↔', people.find(p => p.id === spouseId)?.full_name)
-        
         paths.push(
           <path
             key={`spouse-${pathIndex++}`}
@@ -141,6 +142,66 @@ export function ConnectionRenderer({
             ❤
           </text>
         )
+
+        // Couple -> children routing via the heart
+        const parent1Children = parentChildMap.get(person.id) || []
+        const parent2Children = parentChildMap.get(spouseId) || []
+        const sharedChildren = parent1Children.filter(c => parent2Children.includes(c))
+
+        if (sharedChildren.length > 0) {
+          // Compute child top anchor positions that exist
+          const childAnchors = sharedChildren
+            .map(childId => ({ id: childId, pos: positions[childId] }))
+            .filter(({ pos }) => !!pos)
+            .map(({ id, pos }) => ({ id, anchors: cardAnchors(pos!.x, pos!.y, cardWidth, cardHeight) }))
+
+          if (childAnchors.length > 0) {
+            const xs = childAnchors.map(c => c.anchors.top.x)
+            const ys = childAnchors.map(c => c.anchors.top.y)
+            const barY = Math.min(...ys) - 20 // a little above the highest child
+
+            // Trunk from heart down to bar
+            paths.push(
+              <path
+                key={`trunk-${pathIndex++}`}
+                d={`M ${heartX} ${heartY} L ${heartX} ${barY}`}
+                stroke="#FFFFFF"
+                strokeWidth="3"
+                fill="none"
+              />
+            )
+
+            // Horizontal bar spanning all children
+            const minX = Math.min(...xs)
+            const maxX = Math.max(...xs)
+            paths.push(
+              <path
+                key={`bar-${pathIndex++}`}
+                d={`M ${minX} ${barY} L ${maxX} ${barY}`}
+                stroke="#FFFFFF"
+                strokeWidth="3"
+                fill="none"
+              />
+            )
+
+            // Down lines to each child
+            childAnchors.forEach((c) => {
+              paths.push(
+                <path
+                  key={`child-stem-${pathIndex++}`}
+                  d={`M ${c.anchors.top.x} ${barY} L ${c.anchors.top.x} ${c.anchors.top.y}`}
+                  stroke="#FFFFFF"
+                  strokeWidth="3"
+                  fill="none"
+                />
+              )
+
+              // Mark edges to skip (from both parents to this child)
+              skipEdges.add(`${person.id}->${c.id}`)
+              skipEdges.add(`${spouseId}->${c.id}`)
+            })
+          }
+        }
       })
     })
 
@@ -154,6 +215,9 @@ export function ConnectionRenderer({
       
       const children = parentChildMap.get(parent.id) || []
       children.forEach(childId => {
+        // Skip if this child is already handled via a spouse heart
+        if (skipEdges.has(`${parent.id}->${childId}`)) return
+
         const child = people.find(p => p.id === childId)
         const childPos = positions[childId]
         if (!childPos || !child) {
@@ -168,8 +232,6 @@ export function ConnectionRenderer({
         const pathData = elbowPath(parentAnchors.bottom, childAnchors.top)
         parentChildCount++
         if (debugPaths.length < 3) debugPaths.push(`Parent-Child: ${pathData}`)
-        
-        if (DEBUG) console.log('✅ Creating parent-child connection:', parent.full_name, '→', child.full_name)
         
         paths.push(
           <path
