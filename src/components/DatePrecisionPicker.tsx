@@ -52,20 +52,20 @@ export function DatePrecisionPicker({
             {buttonLabel}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-3">
-          <div className="space-y-3">
+        <PopoverContent className="w-auto p-2">
+          <div className="space-y-2">
             <Calendar
               mode="single"
               selected={value.date ?? undefined}
               onSelect={(d) => setDate(d ?? null)}
               initialFocus
-              className={cn("p-3 pointer-events-auto")}
+              className={cn("p-1 pointer-events-auto text-sm")}
             />
-            <div className="flex items-center gap-3">
-              <div className="space-y-1">
-                <Label>Precision</Label>
+            <div className="flex items-end gap-2 px-1">
+              <div className="space-y-1 flex-1">
+                <Label className="text-xs">Precision</Label>
                 <Select value={value.precision} onValueChange={(v) => setPrecision(v as DatePrecision)}>
-                  <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="day">Day</SelectItem>
                     <SelectItem value="month">Month</SelectItem>
@@ -73,13 +73,13 @@ export function DatePrecisionPicker({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Switch checked={value.approx} onCheckedChange={setApprox} id="approx" />
-                <Label htmlFor="approx">Approximate</Label>
+                <Label htmlFor="approx" className="text-xs">Approx</Label>
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button onClick={() => setOpen(false)}>Done</Button>
+            <div className="flex justify-end px-1">
+              <Button size="sm" onClick={() => setOpen(false)}>Done</Button>
             </div>
           </div>
         </PopoverContent>
