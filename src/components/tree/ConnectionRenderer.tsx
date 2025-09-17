@@ -32,6 +32,14 @@ export function ConnectionRenderer({
   cardWidth = 150,
   cardHeight = 180
 }: ConnectionRendererProps) {
+  console.log('🔧 ConnectionRenderer Props:', { 
+    peopleCount: people.length, 
+    relationshipsCount: relationships.length,
+    positionsCount: Object.keys(positions).length,
+    sampleRelationship: relationships[0],
+    samplePosition: Object.entries(positions)[0]
+  })
+
   // Create maps for quick lookups
   const spouseMap = new Map<string, string[]>()
   const parentChildMap = new Map<string, string[]>()
@@ -46,6 +54,13 @@ export function ConnectionRenderer({
       if (!parentChildMap.has(rel.from_person_id)) parentChildMap.set(rel.from_person_id, [])
       parentChildMap.get(rel.from_person_id)!.push(rel.to_person_id)
     }
+  })
+
+  console.log('🔧 Relationship Maps:', { 
+    spouseMapSize: spouseMap.size, 
+    parentChildMapSize: parentChildMap.size,
+    spouseMapEntries: Array.from(spouseMap.entries()).slice(0, 3),
+    parentChildMapEntries: Array.from(parentChildMap.entries()).slice(0, 3)
   })
 
   const renderConnections = () => {
@@ -63,7 +78,10 @@ export function ConnectionRenderer({
     
     people.forEach(person => {
       const personPos = positions[person.id]
-      if (!personPos) return
+      if (!personPos) {
+        console.log('❌ No position for person:', person.full_name, person.id)
+        return
+      }
       
       const spouses = spouseMap.get(person.id) || []
       spouses.forEach(spouseId => {
@@ -72,7 +90,10 @@ export function ConnectionRenderer({
         processedSpouses.add(pairKey)
         
         const spousePos = positions[spouseId]
-        if (!spousePos) return
+        if (!spousePos) {
+          console.log('❌ No position for spouse:', spouseId)
+          return
+        }
         
         const personAnchors = cardAnchors(personPos.x, personPos.y, cardWidth, cardHeight)
         const spouseAnchors = cardAnchors(spousePos.x, spousePos.y, cardWidth, cardHeight)
@@ -84,6 +105,8 @@ export function ConnectionRenderer({
         const spousePath = `M ${leftPerson.midRight.x} ${leftPerson.midRight.y} L ${rightPerson.midLeft.x} ${rightPerson.midLeft.y}`
         spouseCount++
         if (debugPaths.length < 3) debugPaths.push(`Spouse: ${spousePath}`)
+        
+        console.log('✅ Creating spouse connection:', person.full_name, '↔', people.find(p => p.id === spouseId)?.full_name)
         
         paths.push(
           <path
@@ -118,13 +141,19 @@ export function ConnectionRenderer({
     // Render parent-child connections (elbow/orthogonal paths)
     people.forEach(parent => {
       const parentPos = positions[parent.id]
-      if (!parentPos) return
+      if (!parentPos) {
+        console.log('❌ No position for parent:', parent.full_name, parent.id)
+        return
+      }
       
       const children = parentChildMap.get(parent.id) || []
       children.forEach(childId => {
         const child = people.find(p => p.id === childId)
         const childPos = positions[childId]
-        if (!childPos || !child) return
+        if (!childPos || !child) {
+          console.log('❌ No position or person for child:', childId, child?.full_name)
+          return
+        }
         
         const parentAnchors = cardAnchors(parentPos.x, parentPos.y, cardWidth, cardHeight)
         const childAnchors = cardAnchors(childPos.x, childPos.y, cardWidth, cardHeight)
@@ -133,6 +162,8 @@ export function ConnectionRenderer({
         const pathData = elbowPath(parentAnchors.bottom, childAnchors.top)
         parentChildCount++
         if (debugPaths.length < 3) debugPaths.push(`Parent-Child: ${pathData}`)
+        
+        console.log('✅ Creating parent-child connection:', parent.full_name, '→', child.full_name)
         
         paths.push(
           <path
@@ -158,6 +189,11 @@ export function ConnectionRenderer({
 
   return (
     <>
+      {/* Test rectangle to confirm ConnectionRenderer is rendering */}
+      <rect x="100" y="100" width="200" height="50" fill="red" opacity="0.5" />
+      <text x="200" y="125" textAnchor="middle" fill="white" fontSize="12">
+        ConnectionRenderer Active ({people.length}p, {relationships.length}r)
+      </text>
       {renderConnections()}
     </>
   )

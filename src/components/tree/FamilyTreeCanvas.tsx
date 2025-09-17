@@ -426,6 +426,17 @@ export function FamilyTreeCanvas({
             height: '100%'
           }}
         >
+          {(() => {
+            console.log('🎯 FamilyTreeCanvas - Rendering ConnectionRenderer with:', {
+              peopleCount: people.length,
+              relationshipsCount: relationships.length,
+              positionsCount: Object.keys(positions).length,
+              samplePeople: people.slice(0, 2).map(p => ({ id: p.id, name: p.full_name })),
+              sampleRelationships: relationships.slice(0, 2),
+              samplePositions: Object.entries(positions).slice(0, 2)
+            })
+            return null
+          })()}
           <ConnectionRenderer
             people={people}
             relationships={relationships}

@@ -97,6 +97,15 @@ export default function FamilyTree() {
         .eq('family_id', member.family_id)
 
       setRelationships(relationshipsData || [])
+      
+      // Debug the loaded data
+      console.log('🌳 FamilyTree - Data loaded:', {
+        familyId: member.family_id,
+        peopleCount: peopleData?.length || 0,
+        relationshipsCount: relationshipsData?.length || 0,
+        samplePeople: peopleData?.slice(0, 2).map(p => ({ id: p.id, name: p.full_name })),
+        sampleRelationships: relationshipsData?.slice(0, 2)
+      })
 
       // Initialize positions for new family trees
       if (peopleData?.length && !hasCompletedTutorial) {
@@ -394,7 +403,14 @@ export default function FamilyTree() {
               people={people}
               relationships={relationships}
               familyId={familyId || ''}
-              onPersonSelect={(personId) => console.log('Selected:', personId)}
+              onPersonSelect={(personId) => {
+                console.log('🔍 Person selected:', personId)
+                console.log('📊 Current data state:', {
+                  peopleCount: people.length,
+                  relationshipsCount: relationships.length,
+                  familyId
+                })
+              }}
               onPersonEdit={(personId) => navigate(`/people/${personId}`)}
               onPersonView={handleViewPerson}
             />
