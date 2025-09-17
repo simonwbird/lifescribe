@@ -469,7 +469,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
           {currentPhoto && (
             <div className="flex flex-col h-full">
               {/* Photo Display Area */}
-              <div className="relative flex-1 bg-black">
+              <div className="relative h-[60vh] bg-black">
                 {photoUrls[currentPhoto.id] && (
                   <img
                     src={photoUrls[currentPhoto.id]}
@@ -519,7 +519,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               </div>
 
               {/* Story Details */}
-              <div className="p-6 bg-background max-h-48 overflow-y-auto">
+              <div className="p-6 bg-background flex-shrink-0">
                 <div className="space-y-3">
                   {currentPhoto.story?.title && (
                     <h3 className="text-lg font-semibold">
