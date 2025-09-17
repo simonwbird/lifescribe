@@ -1651,6 +1651,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                       <div className="flex items-center justify-between">
                         <h4 className="text-base font-medium">
                           {currentPhoto.story ? 'Your story about this photo' : 'Tell the story'}
+                          <span className="text-xs font-normal text-muted-foreground ml-2">• Auto-saves as you type</span>
                         </h4>
                         {isSaving && (
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
