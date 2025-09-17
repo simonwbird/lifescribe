@@ -107,14 +107,14 @@ export function ConnectionRenderer({
           </text>
         )
 
-        // Find children of this couple
+        // Find children of this couple (union of both parents' children)
         const parent1Children = parentChildMap.get(person.id) || []
         const parent2Children = parentChildMap.get(spouseId) || []
-        const sharedChildren = parent1Children.filter(c => parent2Children.includes(c))
+        const coupleChildren = Array.from(new Set<string>([...parent1Children, ...parent2Children]))
 
-        if (sharedChildren.length > 0) {
+        if (coupleChildren.length > 0) {
           // Get child positions
-          const childAnchors = sharedChildren
+          const childAnchors = coupleChildren
             .map(childId => ({ 
               id: childId, 
               pos: positions[childId],
