@@ -189,22 +189,18 @@ export function FamilyTreeCanvas({
     return snapToGrid ? Math.round(value / gridSize) * gridSize : value
   }
 
-  // Smooth drag animation - update overrides only
+  // Smooth drag animation - update overrides only (delta-based, robust to pan)
   const tick = useCallback(() => {
     animationFrame.current = 0
     if (!draggingPersonId) return
-    
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return
-    
-    // Correct inversion: element rect already includes translate(pan)
-    // world = (screen - rect) / zoom
-    const worldX = (lastPointer.x - rect.left) / zoom
-    const worldY = (lastPointer.y - rect.top) / zoom
-    
-    const newX = snapToGridHelper(worldX - dragOffset.x)
-    const newY = snapToGridHelper(worldY - dragOffset.y)
-    
+
+    // Compute pointer delta in screen pixels, convert to world units by dividing by zoom
+    const dxWorld = (lastPointer.x - startPointer.x) / zoom
+    const dyWorld = (lastPointer.y - startPointer.y) / zoom
+
+    const newX = snapToGridHelper(dragStartNodePos.x + dxWorld)
+    const newY = snapToGridHelper(dragStartNodePos.y + dyWorld)
+
     // Update override ref and bump tick (lightweight)
     if (!dragOverridesRef.current[draggingPersonId] ||
         dragOverridesRef.current[draggingPersonId].x !== newX ||
@@ -212,7 +208,7 @@ export function FamilyTreeCanvas({
       dragOverridesRef.current[draggingPersonId] = { x: newX, y: newY }
       setVisualTick(v => v + 1)
     }
-  }, [draggingPersonId, lastPointer, pan, zoom, dragOffset])
+  }, [draggingPersonId, lastPointer, startPointer, zoom, dragStartNodePos])
 
   // Pointer handlers for canvas panning
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
@@ -321,23 +317,15 @@ export function FamilyTreeCanvas({
     e.stopPropagation()
     if (e.button !== 0) return
     
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (rect) {
-        const personPos = positions[personId]
-        if (personPos) {
-          setPendingDragId(personId)
-          setSelectedPersonId(personId)
-          setStartPointer({ x: e.clientX, y: e.clientY })
-          setLastPointer({ x: e.clientX, y: e.clientY })
-          
-          // Correct inversion: element rect already includes translate(pan)
-          // world = (screen - rect) / zoom
-          const worldX = (e.clientX - rect.left) / zoom
-          const worldY = (e.clientY - rect.top) / zoom
-          setDragStartNodePos({ x: personPos.x, y: personPos.y })
-          setDragOffset({ x: worldX - personPos.x, y: worldY - personPos.y })
-          document.body.style.userSelect = 'none'
-        }
+    const personPos = positions[personId]
+    if (personPos) {
+      setPendingDragId(personId)
+      setSelectedPersonId(personId)
+      setStartPointer({ x: e.clientX, y: e.clientY })
+      setLastPointer({ x: e.clientX, y: e.clientY })
+      setDragStartNodePos({ x: personPos.x, y: personPos.y })
+      setDragOffset({ x: 0, y: 0 }) // Not used in delta mode, but keep for compatibility
+      document.body.style.userSelect = 'none'
     }
   }
 
