@@ -432,48 +432,24 @@ export default function ProfilePhotoUploader({
         )}
         
         <div 
-          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full cursor-pointer"
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-full cursor-pointer"
           onClick={capturePhoto}
         >
-          <Camera className="h-6 w-6 text-white" />
+          <Camera className="h-4 w-4 text-white/80" />
         </div>
       </div>
 
-      <div className="flex flex-col items-center space-y-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={uploading}
-              className="flex items-center gap-2"
-            >
-              <Camera className="h-4 w-4" />
-              {currentPhotoUrl ? 'Change Photo' : 'Add Photo'}
-              <ChevronDown className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-48">
-            <DropdownMenuItem onClick={capturePhoto} className="flex items-center gap-2">
-              <Camera className="h-4 w-4" />
-              Take Photo
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={selectFromGallery} className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Choose from Gallery
-            </DropdownMenuItem>
-            {currentPhotoUrl && (
-              <DropdownMenuItem onClick={openEditDialog} className="flex items-center gap-2">
-                <CropIcon className="h-4 w-4" />
-                Edit Photo
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        
-        <p className="text-xs text-muted-foreground text-center">
-          JPG, PNG or GIF (max 5MB)
-        </p>
+      <div className="flex flex-col items-center">
+        {/* Only show subtle edit option on hover for tribute pages */}
+        <div className="relative group">
+          <div 
+            className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-1 cursor-pointer border shadow-sm"
+            onClick={capturePhoto}
+            title="Update photo"
+          >
+            <Camera className="h-3 w-3 text-muted-foreground" />
+          </div>
+        </div>
       </div>
 
       <input
