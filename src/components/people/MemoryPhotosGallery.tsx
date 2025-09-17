@@ -374,11 +374,26 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     }
   }
 
-  const handleEditStory = (story: any) => {
+  const handleEditStory = async (story: any) => {
     setEditingStory(story)
     setEditStoryTitle(story.title || '')
     setEditStoryContent(story.content || '')
     setEditStoryDate(story.occurred_on || '')
+    
+    // Fetch people linked to this story
+    try {
+      const { data: linkedPeople } = await supabase
+        .from('person_story_links')
+        .select('person_id')
+        .eq('story_id', story.id)
+      
+      const linkedPersonIds = linkedPeople?.map(link => link.person_id) || []
+      setTaggedPeople(linkedPersonIds)
+    } catch (error) {
+      console.error('Failed to fetch story people:', error)
+      setTaggedPeople([person.id])
+    }
+    
     setShowEditStoryModal(true)
   }
 
@@ -386,7 +401,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     if (!editingStory) return
 
     try {
-      const { error } = await supabase
+      // Update story details
+      const { error: updateError } = await supabase
         .from('stories')
         .update({
           title: editStoryTitle.trim(),
@@ -395,7 +411,30 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         })
         .eq('id', editingStory.id)
 
-      if (error) throw error
+      if (updateError) throw updateError
+
+      // Update people links - remove existing and add new ones
+      const { error: deleteLinksError } = await supabase
+        .from('person_story_links')
+        .delete()
+        .eq('story_id', editingStory.id)
+
+      if (deleteLinksError) throw deleteLinksError
+
+      // Add new people links
+      if (taggedPeople.length > 0) {
+        const linkInserts = taggedPeople.map(personId => ({
+          person_id: personId,
+          story_id: editingStory.id,
+          family_id: (person as any).family_id
+        }))
+
+        const { error: insertLinksError } = await supabase
+          .from('person_story_links')
+          .insert(linkInserts)
+
+        if (insertLinksError) throw insertLinksError
+      }
 
       toast({
         title: "Story updated",
@@ -407,6 +446,9 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       setEditStoryTitle('')
       setEditStoryContent('')
       setEditStoryDate('')
+      setTaggedPeople([person.id])
+      setPeopleSearchQuery('')
+      setShowPeopleDropdown(false)
       fetchPhotos() // Refresh to show updated story
     } catch (error) {
       console.error('Failed to update story:', error)
@@ -1024,7 +1066,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
       {/* Edit Story Modal */}
       <Dialog open={showEditStoryModal} onOpenChange={setShowEditStoryModal}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Memory Story</DialogTitle>
             <DialogDescription>
@@ -1032,7 +1074,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             <div>
               <label className="text-sm font-medium mb-2 block">
                 Story Title
@@ -1071,12 +1113,110 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 {editStoryContent.length}/1000 characters
               </p>
             </div>
+
+            {/* People Tagging Section */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Who's in this memory?
+              </label>
+              
+              {/* Selected People Tags */}
+              {taggedPeople.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {taggedPeople.map((personId) => {
+                    const person = familyMembers.find(m => m.id === personId)
+                    if (!person) return null
+                    return (
+                      <span 
+                        key={personId}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-sm rounded-md"
+                      >
+                        {person.full_name}
+                        <button
+                          type="button"
+                          onClick={() => setTaggedPeople(prev => prev.filter(id => id !== personId))}
+                          className="hover:bg-primary/20 rounded p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+              
+              {/* People Search */}
+              <div className="relative">
+                <Input
+                  placeholder="Search for family members to tag..."
+                  value={peopleSearchQuery}
+                  onChange={(e) => {
+                    setPeopleSearchQuery(e.target.value)
+                    setShowPeopleDropdown(e.target.value.length > 0)
+                  }}
+                  onFocus={() => setShowPeopleDropdown(peopleSearchQuery.length > 0)}
+                  className="pr-10"
+                />
+                
+                {/* Search Results Dropdown */}
+                {showPeopleDropdown && peopleSearchQuery && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                    {(() => {
+                      const searchLower = peopleSearchQuery.toLowerCase()
+                      const matchingMembers = familyMembers.filter(member => 
+                        member.full_name.toLowerCase().includes(searchLower) &&
+                        !taggedPeople.includes(member.id)
+                      )
+                      
+                      return (
+                        <>
+                          {/* Existing Family Members */}
+                          {matchingMembers.map(member => (
+                            <button
+                              key={member.id}
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover:bg-accent flex items-center gap-2"
+                              onClick={() => {
+                                setTaggedPeople(prev => [...prev, member.id])
+                                setPeopleSearchQuery('')
+                                setShowPeopleDropdown(false)
+                              }}
+                            >
+                              <span>{member.full_name}</span>
+                            </button>
+                          ))}
+                           
+                           {matchingMembers.length === 0 && peopleSearchQuery.trim() && (
+                             <div className="px-3 py-2 text-muted-foreground text-sm">
+                               No matching family members found
+                             </div>
+                           )}
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
+                
+                {/* Close dropdown when clicking outside */}
+                {showPeopleDropdown && (
+                  <div 
+                    className="fixed inset-0 z-0" 
+                    onClick={() => setShowPeopleDropdown(false)}
+                  />
+                )}
+              </div>
+            </div>
           </div>
           
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => setShowEditStoryModal(false)}
+              onClick={() => {
+                setShowEditStoryModal(false)
+                setTaggedPeople([person.id])
+                setPeopleSearchQuery('')
+                setShowPeopleDropdown(false)
+              }}
             >
               Cancel
             </Button>
