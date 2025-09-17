@@ -509,6 +509,70 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                     </div>
                   ))}
                 </div>
+) : activeFilter === 'videos' ? (
+                /* Video Wall */
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayedItems.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="bg-muted rounded-lg overflow-hidden border hover:shadow-lg transition-all group"
+                    >
+                      {/* Video Thumbnail/Player */}
+                      <div className="relative aspect-video bg-black/10">
+                        {playingVideo === item.id && videoRef.current ? (
+                          <div 
+                            ref={(container) => {
+                              if (container && videoRef.current && !container.contains(videoRef.current)) {
+                                container.appendChild(videoRef.current)
+                              }
+                            }}
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div 
+                            className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-primary/10 transition-all"
+                            onClick={() => handleVideoPlay(item)}
+                          >
+                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors backdrop-blur-sm">
+                              {playingVideo === item.id ? (
+                                <Pause className="h-8 w-8 text-primary" />
+                              ) : (
+                                <Play className="h-8 w-8 text-primary ml-1" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Video Info */}
+                      <div className="p-4">
+                        <div 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            if (item.story_id) {
+                              navigate(`/stories/${item.story_id}`)
+                            }
+                          }}
+                        >
+                          <h4 className="font-medium text-sm leading-tight mb-2 hover:text-primary transition-colors">
+                            {item.title}
+                          </h4>
+                          {item.excerpt && (
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+                              {item.excerpt}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <VideoIcon className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(item.date, item.date_precision)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 /* Regular Timeline List */
                 <>
@@ -577,71 +641,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                 </div>
               )}
             </div>
-          ) : activeFilter === 'videos' ? (
-                /* Video Wall */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {displayedItems.map((item) => (
-                    <div 
-                      key={item.id}
-                      className="bg-muted rounded-lg overflow-hidden border hover:shadow-lg transition-all group"
-                    >
-                      {/* Video Thumbnail/Player */}
-                      <div className="relative aspect-video bg-black/10">
-                        {playingVideo === item.id && videoRef.current ? (
-                          <div 
-                            ref={(container) => {
-                              if (container && videoRef.current && !container.contains(videoRef.current)) {
-                                container.appendChild(videoRef.current)
-                              }
-                            }}
-                            className="w-full h-full"
-                          />
-                        ) : (
-                          <div 
-                            className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-primary/10 transition-all"
-                            onClick={() => handleVideoPlay(item)}
-                          >
-                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors backdrop-blur-sm">
-                              {playingVideo === item.id ? (
-                                <Pause className="h-8 w-8 text-primary" />
-                              ) : (
-                                <Play className="h-8 w-8 text-primary ml-1" />
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Video Info */}
-                      <div className="p-4">
-                        <div 
-                          className="cursor-pointer"
-                          onClick={() => {
-                            if (item.story_id) {
-                              navigate(`/stories/${item.story_id}`)
-                            }
-                          }}
-                        >
-                          <h4 className="font-medium text-sm leading-tight mb-2 hover:text-primary transition-colors">
-                            {item.title}
-                          </h4>
-                          {item.excerpt && (
-                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-2">
-                              {item.excerpt}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <VideoIcon className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {formatDate(item.date, item.date_precision)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
+          ) : (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">
