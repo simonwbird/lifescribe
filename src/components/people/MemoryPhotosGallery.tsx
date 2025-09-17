@@ -45,6 +45,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [photoTitle, setPhotoTitle] = useState('')
   const [photoDescription, setPhotoDescription] = useState('')
   const [photoDate, setPhotoDate] = useState('')
+  const [approxMonth, setApproxMonth] = useState('')
+  const [approxYear, setApproxYear] = useState('')
   const [showLightbox, setShowLightbox] = useState(false)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
@@ -136,7 +138,21 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       if (!user) throw new Error('Not authenticated')
 
       // Create a story for this memory  
-      const occurred_on = photoDate ? format(new Date(photoDate), 'yyyy-MM-dd') : null
+      let occurred_on = null
+      let occurred_precision = null
+      
+      if (photoDate) {
+        occurred_on = format(new Date(photoDate), 'yyyy-MM-dd')
+        occurred_precision = 'day'
+      } else if (approxYear) {
+        if (approxMonth) {
+          occurred_on = `${approxYear}-${approxMonth.padStart(2, '0')}-01`
+          occurred_precision = 'month'
+        } else {
+          occurred_on = `${approxYear}-01-01`
+          occurred_precision = 'year'
+        }
+      }
       const { data: story, error: storyError } = await supabase
         .from('stories')
         .insert({
@@ -220,6 +236,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         setPhotoTitle('')
         setPhotoDescription('')
         setPhotoDate('')
+        setApproxMonth('')
+        setApproxYear('')
         setTaggedPeople([person.id])
         setPeopleSearchQuery('')
         setShowPeopleDropdown(false)
@@ -493,11 +511,37 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               <label className="text-sm font-medium mb-2 block">
                 When was this taken? <span className="text-muted-foreground">(optional)</span>
               </label>
-              <Input
-                type="date"
-                value={photoDate}
-                onChange={(e) => setPhotoDate(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Input
+                  type="date"
+                  value={photoDate}
+                  onChange={(e) => setPhotoDate(e.target.value)}
+                  placeholder="Select exact date"
+                />
+                <div className="text-xs text-muted-foreground">
+                  Or enter approximate date:
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Month (1-12)"
+                    type="number"
+                    min="1"
+                    max="12"
+                    className="flex-1"
+                    value={approxMonth}
+                    onChange={(e) => setApproxMonth(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Year"
+                    type="number"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    className="flex-1"
+                    value={approxYear}
+                    onChange={(e) => setApproxYear(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
             
             <div>
@@ -669,6 +713,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 setPhotoTitle('')
                 setPhotoDescription('')
                 setPhotoDate('')
+                setApproxMonth('')
+                setApproxYear('')
                 setTaggedPeople([person.id])
                 setPeopleSearchQuery('')
                 setShowPeopleDropdown(false)
