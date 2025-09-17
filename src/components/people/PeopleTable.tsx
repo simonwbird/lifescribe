@@ -121,38 +121,68 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
 
   // Avatar component with proper state management
   const PersonAvatar = ({ person, familyId }: { person: Person, familyId: string }) => {
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(person.avatar_url)
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
     const [hasError, setHasError] = useState(false)
 
+    // Resolve initial avatar URL: handle raw storage paths and signed URLs
     useEffect(() => {
-      setAvatarUrl(person.avatar_url)
-      setHasError(false)
-    }, [person.avatar_url])
+      let cancelled = false
+      async function resolve() {
+        setHasError(false)
+        const raw = person.avatar_url || null
+        if (!raw) {
+          setAvatarUrl(null)
+          return
+        }
+        if (raw.startsWith('http')) {
+          setAvatarUrl(raw)
+          return
+        }
+        // Raw storage path -> get proxied signed URL
+        const proxied = await getSignedMediaUrl(raw, familyId)
+        if (!cancelled) setAvatarUrl(proxied || null)
+      }
+      resolve()
+      return () => {
+        cancelled = true
+      }
+    }, [person.avatar_url, familyId])
 
     const handleError = async () => {
       if (hasError) return // Prevent infinite loops
-      
-      // First try to refresh directly via Storage signed URL
-      if (avatarUrl) {
+      setHasError(true)
+
+      // If current is signed URL, try to refresh
+      if (avatarUrl && avatarUrl.startsWith('http')) {
         const refreshedUrl = await AvatarService.refreshSignedUrl(avatarUrl)
         if (refreshedUrl && refreshedUrl !== avatarUrl) {
+          setHasError(false)
           setAvatarUrl(refreshedUrl)
           return
         }
+        // Try media-proxy using extracted path
+        const filePath = AvatarService.extractFilePath(avatarUrl)
+        if (filePath) {
+          const proxiedUrl = await getSignedMediaUrl(filePath, familyId)
+          if (proxiedUrl) {
+            setHasError(false)
+            setAvatarUrl(proxiedUrl)
+            return
+          }
+        }
       }
 
-      // If that failed, try via media-proxy using family access control
-      const filePath = avatarUrl ? AvatarService.extractFilePath(avatarUrl) : null
-      if (filePath) {
-        const proxiedUrl = await getSignedMediaUrl(filePath, familyId)
+      // If person.avatar_url is a raw path, try proxy now
+      if (person.avatar_url && !person.avatar_url.startsWith('http')) {
+        const proxiedUrl = await getSignedMediaUrl(person.avatar_url, familyId)
         if (proxiedUrl) {
+          setHasError(false)
           setAvatarUrl(proxiedUrl)
           return
         }
       }
-      
-      // Use gender default
-      setHasError(true)
+
+      // Fallback to gender default
       setAvatarUrl(getDefaultAvatar(person))
     }
 
