@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { 
   Filter, 
   MessageSquare, 
@@ -11,11 +12,13 @@ import {
   Calendar,
   Pin,
   Heart,
-  User
+  User,
+  X
 } from 'lucide-react'
 import { Person, UserRole, canAddContent } from '@/utils/personUtils'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase'
+import { getSignedMediaUrl } from '@/lib/media'
 
 interface TimelineItem {
   id: string
@@ -30,6 +33,8 @@ interface TimelineItem {
   story_id?: string
   event_id?: string
   media_id?: string
+  file_path?: string
+  signed_url?: string
 }
 
 interface PersonTimelineProps {
@@ -47,6 +52,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
   const [loading, setLoading] = useState(true)
   const [displayCount, setDisplayCount] = useState(10) // Show 10 items initially
   const [hasMore, setHasMore] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState<TimelineItem | null>(null)
   const canUserAddContent = canAddContent(userRole)
 
   const filters: { key: TimelineFilter; label: string; icon: any }[] = [
@@ -117,7 +123,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       const { data: media } = await supabase
         .from('media')
         .select(`
-          id, file_name, mime_type, created_at, story_id, individual_story_id,
+          id, file_name, mime_type, created_at, story_id, individual_story_id, file_path,
           stories!media_story_id_fkey(
             person_story_links!inner(person_id)
           )
@@ -127,9 +133,18 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
         .order('created_at', { ascending: false })
 
       if (media) {
-        media.forEach(mediaItem => {
+        for (const mediaItem of media) {
           const isPhoto = mediaItem.mime_type?.startsWith('image/')
           const isAudio = mediaItem.mime_type?.startsWith('audio/')
+          
+          let signedUrl = undefined
+          if (isPhoto && mediaItem.file_path) {
+            try {
+              signedUrl = await getSignedMediaUrl(mediaItem.file_path, (person as any).family_id)
+            } catch (error) {
+              console.error('Failed to get signed URL for media:', mediaItem.id, error)
+            }
+          }
           
           items.push({
             id: mediaItem.id,
@@ -137,9 +152,11 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
             title: mediaItem.file_name,
             date: mediaItem.created_at,
             media_type: isPhoto ? 'photo' : isAudio ? 'voice' : 'other',
-            media_id: mediaItem.id
+            media_id: mediaItem.id,
+            file_path: mediaItem.file_path,
+            signed_url: signedUrl || undefined
           })
-        })
+        }
       }
 
       // Sort all items by date (newest first)
@@ -219,6 +236,9 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
     } else if (item.type === 'life_event' && item.event_id) {
       // For now, stay on the same page - could implement event modal later
       console.log('Life event clicked:', item.event_id)
+    } else if (item.type === 'media' && item.media_type === 'photo') {
+      // Open photo in lightbox
+      setSelectedPhoto(item)
     } else if (item.type === 'media' && item.media_id) {
       // For now, stay on the same page - could implement media lightbox later
       console.log('Media clicked:', item.media_id)
@@ -274,15 +294,24 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                       className="aspect-square bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity group"
                       onClick={() => handleItemClick(item)}
                     >
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
-                        <Camera className="h-8 w-8 text-primary/60" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                        <div className="absolute bottom-1 left-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <p className="text-xs text-white bg-black/60 px-1 py-0.5 rounded truncate">
-                            {item.title}
-                          </p>
+                      {item.signed_url ? (
+                        <img 
+                          src={item.signed_url} 
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
+                          <Camera className="h-8 w-8 text-primary/60" />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          <div className="absolute bottom-1 left-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p className="text-xs text-white bg-black/60 px-1 py-0.5 rounded truncate">
+                              {item.title}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -375,6 +404,41 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
           )}
         </div>
       </CardContent>
+
+      {/* Photo Lightbox */}
+      <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          {selectedPhoto && (
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-10 bg-black/20 hover:bg-black/40 text-white"
+                onClick={() => setSelectedPhoto(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              {selectedPhoto.signed_url ? (
+                <img 
+                  src={selectedPhoto.signed_url} 
+                  alt={selectedPhoto.title}
+                  className="w-full h-auto max-h-[90vh] object-contain"
+                />
+              ) : (
+                <div className="w-full h-96 bg-muted flex items-center justify-center">
+                  <Camera className="h-16 w-16 text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                <h3 className="text-white font-medium">{selectedPhoto.title}</h3>
+                <p className="text-white/80 text-sm">
+                  {formatDate(selectedPhoto.date, selectedPhoto.date_precision)}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
