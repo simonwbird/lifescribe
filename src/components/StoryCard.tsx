@@ -246,9 +246,12 @@ export default function StoryCard({ story }: StoryCardProps) {
                 return (
                   <div key={index} className="bg-muted/50 rounded-lg p-4 flex items-center gap-3">
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        {mediaItem.file_name || 'Audio Recording'}
-                      </p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Mic2 size={16} className="text-primary/70" />
+                        <p className="text-sm font-semibold text-foreground/90 truncate">
+                          {mediaItem.file_name?.replace(/\.[^/.]+$/, '') || 'Voice Recording'}
+                        </p>
+                      </div>
                       <audio
                         src={url}
                         controls
