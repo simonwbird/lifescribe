@@ -56,6 +56,19 @@ export class LayoutEngine {
       
       console.log(`🌳 Processing: ${fromPerson?.full_name} --${rel.relationship_type}--> ${toPerson?.full_name}`)
       
+      // Special debugging for Viccars family
+      if (fromPerson?.full_name?.includes('Viccars') || toPerson?.full_name?.includes('Viccars') || 
+          fromPerson?.full_name?.includes('Archibald') || toPerson?.full_name?.includes('Helen') ||
+          fromPerson?.full_name?.includes('Annie')) {
+        console.log('🔍 VICCARS FAMILY RELATIONSHIP:', {
+          from: fromPerson?.full_name,
+          to: toPerson?.full_name,
+          type: rel.relationship_type,
+          fromBirth: fromPerson?.birth_year,
+          toBirth: toPerson?.birth_year
+        })
+      }
+      
       if (rel.relationship_type === 'spouse') {
         if (!this.spouseMap.has(rel.from_person_id)) this.spouseMap.set(rel.from_person_id, [])
         if (!this.spouseMap.has(rel.to_person_id)) this.spouseMap.set(rel.to_person_id, [])
@@ -69,6 +82,24 @@ export class LayoutEngine {
         this.parentsMap.get(rel.to_person_id)!.push(rel.from_person_id)
         console.log(`🌳   Added parent-child: ${fromPerson?.full_name} (parent) → ${toPerson?.full_name} (child)`)
       }
+    })
+    
+    // Special debugging for Viccars family members
+    const viccarsMembers = this.people.filter(p => 
+      p.full_name?.includes('Viccars') || p.full_name?.includes('Archibald') || 
+      p.full_name?.includes('Annie') || p.full_name?.includes('Helen')
+    )
+    
+    console.log('🔍 VICCARS FAMILY ANALYSIS:')
+    viccarsMembers.forEach(person => {
+      const parents = this.parentsMap.get(person.id) || []
+      const children = this.childrenMap.get(person.id) || []
+      const spouses = this.spouseMap.get(person.id) || []
+      
+      console.log(`🔍   ${person.full_name} (${person.birth_year}):`)
+      console.log(`🔍     Parents: ${parents.map(id => this.people.find(p => p.id === id)?.full_name).join(', ') || 'none'}`)
+      console.log(`🔍     Children: ${children.map(id => this.people.find(p => p.id === id)?.full_name).join(', ') || 'none'}`)
+      console.log(`🔍     Spouses: ${spouses.map(id => this.people.find(p => p.id === id)?.full_name).join(', ') || 'none'}`)
     })
     
     console.log('🌳 Final relationship maps:')
@@ -109,7 +140,15 @@ export class LayoutEngine {
       if (visited.has(person.id)) return
       visited.add(person.id)
       
-      console.log(`🌳 Assigning ${person.full_name} to generation ${depth}`)
+      // Special debugging for Viccars family
+      const isViccarsFamily = person.full_name?.includes('Viccars') || person.full_name?.includes('Archibald') || 
+                             person.full_name?.includes('Annie') || person.full_name?.includes('Helen')
+      
+      if (isViccarsFamily) {
+        console.log(`🔍 VICCARS: Assigning ${person.full_name} (${person.birth_year}) to generation ${depth}`)
+      } else {
+        console.log(`🌳 Assigning ${person.full_name} to generation ${depth}`)
+      }
       
       personDepth.set(person.id, depth)
       if (!generations.has(depth)) generations.set(depth, [])
@@ -118,12 +157,20 @@ export class LayoutEngine {
       // Add spouses to same generation
       const spouses = this.spouseMap.get(person.id) || []
       if (spouses.length > 0) {
-        console.log(`🌳   ${person.full_name} has spouses:`, spouses.map(id => this.people.find(p => p.id === id)?.full_name))
+        if (isViccarsFamily) {
+          console.log(`🔍 VICCARS: ${person.full_name} has spouses:`, spouses.map(id => this.people.find(p => p.id === id)?.full_name))
+        } else {
+          console.log(`🌳   ${person.full_name} has spouses:`, spouses.map(id => this.people.find(p => p.id === id)?.full_name))
+        }
       }
       spouses.forEach(spouseId => {
         const spouse = this.people.find(p => p.id === spouseId)
         if (spouse && !visited.has(spouse.id)) {
-          console.log(`🌳   Adding spouse ${spouse.full_name} to same generation ${depth}`)
+          if (isViccarsFamily) {
+            console.log(`🔍 VICCARS: Adding spouse ${spouse.full_name} to same generation ${depth}`)
+          } else {
+            console.log(`🌳   Adding spouse ${spouse.full_name} to same generation ${depth}`)
+          }
           assignGeneration(spouse, depth)
         }
       })
@@ -131,18 +178,33 @@ export class LayoutEngine {
       // Add children to next generation
       const children = this.childrenMap.get(person.id) || []
       if (children.length > 0) {
-        console.log(`🌳   ${person.full_name} has children:`, children.map(id => this.people.find(p => p.id === id)?.full_name))
+        if (isViccarsFamily) {
+          console.log(`🔍 VICCARS: ${person.full_name} has children:`, children.map(id => this.people.find(p => p.id === id)?.full_name))
+        } else {
+          console.log(`🌳   ${person.full_name} has children:`, children.map(id => this.people.find(p => p.id === id)?.full_name))
+        }
       }
       children.forEach(childId => {
         const child = this.people.find(p => p.id === childId)
         if (child && !visited.has(child.id)) {
-          console.log(`🌳   Adding child ${child.full_name} to generation ${depth + 1}`)
+          if (isViccarsFamily) {
+            console.log(`🔍 VICCARS: Adding child ${child.full_name} to generation ${depth + 1}`)
+          } else {
+            console.log(`🌳   Adding child ${child.full_name} to generation ${depth + 1}`)
+          }
           assignGeneration(child, depth + 1)
         }
       })
     }
     
     // Start from root people (oldest generation at depth 0)
+    console.log('🔍 VICCARS CHECK: Are Archibald/Annie in root people?', 
+      rootPeople.filter(p => p.full_name?.includes('Archibald') || p.full_name?.includes('Annie')).map(p => p.full_name)
+    )
+    console.log('🔍 VICCARS CHECK: Is Helen in root people?', 
+      rootPeople.filter(p => p.full_name?.includes('Helen')).map(p => p.full_name)
+    )
+    
     rootPeople.forEach(person => assignGeneration(person, 0))
     
     // Handle any unvisited people (disconnected components)
