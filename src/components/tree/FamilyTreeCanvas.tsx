@@ -211,27 +211,19 @@ export function FamilyTreeCanvas({
 
   // Pointer handlers for canvas panning
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    // Allow panning on any blank area, with explicit area checks
+    // Allow panning on any blank area, not just the canvas element itself
     const target = e.target as HTMLElement
     
-    // More robust detection for interactive elements
-    const isPersonCard = target.closest('article[role="button"]') || target.closest('[data-person-card]')
-    const isButton = target.closest('button') || target.closest('[role="button"]')
-    const isControl = target.closest('.controls') || target.closest('[data-control]')
-    const isInteractive = isPersonCard || isButton || isControl
+    // Check if we clicked on a person card or any interactive element
+    const isPersonCard = target.closest('article[role="button"]')
+    const isButton = target.closest('button')
+    const isInteractive = isPersonCard || isButton
     
-    // Extra check: ensure we're clicking on canvas-related elements
-    const isCanvasArea = target === canvasRef.current || 
-                        target.closest('[data-canvas-area]') ||
-                        target.tagName === 'svg' ||
-                        target.tagName === 'DIV'
-    
-    if (!isInteractive && isCanvasArea) {
-      console.log('🖱️ Starting canvas pan from:', target.tagName, 'at', e.clientX, e.clientY)
+    if (!isInteractive) {
+      console.log('🖱️ Starting canvas pan from:', target.tagName)
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault() // Prevent any default behavior
     }
   }
 
@@ -516,7 +508,6 @@ export function FamilyTreeCanvas({
       {/* Canvas */}
       <div
         ref={canvasRef}
-        data-canvas-area="true"
         className={`w-full h-full ${isDragging && !draggingPersonId ? 'cursor-grabbing' : 'cursor-grab'}`}
         onPointerDown={handleCanvasPointerDown}
         onPointerMove={handleCanvasPointerMove}
@@ -553,19 +544,18 @@ export function FamilyTreeCanvas({
           />
         )}
 
-        {/* SVG for connections - ensure it doesn't block any pointer events */}
+        {/* SVG for connections - below cards, with proper bounds */}
         <svg
           className="absolute pointer-events-none"
           style={{ 
             zIndex: 0,
-            left: '0',
-            top: '0', 
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            overflow: 'visible'
+            left: '-2000px',
+            top: '-2000px', 
+            width: '6000px',
+            height: '6000px',
+            pointerEvents: 'none' // Ensure SVG never blocks canvas panning
           }}
-          viewBox="-3000 -3000 6000 6000"
+          viewBox="-2000 -2000 6000 6000"
         >
           {(() => {
             console.log('🎯 FamilyTreeCanvas - Rendering ConnectionRenderer with:', {
