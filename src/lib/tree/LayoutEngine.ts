@@ -65,12 +65,18 @@ export class LayoutEngine {
   
   public generateLayout(rootPersonId?: string): TreeLayout {
     // Find root people (those with no parents)
-    const rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
+    let rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
+    
+    // If no clear roots, find oldest by birth year as fallback
     if (rootPeople.length === 0 && this.people.length > 0) {
-      rootPeople.push(rootPersonId ? this.people.find(p => p.id === rootPersonId) || this.people[0] : this.people[0])
+      const oldestByYear = this.people
+        .filter(p => p.birth_year)
+        .sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))[0]
+      
+      rootPeople = oldestByYear ? [oldestByYear] : [this.people[0]]
     }
     
-    // Assign generations using BFS
+    // Assign generations using ancestry-based BFS
     const generations = new Map<number, Person[]>()
     const personDepth = new Map<string, number>()
     const visited = new Set<string>()
@@ -102,21 +108,41 @@ export class LayoutEngine {
       })
     }
     
-    // Start from root people
+    // Start from root people (oldest generation at depth 0)
     rootPeople.forEach(person => assignGeneration(person, 0))
     
-    // Layout each generation
+    // Handle any unvisited people (disconnected components)
+    this.people.forEach(person => {
+      if (!visited.has(person.id)) {
+        assignGeneration(person, 0) // Put orphaned people in top generation
+      }
+    })
+    
+    // Layout each generation with hierarchical vertical structure
     const nodes: LayoutNode[] = []
     const generationEntries = Array.from(generations.entries()).sort(([a], [b]) => a - b)
     
     generationEntries.forEach(([depth, genPeople]) => {
-      // Group spouses together
-      const groups = this.groupSpouses(genPeople)
-      const y = depth * this.options.vGap + this.options.cardHeight / 2
+      // Group families: siblings together, spouses side-by-side
+      const familyGroups = this.groupFamilies(genPeople)
+      
+      // Sort family groups by oldest birth year in each group
+      familyGroups.sort((a, b) => {
+        const aOldest = Math.min(...a.map(p => p.birth_year || 9999))
+        const bOldest = Math.min(...b.map(p => p.birth_year || 9999))
+        return aOldest - bOldest
+      })
+      
+      // Calculate Y position with larger gaps between generations for hierarchy
+      const hierarchicalVGap = this.options.vGap * 1.2 // 20% more space between generations
+      const y = depth * hierarchicalVGap + this.options.cardHeight / 2
       
       let currentX = 0
       
-      groups.forEach(group => {
+      familyGroups.forEach(group => {
+        // Sort individuals within group by birth year (oldest first)
+        group.sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))
+        
         if (group.length === 1) {
           // Single person
           nodes.push({
@@ -127,35 +153,71 @@ export class LayoutEngine {
           })
           currentX += this.options.cardWidth + this.options.hGap
         } else {
-          // Spouse pair - place them close together
-          const spouseGap = 30 // Closer gap for spouses
-          group.forEach((person, index) => {
-            nodes.push({
-              personId: person.id,
-              x: currentX + index * (this.options.cardWidth + spouseGap),
-              y,
-              depth
+          // Multiple people - check if they're spouses or siblings
+          const spouses = this.findSpousePairs(group)
+          
+          if (spouses.length > 0) {
+            // Handle spouse pairs with closer spacing
+            spouses.forEach(spousePair => {
+              const spouseGap = 30 // Close gap for spouses
+              spousePair.forEach((person, index) => {
+                nodes.push({
+                  personId: person.id,
+                  x: currentX + index * (this.options.cardWidth + spouseGap),
+                  y,
+                  depth
+                })
+              })
+              currentX += spousePair.length * (this.options.cardWidth + spouseGap) + this.options.hGap
             })
-          })
-          currentX += group.length * (this.options.cardWidth + spouseGap) + this.options.hGap
+            
+            // Handle any remaining non-spouse members
+            const spouseIds = new Set(spouses.flat().map(p => p.id))
+            const remaining = group.filter(p => !spouseIds.has(p.id))
+            remaining.forEach(person => {
+              nodes.push({
+                personId: person.id,
+                x: currentX,
+                y,
+                depth
+              })
+              currentX += this.options.cardWidth + this.options.hGap
+            })
+          } else {
+            // Siblings or other family members - normal spacing
+            group.forEach(person => {
+              nodes.push({
+                personId: person.id,
+                x: currentX,
+                y,
+                depth
+              })
+              currentX += this.options.cardWidth + this.options.hGap
+            })
+          }
         }
+        
+        // Add extra space between family groups
+        currentX += this.options.hGap
       })
     })
     
-    // Center the layout
-    const minX = Math.min(...nodes.map(n => n.x))
-    const maxX = Math.max(...nodes.map(n => n.x))
-    const centerOffset = -((minX + maxX) / 2)
-    
-    nodes.forEach(node => {
-      node.x += centerOffset
-    })
+    // Center the entire layout horizontally
+    if (nodes.length > 0) {
+      const minX = Math.min(...nodes.map(n => n.x))
+      const maxX = Math.max(...nodes.map(n => n.x))
+      const centerOffset = -((minX + maxX) / 2)
+      
+      nodes.forEach(node => {
+        node.x += centerOffset
+      })
+    }
     
     // Calculate bounds
-    const bounds = {
+    const bounds = nodes.length > 0 ? {
       width: Math.max(...nodes.map(n => n.x)) - Math.min(...nodes.map(n => n.x)) + this.options.cardWidth,
-      height: generationEntries.length * this.options.vGap + this.options.cardHeight
-    }
+      height: generationEntries.length * this.options.vGap * 1.2 + this.options.cardHeight
+    } : { width: 800, height: 600 }
     
     return {
       nodes,
@@ -164,7 +226,7 @@ export class LayoutEngine {
     }
   }
   
-  private groupSpouses(people: Person[]): Person[][] {
+  private groupFamilies(people: Person[]): Person[][] {
     const visited = new Set<string>()
     const groups: Person[][] = []
     
@@ -174,7 +236,7 @@ export class LayoutEngine {
       const group = [person]
       visited.add(person.id)
       
-      // Find spouses
+      // Find spouses first (they should be in same group)
       const spouses = this.spouseMap.get(person.id) || []
       spouses.forEach(spouseId => {
         const spouse = people.find(p => p.id === spouseId)
@@ -184,10 +246,60 @@ export class LayoutEngine {
         }
       })
       
+      // Find siblings (share same parents)
+      const personParents = this.parentsMap.get(person.id) || []
+      if (personParents.length > 0) {
+        people.forEach(otherPerson => {
+          if (visited.has(otherPerson.id)) return
+          
+          const otherParents = this.parentsMap.get(otherPerson.id) || []
+          // Check if they share at least one parent
+          const hasSharedParent = personParents.some(parent => otherParents.includes(parent))
+          
+          if (hasSharedParent) {
+            group.push(otherPerson)
+            visited.add(otherPerson.id)
+            
+            // Also add their spouses to the group
+            const otherSpouses = this.spouseMap.get(otherPerson.id) || []
+            otherSpouses.forEach(spouseId => {
+              const spouse = people.find(p => p.id === spouseId)
+              if (spouse && !visited.has(spouse.id)) {
+                group.push(spouse)
+                visited.add(spouse.id)
+              }
+            })
+          }
+        })
+      }
+      
       groups.push(group)
     })
     
     return groups
+  }
+
+  private findSpousePairs(people: Person[]): Person[][] {
+    const pairs: Person[][] = []
+    const paired = new Set<string>()
+    
+    people.forEach(person => {
+      if (paired.has(person.id)) return
+      
+      const spouses = this.spouseMap.get(person.id) || []
+      const spouseInGroup = spouses.find(spouseId => 
+        people.some(p => p.id === spouseId && !paired.has(p.id))
+      )
+      
+      if (spouseInGroup) {
+        const spouse = people.find(p => p.id === spouseInGroup)!
+        pairs.push([person, spouse])
+        paired.add(person.id)
+        paired.add(spouse.id)
+      }
+    })
+    
+    return pairs
   }
   
   public updateLayout(nodes: LayoutNode[], personId: string, x: number, y: number): LayoutNode[] {
