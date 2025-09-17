@@ -37,7 +37,7 @@ export class LayoutEngine {
     this.people = people
     this.relationships = relationships
     this.options = {
-      hGap: 100,
+      hGap: 20,
       vGap: 140,
       cardWidth: 150,
       cardHeight: 180,
@@ -286,8 +286,8 @@ export class LayoutEngine {
           }
         }
         
-        // Add extra space between family groups
-        currentX += this.options.hGap
+        // Add minimal space between family groups
+        currentX += 10
       })
     })
     
