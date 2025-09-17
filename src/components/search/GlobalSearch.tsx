@@ -69,17 +69,18 @@ export default function GlobalSearch() {
       setIsLoading(true)
       timeoutRef.current = setTimeout(async () => {
         try {
+          console.log('Searching for:', query, 'in family:', familyId)
           const results = await SearchService.getSuggestions(query, familyId)
+          console.log('Search results:', results)
           setSuggestions(results)
           setShowSuggestions(true)
           setActiveIndex(-1)
           
-          // Auto-navigate to person if there's an exact or very close match
-          const firstResult = results[0]
+          // Only auto-navigate if there's exactly one person match
           const peopleResults = results.filter(r => r.type === 'person')
           
-          if (firstResult && firstResult.type === 'person' && peopleResults.length === 1) {
-            // Only auto-navigate if there's exactly one person match
+          if (peopleResults.length === 1) {
+            const firstResult = peopleResults[0]
             const queryLower = query.toLowerCase().trim()
             const nameLower = firstResult.title.toLowerCase()
             
