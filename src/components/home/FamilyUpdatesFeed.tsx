@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
@@ -33,6 +33,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
   const navigate = useNavigate()
   const { toast } = useToast()
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string; full_name?: string } | null>(null)
+  const tickerRef = useRef<HTMLDivElement | null>(null)
 
   // Get current user's profile data (prefer auth metadata avatar)
   useEffect(() => {
@@ -58,6 +59,40 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
     }
     getUserProfile()
   }, [])
+
+  // JS-driven marquee animation for reliable movement
+  useEffect(() => {
+    let raf: number
+    let pos = 0
+    const speed = 0.8 // pixels per frame ~48px/s
+
+    const step = () => {
+      const track = tickerRef.current
+      if (track) {
+        // Ensure we have two blocks for seamless looping
+        const blocks = track.querySelectorAll(':scope > .flex')
+        if (blocks.length === 1) {
+          const clone = (blocks[0] as HTMLElement).cloneNode(true) as HTMLElement
+          clone.setAttribute('aria-hidden', 'true')
+          track.appendChild(clone)
+        }
+
+        const firstBlock = track.firstElementChild as HTMLElement | null
+        const blockWidth = firstBlock?.offsetWidth ?? 0
+
+        pos -= speed
+        if (blockWidth > 0 && Math.abs(pos) >= blockWidth) {
+          pos += blockWidth // wrap seamlessly
+        }
+
+        track.style.transform = `translateX(${pos}px)`
+      }
+      raf = requestAnimationFrame(step)
+    }
+
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [activities])
 
   const handleActivityClick = (activity: ActivityItem) => {
     track('activity_clicked', { 
@@ -171,18 +206,20 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
 
         {/* Scrolling News Container */}
         <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative">
-          <div 
-            className="flex whitespace-nowrap w-max"
-            style={{ animation: 'marquee 40s linear infinite' }}
-            onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
-            onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = 'running')}
-          >
-            {[...activities, ...activities, ...activities].slice(0, 15).map((activity, index) => (
-              <div 
-                key={`${activity.id}-${index}`}
-                className="flex-shrink-0 flex items-center gap-4 px-8 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[400px]"
-                onClick={() => handleActivityClick(activity)}
-              >
+          <div className="relative overflow-hidden">
+            <div 
+              ref={tickerRef}
+              className="flex whitespace-nowrap will-change-transform"
+              style={{ transform: 'translateX(0px)' }}
+            >
+              {/* Block A */}
+              <div className="flex">
+                {activities.map((activity, index) => (
+                  <div 
+                    key={`a-${activity.id}-${index}`}
+                    className="flex-shrink-0 flex items-center gap-4 px-8 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[400px]"
+                    onClick={() => handleActivityClick(activity)}
+                  >
                 {/* Live indicator */}
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
@@ -246,6 +283,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
               </div>
             ))}
           </div>
+        </div>
 
           {/* Gradient fade edges */}
           <div className="absolute top-0 left-0 w-8 h-full bg-gradient-to-r from-card to-transparent pointer-events-none"></div>
