@@ -54,6 +54,10 @@ export function FamilyTreeCanvas({
   const dragOverridesRef = useRef<Record<string, { x: number; y: number }>>({})
   const [visualTick, setVisualTick] = useState(0)
   
+  // Click suppression to avoid click-through after grab attempts
+  const suppressNextClickRef = useRef(false)
+  const suppressTimerRef = useRef<number | null>(null)
+  
   const { toast } = useToast()
   const versionService = new VersionService(familyId)
   const layoutEngine = new LayoutEngine(people, relationships)
@@ -238,7 +242,21 @@ export function FamilyTreeCanvas({
       }
     }
 
-    const onUp = () => {
+    const onUp = (e: PointerEvent) => {
+      const dx = e.clientX - startPointer.x
+      const dy = e.clientY - startPointer.y
+      const moved = Math.hypot(dx, dy) > 2
+
+      // Suppress the next click if a drag was active or there was any movement (grab attempt)
+      if (draggingPersonId || moved || pendingDragId) {
+        suppressNextClickRef.current = true
+        if (suppressTimerRef.current) window.clearTimeout(suppressTimerRef.current)
+        suppressTimerRef.current = window.setTimeout(() => {
+          suppressNextClickRef.current = false
+          suppressTimerRef.current = null
+        }, 120)
+      }
+
       if (draggingPersonId) {
         handleCanvasPointerUp()
       } else {
@@ -284,8 +302,12 @@ export function FamilyTreeCanvas({
   }
 
   const handlePersonClick = (personId: string) => {
-    // Only handle click if we're not dragging and there's no pending drag
-    if (draggingPersonId || pendingDragId) return
+    // Only handle click if not dragging and no suppression is active
+    if (draggingPersonId || suppressNextClickRef.current) {
+      // Reset suppression so only the immediate next click is ignored
+      suppressNextClickRef.current = false
+      return
+    }
     
     console.log('🔍 Person clicked:', personId, 'navigating to profile')
     setSelectedPersonId(personId)
