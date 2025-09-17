@@ -1,14 +1,9 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import EnhancedPersonCard from './EnhancedPersonCard'
-import ConnectionLine from './ConnectionLine'
-import ZoomControls from './ZoomControls'
-import GridOverlay from './GridOverlay'
-import RelationshipModal from './RelationshipModal'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { ZoomIn, ZoomOut, Home, RotateCcw, Grid, Users } from 'lucide-react'
+import HierarchicalPersonCard from './HierarchicalPersonCard'
+import HierarchicalConnectionRenderer from './HierarchicalConnectionRenderer'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
-import { getPersonDisplayName } from '@/utils/familyTreeUtils'
-import { FamilyDataService } from '@/lib/familyDataService'
-import { toast } from 'sonner'
 
 interface FamilyTreeCanvasProps {
   people: Person[]
@@ -46,741 +41,266 @@ export default function EnhancedFamilyTreeCanvas({
   onFitToScreenComplete
 }: FamilyTreeCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
-  const [zoom, setZoom] = useState(1.0) // Default to 100% zoom
+  const [zoom, setZoom] = useState(0.8)
   const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState<string | null>(null)
-  const [isPanning, setIsPanning] = useState(false)
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 })
-  const [showGrid, setShowGrid] = useState(true)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [isConnecting, setIsConnecting] = useState<{
-    fromPersonId: string
-    connectionType: 'parent' | 'child' | 'spouse'
-    mousePos: { x: number; y: number }
-  } | null>(null)
-  const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null)
-  const [relationshipModal, setRelationshipModal] = useState<{
-    isOpen: boolean
-    fromPerson: Person | null
-    suggestedType?: 'parent' | 'child' | 'spouse'
-  }>({
-    isOpen: false,
-    fromPerson: null
-  })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [showGrid, setShowGrid] = useState(false)
+  const [hoveredPerson, setHoveredPerson] = useState<string | null>(null)
+  const [draggingPerson, setDraggingPerson] = useState<string | null>(null)
 
-  const CANVAS_SIZE = 4000
-  const MIN_ZOOM = 0.2
-  const MAX_ZOOM = 2.0
-  const NODE_WIDTH = 264 // Width of person cards
+  const CARD_WIDTH = 120
+  const CARD_HEIGHT = 100
+  const GENERATION_HEIGHT = 200
 
-  // Handle zoom
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom(prev => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev * delta)))
-  }, [])
+  // Organize people into generations for hierarchical layout
+  const organizeByGenerations = useCallback(() => {
+    if (!people.length) return []
 
-  // Handle canvas panning
-  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.target === canvasRef.current) {
-      setIsPanning(true)
-      setPanStart({
-        x: e.clientX - pan.x,
-        y: e.clientY - pan.y
-      })
-      e.preventDefault()
-    }
-  }, [pan])
+    // Create relationship maps
+    const spouseMap = new Map<string, string[]>()
+    const childrenMap = new Map<string, string[]>()
+    const parentsMap = new Map<string, string[]>()
 
-  // Handle connection dragging
-  const handleConnectionStart = useCallback((personId: string, connectionType: 'parent' | 'child' | 'spouse', mousePos: { x: number; y: number }) => {
-    console.log('Canvas received connection start:', personId, connectionType)
-    setIsConnecting({ fromPersonId: personId, connectionType, mousePos })
-  }, [])
-
-  const handleConnectionDrag = useCallback((mousePos: { x: number; y: number }) => {
-    if (isConnecting) {
-      setIsConnecting(prev => prev ? { ...prev, mousePos } : null)
-    }
-  }, [isConnecting])
-
-  const handleConnectionEnd = useCallback((targetPersonId?: string) => {
-    console.log('Connection end:', isConnecting, targetPersonId)
-    if (isConnecting && targetPersonId && targetPersonId !== isConnecting.fromPersonId) {
-      // Auto-determine relationship type based on connection type
-      let relType: 'parent' | 'spouse' = 'parent'
-      if (isConnecting.connectionType === 'spouse') {
-        relType = 'spouse'
-      } else if (isConnecting.connectionType === 'parent') {
-        relType = 'parent' // from child to parent
-      } else if (isConnecting.connectionType === 'child') {
-        relType = 'parent' // from parent to child
-      }
-      
-      console.log('Creating connection:', isConnecting.fromPersonId, '->', targetPersonId, 'as', relType)
-      onAddRelation(isConnecting.fromPersonId, targetPersonId, relType)
-      
-      // Auto-align and position spouses
-      if (relType === 'spouse') {
-        const fromPos = positions[isConnecting.fromPersonId]
-        const toPos = positions[targetPersonId]
-        
-        if (fromPos && toPos) {
-          // Align both to the same Y level (use the average)
-          const alignedY = Math.round((fromPos.y + toPos.y) / 2 / 50) * 50 // Snap to 50px grid
-          
-          // Position them closer together horizontally
-          const centerX = (fromPos.x + toPos.x) / 2
-          const spouseDistance = 300 // Distance between spouses
-          
-          const leftX = Math.round((centerX - spouseDistance / 2) / 50) * 50 // Snap to grid
-          const rightX = Math.round((centerX + spouseDistance / 2) / 50) * 50 // Snap to grid
-          
-          // Position the person who initiated the connection on the left
-          onPersonMove(isConnecting.fromPersonId, leftX, alignedY)
-          onPersonMove(targetPersonId, rightX, alignedY)
-          
-          setHasUnsavedChanges(true)
-        }
-      }
-    }
-    setIsConnecting(null)
-    setHoveredPersonId(null)
-  }, [isConnecting, onAddRelation, positions, onPersonMove])
-
-  const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
-    if (isPanning) {
-      setPan({
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y
-      })
-    } else if (isConnecting) {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (rect) {
-        const x = (e.clientX - rect.left - pan.x) / zoom
-        const y = (e.clientY - rect.top - pan.y) / zoom
-        handleConnectionDrag({ x, y })
-
-        // Check if we're near any person cards for auto-connect
-        let nearestPerson = null
-        let minDistance = Infinity
-        const snapDistance = 250 // Increased snap distance for easier connection
-
-        people.forEach(person => {
-          if (person.id === isConnecting.fromPersonId) return
-          
-          const personPos = positions[person.id]
-          if (!personPos) return
-          
-          // Updated card dimensions to match actual EnhancedPersonCard (256x160 approx)
-          const cardCenterX = personPos.x + 132 // card width/2 (264/2)
-          const cardCenterY = personPos.y + 100  // card height/2 (approx 200/2)
-          
-          const distance = Math.sqrt(
-            Math.pow(x - cardCenterX, 2) + Math.pow(y - cardCenterY, 2)
-          )
-          
-          if (distance < snapDistance && distance < minDistance) {
-            minDistance = distance
-            nearestPerson = person.id
-          }
-        })
-        
-        setHoveredPersonId(nearestPerson)
-      }
-    }
-  }, [isPanning, panStart, isConnecting, pan.x, pan.y, zoom, handleConnectionDrag, people, positions])
-
-  const handleCanvasMouseUp = useCallback(() => {
-    if (isPanning) {
-      setIsPanning(false)
-    } else if (isConnecting) {
-      // Auto-connect to hovered person if nearby
-      handleConnectionEnd(hoveredPersonId)
-    }
-  }, [isPanning, isConnecting, handleConnectionEnd, hoveredPersonId])
-
-  // Handle person dragging
-  const handlePersonDrag = useCallback((personId: string, deltaX: number, deltaY: number) => {
-    const currentPos = positions[personId] || { x: 0, y: 0 }
-    const newX = currentPos.x + deltaX / zoom
-    const newY = currentPos.y + deltaY / zoom
-    onPersonMove(personId, newX, newY)
-    setHasUnsavedChanges(true)
-  }, [positions, zoom, onPersonMove])
-
-  const [dragStartPos, setDragStartPos] = useState<Record<string, { x: number; y: number; startX: number; startY: number }>>({})
-
-  const handlePersonDragStart = useCallback((personId: string) => {
-    const currentPos = positions[personId] || { x: 0, y: 0 }
-    setDragStartPos(prev => ({
-      ...prev,
-      [personId]: { 
-        x: currentPos.x, 
-        y: currentPos.y,
-        startX: currentPos.x,
-        startY: currentPos.y
-      }
-    }))
-    setIsDragging(personId)
-  }, [positions])
-
-  const handlePersonDragUpdate = useCallback((personId: string, deltaX: number, deltaY: number) => {
-    const startPos = dragStartPos[personId]
-    if (!startPos) return
-    
-    const newX = startPos.startX + deltaX / zoom
-    const newY = startPos.startY + deltaY / zoom
-    
-    onPersonMove(personId, newX, newY)
-    setHasUnsavedChanges(true)
-  }, [dragStartPos, zoom, onPersonMove])
-
-  const handlePersonDragEnd = useCallback(() => {
-    setIsDragging(null)
-  }, [])
-
-  // Auto-arrange functions
-  const handleAutoArrange = useCallback(() => {
-    // Create generations based on relationships
-    const generations = new Map<number, Person[]>()
-    const personLevels = new Map<string, number>()
-    const spouseMap = new Map<string, Set<string>>() // Track all spouses for each person
-    const parentMap = new Map<string, Set<string>>() // Track parents for each person
-    const childrenMap = new Map<string, Set<string>>() // Track children for each person
-    
-    // Build relationship maps
     relationships.forEach(rel => {
       if (rel.relationship_type === 'spouse') {
-        if (!spouseMap.has(rel.from_person_id)) spouseMap.set(rel.from_person_id, new Set())
-        if (!spouseMap.has(rel.to_person_id)) spouseMap.set(rel.to_person_id, new Set())
-        spouseMap.get(rel.from_person_id)!.add(rel.to_person_id)
-        spouseMap.get(rel.to_person_id)!.add(rel.from_person_id)
+        if (!spouseMap.has(rel.from_person_id)) spouseMap.set(rel.from_person_id, [])
+        if (!spouseMap.has(rel.to_person_id)) spouseMap.set(rel.to_person_id, [])
+        spouseMap.get(rel.from_person_id)!.push(rel.to_person_id)
+        spouseMap.get(rel.to_person_id)!.push(rel.from_person_id)
       } else if (rel.relationship_type === 'parent') {
-        if (!childrenMap.has(rel.from_person_id)) childrenMap.set(rel.from_person_id, new Set())
-        if (!parentMap.has(rel.to_person_id)) parentMap.set(rel.to_person_id, new Set())
-        childrenMap.get(rel.from_person_id)!.add(rel.to_person_id)
-        parentMap.get(rel.to_person_id)!.add(rel.from_person_id)
+        if (!childrenMap.has(rel.from_person_id)) childrenMap.set(rel.from_person_id, [])
+        if (!parentsMap.has(rel.to_person_id)) parentsMap.set(rel.to_person_id, [])
+        childrenMap.get(rel.from_person_id)!.push(rel.to_person_id)
+        parentsMap.get(rel.to_person_id)!.push(rel.from_person_id)
       }
     })
-    
-    // Find root generation (people with no parents)
-    const rootPeople = people.filter(person => !parentMap.has(person.id) || parentMap.get(person.id)!.size === 0)
-    
-    // If no clear roots, start with oldest people by birth year
-    let startingPeople = rootPeople
-    if (startingPeople.length === 0) {
-      startingPeople = people.slice().sort((a, b) => {
-        const aYear = a.birth_year || 1900
-        const bYear = b.birth_year || 1900
-        return aYear - bYear
-      }).slice(0, 2) // Take 2 oldest as potential roots
+
+    // Find root people (those with no parents)
+    const rootPeople = people.filter(person => !parentsMap.has(person.id))
+    if (rootPeople.length === 0 && people.length > 0) {
+      rootPeople.push(people[0]) // Fallback to first person if no clear root
     }
-    
-    // Assign levels using BFS from roots
+
+    // Assign generations using BFS
+    const generations = new Map<number, Person[]>()
+    const personGeneration = new Map<string, number>()
     const visited = new Set<string>()
-    const queue: { person: Person; level: number }[] = []
-    
-    // Start with root people
-    startingPeople.forEach(person => {
-      queue.push({ person, level: 0 })
-    })
-    
-    while (queue.length > 0) {
-      const { person, level } = queue.shift()!
-      
-      if (visited.has(person.id)) continue
+
+    const assignGeneration = (person: Person, generation: number) => {
+      if (visited.has(person.id)) return
       visited.add(person.id)
       
-      personLevels.set(person.id, level)
-      if (!generations.has(level)) generations.set(level, [])
-      generations.get(level)!.push(person)
-      
-      // Add spouses to the same level
-      const spouses = spouseMap.get(person.id) || new Set()
+      personGeneration.set(person.id, generation)
+      if (!generations.has(generation)) generations.set(generation, [])
+      generations.get(generation)!.push(person)
+
+      // Add spouses to same generation
+      const spouses = spouseMap.get(person.id) || []
       spouses.forEach(spouseId => {
         const spouse = people.find(p => p.id === spouseId)
         if (spouse && !visited.has(spouse.id)) {
-          queue.push({ person: spouse, level })
+          assignGeneration(spouse, generation)
         }
       })
-      
-      // Add children to the next level
-      const children = childrenMap.get(person.id) || new Set()
+
+      // Add children to next generation
+      const children = childrenMap.get(person.id) || []
       children.forEach(childId => {
         const child = people.find(p => p.id === childId)
         if (child && !visited.has(child.id)) {
-          queue.push({ person: child, level: level + 1 })
+          assignGeneration(child, generation + 1)
         }
       })
     }
-    
-    // Handle any unvisited people (isolated nodes)
-    people.forEach(person => {
-      if (!visited.has(person.id)) {
-        const maxLevel = Math.max(...Array.from(generations.keys()), -1)
-        personLevels.set(person.id, maxLevel + 1)
-        if (!generations.has(maxLevel + 1)) generations.set(maxLevel + 1, [])
-        generations.get(maxLevel + 1)!.push(person)
-      }
-    })
-    
-    console.log('Generations built:', Array.from(generations.entries()))
-    
-    // Position people by generation with proper family grouping
-    const GENERATION_HEIGHT = 280
-    const FAMILY_GROUP_WIDTH = 280
-    const SPOUSE_SPACING = 300
-    const CHILD_OFFSET = 140
-    
-    Array.from(generations.entries()).forEach(([level, levelPeople]) => {
-      // Group people into family units (spouse pairs + singles)
-      const familyGroups: Person[][] = []
-      const processedPeople = new Set<string>()
-      
-      levelPeople.forEach(person => {
-        if (processedPeople.has(person.id)) return
-        
-        const spouses = Array.from(spouseMap.get(person.id) || new Set())
-          .map(id => people.find(p => p.id === id))
-          .filter(p => p && levelPeople.includes(p) && !processedPeople.has(p.id)) as Person[]
-        
-        if (spouses.length > 0) {
-          // Create family group with person and their spouses
-          const familyGroup = [person, ...spouses]
-          familyGroups.push(familyGroup)
-          familyGroup.forEach(p => processedPeople.add(p.id))
-        } else {
-          // Single person group
-          familyGroups.push([person])
-          processedPeople.add(person.id)
-        }
-      })
-      
-      console.log(`Level ${level} family groups:`, familyGroups.map(g => g.map(p => p.full_name)))
-      
-      // Position family groups across the level
-      const totalGroups = familyGroups.length
-      const startX = CANVAS_SIZE / 2 - ((totalGroups - 1) * FAMILY_GROUP_WIDTH) / 2
-      
-      familyGroups.forEach((group, groupIndex) => {
-        const groupCenterX = startX + groupIndex * FAMILY_GROUP_WIDTH
-        const y = level * GENERATION_HEIGHT + 200
-        
-        if (group.length === 1) {
-          // Single person - center in group
-          onPersonMove(group[0].id, groupCenterX - NODE_WIDTH/2, y)
-        } else {
-          // Multiple people (spouses) - spread them out
-          const groupWidth = (group.length - 1) * SPOUSE_SPACING
-          const groupStartX = groupCenterX - groupWidth / 2
-          
-          group.forEach((person, personIndex) => {
-            const x = groupStartX + personIndex * SPOUSE_SPACING
-            onPersonMove(person.id, x - NODE_WIDTH/2, y)
-          })
-        }
+
+    // Start from root people
+    rootPeople.forEach(person => assignGeneration(person, 0))
+
+    return Array.from(generations.entries()).sort(([a], [b]) => a - b)
+  }, [people, relationships])
+
+  // Calculate positions for hierarchical layout
+  const calculateHierarchicalPositions = useCallback(() => {
+    const generations = organizeByGenerations()
+    const newPositions: Record<string, { x: number; y: number }> = {}
+
+    generations.forEach(([generationIndex, genPeople]) => {
+      const totalWidth = genPeople.length * (CARD_WIDTH + 50)
+      let currentX = -totalWidth / 2
+
+      genPeople.forEach((person, index) => {
+        const x = currentX + index * (CARD_WIDTH + 50) + CARD_WIDTH / 2
+        const y = generationIndex * GENERATION_HEIGHT + 100
+
+        newPositions[person.id] = { x, y }
       })
     })
-    
-    // Second pass: Align children under their parents
-    Array.from(generations.entries()).forEach(([level, levelPeople]) => {
-      if (level === 0) return // Skip root level
-      
-      levelPeople.forEach(child => {
-        const parents = Array.from(parentMap.get(child.id) || new Set())
-          .map(id => people.find(p => p.id === id))
-          .filter(p => p && personLevels.get(p.id) === level - 1) as Person[]
-        
-        if (parents.length > 0) {
-          // Calculate center point between parents
-          const parentPositions = parents.map(p => positions[p.id] || { x: CANVAS_SIZE/2, y: 0 })
-          const avgX = parentPositions.reduce((sum, pos) => sum + pos.x, 0) / parentPositions.length
-          
-          // Position child centered under parents, with slight offset for multiple children
-          const siblings = parents.flatMap(parent => 
-            Array.from(childrenMap.get(parent.id) || new Set())
-              .map(id => people.find(p => p.id === id))
-              .filter(p => p && personLevels.get(p.id) === level)
-          ).filter(Boolean) as Person[]
-          
-          const childIndex = siblings.indexOf(child)
-          const siblingCount = siblings.length
-          const childOffsetX = (childIndex - (siblingCount - 1) / 2) * CHILD_OFFSET
-          
-          const currentPos = positions[child.id] || { x: 0, y: 0 }
-          onPersonMove(child.id, avgX + childOffsetX - NODE_WIDTH/2, currentPos.y)
-        }
-      })
-    })
-    
-    setHasUnsavedChanges(true)
-  }, [people, relationships, onPersonMove, positions])
 
-  const handleFitToScreen = useCallback(() => {
-    if (people.length === 0) return
+    return newPositions
+  }, [organizeByGenerations])
 
-    const personPositions = Object.values(positions)
-    if (personPositions.length === 0) return
+  // Use hierarchical positions if not manually positioned
+  const displayPositions = Object.keys(positions).length === 0 ? calculateHierarchicalPositions() : positions
 
-    const minX = Math.min(...personPositions.map(p => p.x))
-    const maxX = Math.max(...personPositions.map(p => p.x))
-    const minY = Math.min(...personPositions.map(p => p.y))
-    const maxY = Math.max(...personPositions.map(p => p.y))
+  // Zoom handlers
+  const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
+  const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.3))
+  const handleResetZoom = () => {
+    setZoom(0.8)
+    setPan({ x: 0, y: 0 })
+  }
 
-    const contentWidth = maxX - minX + 400
-    const contentHeight = maxY - minY + 300
+  // Mouse handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target === canvasRef.current) {
+      setIsDragging(true)
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+    }
+  }
 
-    const canvasRect = canvasRef.current?.getBoundingClientRect()
-    if (!canvasRect) return
-
-    const scaleX = canvasRect.width / contentWidth
-    const scaleY = canvasRect.height / contentHeight
-    const newZoom = Math.min(scaleX, scaleY, MAX_ZOOM)
-
-    setZoom(newZoom)
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
     setPan({
-      x: canvasRect.width / 2 - (minX + maxX) / 2 * newZoom,
-      y: canvasRect.height / 2 - (minY + maxY) / 2 * newZoom
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
     })
-  }, [positions, people.length])
+  }
 
-  const handleResetPositions = useCallback(() => {
-    // Reset to a simple grid
-    people.forEach((person, index) => {
-      const x = (index % 4) * 300 + 200
-      const y = Math.floor(index / 4) * 200 + 200
-      onPersonMove(person.id, x, y)
-    })
-    setHasUnsavedChanges(true)
-  }, [people, onPersonMove])
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
 
-  const handleSaveLayout = useCallback(() => {
-    // In a real app, this would save to backend
-    localStorage.setItem('familyTree.positions', JSON.stringify(positions))
-    setHasUnsavedChanges(false)
-  }, [positions])
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    setZoom(prev => Math.max(0.3, Math.min(3, prev * delta)))
+  }, [])
 
-  // Get relationships for rendering connections
-  const getPersonRelationships = useCallback((personId: string) => {
-    return relationships.filter(rel => 
-      rel.from_person_id === personId || rel.to_person_id === personId
-    )
-  }, [relationships])
-
-  // Get spouse count and children count for each person
-  const getPersonStats = useCallback((personId: string) => {
-    const personRels = getPersonRelationships(personId)
-    const spouseCount = personRels
-      .filter(rel => rel.relationship_type === 'spouse')
-      .length
-
-    const childrenCount = personRels
-      .filter(rel => rel.relationship_type === 'parent' && rel.to_person_id === personId)
-      .length
-
-    return { spouseCount, childrenCount }
-  }, [getPersonRelationships])
-
-  // Handle adding relation from hotspots (keep for backward compatibility)
-  const handleAddRelationFromCard = useCallback((personId: string, type: 'parent' | 'child' | 'spouse') => {
-    const person = people.find(p => p.id === personId)
-    if (!person) return
-    
-    setRelationshipModal({
-      isOpen: true,
-      fromPerson: person,
-      suggestedType: type
-    })
-  }, [people])
-
-  // Handle deleting a person
-  const handleDeletePerson = useCallback(async (personId: string) => {
-    if (onDeletePerson) {
-      onDeletePerson(personId)
-    } else {
-      // Default delete implementation
-      try {
-        await FamilyDataService.deletePerson(personId)
-        toast.success('Person removed from family tree')
-        if (onUpdate) {
-          onUpdate()
-        }
-      } catch (error: any) {
-        toast.error('Failed to delete person: ' + error.message)
-      }
-    }
-  }, [onDeletePerson, onUpdate])
-
-  const handleTopLeftView = useCallback(() => {
-    if (people.length === 0) return
-
-    const personPositions = Object.values(positions)
-    if (personPositions.length === 0) return
-
-    const minX = Math.min(...personPositions.map(p => p.x))
-    const minY = Math.min(...personPositions.map(p => p.y))
-
-    // Position the tree in the top-left with some padding
-    const padding = 50
-    setPan({
-      x: padding - minX * zoom,
-      y: padding - minY * zoom
-    })
-  }, [positions, people.length, zoom])
-
-  // Auto-position to top-left when people first load (only once)
-  const hasInitialized = useRef(false)
-  useEffect(() => {
-    if (people.length > 0 && Object.keys(positions).length > 0 && !hasInitialized.current) {
-      hasInitialized.current = true
-      setTimeout(() => {
-        handleTopLeftView()
-      }, 100)
-    }
-  }, [people.length, positions, handleTopLeftView])
-
-  // Handle shouldFitToScreen trigger from parent
-  useEffect(() => {
-    if (shouldFitToScreen && onFitToScreenComplete) {
-      handleFitToScreen()
-      onFitToScreenComplete()
-    }
-  }, [shouldFitToScreen, onFitToScreenComplete, handleFitToScreen])
-
-  // Setup event listeners
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
-
-    canvas.addEventListener('wheel', handleWheel, { passive: false })
-    
-    if (isPanning || isConnecting) {
-      document.addEventListener('mousemove', handleCanvasMouseMove)
-      document.addEventListener('mouseup', handleCanvasMouseUp)
+    if (canvas) {
+      canvas.addEventListener('wheel', handleWheel, { passive: false })
+      return () => canvas.removeEventListener('wheel', handleWheel)
     }
-
-    return () => {
-      canvas.removeEventListener('wheel', handleWheel)
-      document.removeEventListener('mousemove', handleCanvasMouseMove)
-      document.removeEventListener('mouseup', handleCanvasMouseUp)
-    }
-  }, [handleWheel, handleCanvasMouseMove, handleCanvasMouseUp, isPanning, isConnecting])
+  }, [handleWheel])
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
-      {/* Canvas */}
+    <div className="relative w-full h-screen bg-gray-800 overflow-hidden">
       <div
         ref={canvasRef}
-        className={`relative w-full h-full ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-        onMouseDown={handleCanvasMouseDown}
-        style={{ 
+        className={`w-full h-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          transformOrigin: '0 0',
-          width: CANVAS_SIZE,
-          height: CANVAS_SIZE
+          transformOrigin: '0 0'
         }}
       >
-        {/* Grid Overlay */}
-        {showGrid && <GridOverlay zoom={zoom} />}
-
-        {/* Connection Lines */}
-        {relationships.map(relationship => {
-          const fromPos = positions[relationship.from_person_id]
-          const toPos = positions[relationship.to_person_id]
-          
-          if (!fromPos || !toPos) return null
-
-          return (
-            <ConnectionLine
-              key={relationship.id}
-              from={fromPos}
-              to={toPos}
-              type={relationship.relationship_type as 'parent' | 'spouse' | 'divorced' | 'unmarried' | 'child'}
-              isHighlighted={
-                selectedPersonId === relationship.from_person_id ||
-                selectedPersonId === relationship.to_person_id
-              }
-              relationshipId={relationship.id}
-              onDelete={onDeleteRelation}
-              allRelationships={relationships}
-              allPositions={positions}
-            />
-          )
-        })}
-
-        {/* Dynamic Connection Line (while dragging) */}
-        {isConnecting && (
-          <svg
-            className="absolute top-0 left-0 pointer-events-none z-20"
-            style={{
-              width: CANVAS_SIZE,
-              height: CANVAS_SIZE,
-            }}
-          >
-            {/* Preview line with 90-degree angles */}
-            <path
-              d={`M ${positions[isConnecting.fromPersonId]?.x + 128 || 0} ${positions[isConnecting.fromPersonId]?.y + 64 || 0} 
-                  L ${positions[isConnecting.fromPersonId]?.x + 128 || 0} ${((positions[isConnecting.fromPersonId]?.y + 64 || 0) + (hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y)) / 2} 
-                  L ${hoveredPersonId ? (positions[hoveredPersonId]?.x + 128 || isConnecting.mousePos.x) : isConnecting.mousePos.x} ${((positions[isConnecting.fromPersonId]?.y + 64 || 0) + (hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y)) / 2}
-                  L ${hoveredPersonId ? (positions[hoveredPersonId]?.x + 128 || isConnecting.mousePos.x) : isConnecting.mousePos.x} ${hoveredPersonId ? (positions[hoveredPersonId]?.y + 64 || isConnecting.mousePos.y) : isConnecting.mousePos.y}`}
-              stroke={hoveredPersonId ? '#10b981' : (isConnecting.connectionType === 'spouse' ? '#ec4899' : '#3b82f6')}
-              strokeWidth={hoveredPersonId ? "4" : "3"}
-              strokeDasharray={isConnecting.connectionType === 'spouse' ? '8 4' : 'none'}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={hoveredPersonId ? 'animate-pulse' : ''}
-            />
-            
-            {/* Connection preview circle at target */}
-            {hoveredPersonId && (
-              <circle
-                cx={positions[hoveredPersonId]?.x + 128 || 0}
-                cy={positions[hoveredPersonId]?.y + 64 || 0}
-                r="20"
-                fill="none"
-                stroke="#10b981"
-                strokeWidth="3"
-                className="animate-ping"
-              />
-            )}
-          </svg>
-        )}
-
-        {/* Person Cards */}
-        {people.map(person => {
-          const position = positions[person.id] || { x: CANVAS_SIZE / 2, y: CANVAS_SIZE / 2 }
-          const stats = getPersonStats(person.id)
-          
-          return (
-            <EnhancedPersonCard
-              key={person.id}
-              person={person}
-              x={position.x}
-              y={position.y}
-              isDragging={isDragging === person.id}
-              isSelected={selectedPersonId === person.id}
-              isHovered={hoveredPersonId === person.id}
-              spouseCount={stats.spouseCount}
-              childrenCount={stats.childrenCount}
-              onDrag={(deltaX, deltaY) => handlePersonDragUpdate(person.id, deltaX, deltaY)}
-              onDragStart={() => handlePersonDragStart(person.id)}
-              onDragEnd={handlePersonDragEnd}
-              onSelect={() => onPersonSelect(person.id)}
-              onViewProfile={() => onViewProfile(person.id)}
-              onEditPerson={() => onEditPerson(person.id)}
-              onDeletePerson={() => handleDeletePerson(person.id)}
-              onAddRelation={(type) => handleAddRelationFromCard(person.id, type)}
-              onConnectionStart={(connectionType, mousePos) => handleConnectionStart(person.id, connectionType, mousePos)}
-              onConnectionEnd={() => handleConnectionEnd(person.id)}
-              onHover={(isHovered) => setHoveredPersonId(isHovered ? person.id : null)}
-              showConnectionHotspots={selectedPersonId === person.id}
-              onRecordMemoryAbout={() => onRecordMemoryAbout?.(person.id, getPersonDisplayName(person))}
-            />
-          )
-        })}
-      </div>
-
-      {/* Zoom Controls - fixed to bottom right of viewport */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <ZoomControls
-          zoom={zoom}
-          onZoomIn={() => setZoom(prev => Math.min(MAX_ZOOM, prev * 1.2))}
-          onZoomOut={() => setZoom(prev => Math.max(MIN_ZOOM, prev / 1.2))}
-          onFitToScreen={handleFitToScreen}
-          onAutoArrange={handleAutoArrange}
-          onToggleGrid={() => setShowGrid(!showGrid)}
-          onReset={handleResetPositions}
-          showGrid={showGrid}
-        />
-      </div>
-
-      {/* Legend - moved to top-right and fixed to viewport */}
-      <div className="fixed top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-4 py-3 text-sm shadow-lg border border-gray-200/50 z-30">
-        <div className="font-semibold mb-2 text-gray-700">Connection Types</div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center">
-              <svg width="32" height="16" className="mr-2">
-                <path 
-                  d="M 0 8 L 0 4 L 24 4 L 24 8" 
-                  stroke="#6b7280" 
-                  strokeWidth="2" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  markerEnd="url(#legend-arrow)" 
-                />
-                <defs>
-                  <marker
-                    id="legend-arrow"
-                    viewBox="0 0 10 10"
-                    refX="9"
-                    refY="3"
-                    markerWidth="4"
-                    markerHeight="4"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L0,6 L9,3 z" fill="#6b7280" />
-                  </marker>
-                </defs>
-              </svg>
-            </div>
-            <span className="text-xs text-gray-600">Parent-Child (L-shaped)</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center">
-              <svg width="32" height="16" className="mr-2">
-                <path 
-                  d="M 0 8 L 0 4 L 24 4 L 24 8" 
-                  stroke="#f59e0b" 
-                  strokeWidth="2" 
-                  strokeDasharray="4 2"
-                  fill="none" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <span className="text-xs text-gray-600">Married/Partner (L-shaped)</span>
-          </div>
-        </div>
-        <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-          Hover over lines to delete • Drag from colored hotspots to connect
-        </div>
-      </div>
-
-      {/* Canvas Info - moved to top-left to avoid overlap with legend */}
-      <div className="fixed top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 text-sm text-gray-700 shadow-lg border border-gray-200/50 z-30">
-        <div className="space-y-1">
-          <div className="font-semibold">Family Tree</div>
-          <div>Zoom: {Math.round(zoom * 100)}%</div>
-          <div>{people.length} people, {relationships.length} connections</div>
-          <div className="text-xs text-gray-500 mt-2">
-            {isPanning ? 'Panning...' : 
-             isDragging ? `Moving ${getPersonDisplayName(people.find(p => p.id === isDragging)!)}` : 
-             isConnecting ? 'Drag to connect people...' :
-             'Drag cards to move • Drag from hotspots to connect • Mouse wheel to zoom'}
-          </div>
-          {hasUnsavedChanges && (
-            <div className="text-xs text-blue-600 font-medium animate-pulse">
-              ● Unsaved changes
-            </div>
+        {/* SVG for all connections and cards */}
+        <svg
+          className="absolute inset-0"
+          style={{ 
+            zIndex: 1,
+            width: '100%',
+            height: '100%'
+          }}
+        >
+          {/* Grid pattern */}
+          {showGrid && (
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#374151" strokeWidth="1" opacity="0.3"/>
+              </pattern>
+            </defs>
           )}
-        </div>
+          {showGrid && (
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          )}
+          
+          {/* Connection lines */}
+          <HierarchicalConnectionRenderer
+            people={people}
+            relationships={relationships}
+            positions={displayPositions}
+            cardWidth={CARD_WIDTH}
+            cardHeight={CARD_HEIGHT}
+          />
+          
+          {/* Person cards */}
+          {people.map((person) => {
+            const position = displayPositions[person.id]
+            if (!position) return null
+            
+            return (
+              <HierarchicalPersonCard
+                key={person.id}
+                person={person}
+                x={position.x}
+                y={position.y}
+                width={CARD_WIDTH}
+                height={CARD_HEIGHT}
+                onPersonClick={onViewProfile}
+                onPersonEdit={onEditPerson}
+                onRecordMemoryAbout={onRecordMemoryAbout}
+                isDragging={draggingPerson === person.id}
+                isHovered={hoveredPerson === person.id}
+              />
+            )
+          })}
+        </svg>
       </div>
 
-      {/* Relationship Modal */}
-      <RelationshipModal
-        isOpen={relationshipModal.isOpen}
-        onClose={() => setRelationshipModal({ isOpen: false, fromPerson: null })}
-        fromPerson={relationshipModal.fromPerson}
-        toPerson={null}
-        people={people}
-        onCreateRelationship={onAddRelation}
-        suggestedType={relationshipModal.suggestedType}
-      />
+      {/* Controls */}
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowGrid(!showGrid)}
+          className={`${showGrid ? 'bg-gray-700 text-white border-gray-600' : 'bg-white/90 text-gray-800'}`}
+        >
+          <Grid className="w-4 h-4 mr-1" />
+          Show Grid
+        </Button>
+        
+        <div className="flex gap-1 bg-white/90 rounded-lg p-1">
+          <Button variant="ghost" size="sm" onClick={handleZoomOut} className="h-8 w-8 p-0">
+            <span className="text-lg font-bold">−</span>
+          </Button>
+          <div className="flex items-center px-2 text-sm font-medium min-w-[60px] justify-center">
+            {Math.round(zoom * 100)}%
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleZoomIn} className="h-8 w-8 p-0">
+            <span className="text-lg font-bold">+</span>
+          </Button>
+        </div>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleResetZoom}
+          className="bg-white/90 text-gray-800"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Instructions panel */}
+      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border max-w-xs">
+        <h4 className="font-semibold text-sm text-gray-800 mb-3 flex items-center gap-2">
+          <Users className="w-4 h-4" />
+          Interactive Family Tree
+        </h4>
+        <div className="space-y-2 text-xs text-gray-600">
+          <div>• Drag any person to reposition them</div>
+          <div>• Use zoom controls (+/-) to get closer or see more</div>
+          <div>• Cards snap to an invisible grid (hold Shift or Alt to disable)</div>
+          <div>• Connections update automatically</div>
+          <div>• Click persons to view their profile</div>
+        </div>
+      </div>
     </div>
   )
 }
