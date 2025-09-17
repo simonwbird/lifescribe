@@ -58,7 +58,9 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
   const [hasMore, setHasMore] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState<TimelineItem | null>(null)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const canUserAddContent = canAddContent(userRole)
 
   const filters: { key: TimelineFilter; label: string; icon: any }[] = [
@@ -281,9 +283,19 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       // Open photo in lightbox
       setSelectedPhoto(item)
     } else if (item.type === 'media' && item.media_type === 'voice') {
-      // Handle voice playback or navigation
+      // Handle voice playbook or navigation
       if (activeFilter === 'voice') {
         handleVoicePlay(item)
+      } else {
+        // Navigate to story if available
+        if (item.story_id) {
+          navigate(`/stories/${item.story_id}`)
+        }
+      }
+    } else if (item.type === 'media' && item.media_type === 'video') {
+      // Handle video playback or navigation
+      if (activeFilter === 'videos') {
+        handleVideoPlay(item)
       } else {
         // Navigate to story if available
         if (item.story_id) {
@@ -328,6 +340,47 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       audio.onerror = () => {
         console.error('Error loading audio:', item.id)
         setPlayingAudio(null)
+      }
+    }
+  }
+
+  function handleVideoPlay(item: TimelineItem) {
+    if (!item.signed_url) return
+
+    if (playingVideo === item.id) {
+      // Stop current video
+      if (videoRef.current) {
+        videoRef.current.pause()
+      }
+      setPlayingVideo(null)
+    } else {
+      // Stop any currently playing video
+      if (videoRef.current) {
+        videoRef.current.pause()
+      }
+      
+      // Create and play new video element
+      const video = document.createElement('video')
+      video.src = item.signed_url
+      video.controls = true
+      video.style.width = '100%'
+      video.style.maxHeight = '300px'
+      video.style.borderRadius = '8px'
+      videoRef.current = video
+      setPlayingVideo(item.id)
+      
+      video.play().catch(error => {
+        console.error('Error playing video:', error)
+        setPlayingVideo(null)
+      })
+      
+      video.onended = () => {
+        setPlayingVideo(null)
+      }
+
+      video.onerror = () => {
+        console.error('Error loading video:', item.id)
+        setPlayingVideo(null)
       }
     }
   }
@@ -523,8 +576,72 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                   </p>
                 </div>
               )}
-            </div>
-          ) : (
+                </div>
+              ) : activeFilter === 'videos' ? (
+                /* Video Wall */
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayedItems.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="bg-muted rounded-lg overflow-hidden border hover:shadow-lg transition-all group"
+                    >
+                      {/* Video Thumbnail/Player */}
+                      <div className="relative aspect-video bg-black/10">
+                        {playingVideo === item.id && videoRef.current ? (
+                          <div 
+                            ref={(container) => {
+                              if (container && videoRef.current && !container.contains(videoRef.current)) {
+                                container.appendChild(videoRef.current)
+                              }
+                            }}
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div 
+                            className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-primary/10 transition-all"
+                            onClick={() => handleVideoPlay(item)}
+                          >
+                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors backdrop-blur-sm">
+                              {playingVideo === item.id ? (
+                                <Pause className="h-8 w-8 text-primary" />
+                              ) : (
+                                <Play className="h-8 w-8 text-primary ml-1" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Video Info */}
+                      <div className="p-4">
+                        <div 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            if (item.story_id) {
+                              navigate(`/stories/${item.story_id}`)
+                            }
+                          }}
+                        >
+                          <h4 className="font-medium text-sm leading-tight mb-2 hover:text-primary transition-colors">
+                            {item.title}
+                          </h4>
+                          {item.excerpt && (
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+                              {item.excerpt}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <VideoIcon className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(item.date, item.date_precision)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">
