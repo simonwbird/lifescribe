@@ -421,10 +421,25 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         .eq('story_id', story.id)
       
       const linkedPersonIds = linkedPeople?.map(link => link.person_id) || []
-      setTaggedPeople(linkedPersonIds)
+      
+      // Also include people from face tags if currentPhoto exists
+      if (currentPhoto && currentPhoto.face_tags) {
+        const faceTaggedPeople = currentPhoto.face_tags.map((tag: FaceTag) => tag.person_id)
+        const allPeople = [...new Set([...linkedPersonIds, ...faceTaggedPeople])]
+        setTaggedPeople(allPeople)
+      } else {
+        setTaggedPeople(linkedPersonIds)
+      }
     } catch (error) {
       console.error('Failed to fetch story people:', error)
-      setTaggedPeople([person.id])
+      // Fallback to face tags if available, otherwise just the main person
+      if (currentPhoto && currentPhoto.face_tags) {
+        const faceTaggedPeople = currentPhoto.face_tags.map((tag: FaceTag) => tag.person_id)
+        const allPeople = [...new Set([person.id, ...faceTaggedPeople])]
+        setTaggedPeople(allPeople)
+      } else {
+        setTaggedPeople([person.id])
+      }
     }
     
     setShowEditStoryModal(true)
@@ -437,7 +452,12 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     setEditStoryTitle('')
     setEditStoryContent('')
     setEditStoryDate('')
-    setTaggedPeople([person.id])
+    
+    // Auto-populate with people from face tags plus the main person
+    const faceTaggedPeople = photo.face_tags?.map((tag: FaceTag) => tag.person_id) || []
+    const allTaggedPeople = [...new Set([person.id, ...faceTaggedPeople])]
+    setTaggedPeople(allTaggedPeople)
+    
     setShowEditStoryModal(true)
   }
 
