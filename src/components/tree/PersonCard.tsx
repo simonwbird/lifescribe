@@ -7,7 +7,8 @@ interface PersonCardProps {
   x: number
   y: number
   selected?: boolean
-  onDragStart?: (e: React.MouseEvent, personId: string) => void
+  isDragging?: boolean
+  onDragStart?: (e: React.PointerEvent, personId: string) => void
   onClick?: (personId: string) => void
 }
 
@@ -16,6 +17,7 @@ export function PersonCard({
   x,
   y,
   selected = false,
+  isDragging = false,
   onDragStart,
   onClick
 }: PersonCardProps) {
@@ -44,10 +46,11 @@ export function PersonCard({
         aria-label={`${displayName} ${lifespan}`}
         className={cn(
           "w-full h-full rounded-xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-all duration-200",
-          "cursor-grab active:cursor-grabbing",
-          selected && "ring-2 ring-sky-400 ring-opacity-75"
+          "cursor-grab active:cursor-grabbing select-none",
+          selected && "ring-2 ring-sky-400 ring-opacity-75",
+          isDragging && "cursor-grabbing shadow-lg"
         )}
-        onMouseDown={(e) => onDragStart?.(e, person.id)}
+        onPointerDown={(e) => onDragStart?.(e, person.id)}
         onClick={(e) => {
           e.stopPropagation()
           onClick?.(person.id)

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Grid, RotateCcw, Save, History, Trash2 } from 'lucide-react'
+import { Grid, RotateCcw, Save, History, Trash2, Maximize2 } from 'lucide-react'
 import { PersonCard } from './PersonCard'
 import { ConnectionRenderer } from './ConnectionRenderer'
 import { LayoutEngine, type LayoutNode } from '@/lib/tree/LayoutEngine'
@@ -44,18 +44,24 @@ export function FamilyTreeCanvas({
   const [versionName, setVersionName] = useState('')
   const [versions, setVersions] = useState<TreeVersion[]>([])
   
+  // Smooth dragging state
+  const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 })
+  const [dragStartNodePos, setDragStartNodePos] = useState({ x: 0, y: 0 })
+  const [isAltPressed, setIsAltPressed] = useState(false)
+  const animationFrame = useRef<number>(0)
+  
   const { toast } = useToast()
   const versionService = new VersionService(familyId)
   const layoutEngine = new LayoutEngine(people, relationships)
 
-  // Initialize layout
+  // Initialize layout with auto-fit
   useEffect(() => {
     if (people.length > 0) {
       const layout = layoutEngine.generateLayout()
       setLayoutNodes(layout.nodes)
       
-      // Center the view
-      setPan({ x: 400, y: 200 })
+      // Auto-fit after layout is set
+      setTimeout(() => autoFit(), 100)
     }
   }, [people, relationships])
 
@@ -75,6 +81,49 @@ export function FamilyTreeCanvas({
     return acc
   }, {} as Record<string, { x: number; y: number; depth: number }>)
 
+  // Auto-fit functionality
+  const autoFit = useCallback(() => {
+    if (layoutNodes.length === 0) return
+    
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    // Calculate bounding box of all nodes
+    const padding = 80
+    const minX = Math.min(...layoutNodes.map(n => n.x - 75)) - padding
+    const maxX = Math.max(...layoutNodes.map(n => n.x + 75)) + padding
+    const minY = Math.min(...layoutNodes.map(n => n.y - 90)) - padding
+    const maxY = Math.max(...layoutNodes.map(n => n.y + 90)) + padding
+    
+    const bbox = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    }
+    
+    const viewportRect = canvas.getBoundingClientRect()
+    const viewport = { w: viewportRect.width, h: viewportRect.height }
+    
+    // Calculate scale to fit
+    const scale = Math.min(
+      viewport.w / bbox.width,
+      viewport.h / bbox.height
+    )
+    const clampedScale = Math.max(0.3, Math.min(2.0, scale))
+    
+    // Calculate pan to center
+    const scaledWidth = bbox.width * clampedScale
+    const scaledHeight = bbox.height * clampedScale
+    const newPan = {
+      x: (viewport.w - scaledWidth) / 2 - bbox.x * clampedScale,
+      y: (viewport.h - scaledHeight) / 2 - bbox.y * clampedScale
+    }
+    
+    setZoom(clampedScale)
+    setPan(newPan)
+  }, [layoutNodes])
+
   // Zoom handlers
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
   const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.3))
@@ -88,56 +137,98 @@ export function FamilyTreeCanvas({
     return snapToGrid ? Math.round(value / gridSize) * gridSize : value
   }
 
-  // Mouse handlers for canvas panning
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+  // Smooth drag animation
+  const tick = useCallback(() => {
+    animationFrame.current = 0
+    if (!draggingPersonId) return
+    
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
+    if (!draggedNode) return
+    
+    // Calculate new position from pointer
+    const newX = snapToGridHelper((lastPointer.x - rect.left - pan.x - dragOffset.x) / zoom)
+    let newY = snapToGridHelper((lastPointer.y - rect.top - pan.y - dragOffset.y) / zoom)
+    
+    // Lock to generation Y unless Alt is pressed
+    if (!isAltPressed) {
+      newY = draggedNode.depth * 140 + 90 // Use generation Y
+    }
+    
+    setLayoutNodes(prev => 
+      prev.map(node => 
+        node.personId === draggingPersonId 
+          ? { ...node, x: newX, y: newY }
+          : node
+      )
+    )
+  }, [draggingPersonId, lastPointer, pan, zoom, dragOffset, snapToGrid, isAltPressed, layoutNodes])
+
+  // Pointer handlers for canvas panning
+  const handleCanvasPointerDown = (e: React.PointerEvent) => {
     if (e.target === canvasRef.current) {
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
     }
   }
 
-  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+  const handleCanvasPointerMove = (e: React.PointerEvent) => {
     if (isDragging && !draggingPersonId) {
       setPan({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
       })
     } else if (draggingPersonId) {
-      // Handle person dragging
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (rect) {
-        const x = snapToGridHelper((e.clientX - rect.left - pan.x - dragOffset.x) / zoom)
-        const y = snapToGridHelper((e.clientY - rect.top - pan.y - dragOffset.y) / zoom)
-        
-        setLayoutNodes(prev => 
-          prev.map(node => 
-            node.personId === draggingPersonId 
-              ? { ...node, x, y }
-              : node
-          )
-        )
+      setLastPointer({ x: e.clientX, y: e.clientY })
+      if (!animationFrame.current) {
+        animationFrame.current = requestAnimationFrame(tick)
       }
     }
   }
 
-  const handleCanvasMouseUp = () => {
+  const handleCanvasPointerUp = () => {
     setIsDragging(false)
-    setDraggingPersonId(null)
+    if (draggingPersonId) {
+      // Snap to generation on drop if Alt was pressed during drag
+      if (isAltPressed) {
+        const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
+        if (draggedNode) {
+          const generationY = draggedNode.depth * 140 + 90
+          setLayoutNodes(prev => 
+            prev.map(node => 
+              node.personId === draggingPersonId 
+                ? { ...node, y: generationY }
+                : node
+            )
+          )
+        }
+      }
+      setDraggingPersonId(null)
+    }
   }
 
   // Person drag handlers
-  const handlePersonDragStart = (e: React.MouseEvent, personId: string) => {
+  const handlePersonDragStart = (e: React.PointerEvent, personId: string) => {
     e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       const personPos = positions[personId]
       if (personPos) {
         setDraggingPersonId(personId)
         setSelectedPersonId(personId)
+        setDragStartNodePos({ x: personPos.x, y: personPos.y })
+        setLastPointer({ x: e.clientX, y: e.clientY })
         setDragOffset({
           x: (e.clientX - rect.left - pan.x) / zoom - personPos.x,
           y: (e.clientY - rect.top - pan.y) / zoom - personPos.y
         })
+        
+        // Disable text selection while dragging
+        document.body.style.userSelect = 'none'
       }
     }
   }
@@ -171,7 +262,9 @@ export function FamilyTreeCanvas({
   // Keyboard handlers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Alt') {
+        setIsAltPressed(true)
+      } else if (e.key === 'Escape') {
         setSelectedPersonId(null)
       } else if (selectedPersonId && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault()
@@ -197,8 +290,26 @@ export function FamilyTreeCanvas({
       }
     }
     
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        setIsAltPressed(false)
+      }
+    }
+    
+    const cleanup = () => {
+      document.body.style.userSelect = ''
+    }
+    
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('beforeunload', cleanup)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('beforeunload', cleanup)
+      cleanup()
+    }
   }, [selectedPersonId, snapToGrid])
 
   useEffect(() => {
@@ -209,19 +320,12 @@ export function FamilyTreeCanvas({
     }
   }, [handleWheel])
 
-  // Save layout
+  // Save layout with default name
   const handleSaveLayout = async () => {
-    if (!versionName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a name for this tree version.",
-        variant: "destructive"
-      })
-      return
-    }
-
+    const defaultName = versionName.trim() || "Classic Layout — elbows & hearts (v2)"
+    
     try {
-      await versionService.save(versionName, layoutNodes, {
+      await versionService.save(defaultName, layoutNodes, {
         hGap: 100,
         vGap: 140,
         zoom,
@@ -230,7 +334,7 @@ export function FamilyTreeCanvas({
       
       toast({
         title: "Success",
-        description: `Tree version "${versionName}" saved successfully.`
+        description: `Tree version "${defaultName}" saved successfully.`
       })
       
       setVersionName('')
@@ -282,10 +386,10 @@ export function FamilyTreeCanvas({
       <div
         ref={canvasRef}
         className={`w-full h-full ${isDragging && !draggingPersonId ? 'cursor-grabbing' : 'cursor-grab'}`}
-        onMouseDown={handleCanvasMouseDown}
-        onMouseMove={handleCanvasMouseMove}
-        onMouseUp={handleCanvasMouseUp}
-        onMouseLeave={handleCanvasMouseUp}
+        onPointerDown={handleCanvasPointerDown}
+        onPointerMove={handleCanvasPointerMove}
+        onPointerUp={handleCanvasPointerUp}
+        onPointerLeave={handleCanvasPointerUp}
         style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           transformOrigin: '0 0'
@@ -305,10 +409,14 @@ export function FamilyTreeCanvas({
           />
         )}
 
-        {/* SVG for connections */}
+        {/* SVG for connections - below cards (z-index: 0) */}
         <svg
           className="absolute inset-0 pointer-events-none"
-          style={{ zIndex: 1 }}
+          style={{ 
+            zIndex: 0,
+            width: '100%',
+            height: '100%'
+          }}
         >
           <ConnectionRenderer
             people={people}
@@ -317,23 +425,26 @@ export function FamilyTreeCanvas({
           />
         </svg>
 
-        {/* Person cards */}
-        {people.map((person) => {
-          const position = positions[person.id]
-          if (!position) return null
-          
-          return (
-            <PersonCard
-              key={person.id}
-              person={person}
-              x={position.x}
-              y={position.y}
-              selected={selectedPersonId === person.id}
-              onDragStart={handlePersonDragStart}
-              onClick={handlePersonClick}
-            />
-          )
-        })}
+        {/* Person cards - above connections (z-index: 1) */}
+        <div className="absolute inset-0" style={{ zIndex: 1 }}>
+          {people.map((person) => {
+            const position = positions[person.id]
+            if (!position) return null
+            
+            return (
+              <PersonCard
+                key={person.id}
+                person={person}
+                x={position.x}
+                y={position.y}
+                selected={selectedPersonId === person.id}
+                isDragging={draggingPersonId === person.id}
+                onDragStart={handlePersonDragStart}
+                onClick={handlePersonClick}
+              />
+            )
+          })}
+        </div>
       </div>
 
       {/* Controls */}
@@ -367,6 +478,15 @@ export function FamilyTreeCanvas({
           className="bg-white/90 text-neutral-800"
         >
           <RotateCcw className="w-4 h-4" />
+        </Button>
+
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={autoFit}
+          className="bg-white/90 text-neutral-800"
+        >
+          <Maximize2 className="w-4 h-4" />
         </Button>
 
         {/* Save Layout */}

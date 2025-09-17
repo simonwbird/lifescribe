@@ -9,6 +9,22 @@ interface ConnectionRendererProps {
   cardHeight?: number
 }
 
+type Point = { x: number; y: number }
+
+function elbowPath(from: Point, to: Point): string {
+  const midY = (from.y + to.y) / 2
+  return `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`
+}
+
+function cardAnchors(x: number, y: number, width: number, height: number) {
+  return {
+    top: { x: x, y: y - height/2 },
+    bottom: { x: x, y: y + height/2 },
+    midLeft: { x: x - width/2, y: y },
+    midRight: { x: x + width/2, y: y }
+  }
+}
+
 export function ConnectionRenderer({
   people,
   relationships,
@@ -37,6 +53,11 @@ export function ConnectionRenderer({
     const hearts: JSX.Element[] = []
     let pathIndex = 0
 
+    // Debug logging
+    let parentChildCount = 0
+    let spouseCount = 0
+    const debugPaths: string[] = []
+
     // Render spouse connections (horizontal lines with hearts)
     const processedSpouses = new Set<string>()
     
@@ -53,35 +74,44 @@ export function ConnectionRenderer({
         const spousePos = positions[spouseId]
         if (!spousePos) return
         
-        // Horizontal line between spouses
-        const y = personPos.y
-        const x1 = Math.min(personPos.x, spousePos.x) + cardWidth / 2
-        const x2 = Math.max(personPos.x, spousePos.x) - cardWidth / 2
+        const personAnchors = cardAnchors(personPos.x, personPos.y, cardWidth, cardHeight)
+        const spouseAnchors = cardAnchors(spousePos.x, spousePos.y, cardWidth, cardHeight)
         
-        if (x2 > x1) {
-          paths.push(
-            <path
-              key={`spouse-${pathIndex++}`}
-              d={`M ${x1} ${y} L ${x2} ${y}`}
-              stroke="#C9CCD6"
-              strokeWidth="2"
-              fill="none"
-              className="hover:stroke-neutral-400 transition-colors"
-            />
-          )
-          
-          // Heart at midpoint
-          const heartX = (x1 + x2) / 2
-          const heartY = y
-          hearts.push(
-            <g key={`heart-${pathIndex}`} transform={`translate(${heartX}, ${heartY})`}>
-              <circle r="8" fill="white" stroke="#F45B69" strokeWidth="1" />
-              <svg x="-6" y="-6" width="12" height="12" viewBox="0 0 24 24" fill="#F45B69">
-                <path d="M12,21.35l-1.45-1.32C5.4,15.36,2,12.28,2,8.5 C2,5.42,4.42,3,7.5,3c1.74,0,3.41,0.81,4.5,2.09C13.09,3.81,14.76,3,16.5,3 C19.58,3,22,5.42,22,8.5c0,3.78-3.4,6.86-8.55,11.54L12,21.35z"/>
-              </svg>
-            </g>
-          )
-        }
+        // Determine which person is on the left
+        const leftPerson = personPos.x < spousePos.x ? personAnchors : spouseAnchors
+        const rightPerson = personPos.x < spousePos.x ? spouseAnchors : personAnchors
+        
+        const spousePath = `M ${leftPerson.midRight.x} ${leftPerson.midRight.y} L ${rightPerson.midLeft.x} ${rightPerson.midLeft.y}`
+        spouseCount++
+        if (debugPaths.length < 3) debugPaths.push(`Spouse: ${spousePath}`)
+        
+        paths.push(
+          <path
+            key={`spouse-${pathIndex++}`}
+            d={spousePath}
+            stroke="#C9CCD6"
+            strokeWidth="2"
+            fill="none"
+            className="hover:stroke-[#9AA3B2] hover:stroke-[3px] transition-all"
+          />
+        )
+        
+        // Heart at midpoint
+        const heartX = (leftPerson.midRight.x + rightPerson.midLeft.x) / 2
+        const heartY = (leftPerson.midRight.y + rightPerson.midLeft.y) / 2
+        hearts.push(
+          <text
+            key={`heart-${pathIndex}`}
+            x={heartX}
+            y={heartY + 4}
+            textAnchor="middle"
+            fontSize="12"
+            fill="#F45B69"
+            className="pointer-events-none"
+          >
+            ❤
+          </text>
+        )
       })
     })
 
@@ -92,25 +122,17 @@ export function ConnectionRenderer({
       
       const children = parentChildMap.get(parent.id) || []
       children.forEach(childId => {
+        const child = people.find(p => p.id === childId)
         const childPos = positions[childId]
-        if (!childPos) return
+        if (!childPos || !child) return
         
-        // Calculate connection points
-        const parentBottom = parentPos.y + cardHeight / 2
-        const childTop = childPos.y - cardHeight / 2
-        const parentCenterX = parentPos.x
-        const childCenterX = childPos.x
+        const parentAnchors = cardAnchors(parentPos.x, parentPos.y, cardWidth, cardHeight)
+        const childAnchors = cardAnchors(childPos.x, childPos.y, cardWidth, cardHeight)
         
-        // Mid-level for horizontal segment
-        const midY = parentBottom + (childTop - parentBottom) / 2
-        
-        // Create orthogonal path: down from parent, across, down to child
-        const pathData = [
-          `M ${parentCenterX} ${parentBottom}`,  // Start at bottom center of parent
-          `L ${parentCenterX} ${midY}`,          // Go down to mid level
-          `L ${childCenterX} ${midY}`,           // Go horizontally to child x
-          `L ${childCenterX} ${childTop}`        // Go down to top of child
-        ].join(' ')
+        // Create elbow path from parent bottom to child top
+        const pathData = elbowPath(parentAnchors.bottom, childAnchors.top)
+        parentChildCount++
+        if (debugPaths.length < 3) debugPaths.push(`Parent-Child: ${pathData}`)
         
         paths.push(
           <path
@@ -119,18 +141,24 @@ export function ConnectionRenderer({
             stroke="#C9CCD6"
             strokeWidth="2"
             fill="none"
-            className="hover:stroke-neutral-400 transition-colors"
+            className="hover:stroke-[#9AA3B2] hover:stroke-[3px] transition-all"
           />
         )
       })
     })
 
+    // Debug output
+    console.log(`🔧 ConnectionRenderer Debug:`)
+    console.log(`  - Parent→Child edges: ${parentChildCount}`)
+    console.log(`  - Spouse edges: ${spouseCount}`)
+    console.log(`  - First 3 paths:`, debugPaths)
+
     return [...paths, ...hearts]
   }
 
   return (
-    <g className="connections">
+    <>
       {renderConnections()}
-    </g>
+    </>
   )
 }
