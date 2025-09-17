@@ -69,6 +69,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [selectedStoryForAdd, setSelectedStoryForAdd] = useState<string | null>(null)
   const [showEditStoryModal, setShowEditStoryModal] = useState(false)
   const [editingStory, setEditingStory] = useState<any>(null)
+  const [isCreatingStory, setIsCreatingStory] = useState(false)
+  const [currentPhotoForStory, setCurrentPhotoForStory] = useState<any>(null)
   const [editStoryTitle, setEditStoryTitle] = useState('')
   const [editStoryContent, setEditStoryContent] = useState('')
   const [editStoryDate, setEditStoryDate] = useState('')
@@ -419,6 +421,90 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     }
     
     setShowEditStoryModal(true)
+  }
+
+  const handleAddStory = async (photo: any) => {
+    setIsCreatingStory(true)
+    setCurrentPhotoForStory(photo)
+    setEditingStory(null)
+    setEditStoryTitle('')
+    setEditStoryContent('')
+    setEditStoryDate('')
+    setTaggedPeople([person.id])
+    setShowEditStoryModal(true)
+  }
+
+  const handleCreateStory = async () => {
+    if (!currentPhotoForStory || !editStoryTitle.trim()) return
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      // Create new story
+      const { data: newStory, error: storyError } = await supabase
+        .from('stories')
+        .insert({
+          title: editStoryTitle,
+          content: editStoryContent,
+          occurred_on: editStoryDate || null,
+          family_id: person.family_id,
+          profile_id: user.id
+        })
+        .select()
+        .single()
+
+      if (storyError) throw storyError
+
+      // Link photo to story
+      const { error: updateError } = await supabase
+        .from('media')
+        .update({ story_id: newStory.id })
+        .eq('id', currentPhotoForStory.id)
+
+      if (updateError) throw updateError
+
+      // Link people to story
+      if (taggedPeople.length > 0) {
+        const personLinks = taggedPeople.map(personId => ({
+          person_id: personId,
+          story_id: newStory.id,
+          family_id: person.family_id
+        }))
+
+        const { error: insertLinksError } = await supabase
+          .from('person_story_links')
+          .insert(personLinks)
+
+        if (insertLinksError) throw insertLinksError
+      }
+
+      toast({
+        title: "Story added",
+        description: "Your story has been added to this photo successfully."
+      })
+
+      setShowEditStoryModal(false)
+      setIsCreatingStory(false)
+      setCurrentPhotoForStory(null)
+      setEditingStory(null)
+      setEditStoryTitle('')
+      setEditStoryContent('')
+      setEditStoryDate('')
+      setTaggedPeople([person.id])
+      setPeopleSearchQuery('')
+      setShowPeopleDropdown(false)
+      fetchPhotos() // Refresh to show new story
+
+    } catch (error) {
+      console.error('Failed to create story:', error)
+      toast({
+        title: "Failed to create story",
+        description: "Could not add the story to this photo. Please try again.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleUpdateStory = async () => {
@@ -1400,9 +1486,19 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                   )}
 
                   {!currentPhoto.story?.title && !currentPhoto.story?.content && !currentPhoto.story?.occurred_on && (
-                    <p className="text-muted-foreground italic">
-                      No story details available for this photo
-                    </p>
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground mb-3">
+                        No story added yet for this photo
+                      </p>
+                      <Button 
+                        onClick={() => handleAddStory(currentPhoto)}
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Quick Story
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1415,9 +1511,9 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       <Dialog open={showEditStoryModal} onOpenChange={setShowEditStoryModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Memory Story</DialogTitle>
+            <DialogTitle>{editingStory ? 'Edit Memory Story' : 'Add Story to Photo'}</DialogTitle>
             <DialogDescription>
-              Update the details of this memory story.
+              {editingStory ? 'Update the details of this memory story.' : 'Tell a quick story about this photo.'}
             </DialogDescription>
           </DialogHeader>
           
@@ -1560,6 +1656,12 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               variant="outline" 
               onClick={() => {
                 setShowEditStoryModal(false)
+                setIsCreatingStory(false)
+                setCurrentPhotoForStory(null)
+                setEditingStory(null)
+                setEditStoryTitle('')
+                setEditStoryContent('')
+                setEditStoryDate('')
                 setTaggedPeople([person.id])
                 setPeopleSearchQuery('')
                 setShowPeopleDropdown(false)
@@ -1568,9 +1670,10 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               Cancel
             </Button>
             <Button 
-              onClick={handleUpdateStory}
+              onClick={isCreatingStory ? handleCreateStory : handleUpdateStory}
+              disabled={!editStoryTitle.trim()}
             >
-              Update Story
+              {isCreatingStory ? 'Add Story' : 'Update Story'}
             </Button>
           </DialogFooter>
         </DialogContent>
