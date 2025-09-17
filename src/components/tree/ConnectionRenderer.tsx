@@ -89,27 +89,27 @@ export function ConnectionRenderer({
           />
         )
         
-        // Heart at midpoint with white background circle
+        // Heart at midpoint with white background circle matching reference design
         const heartX = (leftPerson.midRight.x + rightPerson.midLeft.x) / 2
         const heartY = (leftPerson.midRight.y + rightPerson.midLeft.y) / 2
         hearts.push(
           <g key={`heart-group-${pathIndex++}`}>
-            {/* White background circle to hide connecting line */}
+            {/* White background circle with border to match reference */}
             <circle
               cx={heartX}
               cy={heartY}
-              r="12"
+              r="14"
               fill="white"
-              stroke="#e5e7eb"
-              strokeWidth="1"
+              stroke="#d1d5db"
+              strokeWidth="2"
             />
             {/* Heart icon */}
             <text
               x={heartX}
-              y={heartY + 4}
+              y={heartY + 5}
               textAnchor="middle"
-              fontSize="16"
-              fill="#FF69B4"
+              fontSize="18"
+              fill="#e91e63"
               className="pointer-events-none font-bold"
             >
               ❤
