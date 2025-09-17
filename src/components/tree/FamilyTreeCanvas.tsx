@@ -209,22 +209,25 @@ export function FamilyTreeCanvas({
     }
   }, [draggingPersonId, lastPointer, startPointer, zoom, dragStartNodePos])
 
-  // Pointer handlers for canvas panning - improved to work on any blank area
+  // Pointer handlers for canvas panning
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
+    // Allow panning on any blank area, with explicit area checks
     const target = e.target as HTMLElement
     
-    // Check if we clicked on interactive elements (more thorough check)
-    const isPersonCard = target.closest('[data-person-card="true"]')
-    const isButton = target.closest('button')
-    const isInput = target.closest('input, textarea, select')
-    const isDialog = target.closest('[role="dialog"]')
-    const isInteractive = isPersonCard || isButton || isInput || isDialog || 
-                         target.tagName === 'BUTTON' || 
-                         target.tagName === 'INPUT' ||
-                         target.hasAttribute('tabindex')
+    // More robust detection for interactive elements
+    const isPersonCard = target.closest('article[role="button"]') || target.closest('[data-person-card]')
+    const isButton = target.closest('button') || target.closest('[role="button"]')
+    const isControl = target.closest('.controls') || target.closest('[data-control]')
+    const isInteractive = isPersonCard || isButton || isControl
     
-    if (!isInteractive) {
-      console.log('🖱️ Starting canvas pan from:', target.tagName, target.className)
+    // Extra check: ensure we're clicking on canvas-related elements
+    const isCanvasArea = target === canvasRef.current || 
+                        target.closest('[data-canvas-area]') ||
+                        target.tagName === 'svg' ||
+                        target.tagName === 'DIV'
+    
+    if (!isInteractive && isCanvasArea) {
+      console.log('🖱️ Starting canvas pan from:', target.tagName, 'at', e.clientX, e.clientY)
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
       e.preventDefault()
@@ -513,6 +516,7 @@ export function FamilyTreeCanvas({
       {/* Canvas */}
       <div
         ref={canvasRef}
+        data-canvas-area="true"
         className={`w-full h-full ${isDragging && !draggingPersonId ? 'cursor-grabbing' : 'cursor-grab'}`}
         onPointerDown={handleCanvasPointerDown}
         onPointerMove={handleCanvasPointerMove}
@@ -549,18 +553,19 @@ export function FamilyTreeCanvas({
           />
         )}
 
-        {/* SVG for connections - below cards, with proper bounds */}
+        {/* SVG for connections - ensure it doesn't block any pointer events */}
         <svg
           className="absolute pointer-events-none"
           style={{ 
             zIndex: 0,
-            left: '-2000px',
-            top: '-2000px', 
-            width: '6000px',
-            height: '6000px',
-            pointerEvents: 'none' // Ensure SVG never blocks canvas panning
+            left: '0',
+            top: '0', 
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            overflow: 'visible'
           }}
-          viewBox="-2000 -2000 6000 6000"
+          viewBox="-3000 -3000 6000 6000"
         >
           {(() => {
             console.log('🎯 FamilyTreeCanvas - Rendering ConnectionRenderer with:', {
@@ -581,40 +586,23 @@ export function FamilyTreeCanvas({
         </svg>
 
         {/* Person cards - above connections (z-index: 1) */}
-        <div 
-          className="absolute inset-0" 
-          style={{ 
-            zIndex: 1,
-            pointerEvents: 'none' // Allow events to pass through to canvas
-          }}
-        >
+        <div className="absolute inset-0" style={{ zIndex: 1 }}>
           {people.map((person) => {
             const position = positions[person.id]
             if (!position) return null
             
             return (
-              <div
-                key={`wrapper-${person.id}`}
-                style={{
-                  position: 'absolute',
-                  left: position.x - 75, // Half card width
-                  top: position.y - 90,  // Half card height  
-                  pointerEvents: 'auto', // Re-enable events for person cards
-                  zIndex: 1
-                }}
-                data-person-card="true"
-              >
-                <PersonCard
-                  person={person}
-                  x={0} // Relative to wrapper
-                  y={0} // Relative to wrapper
-                  selected={selectedPersonId === person.id}
-                  isDragging={draggingPersonId === person.id || pendingDragId === person.id}
-                  onDragStart={(e) => handlePersonDragStart(e, person.id)}
-                  onClick={() => handlePersonClick(person.id)}
-                  onDoubleClick={() => handlePersonDoubleClick(person.id)}
-                />
-              </div>
+              <PersonCard
+                key={person.id}
+                person={person}
+                x={position.x}
+                y={position.y}
+                selected={selectedPersonId === person.id}
+                isDragging={draggingPersonId === person.id || pendingDragId === person.id}
+                onDragStart={handlePersonDragStart}
+                onClick={handlePersonClick}
+                onDoubleClick={handlePersonDoubleClick}
+              />
             )
           })}
         </div>
