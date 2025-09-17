@@ -292,20 +292,19 @@ export function FamilyTreeCanvas({
     
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
-      const personPos = positions[personId]
-      if (personPos) {
-        ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
-        setPendingDragId(personId)
-        setSelectedPersonId(personId)
-        setStartPointer({ x: e.clientX, y: e.clientY })
-        setLastPointer({ x: e.clientX, y: e.clientY })
-        
-        const worldX = (e.clientX - rect.left - pan.x) / zoom
-        const worldY = (e.clientY - rect.top - pan.y) / zoom
-        setDragStartNodePos({ x: personPos.x, y: personPos.y })
-        setDragOffset({ x: worldX - personPos.x, y: worldY - personPos.y })
-        document.body.style.userSelect = 'none'
-      }
+        const personPos = positions[personId]
+        if (personPos) {
+          setPendingDragId(personId)
+          setSelectedPersonId(personId)
+          setStartPointer({ x: e.clientX, y: e.clientY })
+          setLastPointer({ x: e.clientX, y: e.clientY })
+          
+          const worldX = (e.clientX - rect.left - pan.x) / zoom
+          const worldY = (e.clientY - rect.top - pan.y) / zoom
+          setDragStartNodePos({ x: personPos.x, y: personPos.y })
+          setDragOffset({ x: worldX - personPos.x, y: worldY - personPos.y })
+          document.body.style.userSelect = 'none'
+        }
     }
   }
 
@@ -473,12 +472,16 @@ export function FamilyTreeCanvas({
         onPointerDown={handleCanvasPointerDown}
         onPointerMove={handleCanvasPointerMove}
         onPointerUp={handleCanvasPointerUp}
-        onPointerLeave={handleCanvasPointerUp}
+        onPointerLeave={(e) => {
+          // Only end when panning the canvas; ignore leaving during card drags
+          if (isDragging && !draggingPersonId) {
+            handleCanvasPointerUp()
+          }
+        }}
         onClickCapture={(e) => {
           if (suppressNextClickRef.current) {
             e.stopPropagation()
             e.preventDefault()
-            // reset right away so only the immediate click is eaten
             suppressNextClickRef.current = false
           }
         }}

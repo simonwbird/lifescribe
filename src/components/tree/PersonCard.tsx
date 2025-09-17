@@ -48,10 +48,10 @@ function PersonCardBase({
         aria-label={`${displayName} ${lifespan}`}
         className={cn(
           "w-full h-full rounded-xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-all duration-200",
-          "cursor-grab active:cursor-grabbing select-none",
+          "cursor-grab active:cursor-grabbing select-none touch-none",
           selected && "ring-2 ring-sky-400 ring-opacity-75",
           isDragging && "cursor-grabbing shadow-lg"
-        )}
+         )}
         onPointerDown={(e) => {
           // Prevent drag on right click or if already dragging
           if (e.button !== 0 || isDragging) return
