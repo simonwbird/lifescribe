@@ -373,42 +373,77 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {photos.map((photo, index) => (
-                <div key={photo.id} className="group relative cursor-pointer" onClick={() => openLightbox(index)}>
-                  <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                    {photoUrls[photo.id] ? (
-                      <img
-                        src={photoUrls[photo.id]}
-                        alt={photo.story?.title || photo.file_name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted animate-pulse" />
-                    )}
-                  </div>
-                  
-                  <div className="mt-2">
-                    {photo.story?.title && (
-                      <p className="text-sm font-medium truncate">
-                        {photo.story.title}
-                      </p>
-                    )}
-                    {photo.story?.occurred_on && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(photo.story.occurred_on), 'MMM d, yyyy')}
-                      </p>
-                    )}
-                    {photo.story?.content && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {photo.story.content}
-                      </p>
-                    )}
-                  </div>
+            (() => {
+              // Group photos by story_id
+              const photoGroups = photos.reduce((acc, photo) => {
+                const storyId = photo.story_id
+                if (!acc[storyId]) {
+                  acc[storyId] = []
+                }
+                acc[storyId].push(photo)
+                return acc
+              }, {} as Record<string, MemoryPhoto[]>)
+              
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {Object.values(photoGroups).map((groupPhotos) => {
+                    const primaryPhoto = groupPhotos[0]
+                    const additionalCount = groupPhotos.length - 1
+                    
+                    return (
+                      <div 
+                        key={primaryPhoto.id} 
+                        className="group relative cursor-pointer" 
+                        onClick={() => openLightbox(photos.indexOf(primaryPhoto))}
+                      >
+                        <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                          {photoUrls[primaryPhoto.id] ? (
+                            <img
+                              src={photoUrls[primaryPhoto.id]}
+                              alt={primaryPhoto.story?.title || primaryPhoto.file_name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-muted animate-pulse" />
+                          )}
+                          
+                          {/* Photo count overlay */}
+                          {additionalCount > 0 && (
+                            <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded-md text-xs font-medium">
+                              +{additionalCount}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="mt-2">
+                          {primaryPhoto.story?.title && (
+                            <p className="text-sm font-medium truncate">
+                              {primaryPhoto.story.title}
+                            </p>
+                          )}
+                          {primaryPhoto.story?.occurred_on && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(primaryPhoto.story.occurred_on), 'MMM d, yyyy')}
+                            </p>
+                          )}
+                          {primaryPhoto.story?.content && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {primaryPhoto.story.content}
+                            </p>
+                          )}
+                          {additionalCount > 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {groupPhotos.length} photo{groupPhotos.length > 1 ? 's' : ''} in this memory
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
+              )
+            })()
           )}
         </CardContent>
       </Card>
