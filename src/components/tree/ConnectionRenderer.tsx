@@ -171,9 +171,12 @@ export function ConnectionRenderer({
           if (childAnchors.length > 0) {
             const xs = childAnchors.map(c => c.anchors.top.x)
             const ys = childAnchors.map(c => c.anchors.top.y)
-            const barY = Math.min(...ys) - 30 // a little above the highest child
+            
+            // Calculate barY as 100px below the parent cards' bottom edge
+            const parentBottomY = Math.max(personPos.y + cardHeight/2, spousePos.y + cardHeight/2)
+            const barY = parentBottomY + 100
 
-            if (DEBUG) console.log(`  Heart at (${heartX}, ${heartY}), bar at Y=${barY}`)
+            if (DEBUG) console.log(`  Heart at (${heartX}, ${heartY}), parent bottom at ${parentBottomY}, bar at Y=${barY}`)
 
             if (childAnchors.length > 1) {
               // Multiple children: heart → vertical down → horizontal bar → vertical down to each child
@@ -232,7 +235,7 @@ export function ConnectionRenderer({
             } else {
               // Single child - vertical line from heart down, then horizontal to child
               const childAnchor = childAnchors[0]
-              const elbowPath = `M ${heartX} ${heartY + 8} L ${heartX} ${childAnchor.anchors.top.y} L ${childAnchor.anchors.top.x} ${childAnchor.anchors.top.y}`
+              const elbowPath = `M ${heartX} ${heartY + 8} L ${heartX} ${barY} L ${childAnchor.anchors.top.x} ${barY} L ${childAnchor.anchors.top.x} ${childAnchor.anchors.top.y}`
               paths.push(
                 <path
                   key={`direct-child-${pathIndex++}`}
