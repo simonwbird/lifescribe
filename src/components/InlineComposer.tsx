@@ -32,8 +32,7 @@ export function InlineComposer({
   const [content, setContent] = useState('')
   const [when, setWhen] = useState<DatePrecisionValue>({
     date: defaultDate ?? null,
-    precision: 'day',
-    approx: false
+    yearOnly: false
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -59,8 +58,8 @@ export function InlineComposer({
           title,
           content,
           occurred_on,
-          occurred_precision: when.precision,
-          is_approx: when.approx,
+          occurred_precision: when.yearOnly ? 'year' : 'day',
+          is_approx: false,
           family_id: familyId,
           profile_id: user.id
         })
@@ -109,7 +108,7 @@ export function InlineComposer({
       // Reset form
       setTitle('')
       setContent('')
-      setWhen({ date: null, precision: 'day', approx: false })
+      setWhen({ date: null, yearOnly: false })
       setSelectedFiles([])
       onOpenChange(false)
       onSuccess()

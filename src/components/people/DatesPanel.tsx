@@ -21,7 +21,7 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
   const { toast } = useToast()
 
   const [editType, setEditType] = useState<'birth' | 'death' | null>(null)
-  const [dp, setDp] = useState<DatePrecisionValue>({ date: null, precision: 'day', approx: false })
+  const [dp, setDp] = useState<DatePrecisionValue>({ date: null, yearOnly: false })
   const [saving, setSaving] = useState(false)
   
   const age = computeAge(person.birth_date, person.death_date)
@@ -31,24 +31,23 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
   function openEdit(type: 'birth' | 'death') {
     setEditType(type)
     const d = type === 'birth' ? person.birth_date : person.death_date
-    // Map DB precision values to picker values (defaults to 'day')
+    // Check if we only have year data
     const precRaw = (type === 'birth' ? (person as any).birth_date_precision : (person as any).death_date_precision) as string | undefined
-    const precision = precRaw === 'ym' ? 'month' : precRaw === 'y' ? 'year' : 'day'
-    setDp({ date: d ? new Date(d) : null, precision, approx: false })
+    const yearOnly = precRaw === 'year' || precRaw === 'y'
+    setDp({ date: d ? new Date(d) : null, yearOnly })
   }
 
   async function saveDate() {
     if (!editType) return
     setSaving(true)
     try {
-      const mapPrec = (p: 'day' | 'month' | 'year') => (p === 'day' ? 'ymd' : p === 'month' ? 'ym' : 'y')
       const updates: any = {}
       if (editType === 'birth') {
         updates.birth_date = dp.date ? format(dp.date, 'yyyy-MM-dd') : null
-        updates.birth_date_precision = mapPrec(dp.precision)
+        updates.birth_date_precision = dp.yearOnly ? 'year' : 'day'
       } else {
         updates.death_date = dp.date ? format(dp.date, 'yyyy-MM-dd') : null
-        updates.death_date_precision = mapPrec(dp.precision)
+        updates.death_date_precision = dp.yearOnly ? 'year' : 'day'
       }
       const { error } = await supabase
         .from('people')
