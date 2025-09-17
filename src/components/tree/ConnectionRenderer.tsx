@@ -175,22 +175,23 @@ export function ConnectionRenderer({
 
             if (DEBUG) console.log(`  Heart at (${heartX}, ${heartY}), bar at Y=${barY}`)
 
-            // Trunk from heart down to bar
-            paths.push(
-              <path
-                key={`trunk-${pathIndex++}`}
-                d={`M ${heartX} ${heartY + 8} L ${heartX} ${barY}`}
-                stroke="#FFFFFF"
-                strokeWidth="3"
-                fill="none"
-                strokeDasharray="4,4"
-              />
-            )
-
             if (childAnchors.length > 1) {
-              // Horizontal bar spanning all children
+              // Multiple children: heart → horizontal bar → children
               const minX = Math.min(...xs)
               const maxX = Math.max(...xs)
+              
+              // Trunk from heart down to bar
+              paths.push(
+                <path
+                  key={`trunk-${pathIndex++}`}
+                  d={`M ${heartX} ${heartY + 8} L ${heartX} ${barY}`}
+                  stroke="#FFFFFF"
+                  strokeWidth="3"
+                  fill="none"
+                />
+              )
+
+              // Horizontal bar spanning all children
               paths.push(
                 <path
                   key={`bar-${pathIndex++}`}
@@ -219,7 +220,7 @@ export function ConnectionRenderer({
               paths.push(
                 <path
                   key={`direct-child-${pathIndex++}`}
-                  d={`M ${heartX} ${barY} L ${childAnchor.anchors.top.x} ${childAnchor.anchors.top.y}`}
+                  d={`M ${heartX} ${heartY + 8} L ${childAnchor.anchors.top.x} ${childAnchor.anchors.top.y}`}
                   stroke="#FFFFFF"
                   strokeWidth="3"
                   fill="none"
