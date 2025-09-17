@@ -171,7 +171,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
                 {activities.map((activity, index) => (
                   <div
                     key={`a-${activity.id}-${index}`}
-                    className="flex-shrink-0 flex items-center gap-4 px-8 py-6 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[400px]"
+                    className="flex-shrink-0 flex items-center gap-3 px-6 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[350px]"
                     onClick={() => handleActivityClick(activity)}
                   >
                     {/* Live */}
@@ -180,7 +180,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
                       <span className="text-xs font-mono text-muted-foreground">LIVE</span>
                     </div>
 
-                    <Avatar className="h-10 w-10 border-2 border-primary/20">
+                    <Avatar className="h-8 w-8 border-2 border-primary/20">
                       <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                         {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -215,7 +215,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
                 {activities.map((activity, index) => (
                   <div
                     key={`b-${activity.id}-${index}`}
-                    className="flex-shrink-0 flex items-center gap-4 px-8 py-6 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[400px]"
+                    className="flex-shrink-0 flex items-center gap-3 px-6 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[350px]"
                     onClick={() => handleActivityClick(activity)}
                   >
                     {/* Live */}
@@ -224,7 +224,7 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
                       <span className="text-xs font-mono text-muted-foreground">LIVE</span>
                     </div>
 
-                    <Avatar className="h-10 w-10 border-2 border-primary/20">
+                    <Avatar className="h-8 w-8 border-2 border-primary/20">
                       <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                         {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}

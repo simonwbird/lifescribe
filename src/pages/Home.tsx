@@ -167,7 +167,7 @@ export default function Home() {
         `)
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
-        .limit(8)
+        .limit(15)
 
       if (stories) {
         stories.forEach(story => {
@@ -202,7 +202,7 @@ export default function Home() {
         `)
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(10)
 
       if (comments) {
         comments.forEach(comment => {
@@ -225,6 +225,73 @@ export default function Home() {
         const timeB = new Date(b.time.includes('ago') ? Date.now() - parseTimeAgo(b.time) : b.time).getTime()
         return timeB - timeA
       })
+
+      // Add sample activities if we have few real ones
+      if (activities.length < 10) {
+        const sampleActivities: ActivityItem[] = [
+          {
+            id: 'sample-1',
+            type: 'photo',
+            actor: 'Emma',
+            action: 'uploaded photos from',
+            target: 'Family Reunion 2024',
+            snippet: '12 new photos added to the album',
+            time: '3 hours ago',
+            unread: true
+          },
+          {
+            id: 'sample-2',
+            type: 'story',
+            actor: 'Michael',
+            action: 'shared memories about',
+            target: 'Dad\'s Workshop',
+            snippet: 'Remember how he taught us to build birdhouses every weekend...',
+            time: '5 hours ago',
+            unread: false
+          },
+          {
+            id: 'sample-3',
+            type: 'invite',
+            actor: 'Sarah',
+            action: 'invited',
+            target: 'Cousin Jake to join',
+            snippet: 'Welcome to our family space!',
+            time: '1 day ago',
+            unread: true
+          },
+          {
+            id: 'sample-4',
+            type: 'photo',
+            actor: 'David',
+            action: 'added photos to',
+            target: 'Grandma\'s 85th Birthday',
+            snippet: '8 new photos from the celebration',
+            time: '2 days ago',
+            unread: false
+          },
+          {
+            id: 'sample-5',
+            type: 'story',
+            actor: 'Lisa',
+            action: 'recorded a voice story about',
+            target: 'Christmas Morning 1995',
+            snippet: 'The year we got our first computer and dad spent hours...',
+            time: '3 days ago',
+            unread: false
+          },
+          {
+            id: 'sample-6',
+            type: 'comment',
+            actor: 'Robert',
+            action: 'commented on',
+            target: 'Mom\'s Apple Pie Recipe',
+            snippet: 'I remember she always added a pinch of cinnamon to the crust',
+            time: '4 days ago',
+            unread: false
+          }
+        ]
+        activities.push(...sampleActivities.slice(0, 10 - activities.length))
+      }
 
       setActivities(activities)
     } catch (error) {
