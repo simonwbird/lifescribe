@@ -81,6 +81,11 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [editStoryTitle, setEditStoryTitle] = useState('')
   const [editStoryContent, setEditStoryContent] = useState('')
   const [editStoryDate, setEditStoryDate] = useState('')
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [inlineStoryTitle, setInlineStoryTitle] = useState('')
+  const [inlineStoryContent, setInlineStoryContent] = useState('')
+  const [inlineStoryDate, setInlineStoryDate] = useState('')
   
   // Face tagging state
   const [isTaggingMode, setIsTaggingMode] = useState(false)
@@ -742,6 +747,111 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
   const currentPhoto = photos[currentPhotoIndex]
 
+  // Initialize inline story fields when photo changes
+  useEffect(() => {
+    if (currentPhoto) {
+      setInlineStoryTitle(currentPhoto.individual_story?.title || '')
+      setInlineStoryContent(currentPhoto.individual_story?.content || '')
+      setInlineStoryDate(currentPhoto.individual_story?.occurred_on || '')
+      
+      // Auto-populate tagged people from face tags
+      const faceTaggedPeople = currentPhoto.face_tags?.map((tag: FaceTag) => tag.person_id) || []
+      const allTaggedPeople = [...new Set([person.id, ...faceTaggedPeople])]
+      setTaggedPeople(allTaggedPeople)
+    }
+  }, [currentPhotoIndex, photos])
+
+  // Auto-save functionality
+  const autoSaveStory = async (title: string, content: string, date: string) => {
+    if (!currentPhoto) return
+
+    setIsSaving(true)
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      if (currentPhoto.individual_story?.id) {
+        // Update existing individual story
+        const { error: updateError } = await supabase
+          .from('stories')
+          .update({
+            title: title.trim(),
+            content: content.trim(),
+            occurred_on: date || null
+          })
+          .eq('id', currentPhoto.individual_story.id)
+
+        if (updateError) throw updateError
+      } else if (title.trim() || content.trim()) {
+        // Create new individual story
+        const { data: newStory, error: storyError } = await supabase
+          .from('stories')
+          .insert({
+            title: title.trim(),
+            content: content.trim(),
+            occurred_on: date || null,
+            family_id: person.family_id,
+            profile_id: user.id
+          })
+          .select()
+          .single()
+
+        if (storyError) throw storyError
+
+        // Link photo to individual story
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ individual_story_id: newStory.id })
+          .eq('id', currentPhoto.id)
+
+        if (updateError) throw updateError
+
+        // Link people to story
+        if (taggedPeople.length > 0) {
+          const personLinks = taggedPeople.map(personId => ({
+            person_id: personId,
+            story_id: newStory.id,
+            family_id: person.family_id
+          }))
+
+          await supabase
+            .from('person_story_links')
+            .insert(personLinks)
+        }
+
+        // Refresh photos to show new story
+        fetchPhotos()
+      }
+    } catch (error) {
+      console.error('Failed to auto-save story:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Debounced auto-save
+  const handleInlineStoryChange = (field: 'title' | 'content' | 'date', value: string) => {
+    if (field === 'title') setInlineStoryTitle(value)
+    if (field === 'content') setInlineStoryContent(value)
+    if (field === 'date') setInlineStoryDate(value)
+
+    // Clear existing timeout
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout)
+    }
+
+    // Set new timeout for auto-save
+    const timeout = setTimeout(() => {
+      const title = field === 'title' ? value : inlineStoryTitle
+      const content = field === 'content' ? value : inlineStoryContent
+      const date = field === 'date' ? value : inlineStoryDate
+      autoSaveStory(title, content, date)
+    }, 1000) // Auto-save after 1 second of no typing
+
+    setAutoSaveTimeout(timeout)
+  }
+
   useEffect(() => {
     photos.forEach(photo => {
       if (!photoUrls[photo.id]) {
@@ -749,6 +859,15 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       }
     })
   }, [photos])
+
+  // Cleanup auto-save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout)
+      }
+    }
+  }, [autoSaveTimeout])
 
   // Face tagging functions
   const fetchFaceTags = async (mediaId: string) => {
@@ -1504,90 +1623,100 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 )}
               </div>
 
-              {/* Story Details */}
-              <div className="p-6 bg-background flex-shrink-0">
+              {/* Inline Story Editor */}
+              <div className="p-6 bg-background border-t flex-shrink-0">
                 <div className="space-y-4">
-                  {/* Group Story */}
+                  {/* Group Story (Read-only display) */}
                   {currentPhoto.story && (
-                    <div className="border-b pb-4">
+                    <div className="bg-muted/30 p-4 rounded-lg border-l-4 border-muted-foreground/20">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold">
-                          {currentPhoto.story.title}
-                        </h3>
+                        <h4 className="text-sm font-medium text-muted-foreground">Group Story</h4>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditStory(currentPhoto.story)}
-                          className="text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground h-6 w-6 p-0"
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-3 w-3" />
                         </Button>
                       </div>
-                      
-                      {currentPhoto.story.occurred_on && (
-                        <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                          <Calendar className="h-4 w-4" />
-                          <span className="text-sm">
-                            {format(new Date(currentPhoto.story.occurred_on), 'MMMM d, yyyy')}
-                          </span>
-                        </div>
-                      )}
-                      
+                      <h5 className="font-medium text-sm mb-1">{currentPhoto.story.title}</h5>
                       {currentPhoto.story.content && (
-                        <p className="text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                           {currentPhoto.story.content}
                         </p>
                       )}
                     </div>
                   )}
 
-                  {/* Individual Photo Story */}
-                  {currentPhoto.individual_story ? (
+                  {/* Individual Story Editor */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium">
+                        {currentPhoto.story ? 'Your story about this photo' : 'Tell the story'}
+                      </h4>
+                      {isSaving && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full"></div>
+                          Saving...
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Story Title */}
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-base font-medium text-primary">
-                          Individual Story: {currentPhoto.individual_story.title}
-                        </h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditStory(currentPhoto.individual_story)}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
+                      <Input
+                        placeholder="Story title..."
+                        value={inlineStoryTitle}
+                        onChange={(e) => handleInlineStoryChange('title', e.target.value)}
+                        className="text-sm border-0 border-b border-border bg-transparent rounded-none px-0 focus:border-primary focus:ring-0"
+                        maxLength={100}
+                      />
+                    </div>
+
+                    {/* Story Content */}
+                    <div>
+                      <Textarea
+                        placeholder="What happened in this moment? Share your memory..."
+                        value={inlineStoryContent}
+                        onChange={(e) => handleInlineStoryChange('content', e.target.value)}
+                        className="resize-none border-0 bg-transparent px-0 focus:ring-0 focus:border-0 text-sm min-h-[80px]"
+                        maxLength={1000}
+                      />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {inlineStoryContent.length}/1000 characters
                       </div>
-                      
-                      {currentPhoto.individual_story.occurred_on && (
-                        <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                          <Calendar className="h-4 w-4" />
-                          <span className="text-sm">
-                            {format(new Date(currentPhoto.individual_story.occurred_on), 'MMMM d, yyyy')}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {currentPhoto.individual_story.content && (
-                        <p className="text-muted-foreground leading-relaxed">
-                          {currentPhoto.individual_story.content}
-                        </p>
-                      )}
                     </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-muted-foreground mb-3">
-                        {currentPhoto.story ? 'Add an individual story for this photo' : 'No story added yet for this photo'}
-                      </p>
-                      <Button 
-                        onClick={() => handleAddStory(currentPhoto)}
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {currentPhoto.story ? 'Add Individual Story' : 'Add Quick Story'}
-                      </Button>
+
+                    {/* Story Date */}
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={inlineStoryDate}
+                        onChange={(e) => handleInlineStoryChange('date', e.target.value)}
+                        className="text-xs border-0 bg-transparent px-0 focus:ring-0 max-w-[140px]"
+                      />
                     </div>
-                  )}
+
+                    {/* Tagged People (simplified display) */}
+                    {taggedPeople.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-2">
+                        {taggedPeople.map((personId) => {
+                          const taggedPerson = familyMembers.find(m => m.id === personId)
+                          if (!taggedPerson) return null
+                          return (
+                            <span 
+                              key={personId}
+                              className="inline-flex items-center px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
+                            >
+                              {taggedPerson.full_name}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
