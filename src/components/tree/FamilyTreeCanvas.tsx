@@ -632,6 +632,44 @@ export function FamilyTreeCanvas({
           <Maximize2 className="w-4 h-4" />
         </Button>
 
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            console.log('🔍 Finding lost cards...')
+            // Find cards that are way off screen and bring them back
+            const viewport = { w: canvasRef.current?.clientWidth || 1200, h: canvasRef.current?.clientHeight || 800 }
+            const visibleBounds = {
+              minX: -viewport.w,
+              maxX: viewport.w * 2,
+              minY: -viewport.h,
+              maxY: viewport.h * 2
+            }
+            
+            setLayoutNodes(prev => 
+              prev.map(node => {
+                if (node.x < visibleBounds.minX || node.x > visibleBounds.maxX || 
+                    node.y < visibleBounds.minY || node.y > visibleBounds.maxY) {
+                  console.log(`📍 Bringing back card: ${people.find(p => p.id === node.personId)?.full_name}`)
+                  return {
+                    ...node,
+                    x: Math.random() * 800 + 100, // Random position in visible area
+                    y: Math.random() * 600 + 100
+                  }
+                }
+                return node
+              })
+            )
+          }}
+          className="bg-white/90 text-neutral-800"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+            <rect x="8" y="8" width="6" height="6" rx="1"/>
+          </svg>
+        </Button>
+
         {/* Save Layout */}
         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
           <DialogTrigger asChild>
