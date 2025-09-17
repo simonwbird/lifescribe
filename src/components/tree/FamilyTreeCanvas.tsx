@@ -64,7 +64,12 @@ export function FamilyTreeCanvas({
   // Memoize layout engine
   const layoutEngine = useMemo(() => {
     console.log('🌳 Creating new LayoutEngine with', people.length, 'people')
-    return new LayoutEngine(people, relationships)
+    return new LayoutEngine(people, relationships, {
+      hGap: 160,      // horizontal spacing between cards/groups
+      vGap: 220,      // vertical spacing between generations (will be scaled by engine)
+      cardWidth: 150,
+      cardHeight: 180,
+    })
   }, [people, relationships])
 
   // Initialize layout
