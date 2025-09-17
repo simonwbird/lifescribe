@@ -14,6 +14,8 @@ import { Contributions } from '@/components/people/Contributions'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
+import { getSignedMediaUrl } from '@/lib/media'
+import { AvatarService } from '@/lib/avatarService'
 
 export default function PersonProfile() {
   const { id } = useParams<{ id: string }>()
@@ -84,11 +86,22 @@ export default function PersonProfile() {
           const preferredAvatar = authAvatar || profile?.avatar_url || personData.avatar_url || null
 
           if (preferredAvatar) {
+            let resolved = preferredAvatar as string
+            if (resolved.startsWith('http')) {
+              const fp = AvatarService.extractFilePath(resolved)
+              if (fp) {
+                const proxied = await getSignedMediaUrl(fp, (personData as any).family_id)
+                if (proxied) resolved = proxied
+              }
+            } else {
+              const proxied = await getSignedMediaUrl(resolved, (personData as any).family_id)
+              if (proxied) resolved = proxied
+            }
             finalPersonData = {
               ...personData,
-              avatar_url: preferredAvatar
+              avatar_url: resolved
             }
-            console.log('✅ Using preferred avatar for person:', finalPersonData.full_name, preferredAvatar)
+            console.log('✅ Using resolved avatar for person:', finalPersonData.full_name, resolved)
           }
         }
 
@@ -166,11 +179,22 @@ export default function PersonProfile() {
         const preferredAvatar = authAvatar || profile?.avatar_url || personData.avatar_url || null
 
         if (preferredAvatar) {
+          let resolved = preferredAvatar as string
+          if (resolved.startsWith('http')) {
+            const fp = AvatarService.extractFilePath(resolved)
+            if (fp) {
+              const proxied = await getSignedMediaUrl(fp, (personData as any).family_id)
+              if (proxied) resolved = proxied
+            }
+          } else {
+            const proxied = await getSignedMediaUrl(resolved, (personData as any).family_id)
+            if (proxied) resolved = proxied
+          }
           finalPersonData = {
             ...personData,
-            avatar_url: preferredAvatar
+            avatar_url: resolved
           }
-          console.log('✅ Using preferred avatar for person:', finalPersonData.full_name, preferredAvatar)
+          console.log('✅ Using resolved avatar for person:', finalPersonData.full_name, resolved)
         }
       }
 
