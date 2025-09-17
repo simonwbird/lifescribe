@@ -89,22 +89,32 @@ export function ConnectionRenderer({
           />
         )
         
-        // Heart at midpoint
+        // Heart at midpoint with white background circle
         const heartX = (leftPerson.midRight.x + rightPerson.midLeft.x) / 2
         const heartY = (leftPerson.midRight.y + rightPerson.midLeft.y) / 2
         hearts.push(
-          <text
-            key={`heart-${pathIndex++}`}
-            x={heartX}
-            y={heartY + 4}
-            textAnchor="middle"
-            fontSize="16"
-            fill="#FF69B4"
-            className="pointer-events-none font-bold"
-            style={{ filter: 'drop-shadow(0 0 3px rgba(255,105,180,0.8))' }}
-          >
-            ❤
-          </text>
+          <g key={`heart-group-${pathIndex++}`}>
+            {/* White background circle to hide connecting line */}
+            <circle
+              cx={heartX}
+              cy={heartY}
+              r="12"
+              fill="white"
+              stroke="#e5e7eb"
+              strokeWidth="1"
+            />
+            {/* Heart icon */}
+            <text
+              x={heartX}
+              y={heartY + 4}
+              textAnchor="middle"
+              fontSize="16"
+              fill="#FF69B4"
+              className="pointer-events-none font-bold"
+            >
+              ❤
+            </text>
+          </g>
         )
 
         // Find children of this couple (union of both parents' children)
