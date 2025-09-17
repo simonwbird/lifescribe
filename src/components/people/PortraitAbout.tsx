@@ -43,6 +43,7 @@ export function PortraitAbout({
   const [isEditing, setIsEditing] = useState(false);
   const [editBio, setEditBio] = useState(person.bio || '');
   const [editFavorites, setEditFavorites] = useState(person.favorites || {});
+  const [editHobbies, setEditHobbies] = useState((person as any).hobbies || []);
   const [saving, setSaving] = useState(false);
   const {
     toast
@@ -116,7 +117,8 @@ export function PortraitAbout({
         error
       } = await supabase.from('people').update({
         bio: editBio.trim() || null,
-        favorites: editFavorites
+        favorites: editFavorites,
+        hobbies: editHobbies.filter(h => h.trim())
       }).eq('id', person.id);
       if (error) throw error;
       toast({
@@ -139,6 +141,7 @@ export function PortraitAbout({
   const handleCancel = () => {
     setEditBio(person.bio || '');
     setEditFavorites(person.favorites || {});
+    setEditHobbies((person as any).hobbies || []);
     setIsEditing(false);
   };
   const addFavoriteItem = (category: string) => {
@@ -158,6 +161,18 @@ export function PortraitAbout({
       ...prev,
       [category]: (prev[category as keyof typeof prev] || []).filter((_, i) => i !== index)
     }));
+  };
+
+  const addHobby = () => {
+    setEditHobbies(prev => [...prev, '']);
+  };
+
+  const updateHobby = (index: number, value: string) => {
+    setEditHobbies(prev => prev.map((hobby, i) => i === index ? value : hobby));
+  };
+
+  const removeHobby = (index: number) => {
+    setEditHobbies(prev => prev.filter((_, i) => i !== index));
   };
   return <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -273,6 +288,54 @@ export function PortraitAbout({
           {isEditing ? <Textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="Share a bit about this person..." rows={3} /> : <p className="text-muted-foreground">
               {person.bio || 'No bio added yet.'}
             </p>}
+        </div>
+
+        {/* Hobbies & Interests Section */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-medium">Hobbies & Interests</h4>
+            {isEditing && (
+              <Button variant="ghost" size="sm" onClick={addHobby}>
+                <Plus className="h-3 w-3 mr-1" />
+                Add
+              </Button>
+            )}
+          </div>
+          
+          {isEditing ? (
+            <div className="space-y-2">
+              {editHobbies.map((hobby: string, index: number) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={hobby}
+                    onChange={(e) => updateHobby(index, e.target.value)}
+                    placeholder="Add a hobby or interest..."
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeHobby(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {((person as any).hobbies || []).length > 0 ? (
+                ((person as any).hobbies || []).map((hobby: string, index: number) => (
+                  <Badge key={index} variant="outline">
+                    {hobby}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  No hobbies or interests added yet
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Favorites Section */}
