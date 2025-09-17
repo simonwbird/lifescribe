@@ -130,6 +130,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
         .select(`
           id, file_name, mime_type, created_at, story_id, individual_story_id, file_path,
           stories!media_story_id_fkey(
+            id, title, content,
             person_story_links!inner(person_id)
           )
         `)
@@ -150,14 +151,23 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
               console.error('Failed to get signed URL for media:', mediaItem.id, error)
             }
           }
+
+          // Use story title and content if available, otherwise fall back to filename
+          const storyData = mediaItem.stories
+          const displayTitle = storyData?.title || mediaItem.file_name
+          const storyContent = storyData?.content
+          const excerpt = storyContent ? storyContent.substring(0, 100) + (storyContent.length > 100 ? '...' : '') : undefined
           
           items.push({
             id: mediaItem.id,
             type: 'media',
-            title: mediaItem.file_name,
+            title: displayTitle,
+            content: storyContent,
+            excerpt: excerpt,
             date: mediaItem.created_at,
             media_type: isPhoto ? 'photo' : isAudio ? 'voice' : 'other',
             media_id: mediaItem.id,
+            story_id: mediaItem.story_id,
             file_path: mediaItem.file_path,
             signed_url: signedUrl || undefined
           })
@@ -391,13 +401,18 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                         <div 
                           className="flex-1 min-w-0 cursor-pointer"
                           onClick={() => {
-                            // Navigate to story if available
+                            // Always navigate to story for voice recordings
                             if (item.story_id) {
                               navigate(`/stories/${item.story_id}`)
                             }
                           }}
                         >
                           <h4 className="font-medium text-sm leading-tight truncate">{item.title}</h4>
+                          {item.excerpt && (
+                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+                              {item.excerpt}
+                            </p>
+                          )}
                           <div className="flex items-center gap-2 mt-1">
                             <Volume2 className="h-3 w-3 text-muted-foreground" />
                             <span className="text-xs text-muted-foreground">
