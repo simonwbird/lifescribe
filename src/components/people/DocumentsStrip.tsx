@@ -162,28 +162,12 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
 
   const fetchDocuments = async () => {
     try {
-      // First get story IDs that are linked to this person
-      const { data: personStoryLinks, error: linkError } = await supabase
-        .from('person_story_links')
-        .select('story_id')
-        .eq('person_id', person.id)
-        .eq('family_id', (person as any).family_id)
-
-      if (linkError) throw linkError
-      
-      if (!personStoryLinks || personStoryLinks.length === 0) {
-        setDocuments([])
-        return
-      }
-
-      const storyIds = personStoryLinks.map(link => link.story_id)
-
-      // Fetch documents that belong to those stories
+      // Fetch all documents for this family that are document types
+      // We'll filter by person association later if needed
       const { data, error } = await supabase
         .from('media')
         .select('*')
         .eq('family_id', (person as any).family_id)
-        .in('story_id', storyIds)
         .in('mime_type', [
           'application/pdf',
           'application/msword', 
