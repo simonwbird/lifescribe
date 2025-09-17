@@ -176,10 +176,10 @@ export function FamilyTreeCanvas({
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
     
-    // Correct coordinate transformation: canvas transform is translate(pan) then scale(zoom)
-    // So: world = (screen - rect - pan) / zoom
-    const worldX = (lastPointer.x - rect.left - pan.x) / zoom
-    const worldY = (lastPointer.y - rect.top - pan.y) / zoom
+    // Correct inversion for transform: translate(pan) scale(zoom)
+    // world = (screen - rect) / zoom - pan
+    const worldX = (lastPointer.x - rect.left) / zoom - pan.x
+    const worldY = (lastPointer.y - rect.top) / zoom - pan.y
     
     const newX = snapToGridHelper(worldX - dragOffset.x)
     const newY = snapToGridHelper(worldY - dragOffset.y)
@@ -309,10 +309,10 @@ export function FamilyTreeCanvas({
           setStartPointer({ x: e.clientX, y: e.clientY })
           setLastPointer({ x: e.clientX, y: e.clientY })
           
-          // Correct coordinate transformation: canvas transform is translate(pan) then scale(zoom)
-          // So: world = (screen - rect - pan) / zoom
-          const worldX = (e.clientX - rect.left - pan.x) / zoom
-          const worldY = (e.clientY - rect.top - pan.y) / zoom
+          // Correct inversion for transform: translate(pan) scale(zoom)
+          // world = (screen - rect) / zoom - pan
+          const worldX = (e.clientX - rect.left) / zoom - pan.x
+          const worldY = (e.clientY - rect.top) / zoom - pan.y
           setDragStartNodePos({ x: personPos.x, y: personPos.y })
           setDragOffset({ x: worldX - personPos.x, y: worldY - personPos.y })
           document.body.style.userSelect = 'none'
