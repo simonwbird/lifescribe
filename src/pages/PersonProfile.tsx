@@ -9,6 +9,7 @@ import { PortraitAbout } from '@/components/people/PortraitAbout'
 import { PinnedStrip } from '@/components/people/PinnedStrip'
 import { PersonTimeline } from '@/components/people/PersonTimeline'
 import { PhotosStrip } from '@/components/people/PhotosStrip'
+import { DocumentsStrip } from '@/components/people/DocumentsStrip'
 import { DatesPanel } from '@/components/people/DatesPanel'
 import { Contributions } from '@/components/people/Contributions'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -283,6 +284,8 @@ export default function PersonProfile() {
           {/* Sidebar */}
           <div className="space-y-6">
             <PhotosStrip person={person} />
+            
+            <DocumentsStrip person={person} />
             
             <DatesPanel 
               person={person}
