@@ -114,52 +114,20 @@ export class LayoutEngine {
   }
   
   public generateLayout(rootPersonId?: string): TreeLayout {
-    console.log('🌳 ═══ STARTING HIERARCHICAL LAYOUT GENERATION ═══')
+    console.log('🌳 ═══ STARTING SIMPLE HIERARCHICAL LAYOUT ═══')
     
-    // Strategy 1: Find people with no parents (true roots)
-    let rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
-    console.log('🌳 People with no parents:', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
+    // SIMPLE RULE: People with no parents = TOP GENERATION
+    const rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
+    console.log('🌳 TOP GENERATION (no parents assigned):', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
     
-    // Strategy 2: If we have too many "roots" or the years don't make sense, use birth year approach
-    if (rootPeople.length > 10 || this.shouldUseBirthYearApproach(rootPeople)) {
-      console.log('🌳 Using birth year approach to find true oldest generation...')
-      
-      // Find the oldest generation by birth year (people born in similar era)
-      const peopleWithYears = this.people.filter(p => p.birth_year && p.birth_year > 1800)
-      if (peopleWithYears.length > 0) {
-        // Sort by birth year and find the oldest cluster
-        peopleWithYears.sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))
-        
-        const oldestYear = peopleWithYears[0].birth_year!
-        const generationSpan = 30 // People born within 30 years are likely same generation
-        
-        rootPeople = peopleWithYears.filter(p => 
-          p.birth_year! <= oldestYear + generationSpan
-        )
-        
-        console.log('🌳 Oldest generation by birth year:', {
-          oldestYear,
-          generationSpan,
-          count: rootPeople.length,
-          people: rootPeople.map(p => `${p.full_name} (${p.birth_year})`)
-        })
-      }
-    }
-    
-    // Fallback: if still no good roots, use the very oldest people
+    // If somehow no one has "no parents", just pick oldest
     if (rootPeople.length === 0 && this.people.length > 0) {
-      console.log('🌳 Fallback: using oldest individual by birth year')
-      const oldestByYear = this.people
-        .filter(p => p.birth_year)
-        .sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))[0]
-      
-      rootPeople = oldestByYear ? [oldestByYear] : [this.people[0]]
-      console.log('🌳 Fallback root selected:', rootPeople[0]?.full_name)
+      const fallback = this.people.sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))[0]
+      rootPeople.push(fallback)
+      console.log('🌳 Fallback top generation:', fallback.full_name)
     }
     
-    console.log('🌳 Final root generation:', rootPeople.map(p => `${p.full_name} (${p.birth_year})`))
-    
-    // Assign generations using ancestry-based BFS
+    // Simple generation assignment using BFS
     const generations = new Map<number, Person[]>()
     const personDepth = new Map<string, number>()
     const visited = new Set<string>()
@@ -225,15 +193,12 @@ export class LayoutEngine {
       })
     }
     
-    // Start from root people (oldest generation at depth 0)
-    console.log('🔍 VICCARS CHECK: Are Archibald/Annie in root people?', 
-      rootPeople.filter(p => p.full_name?.includes('Archibald') || p.full_name?.includes('Annie')).map(p => p.full_name)
-    )
-    console.log('🔍 VICCARS CHECK: Is Helen in root people?', 
-      rootPeople.filter(p => p.full_name?.includes('Helen')).map(p => p.full_name)
-    )
-    
-    rootPeople.forEach(person => assignGeneration(person, 0))
+    // Start from TOP GENERATION (people with no parents)
+    console.log('🔍 Starting BFS from top generation...')
+    rootPeople.forEach(person => {
+      console.log(`🔍 Starting generation assignment from: ${person.full_name} (no parents = Generation 0)`)
+      assignGeneration(person, 0)
+    })
     
     // Handle any unvisited people (disconnected components)
     this.people.forEach(person => {
