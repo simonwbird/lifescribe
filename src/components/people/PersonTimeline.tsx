@@ -13,6 +13,7 @@ import {
   Pin,
   Heart,
   User,
+  Video as VideoIcon,
   X,
   Play,
   Pause,
@@ -46,7 +47,7 @@ interface PersonTimelineProps {
   onRefresh: () => void
 }
 
-type TimelineFilter = 'all' | 'stories' | 'voice' | 'photos' | 'events'
+type TimelineFilter = 'all' | 'stories' | 'voice' | 'photos' | 'videos' | 'events'
 
 export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelineProps) {
   const navigate = useNavigate()
@@ -65,6 +66,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
     { key: 'stories', label: 'Stories', icon: MessageSquare },
     { key: 'voice', label: 'Voice', icon: Mic },
     { key: 'photos', label: 'Photos', icon: Camera },
+    { key: 'videos', label: 'Videos', icon: VideoIcon },
     { key: 'events', label: 'Life Events', icon: Calendar }
   ]
 
@@ -148,9 +150,10 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
         const mediaPromises = media.map(async (mediaItem) => {
           const isPhoto = mediaItem.mime_type?.startsWith('image/')
           const isAudio = mediaItem.mime_type?.startsWith('audio/')
+          const isVideo = mediaItem.mime_type?.startsWith('video/')
           
           let signedUrl = undefined
-          if ((isPhoto || isAudio) && mediaItem.file_path) {
+          if ((isPhoto || isAudio || isVideo) && mediaItem.file_path) {
             try {
               signedUrl = await getSignedMediaUrl(mediaItem.file_path, (person as any).family_id)
             } catch (error) {
@@ -174,7 +177,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
             content: storyContent,
             excerpt: excerpt,
             date: mediaItem.created_at,
-            media_type: isPhoto ? 'photo' as const : isAudio ? 'voice' as const : 'other' as const,
+            media_type: isPhoto ? 'photo' as const : isAudio ? 'voice' as const : isVideo ? 'video' as const : 'other' as const,
             media_id: mediaItem.id,
             story_id: mediaItem.story_id,
             file_path: mediaItem.file_path,
@@ -213,6 +216,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
     if (activeFilter === 'events' && item.type === 'life_event') return true
     if (activeFilter === 'photos' && item.type === 'media' && item.media_type === 'photo') return true
     if (activeFilter === 'voice' && item.type === 'media' && item.media_type === 'voice') return true
+    if (activeFilter === 'videos' && item.type === 'media' && item.media_type === 'video') return true
     return false
   })
 
@@ -248,6 +252,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       case 'media':
         if (item.media_type === 'photo') return Camera
         if (item.media_type === 'voice') return Mic
+        if (item.media_type === 'video') return VideoIcon
         return Camera
       default:
         return MessageSquare
@@ -349,6 +354,7 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
                     if (key === 'events' && item.type === 'life_event') return true
                     if (key === 'photos' && item.type === 'media' && item.media_type === 'photo') return true
                     if (key === 'voice' && item.type === 'media' && item.media_type === 'voice') return true
+                    if (key === 'videos' && item.type === 'media' && item.media_type === 'video') return true
                     return false
                   }).length}
                 </Badge>
