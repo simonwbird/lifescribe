@@ -211,14 +211,19 @@ export function FamilyTreeCanvas({
 
   // Pointer handlers for canvas panning
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    // Allow panning unless we're clicking directly on a person card
+    // Allow panning on any blank area, not just the canvas element itself
     const target = e.target as HTMLElement
-    const isPersonCard = target.closest('[role="button"][aria-label*="–"]') // Person cards have aria-label with lifespan
     
-    if (!isPersonCard) {
-      console.log('🖱️ Starting canvas pan')
+    // Check if we clicked on a person card or any interactive element
+    const isPersonCard = target.closest('article[role="button"]')
+    const isButton = target.closest('button')
+    const isInteractive = isPersonCard || isButton
+    
+    if (!isInteractive) {
+      console.log('🖱️ Starting canvas pan from:', target.tagName)
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+      e.preventDefault() // Prevent any default behavior
     }
   }
 
@@ -547,7 +552,8 @@ export function FamilyTreeCanvas({
             left: '-2000px',
             top: '-2000px', 
             width: '6000px',
-            height: '6000px'
+            height: '6000px',
+            pointerEvents: 'none' // Ensure SVG never blocks canvas panning
           }}
           viewBox="-2000 -2000 6000 6000"
         >
