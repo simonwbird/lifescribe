@@ -385,7 +385,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
             
             <div>
               <label className="text-sm font-medium mb-2 block">
-                What's this memory about?
+                What's this memory about? <span className="text-muted-foreground">(optional)</span>
               </label>
               <Input
                 placeholder="e.g., Family vacation at the beach, Christmas morning 1995..."
