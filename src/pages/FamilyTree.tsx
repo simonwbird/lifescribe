@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import ProfessionalFamilyTree from '@/components/family-tree/ProfessionalFamilyTree'
-import EnhancedFamilyTreeCanvas from '@/components/family-tree/EnhancedFamilyTreeCanvas'
+import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas'
 import GenerationalFamilyTree from '@/components/family-tree/GenerationalFamilyTree'
 import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
 import { useLabs } from '@/hooks/useLabs'
@@ -367,92 +367,6 @@ export default function FamilyTree() {
       <div className="min-h-screen bg-background">
         <Header />
         
-        {/* Toolbar */}
-        <div className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95 sticky top-16 z-40">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center space-x-2">
-                <TreePine className="h-5 w-5 text-primary" />
-                <h1 className="text-lg font-semibold">Family Tree</h1>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button onClick={handleSaveLayout} variant="outline" size="sm">
-                  Save Layout
-                </Button>
-                
-                <Dialog open={isAddPersonOpen} onOpenChange={setIsAddPersonOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Person
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Person</DialogTitle>
-                      <DialogDescription>
-                        Add a new person to your family tree
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="given_name">First Name *</Label>
-                        <Input
-                          id="given_name"
-                          value={newPersonForm.given_name}
-                          onChange={(e) => setNewPersonForm(prev => ({ ...prev, given_name: e.target.value }))}
-                          placeholder="Enter first name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="surname">Last Name</Label>
-                        <Input
-                          id="surname"
-                          value={newPersonForm.surname}
-                          onChange={(e) => setNewPersonForm(prev => ({ ...prev, surname: e.target.value }))}
-                          placeholder="Enter last name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="birth_year">Birth Year</Label>
-                        <Input
-                          id="birth_year"
-                          type="number"
-                          value={newPersonForm.birth_year}
-                          onChange={(e) => setNewPersonForm(prev => ({ ...prev, birth_year: e.target.value }))}
-                          placeholder="Enter birth year"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="gender">Gender</Label>
-                        <Select value={newPersonForm.gender} onValueChange={(value) => setNewPersonForm(prev => ({ ...prev, gender: value }))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setIsAddPersonOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleAddPerson}>
-                          Add Person
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content */}
         <div className="flex-1">
           {people.length === 0 ? (
@@ -476,19 +390,13 @@ export default function FamilyTree() {
               </Card>
             </div>
           ) : (
-            <EnhancedFamilyTreeCanvas
+            <FamilyTreeCanvas
               people={people}
               relationships={relationships}
-              positions={nodePositions}
-              onPersonMove={handlePersonMove}
+              familyId={familyId || ''}
               onPersonSelect={(personId) => console.log('Selected:', personId)}
-              onAddRelation={handleAddRelation}
-              onDeleteRelation={handleDeleteRelation}
-              onViewProfile={handleViewPerson}
-              onEditPerson={(personId) => navigate(`/people/${personId}`)}
-              shouldFitToScreen={shouldFitToScreen}
-              onFitToScreenComplete={() => setShouldFitToScreen(false)}
-              onRecordMemoryAbout={handleRecordMemoryAbout}
+              onPersonEdit={(personId) => navigate(`/people/${personId}`)}
+              onPersonView={handleViewPerson}
             />
           )}
         </div>
