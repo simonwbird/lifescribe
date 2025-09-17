@@ -606,7 +606,7 @@ export function FamilyTreeCanvas({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleResetZoom}
+          onClick={autoFit}
           className="bg-white/90 text-neutral-800"
         >
           <RotateCcw className="w-4 h-4" />
