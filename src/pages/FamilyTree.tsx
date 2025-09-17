@@ -91,7 +91,38 @@ export default function FamilyTree() {
         .eq('family_id', member.family_id)
         .order('created_at')
 
-      setPeople(peopleData as Person[] || [])
+      // Load profile photos separately and merge
+      if (peopleData?.length) {
+        // Get user links
+        const { data: userLinks } = await supabase
+          .from('person_user_links')
+          .select('person_id, user_id')
+          .in('person_id', peopleData.map(p => p.id))
+
+        // Get profile photos for linked users
+        if (userLinks?.length) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, avatar_url')
+            .in('id', userLinks.map(link => link.user_id))
+
+          // Merge photos into people data
+          const peopleWithAvatars = peopleData.map(person => {
+            const userLink = userLinks.find(link => link.person_id === person.id)
+            const profile = userLink ? profiles?.find(p => p.id === userLink.user_id) : null
+            return {
+              ...person,
+              avatar_url: profile?.avatar_url || person.avatar_url
+            }
+          })
+
+          setPeople(peopleWithAvatars as Person[])
+        } else {
+          setPeople(peopleData as Person[])
+        }
+      } else {
+        setPeople([])
+      }
 
       // Load relationships with biological status
       const { data: relationshipsData } = await supabase
