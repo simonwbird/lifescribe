@@ -10,7 +10,7 @@ interface ConnectionRendererProps {
 }
 
 type Point = { x: number; y: number }
-const DEBUG = false
+const DEBUG = true
 
 function elbowPath(from: Point, to: Point): string {
   const midY = (from.y + to.y) / 2
