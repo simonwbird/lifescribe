@@ -92,7 +92,7 @@ export function FamilyTreeCanvas({
     return base
   }, [layoutNodes, visualTick])
 
-  // Auto-fit functionality - always center and fit the whole tree
+  // Auto-fit functionality - aggressive fitting to show the whole tree clearly
   const autoFit = useCallback(() => {
     if (layoutNodes.length === 0) return
     
@@ -104,42 +104,45 @@ export function FamilyTreeCanvas({
     const viewport = { w: viewportRect.width, h: viewportRect.height }
     
     // Calculate bounding box of all nodes with card dimensions
-    const padding = 120 // Good padding for visibility
-    const minX = Math.min(...layoutNodes.map(n => n.x - 75)) - padding
-    const maxX = Math.max(...layoutNodes.map(n => n.x + 75)) + padding
-    const minY = Math.min(...layoutNodes.map(n => n.y - 90)) - padding
-    const maxY = Math.max(...layoutNodes.map(n => n.y + 90)) + padding
+    const cardWidth = 150, cardHeight = 180
+    const padding = 50 // Minimal padding for clean edges
     
-    const bbox = {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY
-    }
+    const minX = Math.min(...layoutNodes.map(n => n.x - cardWidth/2)) - padding
+    const maxX = Math.max(...layoutNodes.map(n => n.x + cardWidth/2)) + padding
+    const minY = Math.min(...layoutNodes.map(n => n.y - cardHeight/2)) - padding
+    const maxY = Math.max(...layoutNodes.map(n => n.y + cardHeight/2)) + padding
     
-    // Calculate scale to fit with margin - be more conservative
-    const scaleX = (viewport.w * 0.85) / bbox.width  // Use 85% of viewport width
-    const scaleY = (viewport.h * 0.85) / bbox.height // Use 85% of viewport height
-    const scale = Math.min(scaleX, scaleY)
-    const clampedScale = Math.max(0.15, Math.min(2.0, scale)) // Allow even smaller zoom for very large trees
+    const contentWidth = maxX - minX
+    const contentHeight = maxY - minY
     
-    // Calculate pan to center the tree perfectly
-    const scaledWidth = bbox.width * clampedScale
-    const scaledHeight = bbox.height * clampedScale
+    // Calculate zoom to fit - use 95% of viewport for maximum visibility
+    const scaleX = (viewport.w * 0.95) / contentWidth
+    const scaleY = (viewport.h * 0.95) / contentHeight
+    const newZoom = Math.min(scaleX, scaleY)
+    
+    // Clamp zoom to reasonable bounds (allow very small zoom for huge trees)
+    const clampedZoom = Math.max(0.1, Math.min(2.0, newZoom))
+    
+    // Center the content in the viewport
+    const contentCenterX = (minX + maxX) / 2
+    const contentCenterY = (minY + maxY) / 2
+    const viewportCenterX = viewport.w / 2
+    const viewportCenterY = viewport.h / 2
+    
     const newPan = {
-      x: (viewport.w - scaledWidth) / 2 - bbox.x * clampedScale,
-      y: (viewport.h - scaledHeight) / 2 - bbox.y * clampedScale
+      x: viewportCenterX - contentCenterX * clampedZoom,
+      y: viewportCenterY - contentCenterY * clampedZoom
     }
     
-    console.log('🎯 Auto-fit tree to viewport:', { 
+    console.log('🎯 Smart Auto-fit:', { 
       viewport, 
-      bbox, 
-      scale: clampedScale, 
+      contentSize: { w: contentWidth, h: contentHeight },
+      zoom: clampedZoom, 
       pan: newPan,
       nodesCount: layoutNodes.length
     })
     
-    setZoom(clampedScale)
+    setZoom(clampedZoom)
     setPan(newPan)
   }, [layoutNodes])
 
