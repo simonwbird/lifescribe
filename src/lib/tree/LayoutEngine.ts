@@ -136,7 +136,7 @@ export class LayoutEngine {
     // Special debugging for the people who should be Generation 2, 3, and 4
     const shouldBeGen2 = ['Helen Dorothy Viccars', 'Edward Ellis Bird', 'Henry George Kemter', 'Shirley Lenore Thomas']
     const shouldBeGen3 = ['David Edward Bird', 'Helen Bird', 'William G Kemter', 'Bentley Kerry-Anne']
-    const shouldBeGen4 = ['Zuzana Buckova', 'Simon William Bird', 'Matthew David Bird', 'Adam George Bird', 'James Edward Bird', 'Sarah Kemter']
+    const shouldBeGen4 = ['Zuzana Buckova', 'Simon William Bird', 'Matthew David Bird', 'Adam George Bird', 'James Edward Bird', 'Sarah Kemter', 'Lucy Shirley Bird', 'Jamie William Bird']
     
     console.log('🔍 GENERATION 2, 3 & 4 ANALYSIS:')
     
@@ -276,7 +276,7 @@ export class LayoutEngine {
     console.log('🔍 ═══ FINAL GENERATION ASSIGNMENTS ═══')
     const gen2Names = ['Helen Dorothy', 'Edward Ellis', 'Henry George', 'Shirley']
     const gen3Names = ['David Edward', 'Helen Bird', 'William G', 'Bentley']
-    const gen4Names = ['Zuzana', 'Simon William', 'Matthew David', 'Adam George', 'James Edward', 'Sarah Kemter']
+    const gen4Names = ['Zuzana', 'Simon William', 'Matthew David', 'Adam George', 'James Edward', 'Sarah Kemter', 'Lucy', 'Jamie']
     
     gen2Names.forEach(name => {
       const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
