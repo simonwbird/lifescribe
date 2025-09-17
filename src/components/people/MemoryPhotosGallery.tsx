@@ -81,6 +81,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [showTagPersonModal, setShowTagPersonModal] = useState(false)
   const [selectedPersonForTag, setSelectedPersonForTag] = useState<string>('')
   const [faceTags, setFaceTags] = useState<FaceTag[]>([])
+  const [hoveredPhotoId, setHoveredPhotoId] = useState<string | null>(null)
   
   const { toast } = useToast()
 
@@ -515,7 +516,47 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         photo.story_id && personStoryIds.includes(photo.story_id)
       )
 
-      setPhotos(filteredPhotos)
+      // Fetch face tags for all photos
+      const photoIds = filteredPhotos.map(photo => photo.id)
+      if (photoIds.length > 0) {
+        const { data: faceTagsData } = await supabase
+          .from('face_tags')
+          .select(`
+            *,
+            people:person_id (full_name)
+          `)
+          .in('media_id', photoIds)
+          .eq('family_id', (person as any).family_id)
+
+        // Group face tags by media_id and add to photos
+        const faceTagsByMedia: Record<string, FaceTag[]> = {}
+        faceTagsData?.forEach(tag => {
+          const mediaId = tag.media_id
+          if (!faceTagsByMedia[mediaId]) {
+            faceTagsByMedia[mediaId] = []
+          }
+          faceTagsByMedia[mediaId].push({
+            id: tag.id,
+            media_id: tag.media_id,
+            person_id: tag.person_id,
+            person_name: (tag.people as any)?.full_name || 'Unknown',
+            x_percent: Number(tag.x_percent),
+            y_percent: Number(tag.y_percent),
+            width_percent: Number(tag.width_percent),
+            height_percent: Number(tag.height_percent)
+          })
+        })
+
+        // Add face tags to photos
+        const photosWithTags = filteredPhotos.map(photo => ({
+          ...photo,
+          face_tags: faceTagsByMedia[photo.id] || []
+        }))
+
+        setPhotos(photosWithTags)
+      } else {
+        setPhotos(filteredPhotos)
+      }
     } catch (error) {
       console.error('Failed to fetch photos:', error)
     }
@@ -802,6 +843,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                         <div 
                           className="aspect-square bg-muted rounded-lg overflow-hidden relative cursor-pointer"
                           onClick={() => openLightbox(photos.indexOf(primaryPhoto))}
+                          onMouseEnter={() => setHoveredPhotoId(primaryPhoto.id)}
+                          onMouseLeave={() => setHoveredPhotoId(null)}
                         >
                           {photoUrls[primaryPhoto.id] ? (
                             <img
@@ -811,6 +854,29 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                             />
                           ) : (
                             <div className="w-full h-full bg-muted animate-pulse" />
+                          )}
+                          
+                          {/* Face Tags on Hover */}
+                          {hoveredPhotoId === primaryPhoto.id && primaryPhoto.face_tags && primaryPhoto.face_tags.length > 0 && (
+                            <div className="absolute inset-0 pointer-events-none">
+                              {primaryPhoto.face_tags.map((tag) => (
+                                <div
+                                  key={tag.id}
+                                  className="absolute border-2 border-blue-400 bg-blue-400/20"
+                                  style={{
+                                    left: `${tag.x_percent}%`,
+                                    top: `${tag.y_percent}%`,
+                                    width: `${tag.width_percent}%`,
+                                    height: `${tag.height_percent}%`,
+                                  }}
+                                >
+                                  {/* Name Label */}
+                                  <div className="absolute -top-6 left-0 bg-blue-500 text-white px-1 py-0.5 rounded text-xs whitespace-nowrap">
+                                    {tag.person_name}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           )}
                           
                           {/* Photo count overlay */}
