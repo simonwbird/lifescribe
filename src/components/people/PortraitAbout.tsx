@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Edit2, Save, X, Plus } from 'lucide-react'
 import { Person, UserRole, canEdit, initials } from '@/utils/personUtils'
 import { supabase } from '@/lib/supabase'
@@ -33,6 +34,8 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
   const [editBio, setEditBio] = useState(person.bio || '')
   const [editFavorites, setEditFavorites] = useState(person.favorites || {})
   const [saving, setSaving] = useState(false)
+  const [setPhotoOpen, setSetPhotoOpen] = useState(false)
+  const [photoInput, setPhotoInput] = useState('')
   const { toast } = useToast()
   
   const canUserEdit = canEdit(userRole)
@@ -201,10 +204,54 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
         </CardTitle>
         
         {canUserEdit && !isEditing && (
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-            <Edit2 className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Dialog open={setPhotoOpen} onOpenChange={setSetPhotoOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">Set photo</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Paste family tree image URL</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Paste Supabase media URL or storage path"
+                    value={photoInput}
+                    onChange={(e) => setPhotoInput(e.target.value)}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setSetPhotoOpen(false)}>Cancel</Button>
+                    <Button size="sm" onClick={async () => {
+                      try {
+                        const raw = photoInput.trim()
+                        if (!raw) return
+                        const filePath = raw.startsWith('http') ? (AvatarService.extractFilePath(raw) || '') : raw
+                        if (!filePath) throw new Error('Invalid Supabase URL')
+                        const { error } = await supabase
+                          .from('people')
+                          .update({ avatar_url: filePath })
+                          .eq('id', person.id)
+                        if (error) throw error
+                        const proxied = await getSignedMediaUrl(filePath, (person as any).family_id)
+                        if (proxied) setAvatarSrc(proxied)
+                        setSetPhotoOpen(false)
+                        setPhotoInput('')
+                        onPersonUpdated()
+                        toast({ title: 'Photo updated' })
+                      } catch (err) {
+                        console.error('Failed to set photo', err)
+                        toast({ title: 'Failed to set photo', variant: 'destructive' })
+                      }
+                    }}>Save</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <Edit2 className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </div>
         )}
         
         {isEditing && (
