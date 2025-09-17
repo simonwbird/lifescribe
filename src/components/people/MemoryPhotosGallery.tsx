@@ -1624,98 +1624,103 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               </div>
 
               {/* Inline Story Editor */}
-              <div className="p-6 bg-background border-t flex-shrink-0">
-                <div className="space-y-4">
-                  {/* Group Story (Read-only display) */}
-                  {currentPhoto.story && (
-                    <div className="bg-muted/30 p-4 rounded-lg border-l-4 border-muted-foreground/20">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Group Story</h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditStory(currentPhoto.story)}
-                          className="text-muted-foreground hover:text-foreground h-6 w-6 p-0"
-                        >
-                          <Edit2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <h5 className="font-medium text-sm mb-1">{currentPhoto.story.title}</h5>
-                      {currentPhoto.story.content && (
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          {currentPhoto.story.content}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Individual Story Editor */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium">
-                        {currentPhoto.story ? 'Your story about this photo' : 'Tell the story'}
-                      </h4>
-                      {isSaving && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full"></div>
-                          Saving...
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Story Title */}
-                    <div>
-                      <Input
-                        placeholder="Story title..."
-                        value={inlineStoryTitle}
-                        onChange={(e) => handleInlineStoryChange('title', e.target.value)}
-                        className="text-sm border-0 border-b border-border bg-transparent rounded-none px-0 focus:border-primary focus:ring-0"
-                        maxLength={100}
-                      />
-                    </div>
-
-                    {/* Story Content */}
-                    <div>
-                      <Textarea
-                        placeholder="What happened in this moment? Share your memory..."
-                        value={inlineStoryContent}
-                        onChange={(e) => handleInlineStoryChange('content', e.target.value)}
-                        className="resize-none border-0 bg-transparent px-0 focus:ring-0 focus:border-0 text-sm min-h-[80px]"
-                        maxLength={1000}
-                      />
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {inlineStoryContent.length}/1000 characters
-                      </div>
-                    </div>
-
-                    {/* Story Date */}
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="date"
-                        value={inlineStoryDate}
-                        onChange={(e) => handleInlineStoryChange('date', e.target.value)}
-                        className="text-xs border-0 bg-transparent px-0 focus:ring-0 max-w-[140px]"
-                      />
-                    </div>
-
-                    {/* Tagged People (simplified display) */}
-                    {taggedPeople.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-2">
-                        {taggedPeople.map((personId) => {
-                          const taggedPerson = familyMembers.find(m => m.id === personId)
-                          if (!taggedPerson) return null
-                          return (
-                            <span 
-                              key={personId}
-                              className="inline-flex items-center px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
-                            >
-                              {taggedPerson.full_name}
-                            </span>
-                          )
-                        })}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-6 bg-background border-t">
+                  <div className="space-y-4 max-w-2xl">
+                    {/* Group Story (Read-only display) */}
+                    {currentPhoto.story && (
+                      <div className="bg-muted/30 p-4 rounded-lg border-l-4 border-muted-foreground/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-medium text-muted-foreground">Group Story</h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditStory(currentPhoto.story)}
+                            className="text-muted-foreground hover:text-foreground h-6 w-6 p-0"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <h5 className="font-medium text-sm mb-1">{currentPhoto.story.title}</h5>
+                        {currentPhoto.story.content && (
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {currentPhoto.story.content}
+                          </p>
+                        )}
                       </div>
                     )}
+
+                    {/* Individual Story Editor */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-base font-medium">
+                          {currentPhoto.story ? 'Your story about this photo' : 'Tell the story'}
+                        </h4>
+                        {isSaving && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full"></div>
+                            Saving...
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Story Title */}
+                      <div>
+                        <Input
+                          placeholder="Story title..."
+                          value={inlineStoryTitle}
+                          onChange={(e) => handleInlineStoryChange('title', e.target.value)}
+                          className="text-base border-0 border-b-2 border-border bg-transparent rounded-none px-0 py-2 focus:border-primary focus:ring-0 font-medium"
+                          maxLength={100}
+                        />
+                      </div>
+
+                      {/* Story Content */}
+                      <div>
+                        <Textarea
+                          placeholder="What happened in this moment? Share your memory..."
+                          value={inlineStoryContent}
+                          onChange={(e) => handleInlineStoryChange('content', e.target.value)}
+                          className="resize-none border-0 bg-transparent px-0 py-2 focus:ring-0 focus:border-0 text-base leading-relaxed min-h-[120px]"
+                          maxLength={1000}
+                        />
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {inlineStoryContent.length}/1000 characters
+                        </div>
+                      </div>
+
+                      {/* Story Date */}
+                      <div className="flex items-center gap-3 py-2">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <Input
+                          type="date"
+                          value={inlineStoryDate}
+                          onChange={(e) => handleInlineStoryChange('date', e.target.value)}
+                          className="text-sm border border-border bg-background px-3 py-2 rounded focus:ring-1 focus:ring-primary max-w-[160px]"
+                        />
+                      </div>
+
+                      {/* Tagged People */}
+                      {taggedPeople.length > 0 && (
+                        <div className="pt-4 border-t border-border">
+                          <h5 className="text-sm font-medium mb-3">People in this memory</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {taggedPeople.map((personId) => {
+                              const taggedPerson = familyMembers.find(m => m.id === personId)
+                              if (!taggedPerson) return null
+                              return (
+                                <span 
+                                  key={personId}
+                                  className="inline-flex items-center px-3 py-1.5 bg-primary/10 text-primary text-sm rounded-full font-medium"
+                                >
+                                  {taggedPerson.full_name}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
