@@ -421,7 +421,7 @@ export default function VoiceCaptureModal({
                   ))}
                 </div>
                 <Input
-                  placeholder="Add a person (press Enter)"
+                  placeholder="Add family members or friends (press Enter)"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       addPerson(e.currentTarget.value)
