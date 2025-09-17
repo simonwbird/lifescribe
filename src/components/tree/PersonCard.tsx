@@ -37,10 +37,11 @@ function PersonCardBase({
 
   // Get default avatar based on gender
   const getDefaultAvatar = () => {
-    if (person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f') {
-      return femaleDefaultAvatar
-    }
-    return maleDefaultAvatar // Default to male avatar for unknown/male genders
+    const avatar = person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f' 
+      ? femaleDefaultAvatar 
+      : maleDefaultAvatar
+    console.log('🎭 Avatar for', displayName, '- Gender:', person.gender, '- Avatar URL:', avatar)
+    return avatar
   }
 
   return (
@@ -95,6 +96,9 @@ function PersonCardBase({
                 alt={displayName}
                 className="w-full h-full object-cover object-center"
                 draggable={false}
+                onError={(e) => {
+                  console.error('❌ Failed to load profile avatar for', displayName, '- URL:', person.avatar_url)
+                }}
               />
             ) : (
               <img
@@ -102,6 +106,24 @@ function PersonCardBase({
                 alt={`${displayName} avatar`}
                 className="w-full h-full object-cover object-center"
                 draggable={false}
+                onError={(e) => {
+                  console.error('❌ Failed to load default avatar for', displayName, '- URL:', getDefaultAvatar())
+                  // Fallback to a simple colored div
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  const parent = target.parentElement
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div class="w-full h-full flex items-center justify-center text-white font-bold text-2xl"
+                           style="background: ${person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f' ? '#e91e63' : '#2196f3'}">
+                        ${displayName.charAt(0).toUpperCase()}
+                      </div>
+                    `
+                  }
+                }}
+                onLoad={() => {
+                  console.log('✅ Successfully loaded default avatar for', displayName)
+                }}
               />
             )}
           </div>
