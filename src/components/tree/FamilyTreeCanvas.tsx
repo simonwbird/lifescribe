@@ -623,7 +623,10 @@ export function FamilyTreeCanvas({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={autoFit}
+          onClick={() => {
+            console.log('🎯 AutoFit button clicked!')
+            autoFit()
+          }}
           className="bg-white/90 text-neutral-800"
         >
           <Maximize2 className="w-4 h-4" />
