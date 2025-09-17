@@ -157,134 +157,107 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
   }
 
   if (variant === 'simple') {
-    // Large card layout for Simple mode
+    // News Reel layout for Simple mode
     return (
-      <div className={cn("space-y-4", className)}>
-        {activities.slice(0, 5).map((activity) => (
-          <Card 
-            key={activity.id}
-            className={cn(
-              "cursor-pointer transition-all hover:shadow-md",
-              activity.unread && "ring-2 ring-primary/20"
-            )}
-            onClick={() => handleActivityClick(activity)}
-          >
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="h-12 w-12 object-cover" referrerPolicy="no-referrer" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="font-medium text-foreground">
-                        {activity.actor} {activity.action} <span className="text-primary">{activity.target}</span>
-                      </p>
-                      {activity.unread && (
-                        <Badge variant="secondary" className="text-xs">New</Badge>
-                      )}
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground">
-                      {activity.time}
+      <div className={cn("relative", className)}>
+        {/* News Reel Header */}
+        <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-2 rounded-t-lg">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-sm font-semibold">FAMILY UPDATES</span>
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Scrolling News Container */}
+        <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative">
+          {/* Moving news ticker */}
+          <div className="flex animate-[slide-in-right_60s_linear_infinite] hover:pause">
+            {[...activities, ...activities].slice(0, 10).map((activity, index) => (
+              <div 
+                key={`${activity.id}-${index}`}
+                className="flex-shrink-0 flex items-center gap-4 px-8 py-4 cursor-pointer hover:bg-muted/30 transition-colors border-r border-muted/30 min-w-[400px]"
+                onClick={() => handleActivityClick(activity)}
+              >
+                {/* Live indicator */}
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-mono text-muted-foreground">LIVE</span>
+                </div>
+
+                <Avatar className="h-8 w-8 border-2 border-primary/20">
+                  <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
                     </p>
-                    
-                    {activity.snippet && (
-                      <p className="text-sm text-foreground mt-3 line-clamp-3">
-                        {activity.snippet}
-                      </p>
+                    {activity.unread && (
+                      <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>
                     )}
                   </div>
+                  
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {activity.time} • Breaking
+                  </p>
+                  
+                  {activity.snippet && (
+                    <p className="text-xs text-foreground mt-1 truncate max-w-[200px]">
+                      {activity.snippet}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="gap-2 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleReaction(activity.id, 'like')
-                      }}
-                    >
-                      <Heart className="h-4 w-4" />
-                      <span className="text-xs">Like</span>
-                    </Button>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="gap-2 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleReaction(activity.id, 'comment')
-                      }}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="text-xs">Comment</span>
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleReaction(activity.id, 'share')
-                      }}
-                    >
-                      <Share className="h-4 w-4" />
-                    </Button>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation()
-                          const storyId = activity.id.replace('story-', '')
-                          navigator.clipboard.writeText(window.location.origin + `/stories/${storyId}`)
-                          console.log('Story link copied to clipboard')
-                        }}>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy Link
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation()
-                          console.log('Hide update:', activity.id)
-                        }}>
-                          <EyeOff className="h-4 w-4 mr-2" />
-                          Hide Update
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation()
-                          console.log('Report update:', activity.id)
-                        }}>
-                          <Flag className="h-4 w-4 mr-2" />
-                          Report
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                {/* Action indicators */}
+                <div className="flex items-center gap-1 opacity-60">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-primary/20"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleReaction(activity.id, 'like')
+                    }}
+                  >
+                    <Heart className="h-3 w-3" />
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-primary/20"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleReaction(activity.id, 'share')
+                    }}
+                  >
+                    <Share className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            ))}
+          </div>
+
+          {/* Gradient fade edges */}
+          <div className="absolute top-0 left-0 w-8 h-full bg-gradient-to-r from-card to-transparent pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-card to-transparent pointer-events-none"></div>
+        </div>
+
+        {/* Breaking news bar at bottom */}
+        <div className="bg-red-600 text-white px-4 py-1 text-xs font-semibold animate-pulse">
+          <div className="flex items-center justify-center gap-2">
+            <span>🔴</span>
+            <span>LIVE FAMILY UPDATES</span>
+            <span>•</span>
+            <span>{activities.length} NEW STORIES</span>
+            <span>🔴</span>
+          </div>
+        </div>
       </div>
     )
   }
