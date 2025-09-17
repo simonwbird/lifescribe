@@ -7,6 +7,7 @@ import ProfessionalFamilyTree from '@/components/family-tree/ProfessionalFamilyT
 import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas'
 import GenerationalFamilyTree from '@/components/family-tree/GenerationalFamilyTree'
 import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
+import { FamilyDataEditor } from '@/components/family-tree/FamilyDataEditor'
 import { useLabs } from '@/hooks/useLabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +31,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   TreePine,
   UserPlus,
+  Users,
 } from 'lucide-react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { useToast } from '@/hooks/use-toast'
@@ -43,6 +45,7 @@ export default function FamilyTree() {
   // Removed layout mode - always use interactive
   const [isVoiceCaptureOpen, setIsVoiceCaptureOpen] = useState(false)
   const [preselectedPeople, setPreselectedPeople] = useState<Array<{ id: string; name: string }>>([])
+  const [showDataEditor, setShowDataEditor] = useState(false)
   
   const { labsEnabled } = useLabs()
   const [newPersonForm, setNewPersonForm] = useState({
@@ -376,6 +379,20 @@ export default function FamilyTree() {
       <div className="min-h-screen bg-background">
         <Header />
         
+        {/* Controls */}
+        <div className="container mx-auto px-4 py-2">
+          <div className="flex justify-between items-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDataEditor(true)}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Edit Relationships
+            </Button>
+          </div>
+        </div>
+
         {/* Main Content */}
         <div className="flex-1">
           {people.length === 0 ? (
@@ -428,6 +445,17 @@ export default function FamilyTree() {
           onStoryCreated={(storyId) => {
             console.log('Story created:', storyId)
             // Optionally navigate to story or refresh data
+          }}
+        />
+
+        {/* Family Data Editor Modal */}
+        <FamilyDataEditor
+          open={showDataEditor}
+          onOpenChange={setShowDataEditor}
+          familyId={familyId || ''}
+          onDataChange={() => {
+            // Refresh the family tree data
+            loadFamilyData()
           }}
         />
       </div>
