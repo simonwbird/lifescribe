@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { CSSProperties } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -134,7 +135,10 @@ export default function GlobalSearch() {
   // Handle clicks outside to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement
+      const clickedInSearch = searchRef.current?.contains(target)
+      const clickedInDropdown = target.closest('#search-suggestions')
+      if (!clickedInSearch && !clickedInDropdown) {
         setShowSuggestions(false)
         setActiveIndex(-1)
       }
@@ -254,15 +258,18 @@ export default function GlobalSearch() {
         )}
       </div>
 
-      {showSuggestions && suggestions.length > 0 && (
-        <SearchSuggestions
-          suggestions={suggestions}
-          activeIndex={activeIndex}
-          onSuggestionClick={handleSuggestionClick}
-          onSeeAll={() => handleSearch()}
-          containerStyle={dropdownStyle}
-        />
-      )}
+      {showSuggestions && suggestions.length > 0 && typeof document !== 'undefined' &&
+        createPortal(
+          <SearchSuggestions
+            suggestions={suggestions}
+            activeIndex={activeIndex}
+            onSuggestionClick={handleSuggestionClick}
+            onSeeAll={() => handleSearch()}
+            containerStyle={dropdownStyle}
+          />,
+          document.body
+        )
+      }
     </div>
   )
 }
