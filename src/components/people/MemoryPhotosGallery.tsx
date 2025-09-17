@@ -83,7 +83,6 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [editStoryDate, setEditStoryDate] = useState('')
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [inlineStoryTitle, setInlineStoryTitle] = useState('')
   const [inlineStoryContent, setInlineStoryContent] = useState('')
   const [inlineStoryDate, setInlineStoryDate] = useState('')
   
@@ -750,7 +749,6 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   // Initialize inline story fields when photo changes
   useEffect(() => {
     if (currentPhoto) {
-      setInlineStoryTitle(currentPhoto.individual_story?.title || '')
       setInlineStoryContent(currentPhoto.individual_story?.content || '')
       setInlineStoryDate(currentPhoto.individual_story?.occurred_on || '')
       
@@ -762,7 +760,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   }, [currentPhotoIndex, photos])
 
   // Auto-save functionality
-  const autoSaveStory = async (title: string, content: string, date: string) => {
+  const autoSaveStory = async (content: string, date: string) => {
     if (!currentPhoto) return
 
     setIsSaving(true)
@@ -776,19 +774,19 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         const { error: updateError } = await supabase
           .from('stories')
           .update({
-            title: title.trim(),
+            title: content.substring(0, 50) || 'Memory', // Generate title from content
             content: content.trim(),
             occurred_on: date || null
           })
           .eq('id', currentPhoto.individual_story.id)
 
         if (updateError) throw updateError
-      } else if (title.trim() || content.trim()) {
+      } else if (content.trim()) {
         // Create new individual story
         const { data: newStory, error: storyError } = await supabase
           .from('stories')
           .insert({
-            title: title.trim(),
+            title: content.substring(0, 50) || 'Memory', // Generate title from content
             content: content.trim(),
             occurred_on: date || null,
             family_id: person.family_id,
@@ -831,8 +829,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   }
 
   // Debounced auto-save
-  const handleInlineStoryChange = (field: 'title' | 'content' | 'date', value: string) => {
-    if (field === 'title') setInlineStoryTitle(value)
+  const handleInlineStoryChange = (field: 'content' | 'date', value: string) => {
     if (field === 'content') setInlineStoryContent(value)
     if (field === 'date') setInlineStoryDate(value)
 
@@ -843,10 +840,9 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
     // Set new timeout for auto-save
     const timeout = setTimeout(() => {
-      const title = field === 'title' ? value : inlineStoryTitle
       const content = field === 'content' ? value : inlineStoryContent
       const date = field === 'date' ? value : inlineStoryDate
-      autoSaveStory(title, content, date)
+      autoSaveStory(content, date)
     }, 1000) // Auto-save after 1 second of no typing
 
     setAutoSaveTimeout(timeout)
@@ -1662,17 +1658,6 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                             Saving...
                           </span>
                         )}
-                      </div>
-
-                      {/* Story Title */}
-                      <div>
-                        <Input
-                          placeholder="Story title..."
-                          value={inlineStoryTitle}
-                          onChange={(e) => handleInlineStoryChange('title', e.target.value)}
-                          className="text-base border-0 border-b-2 border-border bg-transparent rounded-none px-0 py-2 focus:border-primary focus:ring-0 font-medium"
-                          maxLength={100}
-                        />
                       </div>
 
                       {/* Story Content */}
