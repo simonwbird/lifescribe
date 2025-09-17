@@ -97,7 +97,10 @@ function PersonCardBase({
                 className="w-full h-full object-cover object-center"
                 draggable={false}
                 onError={(e) => {
-                  console.error('❌ Failed to load profile avatar for', displayName, '- URL:', person.avatar_url)
+                  console.warn('⚠️ Avatar failed, using default for', displayName, 'from URL:', person.avatar_url)
+                  const target = e.currentTarget as HTMLImageElement
+                  target.onerror = null
+                  target.src = getDefaultAvatar()
                 }}
               />
             ) : (
@@ -109,7 +112,7 @@ function PersonCardBase({
                 onError={(e) => {
                   console.error('❌ Failed to load default avatar for', displayName, '- URL:', getDefaultAvatar())
                   // Fallback to a simple colored div
-                  const target = e.target as HTMLImageElement
+                  const target = e.currentTarget as HTMLImageElement
                   target.style.display = 'none'
                   const parent = target.parentElement
                   if (parent) {
@@ -122,7 +125,7 @@ function PersonCardBase({
                   }
                 }}
                 onLoad={() => {
-                  console.log('✅ Successfully loaded default avatar for', displayName)
+                  // console.log('✅ Successfully loaded default avatar for', displayName)
                 }}
               />
             )}
