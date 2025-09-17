@@ -489,7 +489,7 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Family Updates Feed */}
               <div className="lg:col-span-2">
-                <div className="space-y-4">
+                <div className="space-y-4 min-h-[600px]">
                   <h4 className="text-2xl font-bold text-foreground">
                     Family Updates
                   </h4>
