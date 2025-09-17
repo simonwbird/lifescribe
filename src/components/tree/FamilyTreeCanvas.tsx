@@ -784,7 +784,7 @@ export function FamilyTreeCanvas({
       </div>
 
       {/* Instructions panel */}
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border max-w-xs z-50">
+      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border max-w-xs z-50">
         <h4 className="font-semibold text-sm text-neutral-800 mb-3">
           Interactive Family Tree
         </h4>
