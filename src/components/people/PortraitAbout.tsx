@@ -40,11 +40,21 @@ export function PortraitAbout({
   userRole,
   onPersonUpdated
 }: PortraitAboutProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Individual edit states for each section
+  const [editingBio, setEditingBio] = useState(false);
+  const [editingHobbies, setEditingHobbies] = useState(false);
+  const [editingFavorites, setEditingFavorites] = useState(false);
+  
+  // Edit values for each section
   const [editBio, setEditBio] = useState(person.bio || '');
-  const [editFavorites, setEditFavorites] = useState(person.favorites || {});
   const [editHobbies, setEditHobbies] = useState((person as any).hobbies || []);
-  const [saving, setSaving] = useState(false);
+  const [editFavorites, setEditFavorites] = useState(person.favorites || {});
+  
+  // Saving states for each section
+  const [savingBio, setSavingBio] = useState(false);
+  const [savingHobbies, setSavingHobbies] = useState(false);
+  const [savingFavorites, setSavingFavorites] = useState(false);
+  
   const {
     toast
   } = useToast();
@@ -110,39 +120,96 @@ export function PortraitAbout({
       cancelled = true;
     };
   }, [person.id, person.avatar_url, person.claimed_by_profile_id]);
-  const handleSave = async () => {
-    setSaving(true);
+  // Save functions for each section
+  const handleSaveBio = async () => {
+    setSavingBio(true);
     try {
-      const {
-        error
-      } = await supabase.from('people').update({
-        bio: editBio.trim() || null,
-        favorites: editFavorites,
-        hobbies: editHobbies.filter(h => h.trim())
+      const { error } = await supabase.from('people').update({
+        bio: editBio.trim() || null
       }).eq('id', person.id);
       if (error) throw error;
       toast({
         title: "Success",
-        description: "Profile updated successfully"
+        description: "Bio updated successfully"
       });
-      setIsEditing(false);
+      setEditingBio(false);
       onPersonUpdated();
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating bio:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "Failed to update bio",
         variant: "destructive"
       });
     } finally {
-      setSaving(false);
+      setSavingBio(false);
     }
   };
-  const handleCancel = () => {
+
+  const handleSaveHobbies = async () => {
+    setSavingHobbies(true);
+    try {
+      const { error } = await supabase.from('people').update({
+        hobbies: editHobbies.filter(h => h.trim())
+      } as any).eq('id', person.id);
+      if (error) throw error;
+      toast({
+        title: "Success",
+        description: "Hobbies updated successfully"
+      });
+      setEditingHobbies(false);
+      onPersonUpdated();
+    } catch (error) {
+      console.error('Error updating hobbies:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update hobbies",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingHobbies(false);
+    }
+  };
+
+  const handleSaveFavorites = async () => {
+    setSavingFavorites(true);
+    try {
+      const { error } = await supabase.from('people').update({
+        favorites: editFavorites
+      }).eq('id', person.id);
+      if (error) throw error;
+      toast({
+        title: "Success",
+        description: "Favorites updated successfully"
+      });
+      setEditingFavorites(false);
+      onPersonUpdated();
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorites",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingFavorites(false);
+    }
+  };
+
+  // Cancel functions for each section
+  const handleCancelBio = () => {
     setEditBio(person.bio || '');
-    setEditFavorites(person.favorites || {});
+    setEditingBio(false);
+  };
+
+  const handleCancelHobbies = () => {
     setEditHobbies((person as any).hobbies || []);
-    setIsEditing(false);
+    setEditingHobbies(false);
+  };
+
+  const handleCancelFavorites = () => {
+    setEditFavorites(person.favorites || {});
+    setEditingFavorites(false);
   };
   const addFavoriteItem = (category: string) => {
     setEditFavorites(prev => ({
@@ -175,7 +242,7 @@ export function PortraitAbout({
     setEditHobbies(prev => prev.filter((_, i) => i !== index));
   };
   return <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle className="flex items-center gap-3">
           {canUserEdit ? (
             <ProfilePhotoUploader
@@ -261,40 +328,56 @@ export function PortraitAbout({
           )}
           About {person.given_name || person.full_name}
         </CardTitle>
-        
-        {canUserEdit && !isEditing && <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <Edit2 className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          </div>}
-        
-        {isEditing && <div className="flex gap-2">
-            <Button size="sm" onClick={handleSave} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleCancel}>
-              <X className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
-          </div>}
       </CardHeader>
       
       <CardContent className="space-y-6">
         {/* Bio Section */}
         <div>
-          <h4 className="font-medium mb-2">Bio</h4>
-          {isEditing ? <Textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="Share a bit about this person..." rows={3} /> : <p className="text-muted-foreground">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-medium">Bio</h4>
+            {canUserEdit && !editingBio && (
+              <Button variant="ghost" size="sm" onClick={() => setEditingBio(true)}>
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          
+          {editingBio ? (
+            <div className="space-y-3">
+              <Textarea 
+                value={editBio} 
+                onChange={e => setEditBio(e.target.value)} 
+                placeholder="Share a bit about this person..." 
+                rows={3} 
+              />
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" onClick={handleSaveBio} disabled={savingBio}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCancelBio}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">
               {person.bio || 'No bio added yet.'}
-            </p>}
+            </p>
+          )}
         </div>
 
         {/* Hobbies & Interests Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-medium">Hobbies & Interests</h4>
-            {isEditing && (
+            {canUserEdit && !editingHobbies && (
+              <Button variant="ghost" size="sm" onClick={() => setEditingHobbies(true)}>
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            )}
+            {editingHobbies && (
               <Button variant="ghost" size="sm" onClick={addHobby}>
                 <Plus className="h-3 w-3 mr-1" />
                 Add
@@ -302,24 +385,36 @@ export function PortraitAbout({
             )}
           </div>
           
-          {isEditing ? (
-            <div className="space-y-2">
-              {editHobbies.map((hobby: string, index: number) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={hobby}
-                    onChange={(e) => updateHobby(index, e.target.value)}
-                    placeholder="Add a hobby or interest..."
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeHobby(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+          {editingHobbies ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                {editHobbies.map((hobby: string, index: number) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={hobby}
+                      onChange={(e) => updateHobby(index, e.target.value)}
+                      placeholder="Add a hobby or interest..."
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeHobby(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" onClick={handleSaveHobbies} disabled={savingHobbies}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCancelHobbies}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -340,22 +435,43 @@ export function PortraitAbout({
 
         {/* Favorites Section */}
         <div>
-          <h4 className="font-medium mb-4">Favorites</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium">Favorites</h4>
+            {canUserEdit && !editingFavorites && (
+              <Button variant="ghost" size="sm" onClick={() => setEditingFavorites(true)}>
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          
+          {editingFavorites && (
+            <div className="mb-4 flex gap-2 justify-end">
+              <Button size="sm" onClick={handleSaveFavorites} disabled={savingFavorites}>
+                <Save className="h-4 w-4 mr-2" />
+                Save
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCancelFavorites}>
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {FAVORITE_CATEGORIES.map(({
             key,
             label
           }) => {
-            const items = (isEditing ? editFavorites : person.favorites)?.[key] || [];
+            const items = (editingFavorites ? editFavorites : person.favorites)?.[key] || [];
             return <div key={key}>
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="text-sm font-medium text-muted-foreground">{label}</h5>
-                    {isEditing && <Button variant="ghost" size="sm" onClick={() => addFavoriteItem(key)}>
+                    {editingFavorites && <Button variant="ghost" size="sm" onClick={() => addFavoriteItem(key)}>
                         <Plus className="h-3 w-3" />
                       </Button>}
                   </div>
                   
-                  {isEditing ? <div className="space-y-2">
+                  {editingFavorites ? <div className="space-y-2">
                       {items.map((item: string, index: number) => <div key={index} className="flex gap-2">
                           <Input value={item} onChange={e => updateFavoriteItem(key, index, e.target.value)} placeholder={`Add ${label.toLowerCase()}...`} />
                           <Button variant="ghost" size="sm" onClick={() => removeFavoriteItem(key, index)}>
