@@ -730,7 +730,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 
                 {/* Search Results Dropdown */}
                 {showPeopleDropdown && peopleSearchQuery && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-10 max-h-40 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
                     {(() => {
                       const searchLower = peopleSearchQuery.toLowerCase()
                       const matchingMembers = familyMembers.filter(member => 
