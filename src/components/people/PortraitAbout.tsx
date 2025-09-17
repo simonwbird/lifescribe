@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -35,6 +35,9 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
   
   const canUserEdit = canEdit(userRole)
 
+  // Resolve best avatar to show (prefer real profile photo when viewing own page)
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(person.avatar_url || null)
+
   // Get default avatar based on gender
   const getDefaultAvatar = () => {
     if (person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f') {
@@ -42,6 +45,29 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
     }
     return maleDefaultAvatar // Default to male avatar for unknown/male genders
   }
+
+  // Prefer current user's auth/profile photo when this page belongs to them
+  useEffect(() => {
+    let cancelled = false
+    const resolveAvatar = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user && person.claimed_by_profile_id === user.id) {
+          const authAvatar = (user.user_metadata as any)?.avatar_url || (user.user_metadata as any)?.picture || null
+          if (!cancelled && authAvatar) {
+            setAvatarSrc(authAvatar)
+            return
+          }
+        }
+        // Fall back to person avatar or gender default
+        if (!cancelled) setAvatarSrc(person.avatar_url || null)
+      } catch {
+        if (!cancelled) setAvatarSrc(person.avatar_url || null)
+      }
+    }
+    resolveAvatar()
+    return () => { cancelled = true }
+  }, [person.id, person.avatar_url, person.claimed_by_profile_id])
 
   const handleSave = async () => {
     setSaving(true)
@@ -110,7 +136,7 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
         <CardTitle className="flex items-center gap-3">
           <Avatar className="h-16 w-16">
             <AvatarImage 
-              src={person.avatar_url || getDefaultAvatar()} 
+              src={avatarSrc || getDefaultAvatar()} 
             />
             <AvatarFallback className="text-lg">
               {initials(person.full_name)}
