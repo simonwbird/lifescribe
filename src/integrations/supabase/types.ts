@@ -170,6 +170,48 @@ export type Database = {
           },
         ]
       }
+      face_tags: {
+        Row: {
+          created_at: string
+          created_by: string
+          family_id: string
+          height_percent: number
+          id: string
+          media_id: string
+          person_id: string
+          updated_at: string
+          width_percent: number
+          x_percent: number
+          y_percent: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          family_id: string
+          height_percent: number
+          id?: string
+          media_id: string
+          person_id: string
+          updated_at?: string
+          width_percent: number
+          x_percent: number
+          y_percent: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          family_id?: string
+          height_percent?: number
+          id?: string
+          media_id?: string
+          person_id?: string
+          updated_at?: string
+          width_percent?: number
+          x_percent?: number
+          y_percent?: number
+        }
+        Relationships: []
+      }
       families: {
         Row: {
           created_at: string

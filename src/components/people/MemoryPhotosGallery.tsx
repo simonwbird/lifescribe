@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
-import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight, Trash2, MoreHorizontal, Edit2 } from 'lucide-react'
+import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight, Trash2, MoreHorizontal, Edit2, Tag } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +19,17 @@ interface MemoryPhotosGalleryProps {
 interface FamilyMember {
   id: string
   full_name: string
+}
+
+interface FaceTag {
+  id: string
+  media_id: string
+  person_id: string
+  person_name: string
+  x_percent: number
+  y_percent: number
+  width_percent: number
+  height_percent: number
 }
 
 interface MemoryPhoto {
@@ -35,6 +47,7 @@ interface MemoryPhoto {
     content: string
     occurred_on: string | null
   }
+  face_tags?: FaceTag[]
 }
 
 export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
@@ -59,6 +72,16 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [editStoryTitle, setEditStoryTitle] = useState('')
   const [editStoryContent, setEditStoryContent] = useState('')
   const [editStoryDate, setEditStoryDate] = useState('')
+  
+  // Face tagging state
+  const [isTaggingMode, setIsTaggingMode] = useState(false)
+  const [isDrawingTag, setIsDrawingTag] = useState(false)
+  const [tagStartPos, setTagStartPos] = useState<{x: number, y: number} | null>(null)
+  const [currentTag, setCurrentTag] = useState<{x: number, y: number, width: number, height: number} | null>(null)
+  const [showTagPersonModal, setShowTagPersonModal] = useState(false)
+  const [selectedPersonForTag, setSelectedPersonForTag] = useState<string>('')
+  const [faceTags, setFaceTags] = useState<FaceTag[]>([])
+  
   const { toast } = useToast()
 
   // Fetch photos when component mounts or person changes
@@ -537,6 +560,169 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     })
   }, [photos])
 
+  // Face tagging functions
+  const fetchFaceTags = async (mediaId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('face_tags')
+        .select(`
+          id,
+          media_id,
+          person_id,
+          x_percent,
+          y_percent,
+          width_percent,
+          height_percent,
+          people:person_id (full_name)
+        `)
+        .eq('media_id', mediaId)
+        .eq('family_id', (person as any).family_id)
+
+      if (error) throw error
+
+      return data?.map(tag => ({
+        id: tag.id,
+        media_id: tag.media_id,
+        person_id: tag.person_id,
+        person_name: (tag.people as any)?.full_name || 'Unknown',
+        x_percent: Number(tag.x_percent),
+        y_percent: Number(tag.y_percent),
+        width_percent: Number(tag.width_percent),
+        height_percent: Number(tag.height_percent)
+      })) || []
+    } catch (error) {
+      console.error('Failed to fetch face tags:', error)
+      return []
+    }
+  }
+
+  const createFaceTag = async (mediaId: string, personId: string, coords: {x: number, y: number, width: number, height: number}) => {
+    try {
+      const { data, error } = await supabase
+        .from('face_tags')
+        .insert({
+          media_id: mediaId,
+          person_id: personId,
+          family_id: (person as any).family_id,
+          x_percent: coords.x,
+          y_percent: coords.y,
+          width_percent: coords.width,
+          height_percent: coords.height,
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+
+      if (error) throw error
+
+      // Refresh face tags for this photo
+      const tags = await fetchFaceTags(mediaId)
+      setFaceTags(tags)
+
+      toast({
+        title: "Face tagged",
+        description: "Face has been tagged successfully",
+      })
+    } catch (error) {
+      console.error('Failed to create face tag:', error)
+      toast({
+        title: "Error",
+        description: "Failed to tag face",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const deleteFaceTag = async (tagId: string, mediaId: string) => {
+    try {
+      const { error } = await supabase
+        .from('face_tags')
+        .delete()
+        .eq('id', tagId)
+
+      if (error) throw error
+
+      // Refresh face tags for this photo
+      const tags = await fetchFaceTags(mediaId)
+      setFaceTags(tags)
+
+      toast({
+        title: "Tag removed",
+        description: "Face tag has been removed",
+      })
+    } catch (error) {
+      console.error('Failed to delete face tag:', error)
+      toast({
+        title: "Error",
+        description: "Failed to remove face tag",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handlePhotoMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isTaggingMode) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+
+    setTagStartPos({ x, y })
+    setIsDrawingTag(true)
+  }
+
+  const handlePhotoMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDrawingTag || !tagStartPos) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const currentX = ((e.clientX - rect.left) / rect.width) * 100
+    const currentY = ((e.clientY - rect.top) / rect.height) * 100
+
+    const width = Math.abs(currentX - tagStartPos.x)
+    const height = Math.abs(currentY - tagStartPos.y)
+    const x = Math.min(tagStartPos.x, currentX)
+    const y = Math.min(tagStartPos.y, currentY)
+
+    setCurrentTag({ x, y, width, height })
+  }
+
+  const handlePhotoMouseUp = () => {
+    if (!isDrawingTag || !currentTag || !tagStartPos) return
+
+    // Only create tag if it's a reasonable size
+    if (currentTag.width > 5 && currentTag.height > 5) {
+      setShowTagPersonModal(true)
+    } else {
+      setCurrentTag(null)
+    }
+
+    setIsDrawingTag(false)
+    setTagStartPos(null)
+  }
+
+  const handleTagPerson = () => {
+    if (!currentTag || !selectedPersonForTag || !currentPhoto) return
+
+    createFaceTag(currentPhoto.id, selectedPersonForTag, currentTag)
+    setCurrentTag(null)
+    setShowTagPersonModal(false)
+    setSelectedPersonForTag('')
+  }
+
+  const cancelTagging = () => {
+    setCurrentTag(null)
+    setShowTagPersonModal(false)
+    setSelectedPersonForTag('')
+    setIsDrawingTag(false)
+    setTagStartPos(null)
+  }
+
+  // Load face tags when lightbox opens
+  useEffect(() => {
+    if (showLightbox && currentPhoto) {
+      fetchFaceTags(currentPhoto.id).then(setFaceTags)
+    }
+  }, [showLightbox, currentPhoto])
+
   return (
     <>
       <Card>
@@ -965,13 +1151,62 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
             <div className="flex flex-col h-full">
               {/* Photo Display Area */}
               <div className="relative h-[60vh] bg-black">
-                {photoUrls[currentPhoto.id] && (
-                  <img
-                    src={photoUrls[currentPhoto.id]}
-                    alt={currentPhoto.story?.title || currentPhoto.file_name}
-                    className="w-full h-full object-contain"
-                  />
-                )}
+                <div 
+                  className="relative w-full h-full cursor-crosshair"
+                  onMouseDown={handlePhotoMouseDown}
+                  onMouseMove={handlePhotoMouseMove}
+                  onMouseUp={handlePhotoMouseUp}
+                >
+                  {photoUrls[currentPhoto.id] && (
+                    <img
+                      src={photoUrls[currentPhoto.id]}
+                      alt={currentPhoto.story?.title || currentPhoto.file_name}
+                      className="w-full h-full object-contain"
+                      draggable={false}
+                    />
+                  )}
+                  
+                  {/* Existing Face Tags */}
+                  {faceTags.map((tag) => (
+                    <div
+                      key={tag.id}
+                      className="absolute border-2 border-blue-400 bg-blue-400/20 group"
+                      style={{
+                        left: `${tag.x_percent}%`,
+                        top: `${tag.y_percent}%`,
+                        width: `${tag.width_percent}%`,
+                        height: `${tag.height_percent}%`,
+                      }}
+                    >
+                      {/* Name Label */}
+                      <div className="absolute -top-8 left-0 bg-blue-500 text-white px-2 py-1 rounded text-sm opacity-90">
+                        {tag.person_name}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            deleteFaceTag(tag.id, currentPhoto.id)
+                          }}
+                          className="ml-2 hover:text-red-300"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Current Drawing Tag */}
+                  {currentTag && (
+                    <div
+                      className="absolute border-2 border-yellow-400 bg-yellow-400/20"
+                      style={{
+                        left: `${currentTag.x}%`,
+                        top: `${currentTag.y}%`,
+                        width: `${currentTag.width}%`,
+                        height: `${currentTag.height}%`,
+                      }}
+                    />
+                  )}
+                </div>
                 
                 {/* Navigation Buttons */}
                 {photos.length > 1 && (
@@ -994,6 +1229,16 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                     </Button>
                   </>
                 )}
+
+                {/* Tag Mode Toggle */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`absolute top-4 left-16 ${isTaggingMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-black/20 hover:bg-black/40'} text-white`}
+                  onClick={() => setIsTaggingMode(!isTaggingMode)}
+                >
+                  <Tag className="h-5 w-5" />
+                </Button>
 
                 {/* Delete Photo Button */}
                 <Button
@@ -1019,6 +1264,13 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 {photos.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/40 text-white px-3 py-1 rounded-full text-sm">
                     {currentPhotoIndex + 1} of {photos.length}
+                  </div>
+                )}
+
+                {/* Tagging Instructions */}
+                {isTaggingMode && (
+                  <div className="absolute bottom-4 right-4 bg-blue-500 text-white px-3 py-2 rounded text-sm">
+                    Click and drag to tag faces
                   </div>
                 )}
               </div>
@@ -1229,6 +1481,51 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               onClick={handleUpdateStory}
             >
               Update Story
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tag Person Modal */}
+      <Dialog open={showTagPersonModal} onOpenChange={() => !showTagPersonModal ? null : cancelTagging()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tag Person</DialogTitle>
+            <DialogDescription>
+              Who is in this selected area?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="person-select">Select Person</Label>
+              <div className="relative">
+                <select
+                  id="person-select"
+                  value={selectedPersonForTag}
+                  onChange={(e) => setSelectedPersonForTag(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Choose a person...</option>
+                  {familyMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={cancelTagging}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleTagPerson}
+              disabled={!selectedPersonForTag}
+            >
+              Tag Person
             </Button>
           </DialogFooter>
         </DialogContent>
