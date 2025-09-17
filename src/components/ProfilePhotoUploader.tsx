@@ -394,10 +394,21 @@ export default function ProfilePhotoUploader({
 
       onPhotoUploaded(signedUrl)
       
-      // Dispatch custom event to notify header profile circle
-      window.dispatchEvent(new CustomEvent('profilePhotoUpdated', { 
-        detail: { avatarUrl: signedUrl } 
-      }))
+      // Dispatch custom events to notify all components of avatar changes
+      if (isUserProfile) {
+        window.dispatchEvent(new CustomEvent('profilePhotoUpdated', { 
+          detail: { avatarUrl: signedUrl } 
+        }))
+      } else if (personId) {
+        // Notify family tree and other components of person avatar change
+        window.dispatchEvent(new CustomEvent('personAvatarUpdated', { 
+          detail: { 
+            personId: personId,
+            avatarUrl: signedUrl,
+            familyId: member.family_id
+          } 
+        }))
+      }
       
       toast({
         title: "Photo uploaded!",

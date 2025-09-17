@@ -55,6 +55,18 @@ export function PersonCard({ rect, person, onAddRequested, graph }: {
     return () => { isMounted = false }
   }, [person.avatar_url])
 
+  // Listen for person avatar updates to refresh immediately
+  useEffect(() => {
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (event.detail.personId === person.id) {
+        setResolvedAvatarUrl(event.detail.avatarUrl)
+      }
+    }
+    
+    window.addEventListener('personAvatarUpdated', handleAvatarUpdate as EventListener)
+    return () => window.removeEventListener('personAvatarUpdated', handleAvatarUpdate as EventListener)
+  }, [person.id])
+
   const b = yr(person.birth_date), d = yr(person.death_date);
   const dates = d ? `${b}–${d}` : b ? `${b}–Living` : "Living";
   const name = fullName(person);
