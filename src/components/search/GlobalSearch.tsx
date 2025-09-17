@@ -210,7 +210,7 @@ export default function GlobalSearch() {
   }
 
   return (
-    <div ref={searchRef} className="relative w-full">
+    <div ref={searchRef} className="relative w-full z-50">
       <div className="relative group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-colors group-focus-within:text-foreground" />
         <Input
@@ -234,12 +234,14 @@ export default function GlobalSearch() {
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
-        <SearchSuggestions
-          suggestions={suggestions}
-          activeIndex={activeIndex}
-          onSuggestionClick={handleSuggestionClick}
-          onSeeAll={() => handleSearch()}
-        />
+        <div className="relative">
+          <SearchSuggestions
+            suggestions={suggestions}
+            activeIndex={activeIndex}
+            onSuggestionClick={handleSuggestionClick}
+            onSeeAll={() => handleSearch()}
+          />
+        </div>
       )}
     </div>
   )
