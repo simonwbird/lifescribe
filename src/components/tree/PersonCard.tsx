@@ -76,19 +76,19 @@ function PersonCardBase({
           }
         }}
       >
-        <div className="p-3 flex flex-col items-center gap-2 h-full">
+        <div className="p-2.5 flex flex-col items-center gap-1.5 h-full">
           {/* Avatar area */}
-          <div className="w-20 h-20 rounded-md bg-neutral-100 overflow-hidden flex-shrink-0 border border-neutral-200">
+          <div className="w-24 h-24 rounded-lg bg-neutral-100 overflow-hidden flex-shrink-0 border border-neutral-200">
             {person.avatar_url ? (
               <img
                 src={person.avatar_url}
                 alt={displayName}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
                 draggable={false}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-neutral-400">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
@@ -97,14 +97,14 @@ function PersonCardBase({
           
           {/* Name */}
           <h3 className={cn(
-            "text-[15px] font-semibold text-center leading-tight line-clamp-2 flex-1 flex items-center justify-center",
+            "text-sm font-semibold text-center leading-tight line-clamp-2 min-h-[2.5rem] flex items-center justify-center px-1",
             isDeceased ? "text-neutral-600" : "text-neutral-800"
           )}>
             {displayName}
           </h3>
           
           {/* Life span */}
-          <div className="text-xs text-neutral-500 flex-shrink-0">
+          <div className="text-xs text-neutral-500 flex-shrink-0 font-medium">
             {lifespan}
           </div>
         </div>
