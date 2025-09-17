@@ -110,15 +110,8 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
         <CardTitle className="flex items-center gap-3">
           <Avatar className="h-16 w-16">
             <AvatarImage 
-              src={person.avatar_url || undefined} 
-              onError={(e) => {
-                // Fallback to gender-specific default if profile photo fails
-                const target = e.currentTarget as HTMLImageElement
-                target.onerror = null
-                target.src = getDefaultAvatar()
-              }}
+              src={person.avatar_url || getDefaultAvatar()} 
             />
-            <AvatarImage src={getDefaultAvatar()} />
             <AvatarFallback className="text-lg">
               {initials(person.full_name)}
             </AvatarFallback>
