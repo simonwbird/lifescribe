@@ -9,6 +9,7 @@ import { Edit2, Save, X, Plus } from 'lucide-react'
 import { Person, UserRole, canEdit, initials } from '@/utils/personUtils'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { AvatarService } from '@/lib/avatarService'
 import maleDefaultAvatar from '@/assets/avatar-male-default.png'
 import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
 
@@ -137,6 +138,26 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
           <Avatar className="h-16 w-16">
             <AvatarImage 
               src={avatarSrc || getDefaultAvatar()} 
+              onError={async (e) => {
+                const target = e.currentTarget as HTMLImageElement
+                
+                if (avatarSrc && avatarSrc.includes('supabase.co/storage/v1/object/sign')) {
+                  console.warn('⚠️ Profile avatar failed, trying refresh for', person.full_name)
+                  const refreshedUrl = await AvatarService.refreshSignedUrl(avatarSrc)
+                  if (refreshedUrl && refreshedUrl !== avatarSrc) {
+                    target.onerror = null
+                    target.src = refreshedUrl
+                    setAvatarSrc(refreshedUrl)
+                    console.log('✅ Refreshed profile avatar for', person.full_name)
+                    return
+                  }
+                }
+                
+                // Fall back to gender default
+                target.onerror = null
+                target.src = getDefaultAvatar()
+                console.log('🎭 Using gender default for profile of', person.full_name)
+              }}
             />
             <AvatarFallback className="text-lg">
               {initials(person.full_name)}

@@ -1,6 +1,7 @@
 import React, { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { Person } from '@/lib/familyTreeTypes'
+import { AvatarService } from '@/lib/avatarService'
 import maleDefaultAvatar from '@/assets/avatar-male-default.png'
 import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
 
@@ -96,11 +97,23 @@ function PersonCardBase({
                 alt={displayName}
                 className="w-full h-full object-cover object-center"
                 draggable={false}
-                onError={(e) => {
-                  console.warn('⚠️ Avatar failed, using default for', displayName, 'from URL:', person.avatar_url)
+                onError={async (e) => {
+                  console.warn('⚠️ Avatar failed, trying refresh for', displayName, 'from URL:', person.avatar_url)
                   const target = e.currentTarget as HTMLImageElement
+                  
+                  // Try to refresh the signed URL
+                  const refreshedUrl = await AvatarService.refreshSignedUrl(person.avatar_url!)
+                  if (refreshedUrl && refreshedUrl !== person.avatar_url) {
+                    target.onerror = null
+                    target.src = refreshedUrl
+                    console.log('✅ Refreshed avatar URL for', displayName)
+                    return
+                  }
+                  
+                  // If refresh failed, use gender default
                   target.onerror = null
                   target.src = getDefaultAvatar()
+                  console.log('🎭 Using gender default for', displayName)
                 }}
               />
             ) : (
