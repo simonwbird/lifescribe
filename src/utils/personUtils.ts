@@ -37,13 +37,21 @@ export const getPageType = (person: Person): 'life' | 'tribute' => {
 }
 
 export const getAgeLabel = (person: Person): string | null => {
-  const age = computeAge(person.birth_date, person.death_date)
-  if (!age) return null
+  if (!person.birth_date) return null
   
   if (isMemorialized(person)) {
-    return `Would be ${age}`
+    const ageAtDeath = person.death_date ? computeAge(person.birth_date, person.death_date) : null
+    const currentAge = computeAge(person.birth_date, undefined) // Age they would be today
+    
+    if (ageAtDeath && currentAge) {
+      return `passed at ${ageAtDeath}, would be ${currentAge}`
+    } else if (currentAge) {
+      return `would be ${currentAge}`
+    }
+    return null
   } else {
-    return `${age}`
+    const age = computeAge(person.birth_date)
+    return age ? `${age}` : null
   }
 }
 
