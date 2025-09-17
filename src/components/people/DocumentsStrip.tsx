@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { FileText, Upload, Eye, Download, X } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
@@ -20,14 +22,23 @@ interface Document {
   file_size: number
   created_at: string
   profile_id: string
+  transcript_text?: string // Will use this for document description
 }
 
 export function DocumentsStrip({ person }: DocumentsStripProps) {
   const [uploading, setUploading] = useState(false)
   const [documents, setDocuments] = useState<Document[]>([])
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [description, setDescription] = useState('')
   const { toast } = useToast()
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch documents on component mount
+  useEffect(() => {
+    fetchDocuments()
+  }, [])
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -60,6 +71,15 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
       return
     }
 
+    setSelectedFile(file)
+    setShowUploadModal(true)
+    // Reset input
+    event.target.value = ''
+  }
+
+  const handleUploadWithDescription = async () => {
+    if (!selectedFile) return
+
     setUploading(true)
 
     try {
@@ -68,33 +88,38 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
 
       // Upload to storage
       const { path, error: uploadError } = await uploadMediaFile(
-        file,
+        selectedFile,
         (person as any).family_id,
         user.id
       )
 
       if (uploadError) throw new Error(uploadError)
 
-      // Save to media table
+      // Save to media table with description
       const { error: dbError } = await supabase
         .from('media')
         .insert({
           file_path: path,
-          file_name: file.name,
-          mime_type: file.type,
-          file_size: file.size,
+          file_name: selectedFile.name,
+          mime_type: selectedFile.type,
+          file_size: selectedFile.size,
           family_id: (person as any).family_id,
           profile_id: user.id,
-          // Could add person_id field to link documents to specific people
+          transcript_text: description.trim() || null // Store description in transcript_text field
         })
 
       if (dbError) throw dbError
 
       toast({
         title: "Document uploaded",
-        description: `${file.name} has been uploaded successfully.`
+        description: `${selectedFile.name} has been uploaded successfully.`
       })
 
+      // Reset modal state
+      setShowUploadModal(false)
+      setSelectedFile(null)
+      setDescription('')
+      
       // Refresh documents list
       fetchDocuments()
 
@@ -102,13 +127,11 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
       console.error('Upload failed:', error)
       toast({
         title: "Upload failed",
-        description: "Could not upload the document.",
+        description: "Could not upload the document. Please try again.",
         variant: "destructive"
       })
     } finally {
       setUploading(false)
-      // Reset input
-      event.target.value = ''
     }
   }
 
@@ -167,94 +190,157 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-dashed border-muted-foreground/20 hover:bg-muted/30 transition-colors">
-        <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5" />
-          <div>
-            <CardTitle className="text-base">Documents</CardTitle>
-            <p className="text-xs text-muted-foreground">Upload important documents</p>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-dashed border-muted-foreground/20 hover:bg-muted/30 transition-colors">
+          <div className="flex items-center gap-3">
+            <FileText className="h-5 w-5" />
+            <div>
+              <CardTitle className="text-base">Documents</CardTitle>
+              <p className="text-xs text-muted-foreground">Upload important documents</p>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {documents.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={fetchDocuments}>
-              <Eye className="h-4 w-4 mr-1" />
-              View all ({documents.length})
-            </Button>
-          )}
           
-          <Button variant="ghost" size="sm" disabled={uploading} className="relative">
-            <Upload className="h-4 w-4 mr-1" />
-            {uploading ? 'Uploading...' : 'Add'}
-            <Input
-              type="file"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
-              onChange={handleFileUpload}
-              disabled={uploading}
-            />
-          </Button>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {documents.length === 0 ? (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">
-              No documents yet
-            </p>
-            <div className="relative inline-block">
-              <Button variant="outline" disabled={uploading}>
-                <Upload className="h-4 w-4 mr-2" />
-                {uploading ? 'Uploading...' : 'Upload Document'}
+          <div className="flex items-center gap-2">
+            {documents.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={fetchDocuments}>
+                <Eye className="h-4 w-4 mr-1" />
+                View all ({documents.length})
               </Button>
+            )}
+            
+            <Button variant="ghost" size="sm" disabled={uploading} className="relative">
+              <Upload className="h-4 w-4 mr-1" />
+              {uploading ? 'Uploading...' : 'Add'}
               <Input
                 type="file"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
-                onChange={handleFileUpload}
+                onChange={handleFileSelect}
                 disabled={uploading}
               />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Supports PDF, Word, Excel, and text files (max 10MB)
-            </p>
+            </Button>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {documents.slice(0, 3).map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {getFileIcon(doc.mime_type)}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(doc.file_size)} • {new Date(doc.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => downloadDocument(doc)}
-                >
-                  <Download className="h-4 w-4" />
+        </CardHeader>
+        
+        <CardContent>
+          {documents.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">
+                No documents yet
+              </p>
+              <div className="relative inline-block">
+                <Button variant="outline" disabled={uploading}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? 'Uploading...' : 'Upload Document'}
                 </Button>
+                <Input
+                  type="file"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
+                  onChange={handleFileSelect}
+                  disabled={uploading}
+                />
               </div>
-            ))}
-            {documents.length > 3 && (
-              <div className="text-center pt-2">
-                <Button variant="ghost" size="sm" onClick={fetchDocuments}>
-                  View {documents.length - 3} more documents
-                </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Supports PDF, Word, Excel, and text files (max 10MB)
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {documents.slice(0, 3).map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {getFileIcon(doc.mime_type)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{doc.file_name}</p>
+                      {doc.transcript_text && (
+                        <p className="text-xs text-muted-foreground truncate">{doc.transcript_text}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(doc.file_size)} • {new Date(doc.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadDocument(doc)}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {documents.length > 3 && (
+                <div className="text-center pt-2">
+                  <Button variant="ghost" size="sm" onClick={fetchDocuments}>
+                    View {documents.length - 3} more documents
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upload Modal with Description */}
+      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {selectedFile && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-sm font-medium">{selectedFile.name}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
               </div>
             )}
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                What is this document? <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <Textarea
+                placeholder="e.g., Birth certificate for Henry, Military service records, Last will and testament, etc."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                maxLength={200}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {description.length}/200 characters
+              </p>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowUploadModal(false)
+                setSelectedFile(null)
+                setDescription('')
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUploadWithDescription}
+              disabled={uploading || !selectedFile}
+            >
+              {uploading ? 'Uploading...' : 'Upload Document'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
