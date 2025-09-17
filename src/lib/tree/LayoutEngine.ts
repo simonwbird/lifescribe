@@ -94,14 +94,19 @@ export class LayoutEngine {
       }
     })
     
-    // Special debugging for Viccars family members
-    const viccarsMembers = this.people.filter(p => 
+    // Special debugging for Generation 3, 4 and Viccars family members
+    const gen34AndViccarsMembers = this.people.filter(p => 
       p.full_name?.includes('Viccars') || p.full_name?.includes('Archibald') || 
-      p.full_name?.includes('Annie') || p.full_name?.includes('Helen')
+      p.full_name?.includes('Annie') || p.full_name?.includes('Helen') ||
+      p.full_name?.includes('David') || p.full_name?.includes('William G') || 
+      p.full_name?.includes('Bentley') ||
+      p.full_name?.includes('Zuzana') || p.full_name?.includes('Simon') || 
+      p.full_name?.includes('Matthew') || p.full_name?.includes('Adam') || 
+      p.full_name?.includes('James') || (p.full_name?.includes('Sarah') && p.full_name?.includes('Kemter'))
     )
     
-    console.log('🔍 VICCARS FAMILY ANALYSIS:')
-    viccarsMembers.forEach(person => {
+    console.log('🔍 GENERATION 3, 4 & VICCARS ANALYSIS:')
+    gen34AndViccarsMembers.forEach(person => {
       const parents = this.parentsMap.get(person.id) || []
       const children = this.childrenMap.get(person.id) || []
       const spouses = this.spouseMap.get(person.id) || []
@@ -128,11 +133,12 @@ export class LayoutEngine {
     
     // SIMPLE RULE: People with no parents = TOP GENERATION
     const rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
-    // Special debugging for the people who should be Generation 2 and 3
+    // Special debugging for the people who should be Generation 2, 3, and 4
     const shouldBeGen2 = ['Helen Dorothy Viccars', 'Edward Ellis Bird', 'Henry George Kemter', 'Shirley Lenore Thomas']
     const shouldBeGen3 = ['David Edward Bird', 'Helen Bird', 'William G Kemter', 'Bentley Kerry-Anne']
+    const shouldBeGen4 = ['Zuzana Buckova', 'Simon William Bird', 'Matthew David Bird', 'Adam George Bird', 'James Edward Bird', 'Sarah Kemter']
     
-    console.log('🔍 GENERATION 2 & 3 ANALYSIS:')
+    console.log('🔍 GENERATION 2, 3 & 4 ANALYSIS:')
     
     shouldBeGen2.forEach(name => {
       const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
@@ -148,24 +154,37 @@ export class LayoutEngine {
         const parents = this.parentsMap.get(person.id) || []
         const spouses = this.spouseMap.get(person.id) || []
         console.log(`🔍   GEN 3: ${person.full_name} (${person.birth_year || 'no year'}) has ${parents.length} parents, ${spouses.length} spouses/divorced`)
+      }
+    })
+    
+    shouldBeGen4.forEach(name => {
+      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
+      if (person) {
+        const parents = this.parentsMap.get(person.id) || []
+        const spouses = this.spouseMap.get(person.id) || []
+        console.log(`🔍   GEN 4: ${person.full_name} (${person.birth_year || 'no year'}) has ${parents.length} parents, ${spouses.length} spouses`)
         
         if (parents.length === 0) {
-          console.log(`🔍     ❌ ERROR: ${person.full_name} has NO PARENTS - will be Generation 0 instead of 3!`)
+          console.log(`🔍     ❌ ERROR: ${person.full_name} has NO PARENTS - will be Generation 0 instead of 4!`)
+        } else {
+          const parentNames = parents.map(id => this.people.find(p => p.id === id)?.full_name)
+          console.log(`🔍     Parents: ${parentNames.join(', ')}`)
         }
       }
     })
     
     console.log('🌳 TOP GENERATION (no parents assigned):', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
     
-    // Check if any Generation 2/3 people are incorrectly in the root generation
-    const gen23InRoots = rootPeople.filter(p => 
+    // Check if any Generation 2/3/4 people are incorrectly in the root generation
+    const gen234InRoots = rootPeople.filter(p => 
       shouldBeGen2.some(name => p.full_name?.includes(name.split(' ')[0])) ||
-      shouldBeGen3.some(name => p.full_name?.includes(name.split(' ')[0]))
+      shouldBeGen3.some(name => p.full_name?.includes(name.split(' ')[0])) ||
+      shouldBeGen4.some(name => p.full_name?.includes(name.split(' ')[0]))
     )
     
-    if (gen23InRoots.length > 0) {
-      console.log('🔍 ❌ ERROR: These Generation 2/3 people are incorrectly in TOP generation:', 
-        gen23InRoots.map(p => p.full_name))
+    if (gen234InRoots.length > 0) {
+      console.log('🔍 ❌ ERROR: These Generation 2/3/4 people are incorrectly in TOP generation:', 
+        gen234InRoots.map(p => `${p.full_name} (should be gen 2/3/4)`))
       console.log('🔍 This means parent-child relationships are missing in the database!')
     }
     
@@ -257,6 +276,7 @@ export class LayoutEngine {
     console.log('🔍 ═══ FINAL GENERATION ASSIGNMENTS ═══')
     const gen2Names = ['Helen Dorothy', 'Edward Ellis', 'Henry George', 'Shirley']
     const gen3Names = ['David Edward', 'Helen Bird', 'William G', 'Bentley']
+    const gen4Names = ['Zuzana', 'Simon William', 'Matthew David', 'Adam George', 'James Edward', 'Sarah Kemter']
     
     gen2Names.forEach(name => {
       const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
@@ -271,6 +291,14 @@ export class LayoutEngine {
       if (person) {
         const assignedGeneration = personDepth.get(person.id)
         console.log(`🔍 GEN 3: ${person.full_name}: Assigned to Generation ${assignedGeneration} ${assignedGeneration === 2 ? '✅' : '❌'}`)
+      }
+    })
+    
+    gen4Names.forEach(name => {
+      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
+      if (person) {
+        const assignedGeneration = personDepth.get(person.id)
+        console.log(`🔍 GEN 4: ${person.full_name}: Assigned to Generation ${assignedGeneration} ${assignedGeneration === 3 ? '✅' : '❌'}`)
       }
     })
     
