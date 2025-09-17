@@ -840,72 +840,6 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     // Trigger auto-save with mentions
     handleInlineStoryChange('content', newContent)
   }
-    if (!currentPhoto) return
-
-    setIsSaving(true)
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
-
-      if (currentPhoto.individual_story?.id) {
-        // Update existing individual story
-        const { error: updateError } = await supabase
-          .from('stories')
-          .update({
-            title: content.substring(0, 50) || 'Memory', // Generate title from content
-            content: content.trim(),
-            occurred_on: date || null
-          })
-          .eq('id', currentPhoto.individual_story.id)
-
-        if (updateError) throw updateError
-      } else if (content.trim()) {
-        // Create new individual story
-        const { data: newStory, error: storyError } = await supabase
-          .from('stories')
-          .insert({
-            title: content.substring(0, 50) || 'Memory', // Generate title from content
-            content: content.trim(),
-            occurred_on: date || null,
-            family_id: person.family_id,
-            profile_id: user.id
-          })
-          .select()
-          .single()
-
-        if (storyError) throw storyError
-
-        // Link photo to individual story
-        const { error: updateError } = await supabase
-          .from('media')
-          .update({ individual_story_id: newStory.id })
-          .eq('id', currentPhoto.id)
-
-        if (updateError) throw updateError
-
-        // Link people to story
-        if (taggedPeople.length > 0) {
-          const personLinks = taggedPeople.map(personId => ({
-            person_id: personId,
-            story_id: newStory.id,
-            family_id: person.family_id
-          }))
-
-          await supabase
-            .from('person_story_links')
-            .insert(personLinks)
-        }
-
-        // Refresh photos to show new story
-        fetchPhotos()
-      }
-    } catch (error) {
-      console.error('Failed to auto-save story:', error)
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   // Debounced auto-save
   const handleInlineStoryChange = (field: 'content' | 'date', value: string) => {
@@ -918,10 +852,68 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     }
 
     // Set new timeout for auto-save
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
       const content = field === 'content' ? value : inlineStoryContent
       const date = field === 'date' ? value : inlineStoryDate
-      autoSaveStory(content, date)
+      
+      if (!currentPhoto) return
+
+      setIsSaving(true)
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('User not authenticated')
+
+        if (currentPhoto.individual_story?.id) {
+          // Update existing individual story
+          const { error: updateError } = await supabase
+            .from('stories')
+            .update({
+              title: content.substring(0, 50) || 'Memory',
+              content: content.trim(),
+              occurred_on: date || null
+            })
+            .eq('id', currentPhoto.individual_story.id)
+
+          if (updateError) throw updateError
+          
+          // Create mention notifications after successful update
+          await createMentionNotifications(content, currentPhoto.individual_story.id)
+        } else if (content.trim()) {
+          // Create new individual story
+          const { data: newStory, error: storyError } = await supabase
+            .from('stories')
+            .insert({
+              title: content.substring(0, 50) || 'Memory',
+              content: content.trim(),
+              occurred_on: date || null,
+              family_id: person.family_id,
+              profile_id: user.id
+            })
+            .select()
+            .single()
+
+          if (storyError) throw storyError
+
+          // Link photo to individual story
+          const { error: updateError } = await supabase
+            .from('media')
+            .update({ individual_story_id: newStory.id })
+            .eq('id', currentPhoto.id)
+
+          if (updateError) throw updateError
+
+          // Create mention notifications after successful creation
+          await createMentionNotifications(content, newStory.id)
+
+          // Refresh photos to show new story
+          fetchPhotos()
+        }
+      } catch (error) {
+        console.error('Failed to auto-save story:', error)
+      } finally {
+        setIsSaving(false)
+      }
     }, 1000) // Auto-save after 1 second of no typing
 
     setAutoSaveTimeout(timeout)
@@ -2061,4 +2053,4 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   )
 }
 
-export default MemoryPhotosGallery
+export default MemoryPhotosGallery;
