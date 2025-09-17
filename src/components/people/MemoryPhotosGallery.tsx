@@ -15,6 +15,11 @@ interface MemoryPhotosGalleryProps {
   person: Person
 }
 
+interface FamilyMember {
+  id: string
+  full_name: string
+}
+
 interface MemoryPhoto {
   id: string
   file_name: string
@@ -42,6 +47,9 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [photoDate, setPhotoDate] = useState('')
   const [showLightbox, setShowLightbox] = useState(false)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
+  const [taggedPeople, setTaggedPeople] = useState<string[]>([person.id])
+  const [newPersonName, setNewPersonName] = useState('')
   const { toast } = useToast()
 
   // Fetch photos when component mounts or person changes
@@ -50,6 +58,26 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     setPhotos([])
     setPhotoUrls({})
     fetchPhotos()
+  }, [person.id])
+
+  // Fetch family members for people tagging
+  useEffect(() => {
+    const fetchFamilyMembers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('people')
+          .select('id, full_name')
+          .eq('family_id', (person as any).family_id)
+          .order('full_name')
+
+        if (error) throw error
+        setFamilyMembers(data || [])
+      } catch (error) {
+        console.error('Failed to fetch family members:', error)
+      }
+    }
+    
+    fetchFamilyMembers()
   }, [person.id])
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,15 +151,22 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
       if (storyError || !story) throw storyError || new Error('Failed to create story')
 
-      // Link story to this person
-      const { error: linkError } = await supabase
-        .from('person_story_links')
-        .insert({
-          person_id: person.id,
-          story_id: story.id,
-          family_id: (person as any).family_id
-        })
-      if (linkError) throw linkError
+      // Link story to all tagged people
+      const linkPromises = taggedPeople.map(personId => 
+        supabase
+          .from('person_story_links')
+          .insert({
+            person_id: personId,
+            story_id: story.id,
+            family_id: (person as any).family_id
+          })
+      )
+      
+      const linkResults = await Promise.all(linkPromises)
+      const linkErrors = linkResults.filter(result => result.error)
+      if (linkErrors.length > 0) {
+        console.error('Some person links failed:', linkErrors)
+      }
 
       // Upload all files and create media records
       let uploadedCount = 0
@@ -184,6 +219,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         setPhotoTitle('')
         setPhotoDescription('')
         setPhotoDate('')
+        setTaggedPeople([person.id])
+        setNewPersonName('')
         
         // Refresh photos
         fetchPhotos()
@@ -441,6 +478,100 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 {photoDescription.length}/1000 characters
               </p>
             </div>
+
+            {/* People Tagging Section */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Who was in these photos? <span className="text-muted-foreground">(optional)</span>
+              </label>
+              
+              {/* Family Members Selection */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {familyMembers.map((member) => (
+                    <label 
+                      key={member.id} 
+                      className="flex items-center space-x-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300"
+                        checked={taggedPeople.includes(member.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setTaggedPeople(prev => [...prev, member.id])
+                          } else {
+                            setTaggedPeople(prev => prev.filter(id => id !== member.id))
+                          }
+                        }}
+                      />
+                      <span>{member.full_name}</span>
+                    </label>
+                  ))}
+                </div>
+                
+                {/* Add New Person */}
+                <div className="pt-2 border-t">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add someone not in the family tree..."
+                      value={newPersonName}
+                      onChange={(e) => setNewPersonName(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!newPersonName.trim()) return
+                        
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (!user) return
+                          
+                          const { data: newPerson, error } = await supabase
+                            .from('people')
+                            .insert({
+                              full_name: newPersonName.trim(),
+                              family_id: (person as any).family_id,
+                              created_by: user.id
+                            })
+                            .select()
+                            .single()
+                            
+                          if (error) throw error
+                          
+                          setFamilyMembers(prev => [...prev, { 
+                            id: newPerson.id, 
+                            full_name: newPerson.full_name 
+                          }])
+                          setTaggedPeople(prev => [...prev, newPerson.id])
+                          setNewPersonName('')
+                          
+                          toast({
+                            title: "Person added",
+                            description: `${newPersonName.trim()} has been added to your family tree.`
+                          })
+                        } catch (error) {
+                          console.error('Failed to add person:', error)
+                          toast({
+                            title: "Failed to add person",
+                            description: "Could not add the person. Please try again.",
+                            variant: "destructive"
+                          })
+                        }
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add family members or friends who aren't in your tree yet
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
           
           <DialogFooter>
@@ -452,6 +583,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 setPhotoTitle('')
                 setPhotoDescription('')
                 setPhotoDate('')
+                setTaggedPeople([person.id])
+                setNewPersonName('')
               }}
             >
               Cancel
