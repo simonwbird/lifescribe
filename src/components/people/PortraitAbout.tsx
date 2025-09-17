@@ -9,6 +9,8 @@ import { Edit2, Save, X, Plus } from 'lucide-react'
 import { Person, UserRole, canEdit, initials } from '@/utils/personUtils'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import maleDefaultAvatar from '@/assets/avatar-male-default.png'
+import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
 
 interface PortraitAboutProps {
   person: Person
@@ -32,6 +34,14 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
   const { toast } = useToast()
   
   const canUserEdit = canEdit(userRole)
+
+  // Get default avatar based on gender
+  const getDefaultAvatar = () => {
+    if (person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f') {
+      return femaleDefaultAvatar
+    }
+    return maleDefaultAvatar // Default to male avatar for unknown/male genders
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -99,7 +109,16 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-3">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={person.avatar_url || undefined} />
+            <AvatarImage 
+              src={person.avatar_url || undefined} 
+              onError={(e) => {
+                // Fallback to gender-specific default if profile photo fails
+                const target = e.currentTarget as HTMLImageElement
+                target.onerror = null
+                target.src = getDefaultAvatar()
+              }}
+            />
+            <AvatarImage src={getDefaultAvatar()} />
             <AvatarFallback className="text-lg">
               {initials(person.full_name)}
             </AvatarFallback>
