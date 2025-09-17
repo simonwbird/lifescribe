@@ -70,15 +70,6 @@ export function FamilyTreeCanvas({
     }
   }, [people, relationships])
 
-  // Auto-fit when layout nodes are first set
-  useEffect(() => {
-    if (layoutNodes.length > 0) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => autoFit(), 200)
-      return () => clearTimeout(timer)
-    }
-  }, [layoutNodes.length > 0 ? layoutNodes.length : 0]) // Only trigger on initial load
-
   // Load versions
   useEffect(() => {
     loadVersions()
@@ -101,15 +92,19 @@ export function FamilyTreeCanvas({
     return base
   }, [layoutNodes, visualTick])
 
-  // Auto-fit functionality
+  // Auto-fit functionality - always center and fit the whole tree
   const autoFit = useCallback(() => {
     if (layoutNodes.length === 0) return
     
     const canvas = canvasRef.current
     if (!canvas) return
     
-    // Calculate bounding box of all nodes
-    const padding = 100 // Increased padding for better view
+    // Get viewport dimensions
+    const viewportRect = canvas.getBoundingClientRect()
+    const viewport = { w: viewportRect.width, h: viewportRect.height }
+    
+    // Calculate bounding box of all nodes with card dimensions
+    const padding = 120 // Good padding for visibility
     const minX = Math.min(...layoutNodes.map(n => n.x - 75)) - padding
     const maxX = Math.max(...layoutNodes.map(n => n.x + 75)) + padding
     const minY = Math.min(...layoutNodes.map(n => n.y - 90)) - padding
@@ -122,17 +117,13 @@ export function FamilyTreeCanvas({
       height: maxY - minY
     }
     
-    const viewportRect = canvas.getBoundingClientRect()
-    const viewport = { w: viewportRect.width, h: viewportRect.height }
+    // Calculate scale to fit with margin - be more conservative
+    const scaleX = (viewport.w * 0.85) / bbox.width  // Use 85% of viewport width
+    const scaleY = (viewport.h * 0.85) / bbox.height // Use 85% of viewport height
+    const scale = Math.min(scaleX, scaleY)
+    const clampedScale = Math.max(0.15, Math.min(2.0, scale)) // Allow even smaller zoom for very large trees
     
-    // Calculate scale to fit with some margin
-    const scale = Math.min(
-      (viewport.w * 0.9) / bbox.width,  // Use 90% of viewport width
-      (viewport.h * 0.9) / bbox.height  // Use 90% of viewport height
-    )
-    const clampedScale = Math.max(0.2, Math.min(2.0, scale)) // Allow smaller zoom for large trees
-    
-    // Calculate pan to center
+    // Calculate pan to center the tree perfectly
     const scaledWidth = bbox.width * clampedScale
     const scaledHeight = bbox.height * clampedScale
     const newPan = {
@@ -140,11 +131,29 @@ export function FamilyTreeCanvas({
       y: (viewport.h - scaledHeight) / 2 - bbox.y * clampedScale
     }
     
-    console.log('🎯 Auto-fit:', { bbox, viewport, scale: clampedScale, pan: newPan })
+    console.log('🎯 Auto-fit tree to viewport:', { 
+      viewport, 
+      bbox, 
+      scale: clampedScale, 
+      pan: newPan,
+      nodesCount: layoutNodes.length
+    })
     
     setZoom(clampedScale)
     setPan(newPan)
   }, [layoutNodes])
+
+  // Auto-fit when layout nodes are first set or when canvas is ready
+  useEffect(() => {
+    if (layoutNodes.length > 0 && canvasRef.current) {
+      // Small delay to ensure DOM is ready, then auto-fit
+      const timer = setTimeout(() => {
+        console.log('🎯 Auto-fitting tree to screen on initial load')
+        autoFit()
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [layoutNodes.length > 0 ? layoutNodes.length : 0, autoFit]) // Trigger on initial load and when autoFit changes
 
   // Zoom handlers
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
