@@ -164,99 +164,151 @@ export function PortraitAbout({
   return <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-3">
-          <Avatar className="h-16 w-16">
-            <AvatarImage key={avatarSrc || 'default'} alt={`${person.full_name} profile photo`} src={avatarSrc || getDefaultAvatar()} onError={async e => {
-            const target = e.currentTarget as HTMLImageElement;
+          <Dialog open={setPhotoOpen} onOpenChange={setSetPhotoOpen}>
+            {canUserEdit ? (
+              <DialogTrigger asChild>
+                <button className="relative group cursor-pointer">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage key={avatarSrc || 'default'} alt={`${person.full_name} profile photo`} src={avatarSrc || getDefaultAvatar()} onError={async e => {
+                    const target = e.currentTarget as HTMLImageElement;
 
-            // If we have a signed or http URL, try to refresh/sign
-            if (avatarSrc && avatarSrc.startsWith('http')) {
-              const refreshedUrl = await AvatarService.refreshSignedUrl(avatarSrc);
-              if (refreshedUrl && refreshedUrl !== avatarSrc) {
-                target.onerror = null;
-                target.src = refreshedUrl;
-                setAvatarSrc(refreshedUrl);
-                return;
-              }
-              const filePath = AvatarService.extractFilePath(avatarSrc);
-              if (filePath) {
-                const proxied = await getSignedMediaUrl(filePath, (person as any).family_id);
-                if (proxied) {
-                  target.onerror = null;
-                  target.src = proxied;
-                  setAvatarSrc(proxied);
-                  return;
+                    // If we have a signed or http URL, try to refresh/sign
+                    if (avatarSrc && avatarSrc.startsWith('http')) {
+                      const refreshedUrl = await AvatarService.refreshSignedUrl(avatarSrc);
+                      if (refreshedUrl && refreshedUrl !== avatarSrc) {
+                        target.onerror = null;
+                        target.src = refreshedUrl;
+                        setAvatarSrc(refreshedUrl);
+                        return;
+                      }
+                      const filePath = AvatarService.extractFilePath(avatarSrc);
+                      if (filePath) {
+                        const proxied = await getSignedMediaUrl(filePath, (person as any).family_id);
+                        if (proxied) {
+                          target.onerror = null;
+                          target.src = proxied;
+                          setAvatarSrc(proxied);
+                          return;
+                        }
+                      }
+                    }
+
+                    // If stored value is a raw path, sign it via proxy
+                    if (person.avatar_url && !person.avatar_url.startsWith('http')) {
+                      const proxied = await getSignedMediaUrl(person.avatar_url as any, (person as any).family_id);
+                      if (proxied) {
+                        target.onerror = null;
+                        target.src = proxied;
+                        setAvatarSrc(proxied);
+                        return;
+                      }
+                    }
+
+                    // Fall back to gender default
+                    target.onerror = null;
+                    target.src = getDefaultAvatar();
+                  }} />
+                        
+                    <AvatarFallback className="text-lg">
+                      {initials(person.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-full transition-colors duration-200 flex items-center justify-center">
+                    <Edit2 className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </div>
+                </button>
+              </DialogTrigger>
+            ) : (
+              <Avatar className="h-16 w-16">
+                <AvatarImage key={avatarSrc || 'default'} alt={`${person.full_name} profile photo`} src={avatarSrc || getDefaultAvatar()} onError={async e => {
+                const target = e.currentTarget as HTMLImageElement;
+
+                // If we have a signed or http URL, try to refresh/sign
+                if (avatarSrc && avatarSrc.startsWith('http')) {
+                  const refreshedUrl = await AvatarService.refreshSignedUrl(avatarSrc);
+                  if (refreshedUrl && refreshedUrl !== avatarSrc) {
+                    target.onerror = null;
+                    target.src = refreshedUrl;
+                    setAvatarSrc(refreshedUrl);
+                    return;
+                  }
+                  const filePath = AvatarService.extractFilePath(avatarSrc);
+                  if (filePath) {
+                    const proxied = await getSignedMediaUrl(filePath, (person as any).family_id);
+                    if (proxied) {
+                      target.onerror = null;
+                      target.src = proxied;
+                      setAvatarSrc(proxied);
+                      return;
+                    }
+                  }
                 }
-              }
-            }
 
-            // If stored value is a raw path, sign it via proxy
-            if (person.avatar_url && !person.avatar_url.startsWith('http')) {
-              const proxied = await getSignedMediaUrl(person.avatar_url as any, (person as any).family_id);
-              if (proxied) {
+                // If stored value is a raw path, sign it via proxy
+                if (person.avatar_url && !person.avatar_url.startsWith('http')) {
+                  const proxied = await getSignedMediaUrl(person.avatar_url as any, (person as any).family_id);
+                  if (proxied) {
+                    target.onerror = null;
+                    target.src = proxied;
+                    setAvatarSrc(proxied);
+                    return;
+                  }
+                }
+
+                // Fall back to gender default
                 target.onerror = null;
-                target.src = proxied;
-                setAvatarSrc(proxied);
-                return;
-              }
-            }
-
-            // Fall back to gender default
-            target.onerror = null;
-            target.src = getDefaultAvatar();
-          }} />
-                
-            <AvatarFallback className="text-lg">
-              {initials(person.full_name)}
-            </AvatarFallback>
-          </Avatar>
+                target.src = getDefaultAvatar();
+              }} />
+                    
+                <AvatarFallback className="text-lg">
+                  {initials(person.full_name)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Paste family tree image URL</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Input placeholder="Paste Supabase media URL or storage path" value={photoInput} onChange={e => setPhotoInput(e.target.value)} />
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setSetPhotoOpen(false)}>Cancel</Button>
+                  <Button size="sm" onClick={async () => {
+                try {
+                  const raw = photoInput.trim();
+                  if (!raw) return;
+                  const filePath = raw.startsWith('http') ? AvatarService.extractFilePath(raw) || '' : raw;
+                  if (!filePath) throw new Error('Invalid Supabase URL');
+                  const {
+                    error
+                  } = await supabase.from('people').update({
+                    avatar_url: filePath
+                  }).eq('id', person.id);
+                  if (error) throw error;
+                  const proxied = await getSignedMediaUrl(filePath, (person as any).family_id);
+                  if (proxied) setAvatarSrc(proxied);
+                  setSetPhotoOpen(false);
+                  setPhotoInput('');
+                  onPersonUpdated();
+                  toast({
+                    title: 'Photo updated'
+                  });
+                } catch (err) {
+                  console.error('Failed to set photo', err);
+                  toast({
+                    title: 'Failed to set photo',
+                    variant: 'destructive'
+                  });
+                }
+              }}>Save</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           About {person.given_name || person.full_name}
         </CardTitle>
         
         {canUserEdit && !isEditing && <div className="flex items-center gap-2">
-            <Dialog open={setPhotoOpen} onOpenChange={setSetPhotoOpen}>
-              <DialogTrigger asChild>
-                
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Paste family tree image URL</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3">
-                  <Input placeholder="Paste Supabase media URL or storage path" value={photoInput} onChange={e => setPhotoInput(e.target.value)} />
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSetPhotoOpen(false)}>Cancel</Button>
-                    <Button size="sm" onClick={async () => {
-                  try {
-                    const raw = photoInput.trim();
-                    if (!raw) return;
-                    const filePath = raw.startsWith('http') ? AvatarService.extractFilePath(raw) || '' : raw;
-                    if (!filePath) throw new Error('Invalid Supabase URL');
-                    const {
-                      error
-                    } = await supabase.from('people').update({
-                      avatar_url: filePath
-                    }).eq('id', person.id);
-                    if (error) throw error;
-                    const proxied = await getSignedMediaUrl(filePath, (person as any).family_id);
-                    if (proxied) setAvatarSrc(proxied);
-                    setSetPhotoOpen(false);
-                    setPhotoInput('');
-                    onPersonUpdated();
-                    toast({
-                      title: 'Photo updated'
-                    });
-                  } catch (err) {
-                    console.error('Failed to set photo', err);
-                    toast({
-                      title: 'Failed to set photo',
-                      variant: 'destructive'
-                    });
-                  }
-                }}>Save</Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
               <Edit2 className="h-4 w-4 mr-2" />
               Edit
