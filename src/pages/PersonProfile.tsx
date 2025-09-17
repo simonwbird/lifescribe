@@ -8,7 +8,7 @@ import { LifePageHeader } from '@/components/people/LifePageHeader'
 import { PortraitAbout } from '@/components/people/PortraitAbout'
 import { PinnedStrip } from '@/components/people/PinnedStrip'
 import { PersonTimeline } from '@/components/people/PersonTimeline'
-import { PhotosStrip } from '@/components/people/PhotosStrip'
+import { MemoryPhotosGallery } from '@/components/people/MemoryPhotosGallery'
 import { DocumentsStrip } from '@/components/people/DocumentsStrip'
 import { DatesPanel } from '@/components/people/DatesPanel'
 import { Contributions } from '@/components/people/Contributions'
@@ -283,7 +283,7 @@ export default function PersonProfile() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <PhotosStrip person={person} />
+            <MemoryPhotosGallery person={person} />
             
             <DocumentsStrip person={person} />
             
