@@ -109,7 +109,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         .from('stories')
         .insert({
           title: photoTitle.trim() || `Memory photos - ${new Date().toLocaleDateString()}`,
-          content: photoDescription.trim() || null,
+          content: photoDescription.trim() || `Memory photos shared for ${person.full_name}`,
           occurred_on,
           occurred_precision: occurred_on ? 'day' : null,
           family_id: (person as any).family_id,
