@@ -46,6 +46,7 @@ export function ConnectionRenderer({
   // Create maps for quick lookups
   const spouseMap = new Map<string, string[]>()
   const parentChildMap = new Map<string, string[]>()
+  const childParentsMap = new Map<string, Set<string>>()
   
   relationships.forEach(rel => {
     if (rel.relationship_type === 'spouse') {
@@ -56,6 +57,8 @@ export function ConnectionRenderer({
     } else if (rel.relationship_type === 'parent') {
       if (!parentChildMap.has(rel.from_person_id)) parentChildMap.set(rel.from_person_id, [])
       parentChildMap.get(rel.from_person_id)!.push(rel.to_person_id)
+      if (!childParentsMap.has(rel.to_person_id)) childParentsMap.set(rel.to_person_id, new Set())
+      childParentsMap.get(rel.to_person_id)!.add(rel.from_person_id)
     }
   })
 
@@ -144,11 +147,21 @@ export function ConnectionRenderer({
         )
 
         // Couple -> children routing via the heart
-        const parent1Children = parentChildMap.get(person.id) || []
-        const parent2Children = parentChildMap.get(spouseId) || []
-        const sharedChildren = parent1Children.filter(c => parent2Children.includes(c))
+        const parent1Children = new Set(parentChildMap.get(person.id) || [])
+        const parent2Children = new Set(parentChildMap.get(spouseId) || [])
+        const unionChildren = new Set<string>([...parent1Children, ...parent2Children])
 
-        if (DEBUG) console.log(`💕 Checking shared children for ${person.full_name} & ${people.find(p => p.id === spouseId)?.full_name}:`, sharedChildren.length)
+        // Prefer children that list BOTH parents; fall back to those listing at least one
+        const sharedChildren = Array.from(unionChildren).filter(childId => {
+          const parents = Array.from(childParentsMap.get(childId) || [])
+          if (parents.length >= 2) {
+            return parents.includes(person.id) && parents.includes(spouseId)
+          }
+          // If only one parent is recorded, still show under the couple to keep structure
+          return parents.includes(person.id) || parents.includes(spouseId)
+        })
+
+        if (DEBUG) console.log(`💕 Checking children for couple ${person.full_name} & ${people.find(p => p.id === spouseId)?.full_name}:`, sharedChildren.length)
 
         if (sharedChildren.length > 0) {
           // Compute child top anchor positions that exist
