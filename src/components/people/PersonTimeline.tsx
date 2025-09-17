@@ -125,18 +125,19 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
       }
 
       // Fetch media linked to this person through stories
-      const { data: media } = await supabase
+      console.log('🎵 Fetching media for person:', (person as any).id, 'family_id:', (person as any).family_id)
+      
+      const { data: media, error: mediaError } = await supabase
         .from('media')
         .select(`
           id, file_name, mime_type, created_at, story_id, individual_story_id, file_path,
-          stories!media_story_id_fkey(
-            id, title, content,
-            person_story_links!inner(person_id)
-          )
+          stories!story_id(id, title, content)
         `)
         .eq('family_id', (person as any).family_id)
-        .not('stories.person_story_links', 'is', null)
         .order('created_at', { ascending: false })
+
+      console.log('🎵 Raw media query result:', media)
+      console.log('🎵 Media query error:', mediaError)
 
       if (media) {
         // Process media items in parallel but don't let failures block the UI
@@ -156,7 +157,9 @@ export function PersonTimeline({ person, userRole, onRefresh }: PersonTimelinePr
 
           // Use story title and content if available, otherwise fall back to filename
           const storyData = mediaItem.stories
-          const displayTitle = storyData?.title || mediaItem.file_name
+          console.log('🎵 Media item:', mediaItem.id, 'story data:', storyData, 'file_name:', mediaItem.file_name)
+          const displayTitle = storyData?.title || mediaItem.file_name || 'Untitled'
+          console.log('🎵 Display title for media', mediaItem.id, ':', displayTitle)
           const storyContent = storyData?.content
           const excerpt = storyContent ? storyContent.substring(0, 100) + (storyContent.length > 100 ? '...' : '') : undefined
           
