@@ -284,8 +284,8 @@ export function FamilyTreeCanvas({
   }
 
   const handlePersonClick = (personId: string) => {
-    // Only handle click if we're not dragging
-    if (draggingPersonId) return
+    // Only handle click if we're not dragging and there's no pending drag
+    if (draggingPersonId || pendingDragId) return
     
     console.log('🔍 Person clicked:', personId, 'navigating to profile')
     setSelectedPersonId(personId)
@@ -503,7 +503,7 @@ export function FamilyTreeCanvas({
                 x={position.x}
                 y={position.y}
                 selected={selectedPersonId === person.id}
-                isDragging={draggingPersonId === person.id}
+                isDragging={draggingPersonId === person.id || pendingDragId === person.id}
                 onDragStart={handlePersonDragStart}
                 onClick={handlePersonClick}
               />
