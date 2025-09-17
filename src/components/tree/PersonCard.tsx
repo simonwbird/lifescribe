@@ -10,6 +10,7 @@ interface PersonCardProps {
   isDragging?: boolean
   onDragStart?: (e: React.PointerEvent, personId: string) => void
   onClick?: (personId: string) => void
+  onDoubleClick?: (personId: string) => void
 }
 
 function PersonCardBase({
@@ -19,7 +20,8 @@ function PersonCardBase({
   selected = false,
   isDragging = false,
   onDragStart,
-  onClick
+  onClick,
+  onDoubleClick
 }: PersonCardProps) {
   const displayName = person.full_name || `${person.given_name || ''} ${person.surname || ''}`.trim()
   const birthYear = person.birth_year || (person.birth_date ? new Date(person.birth_date).getFullYear() : null)
@@ -64,6 +66,13 @@ function PersonCardBase({
           // Only click if not dragging
           if (!isDragging) {
             onClick?.(person.id)
+          }
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation()
+          // Only double-click if not dragging
+          if (!isDragging) {
+            onDoubleClick?.(person.id)
           }
         }}
       >

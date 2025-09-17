@@ -325,9 +325,19 @@ export function FamilyTreeCanvas({
       return
     }
     
-    console.log('🔍 Person clicked:', personId, 'navigating to profile')
+    console.log('🔍 Person clicked:', personId, 'selecting card')
     setSelectedPersonId(personId)
-    onPersonView?.(personId) // Navigate to profile instead of just selecting
+    // Just select, don't navigate
+  }
+
+  const handlePersonDoubleClick = (personId: string) => {
+    // Only handle double-click if not dragging
+    if (draggingPersonId || suppressNextClickRef.current) {
+      return
+    }
+    
+    console.log('🔍 Person double-clicked:', personId, 'navigating to profile')
+    onPersonView?.(personId) // Navigate to profile on double-click
   }
 
   // Wheel zoom
@@ -556,6 +566,7 @@ export function FamilyTreeCanvas({
                 isDragging={draggingPersonId === person.id || pendingDragId === person.id}
                 onDragStart={handlePersonDragStart}
                 onClick={handlePersonClick}
+                onDoubleClick={handlePersonDoubleClick}
               />
             )
           })}
