@@ -240,7 +240,7 @@ export default function ResponsiveFamilyTree({
         </div>
 
         {/* Responsive Tree Layout */}
-        <div className="space-y-6 md:space-y-8 lg:space-y-12">
+        <div className="space-y-0">
           {generationData.map(({ generation, people: genPeople }) => (
             <div key={generation} className="relative">
               {/* Generation Label */}
@@ -336,8 +336,23 @@ export default function ResponsiveFamilyTree({
 
               {/* Connection lines to next generation */}
               {generation < generationData.length - 1 && (
-                <div className="flex justify-center mt-4 md:mt-6">
-                  <div className="w-px h-6 md:h-8 bg-gradient-to-b from-border to-transparent"></div>
+                <div className="flex justify-center relative" style={{ height: '100px' }}>
+                  <svg 
+                    width="2" 
+                    height="100" 
+                    className="absolute top-0"
+                    style={{ left: '50%', transform: 'translateX(-50%)' }}
+                  >
+                    <line 
+                      x1="1" 
+                      y1="0" 
+                      x2="1" 
+                      y2="100" 
+                      stroke="hsl(var(--border))" 
+                      strokeWidth="2"
+                      strokeDasharray="4,4"
+                    />
+                  </svg>
                 </div>
               )}
             </div>
