@@ -490,9 +490,9 @@ export default function Home() {
               {/* Family Updates Feed */}
               <div className="lg:col-span-2">
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-bold text-foreground">
+                  <h4 className="text-2xl font-bold text-foreground">
                     Family Updates
-                  </h2>
+                  </h4>
                   <FamilyUpdatesFeed 
                     activities={activities}
                     variant="simple"
