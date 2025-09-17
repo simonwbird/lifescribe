@@ -60,15 +60,34 @@ export function FamilyTreeCanvas({
   
   const { toast } = useToast()
   const versionService = new VersionService(familyId)
-  const layoutEngine = new LayoutEngine(people, relationships)
+  
+  // Memoize layout engine
+  const layoutEngine = useMemo(() => {
+    console.log('🌳 Creating new LayoutEngine with', people.length, 'people')
+    return new LayoutEngine(people, relationships)
+  }, [people, relationships])
 
   // Initialize layout
   useEffect(() => {
     if (people.length > 0) {
+      console.log('🌳 Generating hierarchical layout...')
+      
+      // Clear any cached layouts to force regeneration
+      dragOverridesRef.current = {}
+      
       const layout = layoutEngine.generateLayout()
+      console.log('🌳 Generated layout:', {
+        nodeCount: layout.nodes.length,
+        generations: layout.generations,
+        samplePositions: layout.nodes.slice(0, 3).map(n => ({
+          name: people.find(p => p.id === n.personId)?.full_name,
+          depth: n.depth,
+          y: n.y
+        }))
+      })
       setLayoutNodes(layout.nodes)
     }
-  }, [people, relationships])
+  }, [people, relationships, layoutEngine])
 
   // Load versions
   useEffect(() => {

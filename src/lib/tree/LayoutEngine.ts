@@ -122,6 +122,12 @@ export class LayoutEngine {
     const nodes: LayoutNode[] = []
     const generationEntries = Array.from(generations.entries()).sort(([a], [b]) => a - b)
     
+    console.log('🌳 Hierarchical Layout - Generations:', generationEntries.map(([depth, people]) => ({
+      generation: depth,
+      count: people.length,
+      names: people.map(p => p.full_name)
+    })))
+    
     generationEntries.forEach(([depth, genPeople]) => {
       // Group families: siblings together, spouses side-by-side
       const familyGroups = this.groupFamilies(genPeople)
@@ -134,8 +140,10 @@ export class LayoutEngine {
       })
       
       // Calculate Y position with larger gaps between generations for hierarchy
-      const hierarchicalVGap = this.options.vGap * 1.2 // 20% more space between generations
+      const hierarchicalVGap = this.options.vGap * 1.5 // 50% more space between generations for clearer hierarchy
       const y = depth * hierarchicalVGap + this.options.cardHeight / 2
+      
+      console.log(`🌳 Generation ${depth}: Y=${y}, ${genPeople.length} people, ${familyGroups.length} family groups`)
       
       let currentX = 0
       
