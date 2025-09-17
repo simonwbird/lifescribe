@@ -206,6 +206,14 @@ export function FamilyTreeCanvas({
   }
 
   const handleCanvasPointerUp = () => {
+    // Always suppress the very next click after a pointer up to avoid click-through
+    suppressNextClickRef.current = true
+    if (suppressTimerRef.current) window.clearTimeout(suppressTimerRef.current)
+    suppressTimerRef.current = window.setTimeout(() => {
+      suppressNextClickRef.current = false
+      suppressTimerRef.current = null
+    }, 250)
+
     setIsDragging(false)
     if (draggingPersonId) {
       const override = dragOverridesRef.current[draggingPersonId]
@@ -466,6 +474,14 @@ export function FamilyTreeCanvas({
         onPointerMove={handleCanvasPointerMove}
         onPointerUp={handleCanvasPointerUp}
         onPointerLeave={handleCanvasPointerUp}
+        onClickCapture={(e) => {
+          if (suppressNextClickRef.current) {
+            e.stopPropagation()
+            e.preventDefault()
+            // reset right away so only the immediate click is eaten
+            suppressNextClickRef.current = false
+          }
+        }}
         style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           transformOrigin: '0 0'
