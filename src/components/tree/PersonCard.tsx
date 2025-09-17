@@ -59,12 +59,10 @@ function PersonCardBase({
         }}
         onClick={(e) => {
           e.stopPropagation()
-          // Add a small delay to distinguish from drag start
-          setTimeout(() => {
-            if (!isDragging) {
-              onClick?.(person.id)
-            }
-          }, 10)
+          // Only click if not dragging
+          if (!isDragging) {
+            onClick?.(person.id)
+          }
         }}
       >
         <div className="p-3 flex flex-col items-center gap-2 h-full">

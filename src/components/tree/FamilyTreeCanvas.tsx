@@ -287,9 +287,9 @@ export function FamilyTreeCanvas({
     // Only handle click if we're not dragging
     if (draggingPersonId) return
     
-    console.log('🔍 Person clicked:', personId)
+    console.log('🔍 Person clicked:', personId, 'navigating to profile')
     setSelectedPersonId(personId)
-    onPersonSelect?.(personId)
+    onPersonView?.(personId) // Navigate to profile instead of just selecting
   }
 
   // Wheel zoom
