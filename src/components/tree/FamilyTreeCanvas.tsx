@@ -211,7 +211,12 @@ export function FamilyTreeCanvas({
 
   // Pointer handlers for canvas panning
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    if (e.target === canvasRef.current) {
+    // Allow panning unless we're clicking directly on a person card
+    const target = e.target as HTMLElement
+    const isPersonCard = target.closest('[role="button"][aria-label*="–"]') // Person cards have aria-label with lifespan
+    
+    if (!isPersonCard) {
+      console.log('🖱️ Starting canvas pan')
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
     }
