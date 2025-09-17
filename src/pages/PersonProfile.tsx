@@ -62,6 +62,12 @@ export default function PersonProfile() {
           .eq('person_id', id)
           .single()
 
+        console.log('🔍 Person Profile Initial Load Debug:', {
+          personId: id,
+          userLink,
+          personAvatar: personData.avatar_url
+        })
+
         // If person is linked to a user, get their profile photo
         let finalPersonData = personData
         if (userLink?.user_id) {
@@ -71,12 +77,15 @@ export default function PersonProfile() {
             .eq('id', userLink.user_id)
             .single()
 
+          console.log('🖼️ Profile photo found (initial):', profile?.avatar_url)
+
           // Use profile photo if person doesn't have one, or prefer profile photo
           if (profile?.avatar_url) {
             finalPersonData = {
               ...personData,
               avatar_url: profile.avatar_url || personData.avatar_url
             }
+            console.log('✅ Using profile photo (initial) for person:', finalPersonData.full_name)
           }
         }
 
@@ -123,30 +132,39 @@ export default function PersonProfile() {
 
       if (error) throw error
 
-      // Get user link for this person to check for profile photo
-      const { data: userLink } = await supabase
-        .from('person_user_links')
-        .select('user_id')
-        .eq('person_id', id)
-        .single()
-
-      // If person is linked to a user, get their profile photo
-      let finalPersonData = personData
-      if (userLink?.user_id) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', userLink.user_id)
+        // Get user link for this person to check for profile photo
+        const { data: userLink } = await supabase
+          .from('person_user_links')
+          .select('user_id')
+          .eq('person_id', id)
           .single()
 
-        // Use profile photo if available
-        if (profile?.avatar_url) {
-          finalPersonData = {
-            ...personData,
-            avatar_url: profile.avatar_url || personData.avatar_url
+        console.log('🔍 Person Profile Debug:', {
+          personId: id,
+          userLink,
+          personAvatar: personData.avatar_url
+        })
+
+        // If person is linked to a user, get their profile photo
+        let finalPersonData = personData
+        if (userLink?.user_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', userLink.user_id)
+            .single()
+
+          console.log('🖼️ Profile photo found:', profile?.avatar_url)
+
+          // Use profile photo if available
+          if (profile?.avatar_url) {
+            finalPersonData = {
+              ...personData,
+              avatar_url: profile.avatar_url || personData.avatar_url
+            }
+            console.log('✅ Using profile photo for person:', finalPersonData.full_name)
           }
         }
-      }
 
       setPerson(finalPersonData as Person)
     } catch (error) {
