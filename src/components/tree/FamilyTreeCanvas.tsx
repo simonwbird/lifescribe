@@ -156,14 +156,24 @@ export function FamilyTreeCanvas({
     const draggedNode = layoutNodes.find(n => n.personId === draggingPersonId)
     if (!draggedNode) return
     
-    // Calculate new position from pointer
-    const newX = snapToGridHelper((lastPointer.x - rect.left - pan.x - dragOffset.x) / zoom)
-    let newY = snapToGridHelper((lastPointer.y - rect.top - pan.y - dragOffset.y) / zoom)
+    // Calculate new position from pointer with better precision
+    const worldX = (lastPointer.x - rect.left - pan.x) / zoom
+    const worldY = (lastPointer.y - rect.top - pan.y) / zoom
+    
+    const newX = snapToGridHelper(worldX - dragOffset.x)
+    let newY = snapToGridHelper(worldY - dragOffset.y)
     
     // Lock to generation Y unless Alt is pressed
     if (!isAltPressed) {
       newY = draggedNode.depth * 140 + 90 // Use generation Y
     }
+    
+    console.log('🎯 Tick update:', {
+      pointer: lastPointer,
+      world: { x: worldX, y: worldY },
+      newPos: { x: newX, y: newY },
+      offset: dragOffset
+    })
     
     setLayoutNodes(prev => 
       prev.map(node => 
@@ -247,28 +257,48 @@ export function FamilyTreeCanvas({
   // Person drag handlers
   const handlePersonDragStart = (e: React.PointerEvent, personId: string) => {
     e.stopPropagation()
-    e.currentTarget.setPointerCapture(e.pointerId)
+    
+    // Only start dragging on primary button (left mouse button)
+    if (e.button !== 0) return
     
     const rect = canvasRef.current?.getBoundingClientRect()
     if (rect) {
       const personPos = positions[personId]
       if (personPos) {
+        console.log('🎯 Starting drag for:', personId, 'at position:', personPos)
+        
         setDraggingPersonId(personId)
         setSelectedPersonId(personId)
         setDragStartNodePos({ x: personPos.x, y: personPos.y })
         setLastPointer({ x: e.clientX, y: e.clientY })
+        
+        // Calculate drag offset more carefully
+        const cardCenterX = (e.clientX - rect.left - pan.x) / zoom
+        const cardCenterY = (e.clientY - rect.top - pan.y) / zoom
+        
         setDragOffset({
-          x: (e.clientX - rect.left - pan.x) / zoom - personPos.x,
-          y: (e.clientY - rect.top - pan.y) / zoom - personPos.y
+          x: cardCenterX - personPos.x,
+          y: cardCenterY - personPos.y
         })
         
         // Disable text selection while dragging
         document.body.style.userSelect = 'none'
+        
+        console.log('🎯 Drag setup complete:', {
+          pointer: { x: e.clientX, y: e.clientY },
+          offset: { x: cardCenterX - personPos.x, y: cardCenterY - personPos.y },
+          rect: { left: rect.left, top: rect.top },
+          pan, zoom
+        })
       }
     }
   }
 
   const handlePersonClick = (personId: string) => {
+    // Only handle click if we're not dragging
+    if (draggingPersonId) return
+    
+    console.log('🔍 Person clicked:', personId)
     setSelectedPersonId(personId)
     onPersonSelect?.(personId)
   }

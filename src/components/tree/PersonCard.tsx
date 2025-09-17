@@ -52,10 +52,19 @@ function PersonCardBase({
           selected && "ring-2 ring-sky-400 ring-opacity-75",
           isDragging && "cursor-grabbing shadow-lg"
         )}
-        onPointerDown={(e) => onDragStart?.(e, person.id)}
+        onPointerDown={(e) => {
+          // Prevent drag on right click or if already dragging
+          if (e.button !== 0 || isDragging) return
+          onDragStart?.(e, person.id)
+        }}
         onClick={(e) => {
           e.stopPropagation()
-          onClick?.(person.id)
+          // Add a small delay to distinguish from drag start
+          setTimeout(() => {
+            if (!isDragging) {
+              onClick?.(person.id)
+            }
+          }, 10)
         }}
       >
         <div className="p-3 flex flex-col items-center gap-2 h-full">
