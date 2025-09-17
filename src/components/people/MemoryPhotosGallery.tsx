@@ -1621,7 +1621,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
               {/* Inline Story Editor */}
               <div className="flex-1 overflow-y-auto relative z-10 pointer-events-auto">
-                <div className="p-6 bg-background border-t">
+                <div className="p-6 bg-background border-t max-h-[40vh] overflow-y-auto">
                   <div className="space-y-4 max-w-2xl">
                     {/* Group Story (Read-only display) */}
                     {currentPhoto.story && (
