@@ -48,26 +48,20 @@ export default function ResponsiveFamilyTree({
   useEffect(() => {
     if (!people.length || !dimensions.width) return
 
+    // Use smaller default sizes for responsive layout
     const layoutEngine = new LayoutEngine(people, relationships, {
-      cardWidth: 140,
-      cardHeight: 160,
-      hGap: 60,
-      vGap: 120
+      cardWidth: 120,
+      cardHeight: 140,
+      hGap: 40,
+      vGap: 100
     })
     
     const treeLayout = layoutEngine.generateLayout()
     setLayout(treeLayout)
 
-    // Calculate scale to fit tree in viewport
-    if (treeLayout.bounds.width > 0 && treeLayout.bounds.height > 0) {
-      const padding = 40
-      const scaleX = (dimensions.width - padding * 2) / treeLayout.bounds.width
-      const scaleY = (dimensions.height - padding * 2) / treeLayout.bounds.height
-      const optimalScale = Math.min(scaleX, scaleY, 1.2) // Allow slight scale up
-      const finalScale = Math.max(optimalScale, 0.4) // Minimum 40% scale
-      setScale(finalScale)
-      setZoomLevel(finalScale) // Sync zoom level
-    }
+    // Set initial zoom to 1.0 for responsive design
+    setScale(1)
+    setZoomLevel(1)
   }, [people, relationships, dimensions])
 
   // Organize people by generation for responsive layout
@@ -131,32 +125,53 @@ export default function ResponsiveFamilyTree({
     setPanOffset({ x: 0, y: 0 })
   }
 
-  // Calculate responsive card size based on screen and content
+  // Calculate responsive card size based on screen and content to fit everything
   const getResponsiveCardSize = () => {
-    const baseWidth = 140
-    const baseHeight = 160
+    if (generationData.length === 0) return { width: 140, height: 160 }
     
-    if (isMobile || dimensions.width < 640) {
-      // Mobile - smaller cards, stack vertically
-      const availableWidth = dimensions.width - 32 // padding
-      const cardWidth = Math.min(130, (availableWidth / 2) - 12) // 2 columns on mobile
-      return { width: Math.max(cardWidth, 100), height: 140 }
-    } else if (dimensions.width < 1024) {
-      // Tablet - medium cards
-      const availableWidth = dimensions.width - 48
-      const maxPeopleInGeneration = Math.max(...generationData.map(g => g.people.length))
-      const cardWidth = Math.min(130, (availableWidth / Math.min(maxPeopleInGeneration, 4)) - 16)
-      return { width: Math.max(cardWidth, 110), height: 150 }
-    } else {
-      // Desktop - full size, auto-fit
-      const availableWidth = dimensions.width - 64
-      const maxPeopleInGeneration = Math.max(...generationData.map(g => g.people.length))
-      const cardWidth = Math.min(baseWidth, (availableWidth / maxPeopleInGeneration) - 24)
-      return { width: Math.max(cardWidth, 120), height: baseHeight }
+    // Find the generation with the most people
+    const maxPeopleInGeneration = Math.max(...generationData.map(g => g.people.length))
+    
+    // Calculate available width (minus padding and gaps)
+    const containerPadding = isMobile ? 32 : dimensions.width < 1024 ? 48 : 64
+    const availableWidth = dimensions.width - containerPadding
+    
+    // Calculate card width to fit all people in the widest generation
+    const gapBetweenCards = isMobile ? 12 : dimensions.width < 1024 ? 16 : 24
+    const totalGapWidth = (maxPeopleInGeneration - 1) * gapBetweenCards
+    const maxCardWidth = (availableWidth - totalGapWidth) / maxPeopleInGeneration
+    
+    // Set minimum and maximum constraints
+    const minCardWidth = isMobile ? 80 : 100
+    const maxCardWidthLimit = isMobile ? 140 : dimensions.width < 1024 ? 150 : 180
+    
+    const cardWidth = Math.max(minCardWidth, Math.min(maxCardWidth, maxCardWidthLimit))
+    const cardHeight = Math.max(120, cardWidth * 0.9) // Maintain aspect ratio
+    
+    return { 
+      width: Math.floor(cardWidth), 
+      height: Math.floor(cardHeight)
     }
   }
 
   const cardSize = getResponsiveCardSize()
+
+  // Calculate if tree fits in viewport
+  const doesTreeFitInViewport = () => {
+    if (generationData.length === 0) return true
+    const maxPeopleInGeneration = Math.max(...generationData.map(g => g.people.length))
+    const gapBetweenCards = isMobile ? 12 : dimensions.width < 1024 ? 16 : 24
+    const containerPadding = isMobile ? 32 : dimensions.width < 1024 ? 48 : 64
+    const totalTreeWidth = (maxPeopleInGeneration * cardSize.width) + ((maxPeopleInGeneration - 1) * gapBetweenCards) + containerPadding
+    return totalTreeWidth <= dimensions.width
+  }
+
+  const treeInfo = {
+    totalPeople: people.length,
+    generations: generationData.length,
+    maxInGeneration: generationData.length > 0 ? Math.max(...generationData.map(g => g.people.length)) : 0,
+    fitsInViewport: doesTreeFitInViewport()
+  }
 
   if (!people.length) {
     return (
@@ -203,7 +218,7 @@ export default function ResponsiveFamilyTree({
 
       {/* Tree Content */}
       <div 
-        className="min-h-full p-4 md:p-6 lg:p-8 transition-transform origin-center"
+        className="w-full h-full p-4 md:p-6 lg:p-8 transition-transform origin-center overflow-hidden"
         style={{
           transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
           cursor: isDragging ? 'grabbing' : 'grab'
@@ -215,8 +230,13 @@ export default function ResponsiveFamilyTree({
             Family Tree
           </h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            {people.length} family members across {generationData.length} generations
+            {treeInfo.totalPeople} family members across {treeInfo.generations} generations
           </p>
+          {!treeInfo.fitsInViewport && (
+            <p className="text-xs text-amber-600 mt-1">
+              ⚠ Tree optimized for {treeInfo.maxInGeneration} people per generation
+            </p>
+          )}
         </div>
 
         {/* Responsive Tree Layout */}
@@ -233,7 +253,12 @@ export default function ResponsiveFamilyTree({
               </div>
 
               {/* People in this generation */}
-              <div className="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-6">
+              <div 
+                className="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-6"
+                style={{
+                  gap: `${isMobile ? 12 : dimensions.width < 1024 ? 16 : 24}px`
+                }}
+              >
                 {genPeople.map((person) => (
                   <div
                     key={person.id}
@@ -321,19 +346,24 @@ export default function ResponsiveFamilyTree({
 
         {/* Footer info */}
         <div className="text-center mt-8 md:mt-12 p-4 bg-muted/30 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            Responsive family tree • Optimized for {isMobile ? 'mobile' : dimensions.width < 1024 ? 'tablet' : 'desktop'}
-          </p>
-          {zoomLevel !== 1 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Zoom: {Math.round(zoomLevel * 100)}%
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Responsive family tree • Optimized for {isMobile ? 'mobile' : dimensions.width < 1024 ? 'tablet' : 'desktop'}
             </p>
-          )}
-          {!isMobile && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Scroll + Ctrl/Cmd to zoom • Drag to pan
+            <p className="text-xs text-muted-foreground">
+              Card size: {cardSize.width}×{cardSize.height}px • Max per row: {treeInfo.maxInGeneration}
             </p>
-          )}
+            {zoomLevel !== 1 && (
+              <p className="text-xs text-muted-foreground">
+                Zoom: {Math.round(zoomLevel * 100)}%
+              </p>
+            )}
+            {!isMobile && (
+              <p className="text-xs text-muted-foreground">
+                Scroll + Ctrl/Cmd to zoom • Drag to pan
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
