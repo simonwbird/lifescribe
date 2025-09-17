@@ -126,7 +126,7 @@ export default function GlobalSearch() {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [query, familyId, navigate, track])
+  }, [query, familyId]) // Removed navigate and track from dependencies
 
   // Handle clicks outside to close suggestions
   useEffect(() => {
