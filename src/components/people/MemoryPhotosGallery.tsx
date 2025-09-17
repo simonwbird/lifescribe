@@ -49,7 +49,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
   const [taggedPeople, setTaggedPeople] = useState<string[]>([person.id])
-  const [newPersonName, setNewPersonName] = useState('')
+  const [peopleSearchQuery, setPeopleSearchQuery] = useState('')
+  const [showPeopleDropdown, setShowPeopleDropdown] = useState(false)
   const { toast } = useToast()
 
   // Fetch photos when component mounts or person changes
@@ -220,7 +221,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
         setPhotoDescription('')
         setPhotoDate('')
         setTaggedPeople([person.id])
-        setNewPersonName('')
+        setPeopleSearchQuery('')
+        setShowPeopleDropdown(false)
         
         // Refresh photos
         fetchPhotos()
@@ -485,91 +487,140 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 Who was in these photos? <span className="text-muted-foreground">(optional)</span>
               </label>
               
-              {/* Family Members Selection */}
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  {familyMembers.map((member) => (
-                    <label 
-                      key={member.id} 
-                      className="flex items-center space-x-2 text-sm cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                        checked={taggedPeople.includes(member.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setTaggedPeople(prev => [...prev, member.id])
-                          } else {
-                            setTaggedPeople(prev => prev.filter(id => id !== member.id))
-                          }
-                        }}
-                      />
-                      <span>{member.full_name}</span>
-                    </label>
-                  ))}
+              {/* Selected People Tags */}
+              {taggedPeople.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {taggedPeople.map((personId) => {
+                    const person = familyMembers.find(m => m.id === personId)
+                    if (!person) return null
+                    return (
+                      <span 
+                        key={personId}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-sm rounded-md"
+                      >
+                        {person.full_name}
+                        <button
+                          type="button"
+                          onClick={() => setTaggedPeople(prev => prev.filter(id => id !== personId))}
+                          className="hover:bg-primary/20 rounded p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    )
+                  })}
                 </div>
+              )}
+              
+              {/* People Search */}
+              <div className="relative">
+                <Input
+                  placeholder="Search for family members or add new..."
+                  value={peopleSearchQuery}
+                  onChange={(e) => {
+                    setPeopleSearchQuery(e.target.value)
+                    setShowPeopleDropdown(e.target.value.length > 0)
+                  }}
+                  onFocus={() => setShowPeopleDropdown(peopleSearchQuery.length > 0)}
+                  className="pr-10"
+                />
                 
-                {/* Add New Person */}
-                <div className="pt-2 border-t">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add someone not in the family tree..."
-                      value={newPersonName}
-                      onChange={(e) => setNewPersonName(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        if (!newPersonName.trim()) return
-                        
-                        try {
-                          const { data: { user } } = await supabase.auth.getUser()
-                          if (!user) return
+                {/* Search Results Dropdown */}
+                {showPeopleDropdown && peopleSearchQuery && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-10 max-h-40 overflow-y-auto">
+                    {(() => {
+                      const searchLower = peopleSearchQuery.toLowerCase()
+                      const matchingMembers = familyMembers.filter(member => 
+                        member.full_name.toLowerCase().includes(searchLower) &&
+                        !taggedPeople.includes(member.id)
+                      )
+                      
+                      return (
+                        <>
+                          {/* Existing Family Members */}
+                          {matchingMembers.map(member => (
+                            <button
+                              key={member.id}
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover:bg-accent flex items-center gap-2"
+                              onClick={() => {
+                                setTaggedPeople(prev => [...prev, member.id])
+                                setPeopleSearchQuery('')
+                                setShowPeopleDropdown(false)
+                              }}
+                            >
+                              <span>{member.full_name}</span>
+                            </button>
+                          ))}
                           
-                          const { data: newPerson, error } = await supabase
-                            .from('people')
-                            .insert({
-                              full_name: newPersonName.trim(),
-                              family_id: (person as any).family_id,
-                              created_by: user.id
-                            })
-                            .select()
-                            .single()
-                            
-                          if (error) throw error
+                          {/* Add New Person Option */}
+                          {matchingMembers.length === 0 && peopleSearchQuery.trim() && (
+                            <button
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover:bg-accent flex items-center gap-2 text-muted-foreground"
+                              onClick={async () => {
+                                const newName = peopleSearchQuery.trim()
+                                if (!newName) return
+                                
+                                try {
+                                  const { data: { user } } = await supabase.auth.getUser()
+                                  if (!user) return
+                                  
+                                  const { data: newPerson, error } = await supabase
+                                    .from('people')
+                                    .insert({
+                                      full_name: newName,
+                                      family_id: (person as any).family_id,
+                                      created_by: user.id
+                                    })
+                                    .select()
+                                    .single()
+                                    
+                                  if (error) throw error
+                                  
+                                  const newMember = { id: newPerson.id, full_name: newPerson.full_name }
+                                  setFamilyMembers(prev => [...prev, newMember])
+                                  setTaggedPeople(prev => [...prev, newPerson.id])
+                                  setPeopleSearchQuery('')
+                                  setShowPeopleDropdown(false)
+                                  
+                                  toast({
+                                    title: "Person added",
+                                    description: `${newName} has been added to your family tree.`
+                                  })
+                                } catch (error) {
+                                  console.error('Failed to add person:', error)
+                                  toast({
+                                    title: "Failed to add person",
+                                    description: "Could not add the person. Please try again.",
+                                    variant: "destructive"
+                                  })
+                                }
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span>Add "{peopleSearchQuery.trim()}" to family tree</span>
+                            </button>
+                          )}
                           
-                          setFamilyMembers(prev => [...prev, { 
-                            id: newPerson.id, 
-                            full_name: newPerson.full_name 
-                          }])
-                          setTaggedPeople(prev => [...prev, newPerson.id])
-                          setNewPersonName('')
-                          
-                          toast({
-                            title: "Person added",
-                            description: `${newPersonName.trim()} has been added to your family tree.`
-                          })
-                        } catch (error) {
-                          console.error('Failed to add person:', error)
-                          toast({
-                            title: "Failed to add person",
-                            description: "Could not add the person. Please try again.",
-                            variant: "destructive"
-                          })
-                        }
-                      }}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                          {matchingMembers.length === 0 && !peopleSearchQuery.trim() && (
+                            <div className="px-3 py-2 text-muted-foreground text-sm">
+                              Type a name to search...
+                            </div>
+                          )}
+                        </>
+                      )
+                    })()}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Add family members or friends who aren't in your tree yet
-                  </p>
-                </div>
+                )}
+                
+                {/* Close dropdown when clicking outside */}
+                {showPeopleDropdown && (
+                  <div 
+                    className="fixed inset-0 z-0" 
+                    onClick={() => setShowPeopleDropdown(false)}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -584,7 +635,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 setPhotoDescription('')
                 setPhotoDate('')
                 setTaggedPeople([person.id])
-                setNewPersonName('')
+                setPeopleSearchQuery('')
+                setShowPeopleDropdown(false)
               }}
             >
               Cancel
