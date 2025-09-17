@@ -46,6 +46,8 @@ function PersonCardBase({
       <article
         role="button"
         aria-label={`${displayName} ${lifespan}`}
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
         className={cn(
           "w-full h-full rounded-xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-all duration-200",
           "cursor-grab active:cursor-grabbing select-none touch-none",
@@ -73,6 +75,7 @@ function PersonCardBase({
                 src={person.avatar_url}
                 alt={displayName}
                 className="w-full h-full object-cover"
+                draggable={false}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-neutral-400">
