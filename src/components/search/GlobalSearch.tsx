@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import type { CSSProperties } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
@@ -14,6 +15,7 @@ export default function GlobalSearch() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [dropdownStyle, setDropdownStyle] = useState<CSSProperties | undefined>()
   
   const inputRef = useRef<HTMLInputElement>(null)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -142,6 +144,25 @@ export default function GlobalSearch() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Keep dropdown anchored to input (avoids clipping/overflow)
+  useEffect(() => {
+    const update = () => {
+      const el = inputRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      setDropdownStyle({ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, zIndex: 1000 })
+    }
+    if (showSuggestions) {
+      update()
+      window.addEventListener('resize', update)
+      window.addEventListener('scroll', update, true)
+    }
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+    }
+  }, [showSuggestions])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions || suggestions.length === 0) {
       if (e.key === 'Enter' && query.trim()) {
@@ -234,14 +255,13 @@ export default function GlobalSearch() {
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
-        <div className="relative">
-          <SearchSuggestions
-            suggestions={suggestions}
-            activeIndex={activeIndex}
-            onSuggestionClick={handleSuggestionClick}
-            onSeeAll={() => handleSearch()}
-          />
-        </div>
+        <SearchSuggestions
+          suggestions={suggestions}
+          activeIndex={activeIndex}
+          onSuggestionClick={handleSuggestionClick}
+          onSeeAll={() => handleSearch()}
+          containerStyle={dropdownStyle}
+        />
       )}
     </div>
   )

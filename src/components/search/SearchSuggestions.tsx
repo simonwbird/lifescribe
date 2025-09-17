@@ -2,12 +2,15 @@ import { User, MapPin, FileText, Image, ChefHat, Heart, Home, Plus, ArrowRight }
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { SearchSuggestion } from '@/lib/searchService'
+import type { CSSProperties } from 'react'
 
 interface SearchSuggestionsProps {
   suggestions: SearchSuggestion[]
   activeIndex: number
   onSuggestionClick: (suggestion: SearchSuggestion) => void
   onSeeAll: () => void
+  containerStyle?: CSSProperties
+  containerClassName?: string
 }
 
 const getIcon = (iconName: string) => {
@@ -40,7 +43,9 @@ export default function SearchSuggestions({
   suggestions,
   activeIndex,
   onSuggestionClick,
-  onSeeAll
+  onSeeAll,
+  containerStyle,
+  containerClassName
 }: SearchSuggestionsProps) {
   // Group suggestions by type
   const grouped = suggestions.reduce((acc, suggestion, index) => {
@@ -54,8 +59,9 @@ export default function SearchSuggestions({
   return (
     <div 
       id="search-suggestions"
-      className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+      className={cn("absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto", containerClassName)}
       role="listbox"
+      style={containerStyle}
     >
       {Object.entries(grouped).map(([type, items]) => (
         <div key={type} className="border-b border-border last:border-b-0">
