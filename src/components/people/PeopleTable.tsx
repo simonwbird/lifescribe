@@ -19,6 +19,7 @@ import type { PersonAccounts, CurrentUser } from '@/utils/personState'
 import { AvatarService } from '@/lib/avatarService'
 import maleDefaultAvatar from '@/assets/avatar-male-default.png'
 import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
+import { getSignedMediaUrl } from '@/lib/media'
 
 interface PeopleTableProps {
   people: Person[]
@@ -119,7 +120,7 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
   }
 
   // Avatar component with proper state management
-  const PersonAvatar = ({ person }: { person: Person }) => {
+  const PersonAvatar = ({ person, familyId }: { person: Person, familyId: string }) => {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(person.avatar_url)
     const [hasError, setHasError] = useState(false)
 
@@ -131,11 +132,21 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
     const handleError = async () => {
       if (hasError) return // Prevent infinite loops
       
-      if (avatarUrl && avatarUrl.includes('supabase.co/storage/v1/object/sign')) {
-        // Try to refresh the signed URL
+      // First try to refresh directly via Storage signed URL
+      if (avatarUrl) {
         const refreshedUrl = await AvatarService.refreshSignedUrl(avatarUrl)
         if (refreshedUrl && refreshedUrl !== avatarUrl) {
           setAvatarUrl(refreshedUrl)
+          return
+        }
+      }
+
+      // If that failed, try via media-proxy using family access control
+      const filePath = avatarUrl ? AvatarService.extractFilePath(avatarUrl) : null
+      if (filePath) {
+        const proxiedUrl = await getSignedMediaUrl(filePath, familyId)
+        if (proxiedUrl) {
+          setAvatarUrl(proxiedUrl)
           return
         }
       }
@@ -238,7 +249,7 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
               return (
                 <TableRow key={person.id}>
                   <TableCell>
-                    <PersonAvatar person={person} />
+                    <PersonAvatar person={person} familyId={familyId} />
                   </TableCell>
                   
                   <TableCell>
