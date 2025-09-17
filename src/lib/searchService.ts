@@ -320,10 +320,10 @@ export class SearchService {
     const [people, properties] = await Promise.all([
       supabase
         .from('people')
-        .select('id, full_name, avatar_url')
+        .select('id, full_name, avatar_url, birth_year, death_year')
         .eq('family_id', familyId)
         .ilike('full_name', `%${query}%`)
-        .limit(3),
+        .limit(5), // Increased limit to show more people
       supabase
         .from('properties')
         .select('id, name, address')
@@ -332,12 +332,22 @@ export class SearchService {
         .limit(2)
     ])
 
-    // Add people suggestions
+    // Add people suggestions with more context
     people.data?.forEach(person => {
+      let subtitle = ''
+      if (person.birth_year && person.death_year) {
+        subtitle = `${person.birth_year} - ${person.death_year}`
+      } else if (person.birth_year) {
+        subtitle = `Born ${person.birth_year}`
+      } else if (person.death_year) {
+        subtitle = `Died ${person.death_year}`
+      }
+      
       suggestions.push({
         id: person.id,
         type: 'person',
         title: person.full_name,
+        subtitle,
         url: `/people/${person.id}`,
         icon: 'user'
       })
@@ -355,14 +365,16 @@ export class SearchService {
       })
     })
 
-    // Add action suggestions
-    suggestions.push({
-      id: 'create-story',
-      type: 'action',
-      title: `Create story: "${query}"`,
-      url: `/stories/new?title=${encodeURIComponent(query)}`,
-      icon: 'plus'
-    })
+    // Add action suggestions if we have room
+    if (suggestions.length < 6) {
+      suggestions.push({
+        id: 'create-story',
+        type: 'action',
+        title: `Create story: "${query}"`,
+        url: `/stories/new?title=${encodeURIComponent(query)}`,
+        icon: 'plus'
+      })
+    }
 
     return suggestions.slice(0, 8)
   }

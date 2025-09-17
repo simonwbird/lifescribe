@@ -76,7 +76,10 @@ export default function GlobalSearch() {
           
           // Auto-navigate to person if there's an exact or very close match
           const firstResult = results[0]
-          if (firstResult && firstResult.type === 'person') {
+          const peopleResults = results.filter(r => r.type === 'person')
+          
+          if (firstResult && firstResult.type === 'person' && peopleResults.length === 1) {
+            // Only auto-navigate if there's exactly one person match
             const queryLower = query.toLowerCase().trim()
             const nameLower = firstResult.title.toLowerCase()
             
