@@ -64,17 +64,18 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
             return
           }
         }
-        // Fallback to the person's stored avatar
+        // Resolve from person's stored avatar (supports raw path or signed URL)
         const raw = person.avatar_url || null
-        if (!raw) {
-          if (!cancelled) setAvatarSrc(null)
-          return
-        }
+        if (!raw) { if (!cancelled) setAvatarSrc(null); return }
         if (raw.startsWith('http')) {
-          if (!cancelled) setAvatarSrc(raw)
-          return
+          const fp = AvatarService.extractFilePath(raw)
+          if (fp) {
+            const proxied = await getSignedMediaUrl(fp, (person as any).family_id)
+            if (!cancelled && proxied) { setAvatarSrc(proxied); return }
+          }
+          if (!cancelled) { setAvatarSrc(raw); return }
         }
-        // Raw storage path -> get proxied signed URL via media-proxy
+        // Raw storage path -> sign via media-proxy
         const proxied = await getSignedMediaUrl(raw, (person as any).family_id)
         if (!cancelled) setAvatarSrc(proxied || null)
       } catch {
