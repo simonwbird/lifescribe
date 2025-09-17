@@ -37,6 +37,7 @@ export default function ProfilePhotoUploader({
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [cameraOpen, setCameraOpen] = useState(false)
+  const [photoEditorOpen, setPhotoEditorOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
@@ -433,7 +434,7 @@ export default function ProfilePhotoUploader({
         
         <div 
           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-full cursor-pointer"
-          onClick={capturePhoto}
+          onClick={() => setPhotoEditorOpen(true)}
         >
           <Camera className="h-4 w-4 text-white/80" />
         </div>
@@ -523,6 +524,81 @@ export default function ProfilePhotoUploader({
               ) : (
                 'Apply Crop'
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Editor Dialog */}
+      <Dialog open={photoEditorOpen} onOpenChange={setPhotoEditorOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Profile Photo</DialogTitle>
+            <DialogDescription>
+              Choose how you'd like to add or update the profile photo.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col gap-2"
+                onClick={() => {
+                  setPhotoEditorOpen(false);
+                  capturePhoto();
+                }}
+                disabled={uploading}
+              >
+                <Camera className="h-6 w-6" />
+                <span className="text-sm">Take Photo</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col gap-2"
+                onClick={() => {
+                  setPhotoEditorOpen(false);
+                  selectFromGallery();
+                }}
+                disabled={uploading}
+              >
+                <Upload className="h-6 w-6" />
+                <span className="text-sm">Upload Photo</span>
+              </Button>
+            </div>
+            
+            {currentPhotoUrl && (
+              <Button
+                variant="outline"
+                className="w-full flex items-center gap-2"
+                onClick={() => {
+                  setPhotoEditorOpen(false);
+                  openEditDialog();
+                }}
+                disabled={uploading}
+              >
+                <CropIcon className="h-4 w-4" />
+                Edit Current Photo
+              </Button>
+            )}
+          </div>
+          
+          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground mb-2">
+              <strong>Supported formats:</strong> JPG, PNG, GIF
+            </p>
+            <p className="text-sm text-muted-foreground mb-2">
+              <strong>Maximum size:</strong> 5MB
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <strong>Best results:</strong> Square images (1:1 ratio) work best for profile photos
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPhotoEditorOpen(false)}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
