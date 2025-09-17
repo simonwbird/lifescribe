@@ -118,13 +118,35 @@ export class LayoutEngine {
     
     // SIMPLE RULE: People with no parents = TOP GENERATION
     const rootPeople = this.people.filter(person => !this.parentsMap.has(person.id))
+    // Special debugging for the people who should be Generation 2
+    const shouldBeGen2 = ['Helen Dorothy Viccars', 'Edward Ellis Bird', 'Henry George Kemter', 'Shirley Lenore Thomas']
+    
+    console.log('🔍 GENERATION 2 ANALYSIS:')
+    shouldBeGen2.forEach(name => {
+      const person = this.people.find(p => p.full_name?.includes(name.split(' ')[0]))
+      if (person) {
+        const parents = this.parentsMap.get(person.id) || []
+        console.log(`🔍   ${person.full_name} (${person.birth_year}):`)
+        console.log(`🔍     Should be Gen 2, has ${parents.length} parents assigned:`, 
+          parents.map(id => this.people.find(p => p.id === id)?.full_name))
+        
+        if (parents.length === 0) {
+          console.log(`🔍     ❌ ERROR: ${person.full_name} has NO PARENTS - will be placed in Generation 0 instead of 2!`)
+        }
+      }
+    })
+    
     console.log('🌳 TOP GENERATION (no parents assigned):', rootPeople.map(p => `${p.full_name} (${p.birth_year || 'no year'})`))
     
-    // If somehow no one has "no parents", just pick oldest
-    if (rootPeople.length === 0 && this.people.length > 0) {
-      const fallback = this.people.sort((a, b) => (a.birth_year || 9999) - (b.birth_year || 9999))[0]
-      rootPeople.push(fallback)
-      console.log('🌳 Fallback top generation:', fallback.full_name)
+    // Check if any Generation 2 people are incorrectly in the root generation
+    const gen2InRoots = rootPeople.filter(p => 
+      shouldBeGen2.some(name => p.full_name?.includes(name.split(' ')[0]))
+    )
+    
+    if (gen2InRoots.length > 0) {
+      console.log('🔍 ❌ ERROR: These Generation 2 people are incorrectly in TOP generation:', 
+        gen2InRoots.map(p => p.full_name))
+      console.log('🔍 This means parent-child relationships are missing in the database!')
     }
     
     // Simple generation assignment using BFS
@@ -183,8 +205,11 @@ export class LayoutEngine {
       children.forEach(childId => {
         const child = this.people.find(p => p.id === childId)
         if (child && !visited.has(child.id)) {
-          if (isViccarsFamily) {
-            console.log(`🔍 VICCARS: Adding child ${child.full_name} to generation ${depth + 1}`)
+          const shouldBeGen2Names = ['Helen', 'Edward', 'Henry', 'Shirley']
+          const isGen2Person = shouldBeGen2Names.some(name => child.full_name?.includes(name))
+          
+          if (isGen2Person) {
+            console.log(`🔍 FOUND GEN 2 PERSON: Adding ${child.full_name} as child of ${person.full_name} to generation ${depth + 1}`)
           } else {
             console.log(`🌳   Adding child ${child.full_name} to generation ${depth + 1}`)
           }
@@ -203,7 +228,19 @@ export class LayoutEngine {
     // Handle any unvisited people (disconnected components)
     this.people.forEach(person => {
       if (!visited.has(person.id)) {
+        console.log(`🔍 ORPHAN: ${person.full_name} (${person.birth_year}) has no connections - adding to Generation 0`)
         assignGeneration(person, 0) // Put orphaned people in top generation
+      }
+    })
+    
+    // Final generation verification
+    console.log('🔍 ═══ FINAL GENERATION ASSIGNMENTS ═══')
+    const gen2Names = ['Helen', 'Edward', 'Henry', 'Shirley']
+    gen2Names.forEach(name => {
+      const person = this.people.find(p => p.full_name?.includes(name))
+      if (person) {
+        const assignedGeneration = personDepth.get(person.id)
+        console.log(`🔍 ${person.full_name}: Assigned to Generation ${assignedGeneration} ${assignedGeneration === 1 ? '✅' : '❌'}`)
       }
     })
     
