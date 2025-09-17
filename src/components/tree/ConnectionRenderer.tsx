@@ -10,7 +10,7 @@ interface ConnectionRendererProps {
 }
 
 type Point = { x: number; y: number }
-const DEBUG = false
+const DEBUG = true
 
 function elbowPath(from: Point, to: Point): string {
   const midY = (from.y + to.y) / 2
@@ -148,57 +148,90 @@ export function ConnectionRenderer({
         const parent2Children = parentChildMap.get(spouseId) || []
         const sharedChildren = parent1Children.filter(c => parent2Children.includes(c))
 
+        if (DEBUG) console.log(`💕 Checking shared children for ${person.full_name} & ${people.find(p => p.id === spouseId)?.full_name}:`, sharedChildren.length)
+
         if (sharedChildren.length > 0) {
           // Compute child top anchor positions that exist
           const childAnchors = sharedChildren
-            .map(childId => ({ id: childId, pos: positions[childId] }))
+            .map(childId => {
+              const childPos = positions[childId]
+              const child = people.find(p => p.id === childId)
+              if (DEBUG) console.log(`  Child ${child?.full_name}: has position = ${!!childPos}`)
+              return { id: childId, pos: childPos, child }
+            })
             .filter(({ pos }) => !!pos)
-            .map(({ id, pos }) => ({ id, anchors: cardAnchors(pos!.x, pos!.y, cardWidth, cardHeight) }))
+            .map(({ id, pos, child }) => ({ 
+              id, 
+              child,
+              anchors: cardAnchors(pos!.x, pos!.y, cardWidth, cardHeight) 
+            }))
+
+          if (DEBUG) console.log(`  Valid child anchors: ${childAnchors.length}`)
 
           if (childAnchors.length > 0) {
             const xs = childAnchors.map(c => c.anchors.top.x)
             const ys = childAnchors.map(c => c.anchors.top.y)
-            const barY = Math.min(...ys) - 20 // a little above the highest child
+            const barY = Math.min(...ys) - 30 // a little above the highest child
+
+            if (DEBUG) console.log(`  Heart at (${heartX}, ${heartY}), bar at Y=${barY}`)
 
             // Trunk from heart down to bar
             paths.push(
               <path
                 key={`trunk-${pathIndex++}`}
-                d={`M ${heartX} ${heartY} L ${heartX} ${barY}`}
+                d={`M ${heartX} ${heartY + 8} L ${heartX} ${barY}`}
                 stroke="#FFFFFF"
                 strokeWidth="3"
                 fill="none"
+                strokeDasharray="4,4"
               />
             )
 
-            // Horizontal bar spanning all children
-            const minX = Math.min(...xs)
-            const maxX = Math.max(...xs)
-            paths.push(
-              <path
-                key={`bar-${pathIndex++}`}
-                d={`M ${minX} ${barY} L ${maxX} ${barY}`}
-                stroke="#FFFFFF"
-                strokeWidth="3"
-                fill="none"
-              />
-            )
-
-            // Down lines to each child
-            childAnchors.forEach((c) => {
+            if (childAnchors.length > 1) {
+              // Horizontal bar spanning all children
+              const minX = Math.min(...xs)
+              const maxX = Math.max(...xs)
               paths.push(
                 <path
-                  key={`child-stem-${pathIndex++}`}
-                  d={`M ${c.anchors.top.x} ${barY} L ${c.anchors.top.x} ${c.anchors.top.y}`}
+                  key={`bar-${pathIndex++}`}
+                  d={`M ${minX} ${barY} L ${maxX} ${barY}`}
                   stroke="#FFFFFF"
                   strokeWidth="3"
                   fill="none"
                 />
               )
 
-              // Mark edges to skip (from both parents to this child)
+              // Down lines to each child
+              childAnchors.forEach((c) => {
+                paths.push(
+                  <path
+                    key={`child-stem-${pathIndex++}`}
+                    d={`M ${c.anchors.top.x} ${barY} L ${c.anchors.top.x} ${c.anchors.top.y}`}
+                    stroke="#FFFFFF"
+                    strokeWidth="3"
+                    fill="none"
+                  />
+                )
+              })
+            } else {
+              // Single child - direct line from heart to child
+              const childAnchor = childAnchors[0]
+              paths.push(
+                <path
+                  key={`direct-child-${pathIndex++}`}
+                  d={`M ${heartX} ${barY} L ${childAnchor.anchors.top.x} ${childAnchor.anchors.top.y}`}
+                  stroke="#FFFFFF"
+                  strokeWidth="3"
+                  fill="none"
+                />
+              )
+            }
+
+            // Mark edges to skip (from both parents to this child)
+            childAnchors.forEach(c => {
               skipEdges.add(`${person.id}->${c.id}`)
               skipEdges.add(`${spouseId}->${c.id}`)
+              if (DEBUG) console.log(`  Skipping direct edges to ${c.child?.full_name}`)
             })
           }
         }
