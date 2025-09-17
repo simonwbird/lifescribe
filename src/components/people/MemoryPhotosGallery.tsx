@@ -700,12 +700,17 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                     {selectedFiles.length} photo{selectedFiles.length > 1 ? 's' : ''} selected
                   </span>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {selectedFiles.map((file, index) => (
-                    <span key={index} className="text-xs bg-background px-2 py-1 rounded">
+                <div className="mt-2 flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                  {selectedFiles.slice(0, 3).map((file, index) => (
+                    <span key={index} className="text-xs bg-background px-2 py-1 rounded truncate max-w-32">
                       {file.name}
                     </span>
                   ))}
+                  {selectedFiles.length > 3 && (
+                    <span className="text-xs bg-muted px-2 py-1 rounded">
+                      +{selectedFiles.length - 3} more
+                    </span>
+                  )}
                 </div>
               </div>
             )}
