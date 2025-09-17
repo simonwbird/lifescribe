@@ -16,6 +16,9 @@ import MemorializeModal from './MemorializeModal'
 import PeopleTableRowActions from './PeopleTableRowActions'
 import type { Person } from '@/lib/familyTreeTypes'
 import type { PersonAccounts, CurrentUser } from '@/utils/personState'
+import { AvatarService } from '@/lib/avatarService'
+import maleDefaultAvatar from '@/assets/avatar-male-default.png'
+import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
 
 interface PeopleTableProps {
   people: Person[]
@@ -108,6 +111,13 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
+  // Get default avatar based on gender
+  const getDefaultAvatar = (person: Person) => {
+    return person.gender?.toLowerCase() === 'female' || person.gender?.toLowerCase() === 'f' 
+      ? femaleDefaultAvatar 
+      : maleDefaultAvatar
+  }
+
   const handleInlineEdit = (person: Person, field: string) => {
     setInlineEditing({ personId: person.id, field })
     const currentValue = field === 'birth_date' ? person.birth_date : 
@@ -189,7 +199,35 @@ export default function PeopleTable({ people, personUserLinks, onPersonUpdated, 
                 <TableRow key={person.id}>
                   <TableCell>
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={person.avatar_url || undefined} />
+                      {person.avatar_url ? (
+                        <AvatarImage 
+                          src={person.avatar_url}
+                          onError={async (e) => {
+                            const target = e.currentTarget as HTMLImageElement
+                            
+                            // Try to refresh the signed URL
+                            const refreshedUrl = await AvatarService.refreshSignedUrl(person.avatar_url!)
+                            if (refreshedUrl && refreshedUrl !== person.avatar_url) {
+                              target.onerror = null
+                              target.src = refreshedUrl
+                              return
+                            }
+                            
+                            // If refresh failed, use gender default
+                            target.onerror = null
+                            target.src = getDefaultAvatar(person)
+                          }}
+                        />
+                      ) : (
+                        <AvatarImage 
+                          src={getDefaultAvatar(person)}
+                          onError={(e) => {
+                            // Fallback to initials if default avatar fails
+                            const target = e.currentTarget as HTMLImageElement
+                            target.style.display = 'none'
+                          }}
+                        />
+                      )}
                       <AvatarFallback className="text-xs">
                         {getInitials(person.full_name || 'Unknown')}
                       </AvatarFallback>
