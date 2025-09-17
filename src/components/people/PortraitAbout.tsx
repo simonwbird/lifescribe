@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast'
 import { AvatarService } from '@/lib/avatarService'
 import maleDefaultAvatar from '@/assets/avatar-male-default.png'
 import femaleDefaultAvatar from '@/assets/avatar-female-default.png'
+import { getSignedMediaUrl } from '@/lib/media'
 
 interface PortraitAboutProps {
   person: Person
@@ -60,8 +61,19 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
             return
           }
         }
-        // Fall back to person avatar or gender default
-        if (!cancelled) setAvatarSrc(person.avatar_url || null)
+        // Fallback to the person's stored avatar
+        const raw = person.avatar_url || null
+        if (!raw) {
+          if (!cancelled) setAvatarSrc(null)
+          return
+        }
+        if (raw.startsWith('http')) {
+          if (!cancelled) setAvatarSrc(raw)
+          return
+        }
+        // Raw storage path -> get proxied signed URL via media-proxy
+        const proxied = await getSignedMediaUrl(raw, (person as any).family_id)
+        if (!cancelled) setAvatarSrc(proxied || null)
       } catch {
         if (!cancelled) setAvatarSrc(person.avatar_url || null)
       }
@@ -141,14 +153,35 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
               onError={async (e) => {
                 const target = e.currentTarget as HTMLImageElement
                 
-                if (avatarSrc && avatarSrc.includes('supabase.co/storage/v1/object/sign')) {
-                  console.warn('⚠️ Profile avatar failed, trying refresh for', person.full_name)
+                // If we have a signed URL, try to refresh it
+                if (avatarSrc && avatarSrc.startsWith('http')) {
                   const refreshedUrl = await AvatarService.refreshSignedUrl(avatarSrc)
                   if (refreshedUrl && refreshedUrl !== avatarSrc) {
                     target.onerror = null
                     target.src = refreshedUrl
                     setAvatarSrc(refreshedUrl)
-                    console.log('✅ Refreshed profile avatar for', person.full_name)
+                    return
+                  }
+                  // Try media-proxy using extracted path from signed URL
+                  const filePath = AvatarService.extractFilePath(avatarSrc)
+                  if (filePath) {
+                    const proxied = await getSignedMediaUrl(filePath, (person as any).family_id)
+                    if (proxied) {
+                      target.onerror = null
+                      target.src = proxied
+                      setAvatarSrc(proxied)
+                      return
+                    }
+                  }
+                }
+
+                // If stored value is a raw path, sign it via proxy
+                if (person.avatar_url && !person.avatar_url.startsWith('http')) {
+                  const proxied = await getSignedMediaUrl(person.avatar_url as any, (person as any).family_id)
+                  if (proxied) {
+                    target.onerror = null
+                    target.src = proxied
+                    setAvatarSrc(proxied)
                     return
                   }
                 }
@@ -156,9 +189,9 @@ export function PortraitAbout({ person, userRole, onPersonUpdated }: PortraitAbo
                 // Fall back to gender default
                 target.onerror = null
                 target.src = getDefaultAvatar()
-                console.log('🎭 Using gender default for profile of', person.full_name)
               }}
             />
+                
             <AvatarFallback className="text-lg">
               {initials(person.full_name)}
             </AvatarFallback>
