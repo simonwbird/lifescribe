@@ -432,10 +432,10 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                 value={photoDescription}
                 onChange={(e) => setPhotoDescription(e.target.value)}
                 rows={3}
-                maxLength={500}
+                maxLength={1000}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {photoDescription.length}/500 characters
+                {photoDescription.length}/1000 characters
               </p>
             </div>
           </div>
