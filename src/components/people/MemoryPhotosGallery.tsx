@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
-import { Camera, Upload, Calendar, X, Plus } from 'lucide-react'
+import { Camera, Upload, Calendar, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
@@ -40,6 +40,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [photoTitle, setPhotoTitle] = useState('')
   const [photoDescription, setPhotoDescription] = useState('')
   const [photoDate, setPhotoDate] = useState('')
+  const [showLightbox, setShowLightbox] = useState(false)
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const { toast } = useToast()
 
   // Fetch photos on component mount
@@ -252,6 +254,21 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     }
   }
 
+  const openLightbox = (photoIndex: number) => {
+    setCurrentPhotoIndex(photoIndex)
+    setShowLightbox(true)
+  }
+
+  const navigatePrevious = () => {
+    setCurrentPhotoIndex(prev => prev > 0 ? prev - 1 : photos.length - 1)
+  }
+
+  const navigateNext = () => {
+    setCurrentPhotoIndex(prev => prev < photos.length - 1 ? prev + 1 : 0)
+  }
+
+  const currentPhoto = photos[currentPhotoIndex]
+
   useEffect(() => {
     photos.forEach(photo => {
       if (!photoUrls[photo.id]) {
@@ -315,8 +332,8 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {photos.map((photo) => (
-                <div key={photo.id} className="group relative">
+              {photos.map((photo, index) => (
+                <div key={photo.id} className="group relative cursor-pointer" onClick={() => openLightbox(index)}>
                   <div className="aspect-square bg-muted rounded-lg overflow-hidden">
                     {photoUrls[photo.id] ? (
                       <img
@@ -443,6 +460,97 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
               {uploading ? 'Uploading...' : 'Share Memory'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Lightbox */}
+      <Dialog open={showLightbox} onOpenChange={setShowLightbox}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          {currentPhoto && (
+            <div className="flex flex-col h-full">
+              {/* Photo Display Area */}
+              <div className="relative flex-1 bg-black">
+                {photoUrls[currentPhoto.id] && (
+                  <img
+                    src={photoUrls[currentPhoto.id]}
+                    alt={currentPhoto.story?.title || currentPhoto.file_name}
+                    className="w-full h-full object-contain"
+                  />
+                )}
+                
+                {/* Navigation Buttons */}
+                {photos.length > 1 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
+                      onClick={navigatePrevious}
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
+                      onClick={navigateNext}
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </Button>
+                  </>
+                )}
+
+                {/* Close Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white"
+                  onClick={() => setShowLightbox(false)}
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+
+                {/* Photo Counter */}
+                {photos.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/40 text-white px-3 py-1 rounded-full text-sm">
+                    {currentPhotoIndex + 1} of {photos.length}
+                  </div>
+                )}
+              </div>
+
+              {/* Story Details */}
+              <div className="p-6 bg-background max-h-48 overflow-y-auto">
+                <div className="space-y-3">
+                  {currentPhoto.story?.title && (
+                    <h3 className="text-lg font-semibold">
+                      {currentPhoto.story.title}
+                    </h3>
+                  )}
+                  
+                  {currentPhoto.story?.occurred_on && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span className="text-sm">
+                        {format(new Date(currentPhoto.story.occurred_on), 'MMMM d, yyyy')}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {currentPhoto.story?.content && (
+                    <p className="text-muted-foreground leading-relaxed">
+                      {currentPhoto.story.content}
+                    </p>
+                  )}
+
+                  {!currentPhoto.story?.title && !currentPhoto.story?.content && !currentPhoto.story?.occurred_on && (
+                    <p className="text-muted-foreground italic">
+                      No story details available for this photo
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
