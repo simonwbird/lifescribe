@@ -781,6 +781,84 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          is_read: boolean
+          media_id: string | null
+          message: string
+          recipient_id: string
+          sender_id: string
+          story_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          is_read?: boolean
+          media_id?: string | null
+          message: string
+          recipient_id: string
+          sender_id: string
+          story_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          is_read?: boolean
+          media_id?: string | null
+          message?: string
+          recipient_id?: string
+          sender_id?: string
+          story_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       people: {
         Row: {
           alt_names: string[] | null

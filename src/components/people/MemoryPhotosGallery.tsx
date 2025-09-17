@@ -85,6 +85,10 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [inlineStoryContent, setInlineStoryContent] = useState('')
   const [inlineStoryDate, setInlineStoryDate] = useState('')
+  const [mentionDropdownOpen, setMentionDropdownOpen] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState('')
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
+  const [cursorPosition, setCursorPosition] = useState(0)
   
   // Face tagging state
   const [isTaggingMode, setIsTaggingMode] = useState(false)
@@ -759,8 +763,83 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     }
   }, [currentPhotoIndex, photos])
 
-  // Auto-save functionality
-  const autoSaveStory = async (content: string, date: string) => {
+  // Parse @mentions from content and create notifications
+  const createMentionNotifications = async (content: string, storyId: string) => {
+    const mentionRegex = /@(\w+)/g
+    const mentions = [...content.matchAll(mentionRegex)]
+    
+    if (mentions.length === 0) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Find mentioned users by name
+      const mentionedNames = mentions.map(match => match[1])
+      const { data: mentionedPeople } = await supabase
+        .from('people')
+        .select('id, full_name, claimed_by_profile_id')
+        .eq('family_id', person.family_id)
+        .in('full_name', mentionedNames)
+
+      if (!mentionedPeople) return
+
+      // Create notifications for mentioned living users
+      const notifications = mentionedPeople
+        .filter(p => p.claimed_by_profile_id) // Only living users with accounts
+        .map(p => ({
+          recipient_id: p.claimed_by_profile_id,
+          sender_id: user.id,
+          family_id: person.family_id,
+          type: 'mention',
+          title: 'You were mentioned in a story',
+          message: `${person.full_name} mentioned you: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`,
+          story_id: storyId
+        }))
+
+      if (notifications.length > 0) {
+        await supabase
+          .from('notifications')
+          .insert(notifications)
+      }
+    } catch (error) {
+      console.error('Failed to create mention notifications:', error)
+    }
+  }
+
+  // Handle @ mention detection and dropdown
+  const handleMentionInput = (value: string, selectionStart: number) => {
+    const beforeCursor = value.substring(0, selectionStart)
+    const atIndex = beforeCursor.lastIndexOf('@')
+    
+    if (atIndex !== -1) {
+      const afterAt = beforeCursor.substring(atIndex + 1)
+      
+      // Check if we're still in a mention (no spaces after @)
+      if (!afterAt.includes(' ') && afterAt.length <= 20) {
+        setMentionQuery(afterAt)
+        setMentionDropdownOpen(true)
+        setCursorPosition(atIndex)
+        return
+      }
+    }
+    
+    setMentionDropdownOpen(false)
+  }
+
+  // Insert selected mention
+  const insertMention = (memberName: string) => {
+    const before = inlineStoryContent.substring(0, cursorPosition)
+    const after = inlineStoryContent.substring(cursorPosition + mentionQuery.length + 1) // +1 for @
+    const newContent = before + '@' + memberName + ' ' + after
+    
+    setInlineStoryContent(newContent)
+    setMentionDropdownOpen(false)
+    setMentionQuery('')
+    
+    // Trigger auto-save with mentions
+    handleInlineStoryChange('content', newContent)
+  }
     if (!currentPhoto) return
 
     setIsSaving(true)
@@ -1661,17 +1740,64 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
                         )}
                       </div>
 
-                      {/* Story Content */}
-                      <div>
+                      {/* Story Content with @mentions */}
+                      <div className="relative">
                         <Textarea
-                          placeholder="What happened in this moment? Share your memory..."
+                          placeholder="What happened in this moment? Share your memory... (Use @ to mention someone)"
                           value={inlineStoryContent}
-                          onChange={(e) => handleInlineStoryChange('content', e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setInlineStoryContent(value)
+                            handleMentionInput(value, e.target.selectionStart || 0)
+                            handleInlineStoryChange('content', value)
+                          }}
+                          onKeyDown={(e) => {
+                            if (mentionDropdownOpen) {
+                              if (e.key === 'Escape') {
+                                setMentionDropdownOpen(false)
+                                e.preventDefault()
+                              }
+                            }
+                          }}
                           className="resize-none border-0 bg-transparent px-0 py-2 focus:ring-0 focus:border-0 text-base leading-relaxed min-h-[120px]"
                           maxLength={1000}
                         />
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {inlineStoryContent.length}/1000 characters
+                        
+                        {/* @Mention Dropdown */}
+                        {mentionDropdownOpen && (
+                          <div className="absolute z-50 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto min-w-[200px]">
+                            {familyMembers
+                              .filter(member => 
+                                member.full_name.toLowerCase().includes(mentionQuery.toLowerCase()) &&
+                                member.id !== person.id // Don't mention yourself
+                              )
+                              .slice(0, 5)
+                              .map((member) => (
+                                <button
+                                  key={member.id}
+                                  className="w-full px-3 py-2 text-left hover:bg-muted text-sm flex items-center gap-2"
+                                  onClick={() => insertMention(member.full_name)}
+                                >
+                                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-xs font-medium">
+                                    {member.full_name.charAt(0)}
+                                  </div>
+                                  {member.full_name}
+                                </button>
+                              ))}
+                            {familyMembers.filter(member => 
+                              member.full_name.toLowerCase().includes(mentionQuery.toLowerCase()) &&
+                              member.id !== person.id
+                            ).length === 0 && (
+                              <div className="px-3 py-2 text-sm text-muted-foreground">
+                                No family members found
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                          <span>Use @ to mention family members</span>
+                          <span>{inlineStoryContent.length}/1000 characters</span>
                         </div>
                       </div>
 
@@ -1934,3 +2060,5 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
     </>
   )
 }
+
+export default MemoryPhotosGallery
