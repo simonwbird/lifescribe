@@ -92,7 +92,7 @@ export function FamilyTreeCanvas({
     return base
   }, [layoutNodes, visualTick])
 
-  // Auto-fit functionality - aggressive fitting to show the whole tree clearly
+  // Auto-fit functionality - smart with outlier trimming
   const autoFit = useCallback(() => {
     if (layoutNodes.length === 0) return
     
@@ -103,25 +103,43 @@ export function FamilyTreeCanvas({
     const viewportRect = canvas.getBoundingClientRect()
     const viewport = { w: viewportRect.width, h: viewportRect.height }
     
-    // Calculate bounding box of all nodes with card dimensions
+    // Card dimensions and padding
     const cardWidth = 150, cardHeight = 180
-    const padding = 50 // Minimal padding for clean edges
+    const padding = 60
     
-    const minX = Math.min(...layoutNodes.map(n => n.x - cardWidth/2)) - padding
-    const maxX = Math.max(...layoutNodes.map(n => n.x + cardWidth/2)) + padding
-    const minY = Math.min(...layoutNodes.map(n => n.y - cardHeight/2)) - padding
-    const maxY = Math.max(...layoutNodes.map(n => n.y + cardHeight/2)) + padding
+    // Use trimmed bounds to ignore extreme outliers
+    const xs = [...layoutNodes.map(n => n.x)].sort((a, b) => a - b)
+    const ys = [...layoutNodes.map(n => n.y)].sort((a, b) => a - b)
+    const q = (arr: number[], p: number) => arr[Math.floor((arr.length - 1) * p)]
     
-    const contentWidth = maxX - minX
-    const contentHeight = maxY - minY
+    let minCx: number, maxCx: number, minCy: number, maxCy: number
+    if (layoutNodes.length >= 6) {
+      minCx = q(xs, 0.05)
+      maxCx = q(xs, 0.95)
+      minCy = q(ys, 0.05)
+      maxCy = q(ys, 0.95)
+    } else {
+      minCx = xs[0]
+      maxCx = xs[xs.length - 1]
+      minCy = ys[0]
+      maxCy = ys[ys.length - 1]
+    }
     
-    // Calculate zoom to fit - use 95% of viewport for maximum visibility
-    const scaleX = (viewport.w * 0.95) / contentWidth
-    const scaleY = (viewport.h * 0.95) / contentHeight
+    const minX = minCx - cardWidth / 2 - padding
+    const maxX = maxCx + cardWidth / 2 + padding
+    const minY = minCy - cardHeight / 2 - padding
+    const maxY = maxCy + cardHeight / 2 + padding
+    
+    const contentWidth = Math.max(1, maxX - minX)
+    const contentHeight = Math.max(1, maxY - minY)
+    
+    // Calculate zoom to fit - use 90% of viewport
+    const scaleX = (viewport.w * 0.9) / contentWidth
+    const scaleY = (viewport.h * 0.9) / contentHeight
     const newZoom = Math.min(scaleX, scaleY)
     
-    // Clamp zoom to reasonable bounds (allow very small zoom for huge trees)
-    const clampedZoom = Math.max(0.1, Math.min(2.0, newZoom))
+    // Clamp zoom to avoid "postage stamp" sizes
+    const clampedZoom = Math.max(0.3, Math.min(2.0, newZoom))
     
     // Center the content in the viewport
     const contentCenterX = (minX + maxX) / 2
@@ -134,10 +152,10 @@ export function FamilyTreeCanvas({
       y: viewportCenterY - contentCenterY * clampedZoom
     }
     
-    console.log('🎯 Smart Auto-fit:', { 
-      viewport, 
+    console.log('🎯 Smart Auto-fit (trimmed):', {
+      viewport,
       contentSize: { w: contentWidth, h: contentHeight },
-      zoom: clampedZoom, 
+      zoom: clampedZoom,
       pan: newPan,
       nodesCount: layoutNodes.length
     })
