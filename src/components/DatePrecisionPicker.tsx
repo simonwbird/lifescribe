@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 
 export interface DatePrecisionValue {
@@ -26,6 +27,21 @@ export function DatePrecisionPicker({
 }) {
   const [open, setOpen] = React.useState(false)
   const [currentYear, setCurrentYear] = React.useState(new Date().getFullYear())
+  const [textInput, setTextInput] = React.useState('')
+
+  function handleTextInput(text: string) {
+    setTextInput(text)
+    if (!text.trim()) {
+      onChange({ date: null, yearOnly: false })
+      return
+    }
+
+    // Try to parse various date formats
+    const date = new Date(text)
+    if (!isNaN(date.getTime())) {
+      onChange({ date, yearOnly: false })
+    }
+  }
 
   function setDate(d: Date | null) {
     onChange({ ...value, date: d, yearOnly: false })
@@ -92,12 +108,17 @@ export function DatePrecisionPicker({
               </div>
             ) : (
               <div className="space-y-2">
-                <Label className="text-sm">Select Full Date</Label>
+                <Label className="text-sm">Type or Select Date</Label>
+                <Input
+                  placeholder="e.g. 1985, Jan 15 1985, 1/15/1985"
+                  value={textInput}
+                  onChange={(e) => handleTextInput(e.target.value)}
+                  className="text-sm"
+                />
                 <Calendar
                   mode="single"
                   selected={value.date ?? undefined}
                   onSelect={(d) => setDate(d ?? null)}
-                  initialFocus
                   className={cn("p-1 pointer-events-auto text-sm")}
                 />
               </div>
