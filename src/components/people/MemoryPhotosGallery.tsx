@@ -607,7 +607,23 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
 
   const fetchPhotos = async () => {
     try {
-      // First get the basic media records
+      // First get all person_story_links for this person to know which stories they're in
+      const { data: personStories, error: personStoriesError } = await supabase
+        .from('person_story_links')
+        .select('story_id')
+        .eq('person_id', person.id)
+
+      if (personStoriesError) throw personStoriesError
+
+      const personStoryIds = personStories?.map(link => link.story_id) || []
+      
+      // If person has no stories, show empty gallery
+      if (personStoryIds.length === 0) {
+        setPhotos([])
+        return
+      }
+
+      // Get media records that are linked to this person's stories
       const { data: mediaData, error: mediaError } = await supabase
         .from('media')
         .select('*')
@@ -619,34 +635,15 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
           'image/webp',
           'image/gif'
         ])
+        .or(`story_id.in.(${personStoryIds.join(',')}),individual_story_id.in.(${personStoryIds.join(',')})`)
         .order('created_at', { ascending: false })
 
       if (mediaError) throw mediaError
-      
-      // Filter to only show photos linked to this person (either through group stories or individual stories)
-      const { data: personStories } = await supabase
-        .from('person_story_links')
-        .select('story_id')
-        .eq('person_id', person.id)
-
-      const personStoryIds = personStories?.map(link => link.story_id) || []
-      
-      const filteredPhotos = (mediaData || []).filter(photo => {
-        // Include if linked to person through group story
-        if (photo.story_id && personStoryIds.includes(photo.story_id)) {
-          return true
-        }
-        // Include if has individual story linked to person
-        if (photo.individual_story_id && personStoryIds.includes(photo.individual_story_id)) {
-          return true
-        }
-        return false
-      })
 
       // Now fetch the stories separately
       const storyIds = [...new Set([
-        ...filteredPhotos.filter(p => p.story_id).map(p => p.story_id),
-        ...filteredPhotos.filter(p => p.individual_story_id).map(p => p.individual_story_id)
+        ...mediaData?.filter(p => p.story_id).map(p => p.story_id) || [],
+        ...mediaData?.filter(p => p.individual_story_id).map(p => p.individual_story_id) || []
       ].filter(Boolean))]
 
       const { data: storiesData } = storyIds.length > 0 ? await supabase
@@ -657,7 +654,7 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       const storiesMap = new Map(storiesData?.map(s => [s.id, s] as [string, any]) || [])
 
       // Combine media with stories
-      const photosWithStories = filteredPhotos.map(photo => ({
+      const photosWithStories = (mediaData || []).map(photo => ({
         ...photo,
         story: photo.story_id ? storiesMap.get(photo.story_id) || null : null,
         individual_story: photo.individual_story_id ? storiesMap.get(photo.individual_story_id) || null : null,
@@ -729,9 +726,20 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
           ...prev,
           [photo.id]: signedUrl
         }))
+      } else {
+        // If no signed URL, mark as failed to prevent loading spinner
+        setPhotoUrls(prev => ({
+          ...prev,
+          [photo.id]: ''
+        }))
       }
     } catch (error) {
-      console.error('Failed to load photo URL:', error)
+      console.error('Failed to load photo URL for', photo.file_path, error)
+      // Mark as failed to prevent infinite loading
+      setPhotoUrls(prev => ({
+        ...prev,
+        [photo.id]: ''
+      }))
     }
   }
 
