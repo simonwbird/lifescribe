@@ -125,7 +125,12 @@ export type AnalyticsEvent =
   | 'prompt.record_start'
   | 'story.created_from_prompt'
   | 'recorder.permission_denied'
-  | 'recorder.offline_queue';
+  | 'recorder.offline_queue'
+  // Admin impersonation events
+  | 'ADMIN_IMPERSONATE_STARTED'
+  | 'ADMIN_IMPERSONATE_ENDED'
+  | 'ADMIN_IMPERSONATE_TIMEOUT'
+  | 'ADMIN_IMPERSONATE_BLOCKED_WRITE';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

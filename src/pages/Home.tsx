@@ -28,6 +28,7 @@ import { CountdownModal } from '@/components/home/simple/CountdownModal'
 import { PermissionDeniedCard } from '@/components/home/simple/PermissionDeniedCard'
 import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard'
 import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
+import ImpersonationBoundary from '@/components/ImpersonationBoundary'
 
 // Types
 interface ActivityItem {
@@ -473,25 +474,27 @@ export default function Home() {
 
   if (loading || modeLoading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto px-4 py-6 space-y-6">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <Skeleton className="h-40 w-full" />
-                <Skeleton className="h-40 w-full" />
+      <ImpersonationBoundary>
+        <AuthGate>
+          <div className="min-h-screen bg-background">
+            <Header />
+            <main className="container mx-auto px-4 py-6 space-y-6">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <Skeleton className="h-40 w-full" />
+                  <Skeleton className="h-40 w-full" />
+                </div>
+                <div className="space-y-6">
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
               </div>
-              <div className="space-y-6">
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-              </div>
-            </div>
-          </main>
-        </div>
-      </AuthGate>
+            </main>
+          </div>
+        </AuthGate>
+      </ImpersonationBoundary>
     )
   }
 

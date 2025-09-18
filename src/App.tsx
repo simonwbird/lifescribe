@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 import { ModeProvider } from "@/contexts/ModeContext";
+import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
@@ -139,7 +140,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppContent />
+          <ImpersonationProvider>
+            <AppContent />
+          </ImpersonationProvider>
         </BrowserRouter>
       </ModeProvider>
     </TooltipProvider>

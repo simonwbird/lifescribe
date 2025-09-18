@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import AdminNavigation from './AdminNavigation'
 import AdminGlobalSearch from './AdminGlobalSearch'
 import SavedViewsManager from './SavedViewsManager'
+import ImpersonationBanner from './ImpersonationBanner'
 import type { AdminRole } from '@/lib/adminTypes'
 import { cn } from '@/lib/utils'
 
@@ -88,6 +89,7 @@ export default function AdminShell() {
 
         {/* Content Area */}
         <main className="flex-1 p-6 overflow-auto">
+          <ImpersonationBanner />
           <Outlet />
         </main>
       </div>

@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, Users, UserCheck, UserX, Filter } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import ImpersonateButton from '@/components/admin/ImpersonateButton'
+import type { ImpersonationTarget } from '@/lib/impersonationTypes'
 
 interface AdminUser {
   id: string
@@ -258,6 +260,18 @@ export default function AdminPeople() {
                   <p className="text-xs text-muted-foreground">Joined</p>
                   <p className="text-sm">{new Date(user.created_at).toLocaleDateString()}</p>
                 </div>
+
+                <div className="pt-2 border-t">
+                  <ImpersonateButton
+                    target={{
+                      id: user.id,
+                      name: user.full_name || user.email,
+                      email: user.email,
+                      type: 'user',
+                      primaryFamilyId: user.families[0]?.id
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -293,6 +307,17 @@ export default function AdminPeople() {
                 <div>
                   <p className="text-xs text-muted-foreground">Created</p>
                   <p className="text-sm">{new Date(family.created_at).toLocaleDateString()}</p>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <ImpersonateButton
+                    target={{
+                      id: family.id,
+                      name: family.name,
+                      email: family.creator,
+                      type: 'family'
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>
