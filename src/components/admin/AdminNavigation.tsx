@@ -49,6 +49,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
+    id: 'activation',
+    label: 'Activation (TTV)',
+    href: '/admin/activation',
+    icon: TrendingUp,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
     id: 'flags-config',
     label: 'Flags & Config',
     href: '/admin/config',

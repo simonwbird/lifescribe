@@ -135,7 +135,13 @@ export type AnalyticsEvent =
   | 'ADMIN_FAMILY_FILTER_APPLIED'
   | 'ADMIN_ROW_ACTION_CLICKED'
   | 'ADMIN_FAMILY_VIEW_LOADED'
-  | 'ADMIN_FAMILY_EXPORT_STARTED';
+  | 'ADMIN_FAMILY_EXPORT_STARTED'
+  // Admin activation events
+  | 'ADMIN_ACTIVATION_DASHBOARD_LOADED'
+  | 'ADMIN_FUNNEL_STAGE_CLICKED'
+  | 'ADMIN_NUDGE_SENT'
+  | 'ADMIN_COHORT_FILTER_APPLIED'
+  | 'ADMIN_ACTIVATION_EXPORT_STARTED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'
