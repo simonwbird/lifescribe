@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Edit2, Save, X, Plus } from 'lucide-react';
+import { Edit2, Save, X, Plus, MessageCircle } from 'lucide-react';
 import { Person, UserRole, canEdit, initials } from '@/utils/personUtils';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -362,9 +362,29 @@ export function PortraitAbout({
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground">
-              {person.bio || 'No bio added yet.'}
-            </p>
+            <>
+              {person.bio ? (
+                <p className="text-muted-foreground">
+                  {person.bio}
+                </p>
+              ) : (
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <MessageCircle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <p className="text-sm font-medium mb-1">No bio yet</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Introduce {person.given_name || person.full_name} in one line
+                  </p>
+                  {canUserEdit && (
+                    <Button size="sm" variant="outline" onClick={() => setEditingBio(true)}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Bio
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 

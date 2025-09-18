@@ -5,8 +5,11 @@ import VoiceFirstHero from '@/components/home/VoiceFirstHero'
 import InviteBanner from '@/components/home/InviteBanner'
 import FamilyUpdatesFeed from '@/components/home/FamilyUpdatesFeed'
 import WeeklyDigest from '@/components/home/WeeklyDigest'
+import WeeklyDigestPreview from '@/components/WeeklyDigestPreview'
 import Upcoming from '@/components/home/Upcoming'
 import DraftsRow from '@/components/home/DraftsRow'
+import OnboardingProgress from '@/components/onboarding/OnboardingProgress'
+import FloatingCoachMark from '@/components/onboarding/FloatingCoachMark'
 import { SimpleHeader } from '@/components/home/simple/SimpleHeader'
 import SimpleRecordingController from '@/components/home/simple/SimpleRecordingController'
 import { Card, CardContent } from '@/components/ui/card'
@@ -629,11 +632,21 @@ export default function Home() {
 
             {/* Right Rail */}
             <div className="space-y-6">
-              <WeeklyDigest />
+              <WeeklyDigestPreview familyId={spaceId} />
               <Upcoming />
             </div>
           </div>
         </main>
+        
+        {/* Onboarding Components */}
+        <OnboardingProgress 
+          profileId={profileId} 
+          familyId={spaceId} 
+        />
+        <FloatingCoachMark 
+          profileId={profileId} 
+          familyId={spaceId} 
+        />
       </div>
     </AuthGate>
   )
