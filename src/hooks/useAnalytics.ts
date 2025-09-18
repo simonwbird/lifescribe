@@ -130,7 +130,12 @@ export type AnalyticsEvent =
   | 'ADMIN_IMPERSONATE_STARTED'
   | 'ADMIN_IMPERSONATE_ENDED'
   | 'ADMIN_IMPERSONATE_TIMEOUT'
-  | 'ADMIN_IMPERSONATE_BLOCKED_WRITE';
+  | 'ADMIN_IMPERSONATE_BLOCKED_WRITE'
+  // Admin family overview events
+  | 'ADMIN_FAMILY_FILTER_APPLIED'
+  | 'ADMIN_ROW_ACTION_CLICKED'
+  | 'ADMIN_FAMILY_VIEW_LOADED'
+  | 'ADMIN_FAMILY_EXPORT_STARTED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

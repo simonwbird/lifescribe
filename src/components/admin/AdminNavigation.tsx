@@ -28,6 +28,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN', 'FAMILY_ADMIN']
   },
   {
+    id: 'families-overview',
+    label: 'Families Overview',
+    href: '/admin/families',
+    icon: Users,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
     id: 'content-media',
     label: 'Content & Media',
     href: '/admin/content',

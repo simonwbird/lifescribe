@@ -57,6 +57,7 @@ import AdminShell from './components/admin/AdminShell'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminPeople from './pages/admin/AdminPeople'
 import AdminContent from './pages/admin/AdminContent'
+import FamilyOverviewTable from './components/admin/FamilyOverviewTable'
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ function AppContent() {
        <Route path="/admin" element={<AuthGate><AdminAuthGuard><AdminShell /></AdminAuthGuard></AuthGate>}>
          <Route index element={<AdminDashboard />} />
          <Route path="people" element={<AdminPeople />} />
+         <Route path="families" element={<FamilyOverviewTable />} />
          <Route path="content" element={<AdminContent />} />
          <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="config" element={<div className="p-8"><h1 className="text-2xl font-bold">Flags & Config</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
