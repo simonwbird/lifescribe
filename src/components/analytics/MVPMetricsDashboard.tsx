@@ -17,6 +17,7 @@ interface ChartData {
   name: string
   value: number
   date?: string
+  [key: string]: any
 }
 
 export default function MVPMetricsDashboard() {
