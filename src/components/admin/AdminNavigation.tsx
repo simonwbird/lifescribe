@@ -56,6 +56,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
+    id: 'nudges',
+    label: 'Nudge Orchestrator',
+    href: '/admin/nudges',
+    icon: TrendingUp,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
     id: 'flags-config',
     label: 'Flags & Config',
     href: '/admin/config',

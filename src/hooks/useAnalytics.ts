@@ -141,7 +141,13 @@ export type AnalyticsEvent =
   | 'ADMIN_FUNNEL_STAGE_CLICKED'
   | 'ADMIN_NUDGE_SENT'
   | 'ADMIN_COHORT_FILTER_APPLIED'
-  | 'ADMIN_ACTIVATION_EXPORT_STARTED';
+  | 'ADMIN_ACTIVATION_EXPORT_STARTED'
+  // Nudge orchestrator events
+  | 'NUDGE_CREATED'
+  | 'NUDGE_SENT'
+  | 'NUDGE_CONVERTED'
+  | 'NUDGE_STATUS_CHANGED'
+  | 'NUDGE_CREATE_STARTED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

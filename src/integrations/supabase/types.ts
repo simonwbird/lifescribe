@@ -859,6 +859,236 @@ export type Database = {
           },
         ]
       }
+      nudge_conversions: {
+        Row: {
+          conversion_data: Json | null
+          conversion_event: string
+          converted_at: string
+          family_id: string | null
+          hours_to_convert: number | null
+          id: string
+          nudge_send_id: string
+          user_id: string
+        }
+        Insert: {
+          conversion_data?: Json | null
+          conversion_event: string
+          converted_at?: string
+          family_id?: string | null
+          hours_to_convert?: number | null
+          id?: string
+          nudge_send_id: string
+          user_id: string
+        }
+        Update: {
+          conversion_data?: Json | null
+          conversion_event?: string
+          converted_at?: string
+          family_id?: string | null
+          hours_to_convert?: number | null
+          id?: string
+          nudge_send_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nudge_conversions_nudge_send_id_fkey"
+            columns: ["nudge_send_id"]
+            isOneToOne: false
+            referencedRelation: "nudge_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nudge_sends: {
+        Row: {
+          channel: Database["public"]["Enums"]["nudge_channel_type"]
+          clicked_at: string | null
+          delivered_at: string | null
+          family_id: string | null
+          id: string
+          nudge_id: string
+          opened_at: string | null
+          send_metadata: Json | null
+          sent_at: string
+          template_id: string | null
+          trigger_data: Json | null
+          user_id: string
+          variant: string | null
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["nudge_channel_type"]
+          clicked_at?: string | null
+          delivered_at?: string | null
+          family_id?: string | null
+          id?: string
+          nudge_id: string
+          opened_at?: string | null
+          send_metadata?: Json | null
+          sent_at?: string
+          template_id?: string | null
+          trigger_data?: Json | null
+          user_id: string
+          variant?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["nudge_channel_type"]
+          clicked_at?: string | null
+          delivered_at?: string | null
+          family_id?: string | null
+          id?: string
+          nudge_id?: string
+          opened_at?: string | null
+          send_metadata?: Json | null
+          sent_at?: string
+          template_id?: string | null
+          trigger_data?: Json | null
+          user_id?: string
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nudge_sends_nudge_id_fkey"
+            columns: ["nudge_id"]
+            isOneToOne: false
+            referencedRelation: "nudges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nudge_sends_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "nudge_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nudge_templates: {
+        Row: {
+          category: string | null
+          channel: Database["public"]["Enums"]["nudge_channel_type"]
+          content: string
+          created_at: string
+          id: string
+          name: string
+          subject: string | null
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          category?: string | null
+          channel: Database["public"]["Enums"]["nudge_channel_type"]
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          subject?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          category?: string | null
+          channel?: Database["public"]["Enums"]["nudge_channel_type"]
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          subject?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      nudges: {
+        Row: {
+          audience_rules: Json | null
+          channel: Database["public"]["Enums"]["nudge_channel_type"]
+          conversion_events: string[] | null
+          conversion_window_hours: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ended_at: string | null
+          family_id: string | null
+          holdout_percentage: number | null
+          id: string
+          is_ab_test: boolean | null
+          name: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["nudge_status"]
+          template_id: string | null
+          throttle_config: Json | null
+          trigger_config: Json | null
+          trigger_type: Database["public"]["Enums"]["nudge_trigger_type"]
+          updated_at: string
+          variant_a_percentage: number | null
+          variant_b_template_id: string | null
+        }
+        Insert: {
+          audience_rules?: Json | null
+          channel: Database["public"]["Enums"]["nudge_channel_type"]
+          conversion_events?: string[] | null
+          conversion_window_hours?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ended_at?: string | null
+          family_id?: string | null
+          holdout_percentage?: number | null
+          id?: string
+          is_ab_test?: boolean | null
+          name: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["nudge_status"]
+          template_id?: string | null
+          throttle_config?: Json | null
+          trigger_config?: Json | null
+          trigger_type: Database["public"]["Enums"]["nudge_trigger_type"]
+          updated_at?: string
+          variant_a_percentage?: number | null
+          variant_b_template_id?: string | null
+        }
+        Update: {
+          audience_rules?: Json | null
+          channel?: Database["public"]["Enums"]["nudge_channel_type"]
+          conversion_events?: string[] | null
+          conversion_window_hours?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ended_at?: string | null
+          family_id?: string | null
+          holdout_percentage?: number | null
+          id?: string
+          is_ab_test?: boolean | null
+          name?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["nudge_status"]
+          template_id?: string | null
+          throttle_config?: Json | null
+          trigger_config?: Json | null
+          trigger_type?: Database["public"]["Enums"]["nudge_trigger_type"]
+          updated_at?: string
+          variant_a_percentage?: number | null
+          variant_b_template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nudges_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "nudge_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nudges_variant_b_template_id_fkey"
+            columns: ["variant_b_template_id"]
+            isOneToOne: false
+            referencedRelation: "nudge_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       people: {
         Row: {
           alt_names: string[] | null
@@ -2746,6 +2976,17 @@ export type Database = {
       address_visibility: "exact" | "street_hidden" | "city_only"
       date_precision: "day" | "month" | "year"
       invite_status: "pending" | "accepted" | "expired"
+      nudge_channel_type: "email" | "sms" | "in_app" | "push"
+      nudge_status: "draft" | "active" | "paused" | "completed"
+      nudge_trigger_type:
+        | "no_memory_24h"
+        | "no_memory_7d"
+        | "no_invite_sent"
+        | "no_digest_enabled"
+        | "inactive_7d"
+        | "inactive_30d"
+        | "first_login"
+        | "memory_milestone"
       occupancy_role:
         | "owner"
         | "tenant"
@@ -2944,6 +3185,18 @@ export const Constants = {
       address_visibility: ["exact", "street_hidden", "city_only"],
       date_precision: ["day", "month", "year"],
       invite_status: ["pending", "accepted", "expired"],
+      nudge_channel_type: ["email", "sms", "in_app", "push"],
+      nudge_status: ["draft", "active", "paused", "completed"],
+      nudge_trigger_type: [
+        "no_memory_24h",
+        "no_memory_7d",
+        "no_invite_sent",
+        "no_digest_enabled",
+        "inactive_7d",
+        "inactive_30d",
+        "first_login",
+        "memory_milestone",
+      ],
       occupancy_role: [
         "owner",
         "tenant",
