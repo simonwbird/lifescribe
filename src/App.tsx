@@ -51,6 +51,11 @@ import InviteLanding from "./pages/InviteLanding";
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import People from './pages/People'
+import AdminAuthGuard from './components/admin/AdminAuthGuard'
+import AdminShell from './components/admin/AdminShell'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminPeople from './pages/admin/AdminPeople'
+import AdminContent from './pages/admin/AdminContent'
 
 const queryClient = new QueryClient();
 
@@ -109,6 +114,19 @@ function AppContent() {
        <Route path="/media" element={<AuthGate><Media /></AuthGate>} />
        <Route path="/media/albums" element={<AuthGate><Media /></AuthGate>} />
        <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
+       
+       {/* Admin Routes */}
+       <Route path="/admin" element={<AuthGate><AdminAuthGuard><AdminShell /></AdminAuthGuard></AuthGate>}>
+         <Route index element={<AdminDashboard />} />
+         <Route path="people" element={<AdminPeople />} />
+         <Route path="content" element={<AdminContent />} />
+         <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+         <Route path="config" element={<div className="p-8"><h1 className="text-2xl font-bold">Flags & Config</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+         <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+         <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+         <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+       </Route>
+       
        <Route path="*" element={<NotFound />} />
     </Routes>
   )
