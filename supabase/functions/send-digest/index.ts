@@ -138,7 +138,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'LifeScribe Weekly Digest <digest@send.updates.lifescribe.family>',
+          from: 'LifeScribe Weekly Digest <updates@updates.lifescribe.family>',
           to: [recipient.email],
           subject: `${family.name} Weekly Digest`,
           html: emailContent,
