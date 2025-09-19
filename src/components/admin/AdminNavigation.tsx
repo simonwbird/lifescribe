@@ -70,6 +70,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
+    id: 'media-pipeline',
+    label: 'Media Pipeline',
+    href: '/admin/media-pipeline',
+    icon: Activity,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
     id: 'flags-config',
     label: 'Flags & Config',
     href: '/admin/config',

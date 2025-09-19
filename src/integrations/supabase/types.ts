@@ -742,6 +742,158 @@ export type Database = {
           },
         ]
       }
+      media_pipeline_jobs: {
+        Row: {
+          completed_at: string | null
+          cost_usd: number | null
+          created_at: string
+          error_details: Json | null
+          error_message: string | null
+          family_id: string
+          id: string
+          media_id: string
+          processing_time_ms: number | null
+          raw_output: Json | null
+          retry_count: number | null
+          stage: Database["public"]["Enums"]["media_pipeline_stage"]
+          started_at: string | null
+          status: Database["public"]["Enums"]["media_job_status"]
+          updated_at: string
+          vendor_used: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          error_details?: Json | null
+          error_message?: string | null
+          family_id: string
+          id?: string
+          media_id: string
+          processing_time_ms?: number | null
+          raw_output?: Json | null
+          retry_count?: number | null
+          stage: Database["public"]["Enums"]["media_pipeline_stage"]
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["media_job_status"]
+          updated_at?: string
+          vendor_used?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          error_details?: Json | null
+          error_message?: string | null
+          family_id?: string
+          id?: string
+          media_id?: string
+          processing_time_ms?: number | null
+          raw_output?: Json | null
+          retry_count?: number | null
+          stage?: Database["public"]["Enums"]["media_pipeline_stage"]
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["media_job_status"]
+          updated_at?: string
+          vendor_used?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_pipeline_jobs_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_pipeline_metrics: {
+        Row: {
+          avg_processing_time_ms: number | null
+          created_at: string
+          date: string
+          failed_jobs: number | null
+          id: string
+          p95_processing_time_ms: number | null
+          stage: Database["public"]["Enums"]["media_pipeline_stage"]
+          successful_jobs: number | null
+          total_cost_usd: number | null
+          total_jobs: number | null
+          vendor: string | null
+        }
+        Insert: {
+          avg_processing_time_ms?: number | null
+          created_at?: string
+          date?: string
+          failed_jobs?: number | null
+          id?: string
+          p95_processing_time_ms?: number | null
+          stage: Database["public"]["Enums"]["media_pipeline_stage"]
+          successful_jobs?: number | null
+          total_cost_usd?: number | null
+          total_jobs?: number | null
+          vendor?: string | null
+        }
+        Update: {
+          avg_processing_time_ms?: number | null
+          created_at?: string
+          date?: string
+          failed_jobs?: number | null
+          id?: string
+          p95_processing_time_ms?: number | null
+          stage?: Database["public"]["Enums"]["media_pipeline_stage"]
+          successful_jobs?: number | null
+          total_cost_usd?: number | null
+          total_jobs?: number | null
+          vendor?: string | null
+        }
+        Relationships: []
+      }
+      media_vendor_status: {
+        Row: {
+          avg_response_time_ms: number | null
+          cost_per_unit: number | null
+          created_at: string
+          error_rate_24h: number | null
+          health_status: string | null
+          id: string
+          is_active: boolean | null
+          last_health_check: string | null
+          unit_type: string | null
+          updated_at: string
+          vendor_name: string
+          vendor_type: Database["public"]["Enums"]["media_vendor_type"]
+        }
+        Insert: {
+          avg_response_time_ms?: number | null
+          cost_per_unit?: number | null
+          created_at?: string
+          error_rate_24h?: number | null
+          health_status?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_health_check?: string | null
+          unit_type?: string | null
+          updated_at?: string
+          vendor_name: string
+          vendor_type: Database["public"]["Enums"]["media_vendor_type"]
+        }
+        Update: {
+          avg_response_time_ms?: number | null
+          cost_per_unit?: number | null
+          created_at?: string
+          error_rate_24h?: number | null
+          health_status?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_health_check?: string | null
+          unit_type?: string | null
+          updated_at?: string
+          vendor_name?: string
+          vendor_type?: Database["public"]["Enums"]["media_vendor_type"]
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           family_id: string
@@ -3103,6 +3255,14 @@ export type Database = {
       address_visibility: "exact" | "street_hidden" | "city_only"
       date_precision: "day" | "month" | "year"
       invite_status: "pending" | "accepted" | "expired"
+      media_job_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "failed"
+        | "retrying"
+      media_pipeline_stage: "upload" | "virus_scan" | "ocr" | "asr" | "index"
+      media_vendor_type: "transcription" | "ocr" | "virus_scan" | "storage"
       moderation_action_type:
         | "hide"
         | "blur"
@@ -3327,6 +3487,15 @@ export const Constants = {
       address_visibility: ["exact", "street_hidden", "city_only"],
       date_precision: ["day", "month", "year"],
       invite_status: ["pending", "accepted", "expired"],
+      media_job_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "failed",
+        "retrying",
+      ],
+      media_pipeline_stage: ["upload", "virus_scan", "ocr", "asr", "index"],
+      media_vendor_type: ["transcription", "ocr", "virus_scan", "storage"],
       moderation_action_type: [
         "hide",
         "blur",

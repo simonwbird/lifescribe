@@ -61,6 +61,7 @@ import FamilyOverviewTable from './components/admin/FamilyOverviewTable'
 import ActivationDashboard from './pages/admin/ActivationDashboard'
 import NudgeOrchestrator from './components/admin/NudgeOrchestrator';
 import { ModerationQueue } from './components/admin/ModerationQueue';
+import { MediaPipelineMonitor } from './components/admin/MediaPipelineMonitor';
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,7 @@ function AppContent() {
           <Route path="activation" element={<ActivationDashboard />} />
           <Route path="nudges" element={<NudgeOrchestrator />} />
           <Route path="moderation" element={<ModerationQueue />} />
+          <Route path="media-pipeline" element={<MediaPipelineMonitor />} />
          <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="config" element={<div className="p-8"><h1 className="text-2xl font-bold">Flags & Config</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />

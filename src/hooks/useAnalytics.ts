@@ -150,7 +150,10 @@ export type AnalyticsEvent =
   | 'NUDGE_CREATE_STARTED'
   // Moderation events
   | 'FLAG_RESOLVED'
-  | 'MOD_ACTION_APPLIED';
+  | 'MOD_ACTION_APPLIED'
+  // Media pipeline events
+  | 'MEDIA_JOB_RETRIED'
+  | 'MEDIA_VENDOR_SWITCHED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'
