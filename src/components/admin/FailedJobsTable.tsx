@@ -51,7 +51,7 @@ export function FailedJobsTable() {
       job.media?.file_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.error_message?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStage = !stageFilter || job.stage === stageFilter;
+    const matchesStage = !stageFilter || stageFilter === 'all' || job.stage === stageFilter;
     
     return matchesSearch && matchesStage;
   });
@@ -107,7 +107,7 @@ export function FailedJobsTable() {
                 <SelectValue placeholder="Filter by stage" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Stages</SelectItem>
+                <SelectItem value="all">All Stages</SelectItem>
                 <SelectItem value="upload">Upload</SelectItem>
                 <SelectItem value="virus_scan">Virus Scan</SelectItem>
                 <SelectItem value="ocr">OCR</SelectItem>
