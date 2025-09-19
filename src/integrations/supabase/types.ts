@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access_log: {
+        Row: {
+          admin_id: string
+          family_id: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          last_activity_at: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          role: string
+        }
+        Insert: {
+          admin_id: string
+          family_id?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_activity_at?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role: string
+        }
+        Update: {
+          admin_id?: string
+          family_id?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_activity_at?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_access_log_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -104,6 +154,113 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_hash_chain: {
+        Row: {
+          chain_hash: string
+          created_at: string
+          end_sequence: number
+          id: string
+          start_sequence: number
+          verified_at: string | null
+        }
+        Insert: {
+          chain_hash: string
+          created_at?: string
+          end_sequence: number
+          id?: string
+          start_sequence: number
+          verified_at?: string | null
+        }
+        Update: {
+          chain_hash?: string
+          created_at?: string
+          end_sequence?: number
+          id?: string
+          start_sequence?: number
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: Database["public"]["Enums"]["audit_action_type"]
+          actor_id: string | null
+          actor_type: string
+          after_values: Json | null
+          before_values: Json | null
+          created_at: string
+          current_hash: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          family_id: string | null
+          hash_algorithm: string
+          id: string
+          ip_address: unknown | null
+          is_tampered: boolean | null
+          previous_hash: string | null
+          risk_score: number | null
+          sequence_number: number
+          session_id: string | null
+          user_agent: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["audit_action_type"]
+          actor_id?: string | null
+          actor_type?: string
+          after_values?: Json | null
+          before_values?: Json | null
+          created_at?: string
+          current_hash: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          family_id?: string | null
+          hash_algorithm?: string
+          id?: string
+          ip_address?: unknown | null
+          is_tampered?: boolean | null
+          previous_hash?: string | null
+          risk_score?: number | null
+          sequence_number?: number
+          session_id?: string | null
+          user_agent?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["audit_action_type"]
+          actor_id?: string | null
+          actor_type?: string
+          after_values?: Json | null
+          before_values?: Json | null
+          created_at?: string
+          current_hash?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          family_id?: string | null
+          hash_algorithm?: string
+          id?: string
+          ip_address?: unknown | null
+          is_tampered?: boolean | null
+          previous_hash?: string | null
+          risk_score?: number | null
+          sequence_number?: number
+          session_id?: string | null
+          user_agent?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
             referencedColumns: ["id"]
           },
         ]
@@ -3681,6 +3838,18 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_audit_hash: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_details: Json
+          p_entity_id: string
+          p_entity_type: string
+          p_previous_hash: string
+          p_sequence_number: number
+        }
+        Returns: string
+      }
       check_digest_unlock_status: {
         Args: { p_family_id: string }
         Returns: boolean
@@ -3708,6 +3877,24 @@ export type Database = {
         Args: { family_id: string; user_id: string }
         Returns: boolean
       }
+      log_audit_event: {
+        Args: {
+          p_action?: Database["public"]["Enums"]["audit_action_type"]
+          p_actor_id?: string
+          p_actor_type?: string
+          p_after_values?: Json
+          p_before_values?: Json
+          p_details?: Json
+          p_entity_id?: string
+          p_entity_type?: string
+          p_family_id?: string
+          p_ip_address?: unknown
+          p_risk_score?: number
+          p_session_id?: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       log_content_change: {
         Args: {
           p_action_type: string
@@ -3734,9 +3921,76 @@ export type Database = {
         }
         Returns: undefined
       }
+      revoke_admin_access: {
+        Args: {
+          p_admin_id: string
+          p_family_id: string
+          p_reason?: string
+          p_revoked_by: string
+          p_role: string
+        }
+        Returns: boolean
+      }
+      track_admin_access: {
+        Args: {
+          p_admin_id: string
+          p_family_id: string
+          p_granted_by?: string
+          p_role: string
+        }
+        Returns: string
+      }
+      verify_audit_integrity: {
+        Args: { p_end_sequence?: number; p_start_sequence?: number }
+        Returns: Json
+      }
     }
     Enums: {
       address_visibility: "exact" | "street_hidden" | "city_only"
+      audit_action_type:
+        | "LOGIN"
+        | "LOGOUT"
+        | "SIGNUP"
+        | "PASSWORD_CHANGE"
+        | "EMAIL_CHANGE"
+        | "STORY_CREATE"
+        | "STORY_UPDATE"
+        | "STORY_DELETE"
+        | "STORY_VIEW"
+        | "COMMENT_CREATE"
+        | "COMMENT_UPDATE"
+        | "COMMENT_DELETE"
+        | "REACTION_CREATE"
+        | "REACTION_DELETE"
+        | "MEDIA_UPLOAD"
+        | "MEDIA_DELETE"
+        | "MEDIA_VIEW"
+        | "FAMILY_CREATE"
+        | "FAMILY_UPDATE"
+        | "FAMILY_DELETE"
+        | "MEMBER_INVITE"
+        | "MEMBER_JOIN"
+        | "MEMBER_REMOVE"
+        | "MEMBER_ROLE_CHANGE"
+        | "ADMIN_ACCESS_GRANTED"
+        | "ADMIN_ACCESS_REVOKED"
+        | "ADMIN_LOGIN"
+        | "EXPORT_REQUESTED"
+        | "EXPORT_COMPLETED"
+        | "RTBF_REQUESTED"
+        | "RTBF_EXECUTED"
+        | "SETTINGS_UPDATE"
+        | "PRIVACY_CHANGE"
+        | "PROFILE_UPDATE"
+        | "RECIPE_CREATE"
+        | "RECIPE_UPDATE"
+        | "RECIPE_DELETE"
+        | "PROPERTY_CREATE"
+        | "PROPERTY_UPDATE"
+        | "PROPERTY_DELETE"
+        | "PET_CREATE"
+        | "PET_UPDATE"
+        | "PET_DELETE"
       date_precision: "day" | "month" | "year"
       feature_flag_status: "draft" | "active" | "inactive" | "archived"
       invite_status: "pending" | "accepted" | "expired"
@@ -3972,6 +4226,51 @@ export const Constants = {
   public: {
     Enums: {
       address_visibility: ["exact", "street_hidden", "city_only"],
+      audit_action_type: [
+        "LOGIN",
+        "LOGOUT",
+        "SIGNUP",
+        "PASSWORD_CHANGE",
+        "EMAIL_CHANGE",
+        "STORY_CREATE",
+        "STORY_UPDATE",
+        "STORY_DELETE",
+        "STORY_VIEW",
+        "COMMENT_CREATE",
+        "COMMENT_UPDATE",
+        "COMMENT_DELETE",
+        "REACTION_CREATE",
+        "REACTION_DELETE",
+        "MEDIA_UPLOAD",
+        "MEDIA_DELETE",
+        "MEDIA_VIEW",
+        "FAMILY_CREATE",
+        "FAMILY_UPDATE",
+        "FAMILY_DELETE",
+        "MEMBER_INVITE",
+        "MEMBER_JOIN",
+        "MEMBER_REMOVE",
+        "MEMBER_ROLE_CHANGE",
+        "ADMIN_ACCESS_GRANTED",
+        "ADMIN_ACCESS_REVOKED",
+        "ADMIN_LOGIN",
+        "EXPORT_REQUESTED",
+        "EXPORT_COMPLETED",
+        "RTBF_REQUESTED",
+        "RTBF_EXECUTED",
+        "SETTINGS_UPDATE",
+        "PRIVACY_CHANGE",
+        "PROFILE_UPDATE",
+        "RECIPE_CREATE",
+        "RECIPE_UPDATE",
+        "RECIPE_DELETE",
+        "PROPERTY_CREATE",
+        "PROPERTY_UPDATE",
+        "PROPERTY_DELETE",
+        "PET_CREATE",
+        "PET_UPDATE",
+        "PET_DELETE",
+      ],
       date_precision: ["day", "month", "year"],
       feature_flag_status: ["draft", "active", "inactive", "archived"],
       invite_status: ["pending", "accepted", "expired"],
