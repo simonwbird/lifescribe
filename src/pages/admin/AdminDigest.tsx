@@ -163,6 +163,15 @@ export default function AdminDigest() {
             Manage weekly digest settings across all families
           </p>
         </div>
+        <Button 
+          onClick={loadFamilies} 
+          variant="outline"
+          disabled={isLoading}
+          className="gap-2"
+        >
+          <Search className="h-4 w-4" />
+          {isLoading ? 'Loading...' : 'Refresh Data'}
+        </Button>
       </div>
 
       {/* Filters */}
