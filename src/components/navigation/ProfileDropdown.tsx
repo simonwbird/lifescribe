@@ -149,6 +149,26 @@ export default function ProfileDropdown() {
 
   const handleProfileOpen = () => {
     track('profile_open')
+    
+    // Refresh profile data when dropdown opens to get latest settings
+    const refreshProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*, default_space_id, settings')
+          .eq('id', user.id)
+          .single()
+        
+        if (profileData) {
+          setProfile(profileData)
+          const settings = (profileData?.settings as any) || {}
+          setIsSuperAdmin(settings.role === 'super_admin')
+        }
+      }
+    }
+    
+    refreshProfile()
     setOpen(true)
   }
 
