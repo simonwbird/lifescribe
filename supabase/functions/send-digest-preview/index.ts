@@ -326,19 +326,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send preview email
     const emailResponse = await resend.emails.send({
-      from: "LifeScribe Weekly Digest <digest@lifescribe.family>",
+      from: "LifeScribe Weekly Digest <onboarding@resend.dev>", // Use verified domain
       to: [email],
       subject: `📨 ${family_name || "Your Family"} Weekly Digest Preview`,
       html: digestHTML,
     });
 
-    console.log("Digest preview sent successfully:", emailResponse);
+    console.log("Resend API response:", emailResponse);
+
+    // Check if there was an error in the Resend response
+    if (emailResponse.error) {
+      console.error("Resend error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: emailResponse.error.message || "Failed to send email",
+          details: emailResponse.error
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Digest preview sent successfully!",
-        email_id: emailResponse.id
+        email_id: emailResponse.data?.id
       }),
       {
         status: 200,
