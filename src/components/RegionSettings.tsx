@@ -20,9 +20,16 @@ import { supabase } from '@/lib/supabase'
 interface RegionSettingsProps {
   currentSettings?: UserLocale
   onUpdate?: (settings: UserLocale) => void
+  onSettingsUpdated?: (settings: UserLocale) => void
+  showAsCard?: boolean
 }
 
-export default function RegionSettings({ currentSettings, onUpdate }: RegionSettingsProps) {
+export default function RegionSettings({ 
+  currentSettings, 
+  onUpdate, 
+  onSettingsUpdated, 
+  showAsCard = true 
+}: RegionSettingsProps) {
   const [settings, setSettings] = useState<UserLocale>({
     locale: 'en-US',
     timezone: 'UTC',
@@ -68,6 +75,7 @@ export default function RegionSettings({ currentSettings, onUpdate }: RegionSett
       })
 
       onUpdate?.(settings)
+      onSettingsUpdated?.(settings)
     } catch (error) {
       console.error('Failed to save region settings:', error)
       toast({

@@ -2431,6 +2431,8 @@ export type Database = {
           full_name: string | null
           id: string
           locale: string | null
+          region_confirmed_at: string | null
+          region_inferred_source: string | null
           settings: Json | null
           simple_mode: boolean | null
           timezone: string | null
@@ -2447,6 +2449,8 @@ export type Database = {
           full_name?: string | null
           id: string
           locale?: string | null
+          region_confirmed_at?: string | null
+          region_inferred_source?: string | null
           settings?: Json | null
           simple_mode?: boolean | null
           timezone?: string | null
@@ -2463,6 +2467,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           locale?: string | null
+          region_confirmed_at?: string | null
+          region_inferred_source?: string | null
           settings?: Json | null
           simple_mode?: boolean | null
           timezone?: string | null

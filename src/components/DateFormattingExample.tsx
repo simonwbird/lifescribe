@@ -257,12 +257,6 @@ export default function DateFormattingExample() {
 
       {/* Migration Demo */}
       <DateMigrationDemo />
-      
-      {/* QA Matrix Demo */}
-      <QAMatrixDemo />
-      
-      {/* QA Matrix Demo */}
-      <QAMatrixDemo />
     </div>
   )
 }
