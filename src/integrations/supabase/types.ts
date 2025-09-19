@@ -484,6 +484,177 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flag_analytics: {
+        Row: {
+          created_at: string
+          evaluation_result: boolean | null
+          event_type: string
+          family_id: string | null
+          flag_id: string
+          id: string
+          targeting_reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          evaluation_result?: boolean | null
+          event_type: string
+          family_id?: string | null
+          flag_id: string
+          id?: string
+          targeting_reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          evaluation_result?: boolean | null
+          event_type?: string
+          family_id?: string | null
+          flag_id?: string
+          id?: string
+          targeting_reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_analytics_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_flag_targeting: {
+        Row: {
+          created_at: string
+          flag_id: string
+          id: string
+          is_enabled: boolean | null
+          rollout_percentage: number | null
+          targeting_type: Database["public"]["Enums"]["targeting_type"]
+          targeting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          flag_id: string
+          id?: string
+          is_enabled?: boolean | null
+          rollout_percentage?: number | null
+          targeting_type: Database["public"]["Enums"]["targeting_type"]
+          targeting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          flag_id?: string
+          id?: string
+          is_enabled?: boolean | null
+          rollout_percentage?: number | null
+          targeting_type?: Database["public"]["Enums"]["targeting_type"]
+          targeting_value?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_targeting_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_flag_user_overrides: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          flag_id: string
+          id: string
+          is_enabled: boolean
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          flag_id: string
+          id?: string
+          is_enabled: boolean
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          flag_id?: string
+          id?: string
+          is_enabled?: boolean
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_user_overrides_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_kill_switch: boolean | null
+          key: string
+          last_changed_at: string | null
+          last_changed_by: string | null
+          name: string
+          rollout_percentage: number | null
+          rollout_type: Database["public"]["Enums"]["rollout_type"]
+          status: Database["public"]["Enums"]["feature_flag_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_kill_switch?: boolean | null
+          key: string
+          last_changed_at?: string | null
+          last_changed_by?: string | null
+          name: string
+          rollout_percentage?: number | null
+          rollout_type?: Database["public"]["Enums"]["rollout_type"]
+          status?: Database["public"]["Enums"]["feature_flag_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_kill_switch?: boolean | null
+          key?: string
+          last_changed_at?: string | null
+          last_changed_by?: string | null
+          name?: string
+          rollout_percentage?: number | null
+          rollout_type?: Database["public"]["Enums"]["rollout_type"]
+          status?: Database["public"]["Enums"]["feature_flag_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gedcom_people_stage: {
         Row: {
           birth_date: string | null
@@ -2709,6 +2880,54 @@ export type Database = {
           },
         ]
       }
+      remote_config: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_value: Json
+          default_value: Json
+          description: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          last_changed_at: string | null
+          last_changed_by: string | null
+          name: string
+          updated_at: string
+          value_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_value: Json
+          default_value: Json
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: string
+          last_changed_at?: string | null
+          last_changed_by?: string | null
+          name: string
+          updated_at?: string
+          value_type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_value?: Json
+          default_value?: Json
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: string
+          last_changed_at?: string | null
+          last_changed_by?: string | null
+          name?: string
+          updated_at?: string
+          value_type?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -3466,6 +3685,17 @@ export type Database = {
         Args: { p_family_id: string }
         Returns: boolean
       }
+      evaluate_feature_flag: {
+        Args: {
+          p_family_id?: string
+          p_flag_key: string
+          p_user_cohort?: string
+          p_user_country?: string
+          p_user_id?: string
+          p_user_role?: string
+        }
+        Returns: Json
+      }
       generate_digest_preview: {
         Args: { p_family_id: string; p_preview_date?: string }
         Returns: Json
@@ -3508,6 +3738,7 @@ export type Database = {
     Enums: {
       address_visibility: "exact" | "street_hidden" | "city_only"
       date_precision: "day" | "month" | "year"
+      feature_flag_status: "draft" | "active" | "inactive" | "archived"
       invite_status: "pending" | "accepted" | "expired"
       media_job_status:
         | "pending"
@@ -3610,6 +3841,8 @@ export type Database = {
         | "other"
       relationship_type: "parent" | "spouse" | "divorced" | "unmarried"
       role_type: "admin" | "member" | "guest"
+      rollout_type: "global" | "cohort" | "family" | "user"
+      targeting_type: "role" | "country" | "cohort" | "family_id" | "user_id"
       visit_occasion: "holiday" | "celebration" | "reunion" | "other"
     }
     CompositeTypes: {
@@ -3740,6 +3973,7 @@ export const Constants = {
     Enums: {
       address_visibility: ["exact", "street_hidden", "city_only"],
       date_precision: ["day", "month", "year"],
+      feature_flag_status: ["draft", "active", "inactive", "archived"],
       invite_status: ["pending", "accepted", "expired"],
       media_job_status: [
         "pending",
@@ -3850,6 +4084,8 @@ export const Constants = {
       ],
       relationship_type: ["parent", "spouse", "divorced", "unmarried"],
       role_type: ["admin", "member", "guest"],
+      rollout_type: ["global", "cohort", "family", "user"],
+      targeting_type: ["role", "country", "cohort", "family_id", "user_id"],
       visit_occasion: ["holiday", "celebration", "reunion", "other"],
     },
   },

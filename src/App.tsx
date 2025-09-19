@@ -64,6 +64,7 @@ import { ModerationQueue } from './components/admin/ModerationQueue';
 import { MediaPipelineMonitor } from './components/admin/MediaPipelineMonitor';
 import { ContentTimelineAdmin } from './components/admin/ContentTimelineAdmin';
 import AdminDigest from './pages/admin/AdminDigest';
+import AdminFeatureFlags from '@/pages/admin/AdminFeatureFlags'
 
 const queryClient = new QueryClient();
 
@@ -128,6 +129,7 @@ function AppContent() {
          <Route index element={<AdminDashboard />} />
          <Route path="people" element={<AdminPeople />} />
           <Route path="families" element={<FamilyOverviewTable />} />
+           <Route path="feature-flags" element={<AdminFeatureFlags />} />
            <Route path="digest" element={<AdminDigest />} />
            <Route path="content" element={<AdminContent />} />
           <Route path="activation" element={<ActivationDashboard />} />

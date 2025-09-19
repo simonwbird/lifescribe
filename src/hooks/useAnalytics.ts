@@ -158,7 +158,12 @@ export type AnalyticsEvent =
   | 'MEDIA_JOB_RETRIED'
   | 'MEDIA_VENDOR_SWITCHED'
   // Content admin events
-  | 'CONTENT_BULK_EDIT_APPLIED';
+  | 'CONTENT_BULK_EDIT_APPLIED'
+  // Feature flags events
+  | 'flag_created'
+  | 'flag_targeting_updated'
+  | 'flag_enabled'
+  | 'flag_disabled';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

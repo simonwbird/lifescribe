@@ -6,7 +6,8 @@ import {
   Settings, 
   Puzzle, 
   Activity, 
-  Shield 
+  Shield,
+  Flag
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -40,6 +41,13 @@ const adminNavItems: AdminNavItem[] = [
     href: '/admin/content',
     icon: FileText,
     roles: ['SUPER_ADMIN', 'ORG_ADMIN', 'FAMILY_ADMIN']
+  },
+  {
+    id: 'feature-flags',
+    label: 'Feature Flags',
+    href: '/admin/feature-flags',
+    icon: Flag,
+    roles: ['SUPER_ADMIN']
   },
   {
     id: 'digest',
