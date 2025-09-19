@@ -326,7 +326,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send preview email
     const emailResponse = await resend.emails.send({
-      from: "LifeScribe Weekly Digest <onboarding@resend.dev>", // Use verified domain
+      from: "LifeScribe Weekly Digest <digest@send.updates.lifescribe.family>", // Use custom domain
       to: [email],
       subject: `📨 ${family_name || "Your Family"} Weekly Digest Preview`,
       html: digestHTML,
