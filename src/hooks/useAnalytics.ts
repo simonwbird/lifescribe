@@ -153,7 +153,9 @@ export type AnalyticsEvent =
   | 'MOD_ACTION_APPLIED'
   // Media pipeline events
   | 'MEDIA_JOB_RETRIED'
-  | 'MEDIA_VENDOR_SWITCHED';
+  | 'MEDIA_VENDOR_SWITCHED'
+  // Content admin events
+  | 'CONTENT_BULK_EDIT_APPLIED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

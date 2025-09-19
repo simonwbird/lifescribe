@@ -77,6 +77,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
+    id: 'content-admin',
+    label: 'Content & Timeline',
+    href: '/admin/content',
+    icon: FileText,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
     id: 'flags-config',
     label: 'Flags & Config',
     href: '/admin/config',

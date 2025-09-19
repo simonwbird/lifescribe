@@ -170,6 +170,147 @@ export type Database = {
           },
         ]
       }
+      content_audit_log: {
+        Row: {
+          action_type: string
+          ai_suggested: boolean | null
+          batch_id: string | null
+          change_reason: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          editor_id: string
+          family_id: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+        }
+        Insert: {
+          action_type: string
+          ai_suggested?: boolean | null
+          batch_id?: string | null
+          change_reason?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          editor_id: string
+          family_id: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+        }
+        Update: {
+          action_type?: string
+          ai_suggested?: boolean | null
+          batch_id?: string | null
+          change_reason?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          editor_id?: string
+          family_id?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+        }
+        Relationships: []
+      }
+      content_batch_operations: {
+        Row: {
+          completed_count: number | null
+          created_at: string
+          error_details: Json | null
+          family_id: string
+          id: string
+          initiated_by: string
+          operation_data: Json | null
+          operation_type: string
+          status: string | null
+          target_content_ids: string[]
+          total_count: number
+          updated_at: string
+        }
+        Insert: {
+          completed_count?: number | null
+          created_at?: string
+          error_details?: Json | null
+          family_id: string
+          id?: string
+          initiated_by: string
+          operation_data?: Json | null
+          operation_type: string
+          status?: string | null
+          target_content_ids: string[]
+          total_count: number
+          updated_at?: string
+        }
+        Update: {
+          completed_count?: number | null
+          created_at?: string
+          error_details?: Json | null
+          family_id?: string
+          id?: string
+          initiated_by?: string
+          operation_data?: Json | null
+          operation_type?: string
+          status?: string | null
+          target_content_ids?: string[]
+          total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_suggestions: {
+        Row: {
+          confidence_score: number | null
+          content_id: string
+          content_type: string
+          created_at: string
+          created_by_ai: string | null
+          family_id: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_data: Json | null
+          status: string | null
+          suggested_value: Json
+          suggestion_type: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          created_by_ai?: string | null
+          family_id: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_data?: Json | null
+          status?: string | null
+          suggested_value: Json
+          suggestion_type: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          created_by_ai?: string | null
+          family_id?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_data?: Json | null
+          status?: string | null
+          suggested_value?: Json
+          suggestion_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       face_tags: {
         Row: {
           created_at: string
@@ -3238,6 +3379,21 @@ export type Database = {
       is_family_admin: {
         Args: { family_id: string; user_id: string }
         Returns: boolean
+      }
+      log_content_change: {
+        Args: {
+          p_action_type: string
+          p_ai_suggested?: boolean
+          p_batch_id?: string
+          p_change_reason?: string
+          p_content_id: string
+          p_content_type: string
+          p_editor_id: string
+          p_family_id: string
+          p_new_values?: Json
+          p_old_values?: Json
+        }
+        Returns: string
       }
       log_security_event: {
         Args: {
