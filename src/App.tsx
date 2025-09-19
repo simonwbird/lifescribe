@@ -52,6 +52,7 @@ import InviteLanding from "./pages/InviteLanding";
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import People from './pages/People'
+import DateFormattingExamplePage from './pages/DateFormattingExample'
 import AdminAuthGuard from './components/admin/AdminAuthGuard'
 import AdminShell from './components/admin/AdminShell'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -123,9 +124,10 @@ function AppContent() {
        <Route path="/capture" element={<AuthGate><Capture /></AuthGate>} />
        <Route path="/media" element={<AuthGate><Media /></AuthGate>} />
        <Route path="/media/albums" element={<AuthGate><Media /></AuthGate>} />
-       <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
-       
-       {/* Admin Routes */}
+        <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
+        <Route path="/date-formatting-example" element={<DateFormattingExamplePage />} />
+        
+        {/* Admin Routes */}
        <Route path="/admin" element={<AuthGate><AdminAuthGuard><AdminShell /></AdminAuthGuard></AuthGate>}>
          <Route index element={<AdminDashboard />} />
          <Route path="people" element={<AdminPeople />} />

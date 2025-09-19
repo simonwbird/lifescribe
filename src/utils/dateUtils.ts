@@ -1,7 +1,14 @@
 /**
- * Utility functions for date calculations and formatting
+ * DEPRECATED: Legacy date utilities - use @/utils/date.ts instead
+ * These functions remain for backward compatibility during migration
+ * TODO: Remove after all components migrated to new centralized utilities
  */
 
+import { formatForUser, getCurrentUserRegion, type RegionPrefs } from './date'
+
+/**
+ * @deprecated Use computeAge from @/utils/personUtils.ts or formatForUser with 'relative' instead
+ */
 export const calculateAge = (birthDate: string | null, deathDate: string | null, isLiving: boolean) => {
   if (!birthDate) return null
   
@@ -47,24 +54,23 @@ export const isLeapYear = (year: number) => {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
 }
 
+/**
+ * @deprecated Use formatForUser(birthDate, 'dateOnly', userRegion) instead
+ * NEW: Also supports relative formatting for countdowns
+ */
 export const formatUpcoming = (birthDate: string | null, isLiving: boolean) => {
   if (!birthDate || !isLiving) return null
   
   const days = calculateDaysUntilBirthday(birthDate)
   if (days === null) return null
   
-  const birth = new Date(birthDate)
-  const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ]
+  // NEW: Use centralized formatting for consistent locale support
+  const userRegion = getCurrentUserRegion()
+  const formattedDate = formatForUser(birthDate, 'dateOnly', userRegion)
   
-  const month = monthNames[birth.getMonth()]
-  const day = birth.getDate()
-  
-  if (days === 0) return `${month} ${day} • Today!`
-  if (days === 1) return `${month} ${day} • Tomorrow`
-  return `${month} ${day} • in ${days}d`
+  if (days === 0) return `${formattedDate} • Today!`
+  if (days === 1) return `${formattedDate} • Tomorrow`
+  return `${formattedDate} • in ${days}d`
 }
 
 export const computeAge = (birthDate: string | null, referenceDate?: Date, deathDate?: string | null) => {
