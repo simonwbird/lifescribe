@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "codemod:date-dry-run": "tsx scripts/codemod-date-formatting.ts",
+    "codemod:date-apply": "tsx scripts/codemod-date-formatting.ts --fix",
+    "lint:date-formatting": "eslint --config .eslintrc.codemod.js src/**/*.{ts,tsx}",
+    "lint:date-fix": "eslint --config .eslintrc.codemod.js --fix src/**/*.{ts,tsx}",
+    "enforce-date-formatting": "npm run lint:date-formatting && echo '✅ All date formatting follows centralized patterns'"
+  }
+}

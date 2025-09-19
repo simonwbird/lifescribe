@@ -1,0 +1,69 @@
+name: Enforce Centralized Date Formatting
+
+on:
+  pull_request:
+    paths:
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+  push:
+    branches: [main, develop]
+
+jobs:
+  check-date-formatting:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Check for ad-hoc date formatting
+      run: |
+        echo "🔍 Checking for ad-hoc date formatting violations..."
+        npm run lint:date-formatting
+        
+    - name: Report violations
+      if: failure()
+      run: |
+        echo "❌ Ad-hoc date formatting detected!"
+        echo ""
+        echo "Please use the centralized formatForUser utility instead:"
+        echo "  formatForUser(dateValue, 'dateOnly', userRegion)    // birthdays, anniversaries"
+        echo "  formatForUser(dateValue, 'datetime', userRegion)    // timestamps"  
+        echo "  formatForUser(dateValue, 'relative', userRegion)    // time ago"
+        echo ""
+        echo "Run the codemod to fix automatically:"
+        echo "  npm run codemod:date-apply"
+        echo ""
+        echo "Or fix manually and run:"
+        echo "  npm run lint:date-fix"
+        exit 1
+        
+    - name: Verify date utilities are imported
+      run: |
+        echo "✅ Checking that formatForUser is properly imported..."
+        # Check if files using formatForUser have the import
+        grep -r "formatForUser" src/ --include="*.tsx" --include="*.ts" | \
+        cut -d: -f1 | sort -u | \
+        while read file; do
+          if ! grep -q "from '@/utils/date'" "$file"; then
+            echo "❌ $file uses formatForUser but missing import"
+            echo "Add: import { formatForUser, getCurrentUserRegion } from '@/utils/date'"
+            exit 1
+          fi
+        done
+        echo "✅ All formatForUser imports are correct"
+        
+    - name: Success
+      run: |
+        echo "✅ All date formatting follows centralized patterns!"
+        echo "✅ No ad-hoc toLocaleDateString, formatDistanceToNow, etc. found"
+        echo "✅ Consistent user region handling detected"
