@@ -311,6 +311,69 @@ export type Database = {
         }
         Relationships: []
       }
+      digest_content_cache: {
+        Row: {
+          content_snapshot: Json
+          created_by: string | null
+          digest_week: string
+          expires_at: string
+          family_id: string
+          generated_at: string
+          id: string
+        }
+        Insert: {
+          content_snapshot?: Json
+          created_by?: string | null
+          digest_week: string
+          expires_at?: string
+          family_id: string
+          generated_at?: string
+          id?: string
+        }
+        Update: {
+          content_snapshot?: Json
+          created_by?: string | null
+          digest_week?: string
+          expires_at?: string
+          family_id?: string
+          generated_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      digest_send_log: {
+        Row: {
+          content_summary: Json | null
+          digest_week: string
+          family_id: string
+          id: string
+          recipient_count: number | null
+          send_type: string
+          sent_at: string
+          sent_by: string | null
+        }
+        Insert: {
+          content_summary?: Json | null
+          digest_week: string
+          family_id: string
+          id?: string
+          recipient_count?: number | null
+          send_type?: string
+          sent_at?: string
+          sent_by?: string | null
+        }
+        Update: {
+          content_summary?: Json | null
+          digest_week?: string
+          family_id?: string
+          id?: string
+          recipient_count?: number | null
+          send_type?: string
+          sent_at?: string
+          sent_by?: string | null
+        }
+        Relationships: []
+      }
       face_tags: {
         Row: {
           created_at: string
@@ -3261,6 +3324,7 @@ export type Database = {
       }
       weekly_digest_settings: {
         Row: {
+          content_settings: Json | null
           created_at: string
           created_by: string
           delivery_day: number
@@ -3268,12 +3332,21 @@ export type Database = {
           delivery_timezone: string
           enabled: boolean
           family_id: string
+          forced_send_by: string | null
           id: string
+          is_paused: boolean | null
+          is_unlocked: boolean | null
+          last_forced_send_at: string | null
           last_sent_at: string | null
+          pause_reason: string | null
+          paused_at: string | null
+          paused_by: string | null
           recipients: Json
+          unlock_threshold: number | null
           updated_at: string
         }
         Insert: {
+          content_settings?: Json | null
           created_at?: string
           created_by: string
           delivery_day?: number
@@ -3281,12 +3354,21 @@ export type Database = {
           delivery_timezone?: string
           enabled?: boolean
           family_id: string
+          forced_send_by?: string | null
           id?: string
+          is_paused?: boolean | null
+          is_unlocked?: boolean | null
+          last_forced_send_at?: string | null
           last_sent_at?: string | null
+          pause_reason?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
           recipients?: Json
+          unlock_threshold?: number | null
           updated_at?: string
         }
         Update: {
+          content_settings?: Json | null
           created_at?: string
           created_by?: string
           delivery_day?: number
@@ -3294,9 +3376,17 @@ export type Database = {
           delivery_timezone?: string
           enabled?: boolean
           family_id?: string
+          forced_send_by?: string | null
           id?: string
+          is_paused?: boolean | null
+          is_unlocked?: boolean | null
+          last_forced_send_at?: string | null
           last_sent_at?: string | null
+          pause_reason?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
           recipients?: Json
+          unlock_threshold?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -3372,6 +3462,14 @@ export type Database = {
       }
     }
     Functions: {
+      check_digest_unlock_status: {
+        Args: { p_family_id: string }
+        Returns: boolean
+      }
+      generate_digest_preview: {
+        Args: { p_family_id: string; p_preview_date?: string }
+        Returns: Json
+      }
       get_user_family_ids: {
         Args: { user_id: string }
         Returns: string[]

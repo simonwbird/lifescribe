@@ -117,6 +117,9 @@ export type AnalyticsEvent =
   | 'digest_scheduled'
   | 'digest_sent'
   | 'digest_opened'
+  | 'digest_forced_send' 
+  | 'digest_paused'
+  | 'digest_resumed'
   // Elder Simple Mode events
   | 'simple_mode.header_view'
   | 'prompt.impression' 

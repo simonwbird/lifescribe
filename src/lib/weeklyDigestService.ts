@@ -1,5 +1,7 @@
 import { supabase } from './supabase'
+import { DigestSettings, DigestPreview, DigestSendLog, DEFAULT_DIGEST_SETTINGS, DigestContentSettings } from './digestTypes'
 
+// Legacy interface for backward compatibility
 export interface WeeklyDigestSettings {
   id?: string
   family_id?: string
@@ -15,7 +17,7 @@ export interface WeeklyDigestSettings {
 }
 
 export class WeeklyDigestService {
-  async getSettings(userId: string): Promise<WeeklyDigestSettings | null> {
+  async getSettings(userId: string): Promise<DigestSettings | null> {
     const { data, error } = await supabase
       .from('weekly_digest_settings')
       .select('*')
@@ -33,11 +35,13 @@ export class WeeklyDigestService {
 
     return {
       ...data,
-      recipients: Array.isArray(data.recipients) ? (data.recipients as string[]) : []
-    }
+      recipients: Array.isArray(data.recipients) ? (data.recipients as string[]) : 
+                  (typeof data.recipients === 'object' && data.recipients !== null) ? data.recipients : [],
+      content_settings: (data.content_settings as unknown as DigestContentSettings) || DEFAULT_DIGEST_SETTINGS.content_settings!
+    } as DigestSettings
   }
 
-  async updateSettings(userId: string, settings: Partial<WeeklyDigestSettings>): Promise<void> {
+  async updateSettings(userId: string, settings: Partial<DigestSettings>): Promise<void> {
     // Get current user's family_id if not provided
     let familyId = settings.family_id
     if (!familyId) {
@@ -123,6 +127,125 @@ export class WeeklyDigestService {
     await this.updateSettings(userId, {
       last_sent_at: new Date().toISOString()
     })
+  }
+
+  async pauseDigest(userId: string, familyId: string, reason?: string): Promise<void> {
+    await this.updateSettings(userId, {
+      family_id: familyId,
+      is_paused: true,
+      pause_reason: reason,
+      paused_at: new Date().toISOString(),
+      paused_by: userId
+    })
+  }
+
+  async resumeDigest(userId: string, familyId: string): Promise<void> {
+    await this.updateSettings(userId, {
+      family_id: familyId,
+      is_paused: false,
+      pause_reason: null,
+      paused_at: null,
+      paused_by: null
+    })
+  }
+
+  async forceSendDigest(userId: string, familyId: string): Promise<void> {
+    // Update settings to track forced send
+    await this.updateSettings(userId, {
+      family_id: familyId,
+      last_forced_send_at: new Date().toISOString(),
+      forced_send_by: userId
+    })
+
+    // Call edge function to send digest
+    const { error } = await supabase.functions.invoke('send-digest', {
+      body: {
+        family_id: familyId,
+        send_type: 'forced',
+        sent_by: userId
+      }
+    })
+
+    if (error) {
+      console.error('Error force-sending digest:', error)
+      throw error
+    }
+
+    // Log the send
+    await this.logDigestSend(familyId, 'forced', userId)
+  }
+
+  async generatePreview(familyId: string): Promise<DigestPreview> {
+    const { data, error } = await supabase.rpc('generate_digest_preview', {
+      p_family_id: familyId
+    })
+
+    if (error) {
+      console.error('Error generating digest preview:', error)
+      throw error
+    }
+
+    return data as unknown as DigestPreview
+  }
+
+  async checkUnlockStatus(familyId: string): Promise<boolean> {
+    const { data, error } = await supabase.rpc('check_digest_unlock_status', {
+      p_family_id: familyId
+    })
+
+    if (error) {
+      console.error('Error checking unlock status:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  async updateUnlockStatus(userId: string, familyId: string): Promise<void> {
+    const isUnlocked = await this.checkUnlockStatus(familyId)
+    
+    if (isUnlocked) {
+      await this.updateSettings(userId, {
+        family_id: familyId,
+        is_unlocked: true
+      })
+    }
+  }
+
+  private async logDigestSend(familyId: string, sendType: 'scheduled' | 'forced', sentBy?: string): Promise<void> {
+    const currentWeek = new Date()
+    currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay()) // Start of week
+
+    const { error } = await supabase
+      .from('digest_send_log')
+      .insert({
+        family_id: familyId,
+        digest_week: currentWeek.toISOString().split('T')[0],
+        send_type: sendType,
+        sent_by: sentBy,
+        recipient_count: 0, // Will be updated by edge function
+        content_summary: {}
+      })
+
+    if (error && error.code !== '23505') { // Ignore unique constraint violations
+      console.error('Error logging digest send:', error)
+    }
+  }
+
+  async getDigestHistory(familyId: string): Promise<DigestSendLog[]> {
+    const { data, error } = await supabase
+      .from('digest_send_log')
+      .select('*')
+      .eq('family_id', familyId)
+      .order('sent_at', { ascending: false })
+      .limit(10)
+
+    if (error) {
+      console.error('Error fetching digest history:', error)
+      throw error
+    }
+
+    return data as DigestSendLog[]
   }
 }
 
