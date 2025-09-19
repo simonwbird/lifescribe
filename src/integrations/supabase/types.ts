@@ -2422,38 +2422,50 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          country: string | null
           created_at: string
+          date_format_preference: string | null
           default_space_id: string | null
           email: string
           feature_flags: Json | null
           full_name: string | null
           id: string
+          locale: string | null
           settings: Json | null
           simple_mode: boolean | null
+          timezone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
+          date_format_preference?: string | null
           default_space_id?: string | null
           email: string
           feature_flags?: Json | null
           full_name?: string | null
           id: string
+          locale?: string | null
           settings?: Json | null
           simple_mode?: boolean | null
+          timezone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
+          date_format_preference?: string | null
           default_space_id?: string | null
           email?: string
           feature_flags?: Json | null
           full_name?: string | null
           id?: string
+          locale?: string | null
           settings?: Json | null
           simple_mode?: boolean | null
+          timezone?: string | null
           updated_at?: string
         }
         Relationships: [
