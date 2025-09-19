@@ -63,6 +63,7 @@ import NudgeOrchestrator from './components/admin/NudgeOrchestrator';
 import { ModerationQueue } from './components/admin/ModerationQueue';
 import { MediaPipelineMonitor } from './components/admin/MediaPipelineMonitor';
 import { ContentTimelineAdmin } from './components/admin/ContentTimelineAdmin';
+import AdminDigest from './pages/admin/AdminDigest';
 
 const queryClient = new QueryClient();
 
@@ -127,7 +128,8 @@ function AppContent() {
          <Route index element={<AdminDashboard />} />
          <Route path="people" element={<AdminPeople />} />
           <Route path="families" element={<FamilyOverviewTable />} />
-          <Route path="content" element={<AdminContent />} />
+           <Route path="digest" element={<AdminDigest />} />
+           <Route path="content" element={<AdminContent />} />
           <Route path="activation" element={<ActivationDashboard />} />
           <Route path="nudges" element={<NudgeOrchestrator />} />
           <Route path="moderation" element={<ModerationQueue />} />

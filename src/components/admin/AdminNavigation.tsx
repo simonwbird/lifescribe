@@ -42,9 +42,9 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN', 'FAMILY_ADMIN']
   },
   {
-    id: 'growth-digests',
-    label: 'Growth & Digests',
-    href: '/admin/growth',
+    id: 'digest',
+    label: 'Weekly Digest',
+    href: '/admin/digest',
     icon: TrendingUp,
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },

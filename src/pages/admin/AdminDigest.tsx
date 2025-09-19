@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import AdminShell from '@/components/admin/AdminShell'
 import { DigestScheduler } from '@/components/admin/DigestScheduler'
 import { Search, Calendar, Users, Settings } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -55,7 +54,7 @@ export default function AdminDigest() {
 
       if (familiesError) throw familiesError
 
-        const formattedFamilies: FamilyWithDigest[] = familiesData.map(family => {
+      const formattedFamilies: FamilyWithDigest[] = familiesData.map(family => {
         const settings = family.weekly_digest_settings?.[0] as any
         const memberCount = (family.members as any)?.[0]?.count || 0
         
@@ -134,189 +133,185 @@ export default function AdminDigest() {
 
   if (selectedFamily) {
     return (
-      <AdminShell title="Digest Administration">
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setSelectedFamily(null)}
-            >
-              ← Back to All Families
-            </Button>
-            <h2 className="text-xl font-semibold">Managing: {selectedFamily.name}</h2>
-          </div>
-          
-          <DigestScheduler
-            familyId={selectedFamily.id}
-            familyName={selectedFamily.name}
-            memberCount={selectedFamily.member_count}
-          />
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setSelectedFamily(null)}
+          >
+            ← Back to All Families
+          </Button>
+          <h2 className="text-xl font-semibold">Managing: {selectedFamily.name}</h2>
         </div>
-      </AdminShell>
+        
+        <DigestScheduler
+          familyId={selectedFamily.id}
+          familyName={selectedFamily.name}
+          memberCount={selectedFamily.member_count}
+        />
+      </div>
     )
   }
 
   return (
-    <AdminShell title="Digest Administration">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Weekly Digest Management</h1>
-            <p className="text-muted-foreground">
-              Manage weekly digest settings across all families
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Weekly Digest Management</h1>
+          <p className="text-muted-foreground">
+            Manage weekly digest settings across all families
+          </p>
         </div>
+      </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search families..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search families..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              
-              <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Families</SelectItem>
-                  <SelectItem value="enabled">Active Digests</SelectItem>
-                  <SelectItem value="disabled">Disabled</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                </SelectContent>
-              </Select>
+            </div>
+            
+            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Families</SelectItem>
+                <SelectItem value="enabled">Active Digests</SelectItem>
+                <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Families List */}
+      <div className="grid gap-4">
+        {isLoading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading families...</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : filteredFamilies.length === 0 ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-muted-foreground">No families found</h3>
+                <p className="text-sm text-muted-foreground">
+                  {searchTerm || filterStatus !== 'all' 
+                    ? 'Try adjusting your search or filters'
+                    : 'No families have been created yet'
+                  }
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredFamilies.map((family) => (
+            <Card key={family.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-semibold text-lg">{family.name}</h3>
+                      {getStatusBadge(family)}
+                    </div>
+                    
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {family.member_count} members
+                      </span>
+                      
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        Last sent: {formatDate(family.last_sent_at)}
+                      </span>
+                      
+                      {family.next_digest_date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Next: {formatDate(family.next_digest_date)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => setSelectedFamily(family)}
+                    className="flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Manage
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Families</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{families.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Active Digests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {families.filter(f => f.digest_enabled && !f.digest_paused).length}
             </div>
           </CardContent>
         </Card>
-
-        {/* Families List */}
-        <div className="grid gap-4">
-          {isLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading families...</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : filteredFamilies.length === 0 ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-muted-foreground">No families found</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {searchTerm || filterStatus !== 'all' 
-                      ? 'Try adjusting your search or filters'
-                      : 'No families have been created yet'
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredFamilies.map((family) => (
-              <Card key={family.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-lg">{family.name}</h3>
-                        {getStatusBadge(family)}
-                      </div>
-                      
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {family.member_count} members
-                        </span>
-                        
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Last sent: {formatDate(family.last_sent_at)}
-                        </span>
-                        
-                        {family.next_digest_date && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            Next: {formatDate(family.next_digest_date)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      variant="outline"
-                      onClick={() => setSelectedFamily(family)}
-                      className="flex items-center gap-2"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Manage
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Families</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{families.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Active Digests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {families.filter(f => f.digest_enabled && !f.digest_paused).length}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Paused</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {families.filter(f => f.digest_paused).length}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Disabled</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {families.filter(f => !f.digest_enabled).length}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Paused</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {families.filter(f => f.digest_paused).length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Disabled</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {families.filter(f => !f.digest_enabled).length}
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </AdminShell>
+    </div>
   )
 }
