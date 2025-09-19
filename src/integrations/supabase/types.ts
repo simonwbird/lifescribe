@@ -781,6 +781,133 @@ export type Database = {
           },
         ]
       }
+      moderation_actions: {
+        Row: {
+          action_type: Database["public"]["Enums"]["moderation_action_type"]
+          actor_id: string
+          created_at: string
+          flag_id: string
+          id: string
+          metadata: Json | null
+          rationale: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["moderation_action_type"]
+          actor_id: string
+          created_at?: string
+          flag_id: string
+          id?: string
+          metadata?: Json | null
+          rationale: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["moderation_action_type"]
+          actor_id?: string
+          created_at?: string
+          flag_id?: string
+          id?: string
+          metadata?: Json | null
+          rationale?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "moderation_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_flags: {
+        Row: {
+          created_at: string
+          details: Json | null
+          family_id: string
+          flagged_by: string | null
+          id: string
+          item_id: string
+          item_type: Database["public"]["Enums"]["moderation_item_type"]
+          reason: string
+          severity: number | null
+          source: Database["public"]["Enums"]["moderation_source"]
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          family_id: string
+          flagged_by?: string | null
+          id?: string
+          item_id: string
+          item_type: Database["public"]["Enums"]["moderation_item_type"]
+          reason: string
+          severity?: number | null
+          source: Database["public"]["Enums"]["moderation_source"]
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          family_id?: string
+          flagged_by?: string | null
+          id?: string
+          item_id?: string
+          item_type?: Database["public"]["Enums"]["moderation_item_type"]
+          reason?: string
+          severity?: number | null
+          source?: Database["public"]["Enums"]["moderation_source"]
+        }
+        Relationships: []
+      }
+      moderation_queue_items: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          family_id: string
+          flag_id: string
+          id: string
+          item_id: string
+          item_type: Database["public"]["Enums"]["moderation_item_type"]
+          priority: number | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["moderation_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          family_id: string
+          flag_id: string
+          id?: string
+          item_id: string
+          item_type: Database["public"]["Enums"]["moderation_item_type"]
+          priority?: number | null
+          sla_due_at?: string | null
+          status?: Database["public"]["Enums"]["moderation_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          family_id?: string
+          flag_id?: string
+          id?: string
+          item_id?: string
+          item_type?: Database["public"]["Enums"]["moderation_item_type"]
+          priority?: number | null
+          sla_due_at?: string | null
+          status?: Database["public"]["Enums"]["moderation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_queue_items_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "moderation_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2976,6 +3103,21 @@ export type Database = {
       address_visibility: "exact" | "street_hidden" | "city_only"
       date_precision: "day" | "month" | "year"
       invite_status: "pending" | "accepted" | "expired"
+      moderation_action_type:
+        | "hide"
+        | "blur"
+        | "age_gate"
+        | "notify_owner"
+        | "escalate"
+        | "resolve"
+      moderation_item_type: "story" | "media" | "answer" | "comment"
+      moderation_source:
+        | "user_flag"
+        | "automated_nsfw"
+        | "automated_toxicity"
+        | "automated_pii"
+        | "dmca"
+      moderation_status: "pending" | "in_review" | "resolved" | "escalated"
       nudge_channel_type: "email" | "sms" | "in_app" | "push"
       nudge_status: "draft" | "active" | "paused" | "completed"
       nudge_trigger_type:
@@ -3185,6 +3327,23 @@ export const Constants = {
       address_visibility: ["exact", "street_hidden", "city_only"],
       date_precision: ["day", "month", "year"],
       invite_status: ["pending", "accepted", "expired"],
+      moderation_action_type: [
+        "hide",
+        "blur",
+        "age_gate",
+        "notify_owner",
+        "escalate",
+        "resolve",
+      ],
+      moderation_item_type: ["story", "media", "answer", "comment"],
+      moderation_source: [
+        "user_flag",
+        "automated_nsfw",
+        "automated_toxicity",
+        "automated_pii",
+        "dmca",
+      ],
+      moderation_status: ["pending", "in_review", "resolved", "escalated"],
       nudge_channel_type: ["email", "sms", "in_app", "push"],
       nudge_status: ["draft", "active", "paused", "completed"],
       nudge_trigger_type: [
