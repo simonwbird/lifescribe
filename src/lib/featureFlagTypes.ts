@@ -124,7 +124,9 @@ export const DEFAULT_REMOTE_CONFIG = {
   autosave_interval_seconds: 30,
   digest_unlock_threshold: 2,
   max_family_members: 50,
-  enable_voice_transcription: true
+  enable_voice_transcription: true,
+  date_render_sampling_rate: 1.0,
+  auto_rollback_error_threshold: 10
 } as const
 
 export type RemoteConfigKey = keyof typeof DEFAULT_REMOTE_CONFIG

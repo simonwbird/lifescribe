@@ -7,7 +7,8 @@ import {
   Puzzle, 
   Activity, 
   Shield,
-  Flag
+  Flag,
+  Clock
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -47,6 +48,13 @@ const adminNavItems: AdminNavItem[] = [
     label: 'Feature Flags',
     href: '/admin/feature-flags',
     icon: Flag,
+    roles: ['SUPER_ADMIN']
+  },
+  {
+    id: 'date-localization',
+    label: 'Date Localization',
+    href: '/admin/date-localization',
+    icon: Clock,
     roles: ['SUPER_ADMIN']
   },
   {

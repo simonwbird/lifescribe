@@ -163,7 +163,13 @@ export type AnalyticsEvent =
   | 'flag_created'
   | 'flag_targeting_updated'
   | 'flag_enabled'
-  | 'flag_disabled';
+  | 'flag_disabled'
+  // Date localization events
+  | 'DATE_RENDER_GATEWAY_USED'
+  | 'DATE_FORMAT_ERROR'
+  | 'TIMEZONE_ERROR_SENTINEL'
+  | 'REGION_PREFS_CONFIRMED'
+  | 'REGION_PREFS_UPDATED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'
