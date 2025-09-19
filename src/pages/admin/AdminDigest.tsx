@@ -55,7 +55,7 @@ export default function AdminDigest() {
       if (familiesError) throw familiesError
 
       const formattedFamilies: FamilyWithDigest[] = familiesData.map(family => {
-        const settings = family.weekly_digest_settings?.[0] as any
+        const settings = family.weekly_digest_settings as any
         const memberCount = (family.members as any)?.[0]?.count || 0
         
         // Calculate next digest date
