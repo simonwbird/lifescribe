@@ -17,6 +17,7 @@ import { weeklyDigestService } from '@/lib/weeklyDigestService'
 import { DigestSettings, DigestPreview, DigestSendLog, DIGEST_SCHEDULE_OPTIONS, DIGEST_HOUR_OPTIONS, DEFAULT_DIGEST_SETTINGS } from '@/lib/digestTypes'
 import { DigestPreviewModal } from './DigestPreviewModal'
 import { DigestHistoryModal } from './DigestHistoryModal'
+import { supabase } from '@/lib/supabase'
 
 interface DigestSchedulerProps {
   familyId: string
@@ -34,6 +35,20 @@ export const DigestScheduler = ({ familyId, familyName, memberCount }: DigestSch
   const [showHistory, setShowHistory] = useState(false)
   const [pauseReason, setPauseReason] = useState('')
   const { toast } = useToast()
+
+  // Helper to get current authenticated user id
+  const getUserId = async (): Promise<string | null> => {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please sign in again to manage digests.',
+        variant: 'destructive'
+      })
+      return null
+    }
+    return data.user.id
+  }
   const { track } = useAnalytics()
 
   useEffect(() => {
@@ -43,9 +58,9 @@ export const DigestScheduler = ({ familyId, familyName, memberCount }: DigestSch
   const loadSettings = async () => {
     try {
       setIsLoading(true)
-      // For now, use a mock user ID - in real app this would come from auth
-      const mockUserId = 'mock-user-id'
-      const digestSettings = await weeklyDigestService.getSettings(mockUserId)
+      const userId = await getUserId()
+      if (!userId) { setIsLoading(false); return }
+      const digestSettings = await weeklyDigestService.getSettings(userId)
       
       if (digestSettings && digestSettings.family_id === familyId) {
         setSettings(digestSettings)
@@ -54,7 +69,7 @@ export const DigestScheduler = ({ familyId, familyName, memberCount }: DigestSch
         const defaultSettings: DigestSettings = {
           ...DEFAULT_DIGEST_SETTINGS,
           family_id: familyId,
-          created_by: mockUserId
+          created_by: userId
         } as DigestSettings
         setSettings(defaultSettings)
       }
@@ -81,8 +96,9 @@ export const DigestScheduler = ({ familyId, familyName, memberCount }: DigestSch
 
     try {
       setIsSaving(true)
-      const mockUserId = 'mock-user-id'
-      await weeklyDigestService.updateSettings(mockUserId, settings)
+      const userId = await getUserId()
+      if (!userId) return
+      await weeklyDigestService.updateSettings(userId, settings)
       
       await track('digest_scheduled', {
         family_id: familyId,
@@ -111,17 +127,18 @@ export const DigestScheduler = ({ familyId, familyName, memberCount }: DigestSch
     if (!settings) return
 
     try {
-      const mockUserId = 'mock-user-id'
+      const userId = await getUserId()
+      if (!userId) return
       
       if (settings.is_paused) {
-        await weeklyDigestService.resumeDigest(mockUserId, familyId)
+        await weeklyDigestService.resumeDigest(userId, familyId)
         await track('digest_resumed', { family_id: familyId })
         toast({
           title: 'Digest resumed',
           description: 'Weekly digest has been resumed for this family'
         })
       } else {
-        await weeklyDigestService.pauseDigest(mockUserId, familyId, pauseReason)
+        await weeklyDigestService.pauseDigest(userId, familyId, pauseReason)
         await track('digest_paused', { family_id: familyId, reason: pauseReason })
         toast({
           title: 'Digest paused',
@@ -145,8 +162,9 @@ export const DigestScheduler = ({ familyId, familyName, memberCount }: DigestSch
     if (!settings) return
 
     try {
-      const mockUserId = 'mock-user-id'
-      await weeklyDigestService.forceSendDigest(mockUserId, familyId)
+      const userId = await getUserId()
+      if (!userId) return
+      await weeklyDigestService.forceSendDigest(userId, familyId)
       
       await track('digest_forced_send', { 
         family_id: familyId,
