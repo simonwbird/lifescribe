@@ -268,9 +268,22 @@ function generateDigestHTML({ familyName, digestContent, stories, photos, weekSt
         </div>
       ` : ''}
 
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="https://lifescribe.lovable.app/dashboard" 
+           style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; 
+                  text-decoration: none; border-radius: 6px; font-weight: 600;">
+          View All Stories & Photos
+        </a>
+      </div>
+
       <div class="footer">
         <p>You're receiving this because you're part of the ${familyName} family.</p>
         <p>Family Stories • Bringing families together through shared memories</p>
+        <p>
+          <a href="https://lifescribe.lovable.app/settings/notifications">Update preferences</a> • 
+          <a href="https://lifescribe.lovable.app/unsubscribe">Unsubscribe</a> • 
+          <a href="https://lifescribe.lovable.app/digest/preview">View online</a>
+        </p>
       </div>
     </body>
     </html>

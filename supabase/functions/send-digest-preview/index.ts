@@ -269,7 +269,7 @@ function generateSampleDigestHTML(familyName: string = "Your Family") {
 
             <!-- Call to Action -->
             <div class="cta">
-              <a href="#" class="cta-button">View All Stories & Photos</a>
+              <a href="https://lifescribe.lovable.app/dashboard" class="cta-button">View All Stories & Photos</a>
             </div>
 
             <!-- Family Activity Prompt -->
@@ -288,9 +288,9 @@ function generateSampleDigestHTML(familyName: string = "Your Family") {
           <div class="footer">
             <p>💝 Sent with love from your LifeScribe family app</p>
             <p>
-              <a href="#">Update preferences</a> • 
-              <a href="#">Unsubscribe</a> • 
-              <a href="#">View online</a>
+              <a href="https://lifescribe.lovable.app/settings/notifications">Update preferences</a> • 
+              <a href="https://lifescribe.lovable.app/unsubscribe">Unsubscribe</a> • 
+              <a href="https://lifescribe.lovable.app/digest/preview">View online</a>
             </p>
             <p style="margin-top: 20px; font-size: 12px; color: #999;">
               This digest was automatically generated based on your family's activity.
