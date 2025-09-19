@@ -24,6 +24,7 @@ export default function ProfileDropdown() {
   const [familyName, setFamilyName] = useState<string>('My Family')
   const [enableMultiSpaces, setEnableMultiSpaces] = useState(false)
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [isOwnerAccount, setIsOwnerAccount] = useState(false)
   const navigate = useNavigate()
   const { track } = useAnalytics()
 
@@ -31,6 +32,9 @@ export default function ProfileDropdown() {
     const getProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        // Mark owner account (fallback access)
+        setIsOwnerAccount(user.email === 'simonwbird@gmail.com')
+
         // Get profile data with feature flags
         const { data: profileData } = await supabase
           .from('profiles')
@@ -154,6 +158,9 @@ export default function ProfileDropdown() {
     const refreshProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        // Ensure owner access is detected on every open
+        setIsOwnerAccount(user.email === 'simonwbird@gmail.com')
+
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*, default_space_id, settings')
@@ -215,7 +222,7 @@ export default function ProfileDropdown() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        className="w-64 p-2 bg-popover border border-border shadow-lg" 
+        className="w-64 p-2 bg-popover border border-border shadow-lg z-50" 
         align="end" 
         forceMount
       >
@@ -271,7 +278,7 @@ export default function ProfileDropdown() {
           </Link>
         </DropdownMenuItem>
 
-        {isSuperAdmin && (
+        {(isSuperAdmin || isOwnerAccount) && (
           <DropdownMenuItem className="p-0">
             <Link
               to="/admin"
