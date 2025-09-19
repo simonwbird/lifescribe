@@ -196,7 +196,7 @@ export class CollectionsService {
       .from('stories')
       .select(`
         *,
-        profiles:profile_id (full_name),
+        family_member_profiles:profile_id (full_name),
         person_story_links (
           person_id,
           people (full_name)
@@ -247,7 +247,7 @@ export class CollectionsService {
         visibility: 'family', // Default for now
         status: 'published', // Default for now  
         authorId: story.profile_id,
-        authorName: story.profiles?.full_name || 'Unknown',
+        authorName: story.family_member_profiles?.full_name || 'Unknown',
         familyId: story.family_id,
         fields: {
           content: story.content,

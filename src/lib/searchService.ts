@@ -182,7 +182,7 @@ export class SearchService {
       .from('stories')
       .select(`
         *,
-        profiles:profile_id (full_name),
+        family_member_profiles:profile_id (full_name),
         person_story_links (
           people (full_name)
         )
@@ -212,7 +212,7 @@ export class SearchService {
       id: story.id,
       type: 'story' as const,
       title: story.title,
-      subtitle: story.profiles?.full_name,
+      subtitle: story.family_member_profiles?.full_name,
       snippet: story.content?.substring(0, 150) + '...',
       url: `/stories/${story.id}`,
       metadata: {

@@ -74,7 +74,7 @@ export default function NotificationsBell() {
           content,
           created_at,
           story_id,
-          profiles:profile_id (full_name),
+          family_member_profiles:profile_id (full_name),
           stories:story_id (title, profile_id)
         `)
         .eq('family_id', member.family_id)
@@ -88,7 +88,7 @@ export default function NotificationsBell() {
             notificationList.push({
               id: `comment-${comment.id}`,
               title: 'New comment on your story',
-              actor: comment.profiles?.full_name || 'Someone',
+              actor: comment.family_member_profiles?.full_name || 'Someone',
               when: getRelativeTime(comment.created_at),
               read: !isRecent(comment.created_at),
               href: `/stories/${comment.story_id}#comment-${comment.id}`,
@@ -105,7 +105,7 @@ export default function NotificationsBell() {
           id,
           title,
           created_at,
-          profiles:profile_id (full_name)
+          family_member_profiles:profile_id (full_name)
         `)
         .eq('family_id', member.family_id)
         .neq('profile_id', user.id)
@@ -117,7 +117,7 @@ export default function NotificationsBell() {
           notificationList.push({
             id: `story-${story.id}`,
             title: 'New family story shared',
-            actor: story.profiles?.full_name || 'Someone',
+            actor: story.family_member_profiles?.full_name || 'Someone',
             when: getRelativeTime(story.created_at),
             read: !isRecent(story.created_at),
             href: `/stories/${story.id}`,

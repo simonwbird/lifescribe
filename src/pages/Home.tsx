@@ -169,7 +169,7 @@ export default function Home() {
           title,
           content,
           created_at,
-          profiles:profile_id (full_name)
+          family_member_profiles:profile_id (full_name)
         `)
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
@@ -180,7 +180,7 @@ export default function Home() {
           activities.push({
             id: `story-${story.id}`,
             type: 'story',
-            actor: story.profiles?.full_name || 'Someone',
+            actor: story.family_member_profiles?.full_name || 'Someone',
             action: 'shared a story',
             target: story.title,
             snippet: story.content?.substring(0, 150) + '...',
@@ -203,7 +203,7 @@ export default function Home() {
           content,
           created_at,
           story_id,
-          profiles:profile_id (full_name),
+          family_member_profiles:profile_id (full_name),
           stories:story_id (title)
         `)
         .eq('family_id', familyId)
@@ -215,7 +215,7 @@ export default function Home() {
           activities.push({
             id: `comment-${comment.id}`,
             type: 'comment',
-            actor: comment.profiles?.full_name || 'Someone',
+            actor: comment.family_member_profiles?.full_name || 'Someone',
             action: 'commented on',
             target: comment.stories?.title || 'a story',
             snippet: comment.content?.substring(0, 100),

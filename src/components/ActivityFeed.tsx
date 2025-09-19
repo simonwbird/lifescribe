@@ -90,7 +90,7 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
         .from('stories')
         .select(`
           id, title, created_at, profile_id,
-          profiles:profile_id (full_name, avatar_url)
+          family_member_profiles:profile_id (full_name, avatar_url)
         `)
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
@@ -121,7 +121,7 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
         .from('reactions')
         .select(`
           id, reaction_type, created_at, profile_id, story_id,
-          profiles:profile_id (full_name, avatar_url),
+          family_member_profiles:profile_id (full_name, avatar_url),
           stories:story_id (title)
         `)
         .eq('family_id', familyId)
@@ -133,7 +133,7 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
         .from('members')
         .select(`
           id, joined_at, profile_id,
-          profiles:profile_id (full_name, avatar_url)
+          family_member_profiles:profile_id (full_name, avatar_url)
         `)
         .eq('family_id', familyId)
         .order('joined_at', { ascending: false })
@@ -149,8 +149,8 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
           type: 'story',
           title: story.title,
           description: 'shared a new story',
-          author_name: story.profiles?.full_name || 'Someone',
-          author_avatar: story.profiles?.avatar_url,
+          author_name: story.family_member_profiles?.full_name || 'Someone',
+          author_avatar: story.family_member_profiles?.avatar_url,
           created_at: story.created_at,
           family_id: familyId,
           item_id: story.id
@@ -195,8 +195,8 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
             type: 'reaction',
             title: reaction.stories.title,
             description: `reacted with ${reaction.reaction_type}`,
-            author_name: reaction.profiles?.full_name || 'Someone',
-            author_avatar: reaction.profiles?.avatar_url,
+            author_name: reaction.family_member_profiles?.full_name || 'Someone',
+            author_avatar: reaction.family_member_profiles?.avatar_url,
             created_at: reaction.created_at,
             family_id: familyId,
             item_id: reaction.story_id,
@@ -212,8 +212,8 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
           type: 'member_joined',
           title: 'New family member',
           description: 'joined the family',
-          author_name: member.profiles?.full_name || 'Someone',
-          author_avatar: member.profiles?.avatar_url,
+          author_name: member.family_member_profiles?.full_name || 'Someone',
+          author_avatar: member.family_member_profiles?.avatar_url,
           created_at: member.joined_at,
           family_id: familyId
         })
