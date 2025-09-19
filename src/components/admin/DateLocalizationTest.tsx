@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import AdminAuthGuard from '@/components/admin/AdminAuthGuard'
 import { useFeatureFlagAdmin } from '@/hooks/useFeatureFlags'
 import { useToast } from '@/hooks/use-toast'
+import DigestPreviewSender from '@/components/admin/DigestPreviewSender'
 
 export default function DateLocalizationTest() {
   const [showUTC, setShowUTC] = useState(false)
@@ -79,6 +80,11 @@ export default function DateLocalizationTest() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Date Localization Control</h1>
             <p className="text-muted-foreground">Manage rollout phases and monitor date formatting</p>
+            
+            {/* Add email preview section */}
+            <div className="mt-8">
+              <DigestPreviewSender />
+            </div>
           </div>
           
           <div className="flex items-center space-x-2">
