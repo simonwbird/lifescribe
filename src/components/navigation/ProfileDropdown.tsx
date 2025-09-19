@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, User, Users, Settings, CreditCard, LogOut, Beaker } from 'lucide-react'
+import { ChevronDown, User, Users, Settings, CreditCard, LogOut, Beaker, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -23,6 +23,7 @@ export default function ProfileDropdown() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [familyName, setFamilyName] = useState<string>('My Family')
   const [enableMultiSpaces, setEnableMultiSpaces] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const navigate = useNavigate()
   const { track } = useAnalytics()
 
@@ -42,6 +43,9 @@ export default function ProfileDropdown() {
         const settings = (profileData?.settings as any) || {}
         const labsFlags = settings.labs_flags || {}
         setEnableMultiSpaces(settings.labs_enabled && labsFlags.multiSpaces)
+        
+        // Check if user is super admin
+        setIsSuperAdmin(settings.role === 'super_admin')
         
         // Get default family name
         if (profileData?.default_space_id) {
@@ -246,6 +250,19 @@ export default function ProfileDropdown() {
             Labs (experimental)
           </Link>
         </DropdownMenuItem>
+
+        {isSuperAdmin && (
+          <DropdownMenuItem className="p-0">
+            <Link
+              to="/admin"
+              className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground text-destructive"
+              onClick={() => handleMenuItemClick('admin')}
+            >
+              <Shield className="h-4 w-4" />
+              Super Admin
+            </Link>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator />
 
