@@ -147,7 +147,10 @@ export type AnalyticsEvent =
   | 'NUDGE_SENT'
   | 'NUDGE_CONVERTED'
   | 'NUDGE_STATUS_CHANGED'
-  | 'NUDGE_CREATE_STARTED';
+  | 'NUDGE_CREATE_STARTED'
+  // Moderation events
+  | 'FLAG_RESOLVED'
+  | 'MOD_ACTION_APPLIED';
 
 import { supabase } from '@/lib/supabase'
 import { useMode } from './useMode'

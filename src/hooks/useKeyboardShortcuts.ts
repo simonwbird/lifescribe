@@ -6,6 +6,10 @@ interface ShortcutHandlers {
   q?: () => void; // Ask the Family
   r?: () => void; // Record Audio
   i?: () => void; // Invite a Family Member
+  j?: () => void; // Next item (moderation)
+  k?: () => void; // Previous item (moderation)
+  h?: () => void; // Hide (moderation)
+  b?: () => void; // Blur (moderation)
 }
 
 export const useKeyboardShortcuts = (handlers: ShortcutHandlers) => {
@@ -54,6 +58,30 @@ export const useKeyboardShortcuts = (handlers: ShortcutHandlers) => {
           if (handlers.i) {
             event.preventDefault();
             handlers.i();
+          }
+          break;
+        case 'j':
+          if (handlers.j) {
+            event.preventDefault();
+            handlers.j();
+          }
+          break;
+        case 'k':
+          if (handlers.k) {
+            event.preventDefault();
+            handlers.k();
+          }
+          break;
+        case 'h':
+          if (handlers.h) {
+            event.preventDefault();
+            handlers.h();
+          }
+          break;
+        case 'b':
+          if (handlers.b) {
+            event.preventDefault();
+            handlers.b();
           }
           break;
       }

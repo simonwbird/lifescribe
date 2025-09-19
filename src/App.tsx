@@ -59,6 +59,8 @@ import AdminPeople from './pages/admin/AdminPeople'
 import AdminContent from './pages/admin/AdminContent'
 import FamilyOverviewTable from './components/admin/FamilyOverviewTable'
 import ActivationDashboard from './pages/admin/ActivationDashboard'
+import NudgeOrchestrator from './components/admin/NudgeOrchestrator';
+import { ModerationQueue } from './components/admin/ModerationQueue';
 
 const queryClient = new QueryClient();
 
@@ -122,9 +124,11 @@ function AppContent() {
        <Route path="/admin" element={<AuthGate><AdminAuthGuard><AdminShell /></AdminAuthGuard></AuthGate>}>
          <Route index element={<AdminDashboard />} />
          <Route path="people" element={<AdminPeople />} />
-         <Route path="families" element={<FamilyOverviewTable />} />
-         <Route path="content" element={<AdminContent />} />
-         <Route path="activation" element={<ActivationDashboard />} />
+          <Route path="families" element={<FamilyOverviewTable />} />
+          <Route path="content" element={<AdminContent />} />
+          <Route path="activation" element={<ActivationDashboard />} />
+          <Route path="nudges" element={<NudgeOrchestrator />} />
+          <Route path="moderation" element={<ModerationQueue />} />
          <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="config" element={<div className="p-8"><h1 className="text-2xl font-bold">Flags & Config</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />

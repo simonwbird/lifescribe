@@ -63,6 +63,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
+    id: 'moderation',
+    label: 'Moderation Queue',
+    href: '/admin/moderation',
+    icon: Shield,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
     id: 'flags-config',
     label: 'Flags & Config',
     href: '/admin/config',
