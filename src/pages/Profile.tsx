@@ -15,12 +15,20 @@ import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 import ExportDataCard from '@/components/compliance/ExportDataCard'
 import RTBFCard from '@/components/compliance/RTBFCard'
-import type { Profile } from '@/lib/types'
+import RegionSettings from '@/components/RegionSettings'
+import TimezoneMismatchBanner from '@/components/TimezoneMismatchBanner'
+import type { UserLocale } from '@/lib/localizationTypes'
+import type { Profile as ProfileType } from '@/lib/types'
 
 export default function Profile() {
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<ProfileType | null>(null)
   const [linkedPerson, setLinkedPerson] = useState<any>(null)
   const [fullName, setFullName] = useState('')
+  const [userRegion, setUserRegion] = useState<UserLocale>({
+    locale: 'en-US',
+    timezone: 'UTC', 
+    country: 'US'
+  })
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -39,6 +47,14 @@ export default function Profile() {
         if (profileData) {
           setProfile(profileData)
           setFullName(profileData.full_name || '')
+          
+          // Set user region from profile
+          setUserRegion({
+            locale: profileData.locale || 'en-US',
+            timezone: profileData.timezone || 'UTC',
+            country: profileData.country || 'US',
+            dateFormatPreference: profileData.date_format_preference || undefined
+          })
         }
 
         // Get linked family tree person
@@ -114,8 +130,25 @@ export default function Profile() {
     <AuthGate>
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto space-y-6">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          
+          {/* Timezone Mismatch Banner */}
+          <div className="mb-6">
+            <TimezoneMismatchBanner 
+              userSettings={userRegion}
+              onUpdate={setUserRegion}
+            />
+          </div>
+
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold">Profile Settings</h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your account information and preferences
+              </p>
+            </div>
+
+            {/* Basic Profile Info */}
             <Card>
               <CardHeader className="text-center">
                 <ProfilePhotoUploader
@@ -161,6 +194,12 @@ export default function Profile() {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Region & Format Settings */}
+            <RegionSettings 
+              currentSettings={userRegion}
+              onUpdate={setUserRegion}
+            />
 
             {/* Mode Settings */}
             <ModeToggle />

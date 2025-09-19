@@ -12,6 +12,8 @@ import { Camera, Upload, Users, TreePine, BookOpen, ChefHat, Package, ArrowLeft,
 import { useNavigate } from 'react-router-dom'
 import type { User } from '@supabase/supabase-js'
 import ProfilePhotoUploader from './ProfilePhotoUploader'
+import RegionConfirmStep from './onboarding/RegionConfirmStep'
+import type { UserLocale } from '@/lib/localizationTypes'
 
 interface OnboardingWizardProps {
   user: User
@@ -31,10 +33,11 @@ export default function OnboardingWizard({ user }: OnboardingWizardProps) {
   const [profilePhoto, setProfilePhoto] = useState('')
   const [inviteEmails, setInviteEmails] = useState<string[]>([''])
   const [startingFocus, setStartingFocus] = useState<'tree' | 'stories' | 'recipes' | 'things'>('stories')
+  const [regionSettings, setRegionSettings] = useState<any>(null)
   
   const navigate = useNavigate()
   
-  const totalSteps = 5
+  const totalSteps = 6 // Updated to include region step
   const progress = (currentStep / totalSteps) * 100
 
   const focusOptions = [
@@ -403,8 +406,19 @@ export default function OnboardingWizard({ user }: OnboardingWizardProps) {
             </div>
           )}
 
-          {/* Step 5: Starting Focus */}
+          {/* Step 5: Region Settings */}
           {currentStep === 5 && (
+            <RegionConfirmStep
+              onComplete={(settings: UserLocale) => {
+                setRegionSettings(settings)
+                setCurrentStep(6)
+              }}
+              onSkip={() => setCurrentStep(6)}
+            />
+          )}
+
+          {/* Step 6: Starting Focus */}
+          {currentStep === 6 && (
             <div className="space-y-4">
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">What would you like to start with?</h3>
