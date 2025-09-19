@@ -32,12 +32,12 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
         .order('created_at')
 
       if (commentsData) {
-        // Fetch profiles separately to avoid type complexity
+        // Fetch family member profiles separately for comments 
         const profileIds = [...new Set(commentsData.map((c: any) => c.profile_id))]
-        const { data: profilesData } = await (supabase as any)
-          .from('profiles')
+        const { data: profilesData } = await supabase
+          .from('family_member_profiles')
           .select('*')
-          .in('id', profileIds)
+          .in('id', profileIds.map(id => String(id)))
         
         // Combine the data
         const commentsWithProfiles = commentsData.map((comment: any) => ({
@@ -84,8 +84,8 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
           .single()
         
         if (commentData) {
-          // Fetch the user's profile
-          const { data: profileData } = await (supabase as any)
+          // Fetch the user's own profile
+          const { data: profileData } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)

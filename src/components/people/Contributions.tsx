@@ -73,8 +73,9 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
             return { ...entry, author_profile: null }
           }
           
+          // Use safe family member profiles view
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('family_member_profiles')
             .select('full_name, avatar_url')
             .eq('id', entry.author_profile_id)
             .single()

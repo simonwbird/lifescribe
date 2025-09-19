@@ -30,7 +30,7 @@ export function useActiveSpace() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Get user's profile with default space
+      // Get user's own profile with default space  
       const { data: profile } = await supabase
         .from('profiles')
         .select('default_space_id')

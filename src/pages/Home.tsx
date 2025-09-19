@@ -161,34 +161,42 @@ export default function Home() {
     try {
       const activities: ActivityItem[] = []
 
-      // Get recent stories
-      const { data: stories } = await supabase
-        .from('stories')
-        .select(`
-          id,
-          title,
-          content,
-          created_at,
-          family_member_profiles:profile_id (full_name)
-        `)
-        .eq('family_id', familyId)
-        .order('created_at', { ascending: false })
-        .limit(15)
+        // Get recent stories
+        const { data: stories } = await supabase
+          .from('stories')
+          .select(`
+            id,
+            title,
+            content,
+            created_at,
+            profile_id
+          `)
+          .eq('family_id', familyId)
+          .order('created_at', { ascending: false })
+          .limit(15)
 
-      if (stories) {
-        stories.forEach(story => {
-          activities.push({
-            id: `story-${story.id}`,
-            type: 'story',
-            actor: story.family_member_profiles?.full_name || 'Someone',
-            action: 'shared a story',
-            target: story.title,
-            snippet: story.content?.substring(0, 150) + '...',
-            time: getRelativeTime(story.created_at),
-            unread: isRecent(story.created_at)
+        // Fetch author profiles separately
+        if (stories?.length) {
+          const authorIds = [...new Set(stories.map(story => story.profile_id))]
+          const { data: profiles } = await supabase
+            .from('family_member_profiles')
+            .select('id, full_name')
+            .in('id', authorIds)
+
+          stories.forEach(story => {
+            const profile = profiles?.find(p => p.id === story.profile_id)
+            activities.push({
+              id: `story-${story.id}`,
+              type: 'story',
+              actor: profile?.full_name || 'Someone',
+              action: 'shared a story',
+              target: story.title,
+              snippet: story.content?.substring(0, 150) + '...',
+              time: getRelativeTime(story.created_at),
+              unread: isRecent(story.created_at)
+            })
           })
-        })
-      }
+        }
 
       // Sort activities by creation time (most recent first)
       activities.sort((a, b) => parseTimeAgo(a.time) - parseTimeAgo(b.time))
