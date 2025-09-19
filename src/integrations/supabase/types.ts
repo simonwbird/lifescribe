@@ -3783,7 +3783,15 @@ export type Database = {
           unlock_threshold?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_digest_settings_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: true
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
