@@ -3877,6 +3877,10 @@ export type Database = {
         Args: { family_id: string; user_id: string }
         Returns: boolean
       }
+      is_super_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       log_audit_event: {
         Args: {
           p_action?: Database["public"]["Enums"]["audit_action_type"]
