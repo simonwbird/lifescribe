@@ -15,6 +15,15 @@ verify_jwt = true
 [functions.transcribe]
 verify_jwt = true
 
+[functions.export-enhanced]
+verify_jwt = true
+
+[functions.rtbf-analyze]
+verify_jwt = true
+
+[functions.rtbf-execute]
+verify_jwt = true
+
 [functions.invite-link]
 verify_jwt = true
 
