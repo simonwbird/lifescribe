@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Trash2, AlertTriangle, FileText, Clock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
+import { useEventTracking } from '@/hooks/useEventTracking'
 import { ComplianceService } from '@/lib/complianceService'
 import type { RTBFAnalysis, RTBFCompletionReceipt } from '@/lib/complianceTypes'
 
@@ -21,6 +22,7 @@ export default function RTBFCard() {
   const [completionReceipt, setCompletionReceipt] = useState<RTBFCompletionReceipt | null>(null)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { trackRtbfRequested, trackRtbfExecuted } = useEventTracking()
 
   const handleAnalyzeImpact = async () => {
     setIsAnalyzing(true)
@@ -29,6 +31,18 @@ export default function RTBFCard() {
       setAnalysis(result)
       setCheckedWarnings(new Set())
       setConfirmationCode('')
+
+      // Track RTBF request
+      await trackRtbfRequested({
+        impact_analysis: {
+          stories_affected: result.deletion_analysis.content_data.stories,
+          media_affected: result.deletion_analysis.content_data.media_files,
+          families_affected: result.deletion_analysis.impact_analysis.affected_families,
+          total_items: result.deletion_analysis.impact_analysis.total_items
+        },
+        confirmation_method: 'in_person', // User is in the app
+        legal_basis: 'GDPR Article 17 - Right to erasure'
+      })
     } catch (error) {
       console.error('Analysis error:', error)
       toast({

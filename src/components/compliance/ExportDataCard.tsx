@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Download, FileArchive, Clock, AlertCircle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useEventTracking } from '@/hooks/useEventTracking'
 import { ComplianceService } from '@/lib/complianceService'
 import type { ExportAnalysis } from '@/lib/complianceTypes'
 
@@ -14,12 +15,30 @@ export default function ExportDataCard() {
   const [exportData, setExportData] = useState<ExportAnalysis | null>(null)
   const [includeMedia, setIncludeMedia] = useState(true)
   const { toast } = useToast()
+  const { trackExportRequested, trackExportCompleted } = useEventTracking()
 
   const handleRequestExport = async () => {
     setIsExporting(true)
     try {
+      // Track export request
+      await trackExportRequested({
+        export_type: includeMedia ? 'full' : 'stories_only',
+        requested_format: 'zip',
+        estimated_size_mb: 0, // Will be updated when we get the result
+        estimated_items: 0 // Will be updated when we get the result
+      })
+
       const result = await ComplianceService.requestEnhancedExport(includeMedia)
       setExportData(result)
+      
+      // Track export completion
+      await trackExportCompleted({
+        export_type: includeMedia ? 'full' : 'stories_only',
+        final_size_mb: result.estimated_size_mb,
+        total_items: result.media_count, // Use available media_count property
+        processing_time_seconds: 0, // Edge function would need to return this
+        download_expires_at: result.expires_at
+      })
       
       toast({
         title: 'Export Ready',
