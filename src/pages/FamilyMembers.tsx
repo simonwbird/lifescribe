@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { UserPlus, Crown, User, Eye } from 'lucide-react'
 import type { Member, Profile, Family } from '@/lib/types'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 type MemberWithProfile = Member & { 
   profiles: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> 
@@ -149,7 +150,7 @@ export default function FamilyMembers() {
                       {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                     </Badge>
                     <p className="text-xs text-muted-foreground">
-                      Joined {new Date(member.joined_at).toLocaleDateString()}
+                      Joined {formatForUser(member.joined_at, 'datetime', getCurrentUserRegion())}
                     </p>
                   </CardContent>
                 </Card>

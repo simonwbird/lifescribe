@@ -1,5 +1,6 @@
 import Header from '@/components/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 export default function Privacy() {
   return (
@@ -10,7 +11,7 @@ export default function Privacy() {
           <Card>
             <CardHeader>
               <CardTitle className="text-3xl">Privacy Policy</CardTitle>
-              <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+              <p className="text-muted-foreground">Last updated: {formatForUser(new Date().toISOString(), 'dateOnly', getCurrentUserRegion())}</p>
             </CardHeader>
             <CardContent className="prose prose-slate max-w-none dark:prose-invert">
               <h2>Information We Collect</h2>

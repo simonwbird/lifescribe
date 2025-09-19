@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import ReactionBar from './ReactionBar'
 import CommentThread from './CommentThread'
 import type { Answer, Profile, Question, Media } from '@/lib/types'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface AnswerCardProps {
   answer: Answer & { profiles: Profile; questions: Question }
@@ -57,7 +58,7 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
             </CardTitle>
             <CardDescription>
               answered by {answer.profiles.full_name || 'User'} • {' '}
-              {new Date(answer.created_at).toLocaleDateString()}
+              {formatForUser(answer.created_at, 'datetime', getCurrentUserRegion())}
             </CardDescription>
           </div>
         </div>

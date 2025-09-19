@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ExternalLink, MessageSquare, Camera, Edit3, Calendar, Heart } from 'lucide-react'
 import SuggestEditModal from './SuggestEditModal'
 import type { Person } from '@/lib/familyTreeTypes'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface PeopleDirectoryProps {
   people: Person[]
@@ -113,12 +114,16 @@ export default function PeopleDirectory({ people, familyId }: PeopleDirectoryPro
                     <CardDescription>
                       {person.is_living === false && person.death_date ? (
                         <>
-                          {new Date(person.birth_date).getFullYear()} - {new Date(person.death_date).getFullYear()}
+                          <span className="text-xs text-muted-foreground">
+                            {formatForUser(person.birth_date, 'dateOnly', getCurrentUserRegion())} - {formatForUser(person.death_date, 'dateOnly', getCurrentUserRegion())}
+                          </span>
                           {age !== null && <div className="text-xs">Would be {age}</div>}
                         </>
                       ) : person.birth_date ? (
                         <>
-                          Born {new Date(person.birth_date).getFullYear()}
+                          <span className="text-xs text-muted-foreground">
+                            Born {formatForUser(person.birth_date, 'dateOnly', getCurrentUserRegion())}
+                          </span>
                           {age !== null && <div className="text-xs">{age} years old</div>}
                         </>
                       ) : null}

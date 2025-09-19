@@ -1,5 +1,6 @@
 import Header from '@/components/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 export default function Terms() {
   return (
@@ -10,7 +11,7 @@ export default function Terms() {
           <Card>
             <CardHeader>
               <CardTitle className="text-3xl">Terms of Service</CardTitle>
-              <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+              <p className="text-muted-foreground">Last updated: {formatForUser(new Date().toISOString(), 'dateOnly', getCurrentUserRegion())}</p>
             </CardHeader>
             <CardContent className="prose prose-slate max-w-none dark:prose-invert">
               <h2>Acceptance of Terms</h2>

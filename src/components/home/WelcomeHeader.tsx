@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface WelcomeHeaderProps {
   firstName?: string;
@@ -10,21 +11,7 @@ interface WelcomeHeaderProps {
 const formatLastSeen = (timestamp?: string) => {
   if (!timestamp) return 'Welcome back!';
   
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffDays > 7) {
-    return `Last seen ${date.toLocaleDateString()}`;
-  } else if (diffDays > 0) {
-    return `Last seen ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  } else if (diffHours > 0) {
-    return `Last seen ${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  } else {
-    return 'Last seen recently';
-  }
+  return `Last seen ${formatForUser(timestamp, 'relative', getCurrentUserRegion())}`;
 };
 
 export default function WelcomeHeader({ firstName = 'Emily', lastSeen, onCreateClick }: WelcomeHeaderProps) {

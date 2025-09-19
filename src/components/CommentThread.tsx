@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { MessageCircle } from 'lucide-react'
 import ReactionBar from './ReactionBar'
 import type { Comment, Profile } from '@/lib/types'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface CommentThreadProps {
   targetType: 'story' | 'answer'
@@ -144,9 +145,9 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
                   <span className="text-sm font-medium">
                     {comment.profiles.full_name || 'User'}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(comment.created_at).toLocaleDateString()}
-                  </span>
+                   <span className="text-xs text-muted-foreground">
+                     {formatForUser(comment.created_at, 'datetime', getCurrentUserRegion())}
+                   </span>
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
                 <ReactionBar 

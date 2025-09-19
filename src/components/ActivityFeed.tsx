@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Heart, MessageCircle, UserPlus, BookOpen, ChefHat, TreePine, Package, Clock, Bell } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface ActivityItem {
   id: string
@@ -306,8 +306,8 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                  </p>
+                     {formatForUser(activity.created_at, 'relative', getCurrentUserRegion())}
+                   </p>
                 </div>
                 
                 {getActivityIcon(activity.type)}
@@ -379,8 +379,8 @@ export default function ActivityFeed({ familyId, showNotifications = false }: Ac
                   )}
                   
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                  </p>
+                     {formatForUser(activity.created_at, 'relative', getCurrentUserRegion())}
+                   </p>
                 </div>
               </div>
             ))}

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Plus, Edit2, Trash2 } from 'lucide-react'
 import { Person, UserRole, canEdit, computeAge, nextBirthdayOccurrence } from '@/utils/personUtils'
 import { format, differenceInDays } from 'date-fns'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { DatePrecisionPicker, DatePrecisionValue } from '@/components/DatePrecisionPicker'
 import { useToast } from '@/hooks/use-toast'
@@ -263,7 +264,7 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
               <div>
                 <p className="font-medium">Birthday</p>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(person.birth_date), 'MMMM d, yyyy')}
+                  {formatForUser(person.birth_date, 'dateOnly', getCurrentUserRegion())}
                   {age && <span> • Age {age}</span>}
                 </p>
                 {daysUntilBirthday !== null && person.is_living !== false && (
@@ -286,7 +287,7 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
               <div>
                 <p className="font-medium">Passed Away</p>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(person.death_date), 'MMMM d, yyyy')}
+                  {formatForUser(person.death_date, 'dateOnly', getCurrentUserRegion())}
                 </p>
               </div>
               {canUserEdit && (
@@ -306,8 +307,8 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
                 {event.event_date && (
                   <p className="text-sm text-muted-foreground">
                     {event.date_precision === 'year' 
-                      ? format(new Date(event.event_date), 'yyyy')
-                      : format(new Date(event.event_date), 'MMMM d, yyyy')
+                      ? new Date(event.event_date).getFullYear()
+                      : formatForUser(event.event_date, 'dateOnly', getCurrentUserRegion())
                     }
                   </p>
                 )}

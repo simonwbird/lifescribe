@@ -8,6 +8,7 @@ import CommentThread from './CommentThread'
 import { Link } from 'react-router-dom'
 import { Calendar, MapPin, Users, MessageSquare, Mic2 } from 'lucide-react'
 import type { Story, Profile, Media } from '@/lib/types'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface ExtendedStory extends Story {
   occurred_on?: string
@@ -169,7 +170,7 @@ export default function StoryCard({ story }: StoryCardProps) {
             </CardTitle>
             <CardDescription>
               by {story.profiles.full_name || 'User'} • {' '}
-              {new Date(story.created_at).toLocaleDateString()}
+              {formatForUser(story.created_at, 'datetime', getCurrentUserRegion())}
             </CardDescription>
           </div>
         </div>
@@ -182,8 +183,8 @@ export default function StoryCard({ story }: StoryCardProps) {
               <Calendar size={14} />
               <span>
                 {story.occurred_precision === 'year' ? new Date(story.occurred_on).getFullYear() : 
-                 story.occurred_precision === 'month' ? new Date(story.occurred_on).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) :
-                 new Date(story.occurred_on).toLocaleDateString()}
+                 story.occurred_precision === 'month' ? formatForUser(story.occurred_on, 'dateOnly', { locale: 'en-US', timezone: getCurrentUserRegion().timezone }) :
+                 formatForUser(story.occurred_on, 'dateOnly', getCurrentUserRegion())}
                 {story.is_approx && ' (approximate)'}
                 {story.occurred_precision && ` • ${story.occurred_precision} precision`}
               </span>

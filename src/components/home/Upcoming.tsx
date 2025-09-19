@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { getUpcomingEvents, type UpcomingEvent } from '@/lib/eventsService'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import AddBirthdayModal from './AddBirthdayModal'
 import AddEventModal from './AddEventModal'
 
@@ -43,13 +44,7 @@ export default function Upcoming() {
   }
 
   const formatDateLabel = (event: UpcomingEvent): string => {
-    const date = new Date(event.date)
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    }
-    return date.toLocaleDateString('en-US', options)
+    return formatForUser(event.date, 'dateOnly', getCurrentUserRegion())
   }
 
   const formatDaysUntil = (daysUntil: number): string => {

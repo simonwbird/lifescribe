@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, FileText, Image, Video, Mic } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 interface ContentItem {
   id: string
@@ -246,7 +247,7 @@ export default function AdminContent() {
 
                 <div>
                   <p className="text-xs text-muted-foreground">Created</p>
-                  <p className="text-sm">{new Date(item.created_at).toLocaleDateString()}</p>
+                  <p className="text-sm">{formatForUser(item.created_at, 'datetime', getCurrentUserRegion())}</p>
                 </div>
               </CardContent>
             </Card>

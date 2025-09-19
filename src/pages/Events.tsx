@@ -12,6 +12,7 @@ import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import AddBirthdayModal from '@/components/home/AddBirthdayModal'
 import AddEventModal from '@/components/home/AddEventModal'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 export default function Events() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
@@ -48,22 +49,7 @@ export default function Events() {
   }
 
   const formatDateLabel = (event: UpcomingEvent): string => {
-    // Parse YYYY-MM-DD safely in local time
-    const [y, m, d] = event.date.split('-').map(Number)
-    const date = new Date(y, (m || 1) - 1, d || 1)
-
-    const weekday = date.toLocaleString('en-GB', { weekday: 'long' })
-    const month = date.toLocaleString('en-GB', { month: 'long' })
-    const day = date.getDate()
-    const year = date.getFullYear()
-
-    const getOrdinal = (n: number) => {
-      const s = ['th', 'st', 'nd', 'rd']
-      const v = n % 100
-      return s[(v - 20) % 10] || s[v] || s[0]
-    }
-
-    return `${weekday} ${day}${getOrdinal(day)} ${month} ${year}`
+    return formatForUser(event.date, 'dateOnly', getCurrentUserRegion())
   }
 
   const formatDaysUntil = (daysUntil: number): string => {

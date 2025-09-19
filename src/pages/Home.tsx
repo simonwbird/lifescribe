@@ -28,6 +28,7 @@ import { CountdownModal } from '@/components/home/simple/CountdownModal'
 import { PermissionDeniedCard } from '@/components/home/simple/PermissionDeniedCard'
 import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard'
 import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
+import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import ImpersonationBoundary from '@/components/ImpersonationBoundary'
 
 // Types
@@ -350,7 +351,7 @@ export default function Home() {
     const diffInWeeks = Math.floor(diffInDays / 7)
     if (diffInWeeks < 4) return `${diffInWeeks} weeks ago`
     
-    return date.toLocaleDateString()
+    return formatForUser(dateString, 'relative', getCurrentUserRegion())
   }
 
   const isRecent = (dateString: string): boolean => {
