@@ -27,8 +27,16 @@ export default function AdminConfig() {
       description: 'Admin access and user permissions',
       icon: Users,
       status: 'Active',
+      path: '/admin/users',
+      items: ['Super admin controls', 'Role assignment', 'Bug tester access']
+    },
+    {
+      title: 'Family Management',
+      description: 'Family oversight and analytics',
+      icon: Users,
+      status: 'Active',
       path: '/admin/families',
-      items: ['Super admin controls', 'Family management', 'Access control']
+      items: ['Family health monitoring', 'Usage analytics', 'Member management']
     },
     {
       title: 'Security & Compliance',
@@ -190,9 +198,13 @@ export default function AdminConfig() {
               <Flag className="w-4 h-4 mr-2" />
               Feature Flags
             </Button>
-            <Button variant="outline" onClick={() => window.location.href = '/admin/families'}>
+            <Button variant="outline" onClick={() => window.location.href = '/admin/users'}>
               <Users className="w-4 h-4 mr-2" />
               Users
+            </Button>
+            <Button variant="outline" onClick={() => window.location.href = '/admin/families'}>
+              <Users className="w-4 h-4 mr-2" />
+              Families
             </Button>
             <Button variant="outline" onClick={() => window.location.href = '/admin/digest'}>
               <Bell className="w-4 h-4 mr-2" />

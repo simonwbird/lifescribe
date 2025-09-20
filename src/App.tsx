@@ -72,6 +72,7 @@ import DateLocalizationTest from './components/admin/DateLocalizationTest';
 import BugInbox from './pages/admin/BugInbox';
 import BugDetail from './pages/admin/BugDetail';
 import AdminConfig from './pages/admin/AdminConfig';
+import AdminUserManagement from '@/pages/admin/AdminUserManagement';
 import { BugReportWidget } from './components/BugReportWidget';
 
 const queryClient = new QueryClient();
@@ -138,7 +139,8 @@ function AppContent() {
        <Route path="/admin" element={<AuthGate><AdminAuthGuard><AdminShell /></AdminAuthGuard></AuthGate>}>
          <Route index element={<AdminDashboard />} />
          <Route path="people" element={<AdminPeople />} />
-          <Route path="families" element={<FamilyOverviewTable />} />
+           <Route path="families" element={<FamilyOverviewTable />} />
+           <Route path="users" element={<AdminUserManagement />} />
            <Route path="feature-flags" element={<AdminFeatureFlags />} />
            <Route path="digest" element={<AdminDigest />} />
            <Route path="content" element={<AdminContent />} />
