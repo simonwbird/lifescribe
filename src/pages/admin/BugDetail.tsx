@@ -297,6 +297,13 @@ export default function BugDetail() {
               <CardTitle>Bug Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Bug Title/Description */}
+              <div>
+                <h2 className="text-base font-medium text-foreground leading-relaxed mb-4 p-3 bg-muted rounded-md">
+                  {bugReport.title}
+                </h2>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Status</label>
