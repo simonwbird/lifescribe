@@ -32,8 +32,8 @@ const actionTypeLabels = {
 
 export function ContentAuditLogModal() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState('');
-  const [contentTypeFilter, setContentTypeFilter] = useState('');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [contentTypeFilter, setContentTypeFilter] = useState('all');
 
   const { data: auditLogs = [], isLoading } = useContentAuditLog();
 
@@ -43,8 +43,8 @@ export function ContentAuditLogModal() {
       log.editor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.change_reason?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesAction = !actionFilter || log.action_type === actionFilter;
-    const matchesContentType = !contentTypeFilter || log.content_type === contentTypeFilter;
+    const matchesAction = actionFilter === 'all' || log.action_type === actionFilter;
+    const matchesContentType = contentTypeFilter === 'all' || log.content_type === contentTypeFilter;
     
     return matchesSearch && matchesAction && matchesContentType;
   });
@@ -79,7 +79,7 @@ export function ContentAuditLogModal() {
             <SelectValue placeholder="Filter by action" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Actions</SelectItem>
+            <SelectItem value="all">All Actions</SelectItem>
             {Object.entries(actionTypeLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
@@ -92,7 +92,7 @@ export function ContentAuditLogModal() {
             <SelectValue placeholder="Content type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Types</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="story">Stories</SelectItem>
             <SelectItem value="media">Media</SelectItem>
             <SelectItem value="answer">Answers</SelectItem>

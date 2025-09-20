@@ -40,8 +40,8 @@ export default function BugInbox() {
   const [bugReports, setBugReports] = useState<BugReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>({
-    status: '',
-    severity: '',
+    status: 'all',
+    severity: 'all',
     route: '',
     search: ''
   });
@@ -71,11 +71,11 @@ export default function BugInbox() {
         .order('created_at', { ascending: false });
 
       // Apply filters
-      if (filters.status) {
+      if (filters.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
       }
       
-      if (filters.severity) {
+      if (filters.severity && filters.severity !== 'all') {
         query = query.eq('severity', filters.severity);
       }
       
@@ -185,7 +185,7 @@ export default function BugInbox() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="New">New</SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
                   <SelectItem value="Fixed">Fixed</SelectItem>
@@ -202,7 +202,7 @@ export default function BugInbox() {
                   <SelectValue placeholder="All severities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All severities</SelectItem>
+                  <SelectItem value="all">All severities</SelectItem>
                   <SelectItem value="High">High</SelectItem>
                   <SelectItem value="Medium">Medium</SelectItem>
                   <SelectItem value="Low">Low</SelectItem>
