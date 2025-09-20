@@ -290,10 +290,10 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
           </div>
         </div>
 
-        <div className="p-4 max-h-[80vh] overflow-y-auto overflow-x-hidden">
+        <div className="p-4 max-h-[80vh] overflow-auto">
           <div className="flex justify-center">
             <div className="relative">
-              <canvas ref={canvasRef} className="border border-border rounded max-w-full" />
+              <canvas ref={canvasRef} className="border border-border rounded max-w-none" />
             </div>
           </div>
         </div>
