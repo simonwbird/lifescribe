@@ -32,11 +32,11 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
     if (isOpen && document) {
       loadDocument()
     } else {
-      // Clean up the URL when modal closes
-      if (documentUrl) {
+      // Clean up the blob URL when modal closes
+      if (documentUrl && documentUrl.startsWith('blob:')) {
         URL.revokeObjectURL(documentUrl)
-        setDocumentUrl('')
       }
+      setDocumentUrl('')
     }
   }, [isOpen, document])
 
@@ -52,14 +52,32 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
         throw new Error('Not authenticated')
       }
 
-      console.log('Loading document with session token')
+      console.log('Fetching document content directly...')
 
-      // Create the URL for the document viewer with proper token
+      // Fetch the document content using fetch with auth header
       const supabaseUrl = 'https://imgtnixyralpdrmedwzi.supabase.co'
-      const viewerUrl = `${supabaseUrl}/functions/v1/document-viewer?filePath=${encodeURIComponent(document.file_path)}&familyId=${encodeURIComponent(familyId)}&token=${encodeURIComponent(session.access_token)}`
+      const response = await fetch(`${supabaseUrl}/functions/v1/document-viewer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filePath: document.file_path,
+          familyId: familyId
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch document: ${response.statusText}`)
+      }
+
+      const fileBlob = await response.blob()
       
-      console.log('Document viewer URL:', viewerUrl.replace(session.access_token, '[TOKEN]'))
-      setDocumentUrl(viewerUrl)
+      // Create blob URL for the iframe
+      const blobUrl = URL.createObjectURL(fileBlob)
+      console.log('Created blob URL for document')
+      setDocumentUrl(blobUrl)
     } catch (error) {
       console.error('Error loading document:', error)
       setError('Failed to load document. Please try again.')

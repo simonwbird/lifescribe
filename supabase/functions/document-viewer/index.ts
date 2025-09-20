@@ -23,11 +23,34 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get file path and family ID from URL query parameters
-    const url = new URL(req.url)
-    const filePath = url.searchParams.get('filePath')
-    const familyId = url.searchParams.get('familyId')
-    const tokenParam = url.searchParams.get('token')
+    let filePath: string
+    let familyId: string
+    let token: string | null = null
+
+    // Handle both GET (with query params) and POST (with body) requests
+    if (req.method === 'GET') {
+      const url = new URL(req.url)
+      filePath = url.searchParams.get('filePath') ?? ''
+      familyId = url.searchParams.get('familyId') ?? ''
+      const tokenParam = url.searchParams.get('token')
+      
+      // Get token from auth header or query param
+      const authHeader = req.headers.get('Authorization')
+      token = authHeader?.replace('Bearer ', '') || tokenParam
+    } else if (req.method === 'POST') {
+      const body = await req.json()
+      filePath = body.filePath
+      familyId = body.familyId
+      
+      // Get token from auth header
+      const authHeader = req.headers.get('Authorization')
+      token = authHeader?.replace('Bearer ', '')
+    } else {
+      return new Response('Method not allowed', { 
+        status: 405, 
+        headers: corsHeaders 
+      })
+    }
 
     if (!filePath || !familyId) {
       return new Response('Missing filePath or familyId parameters', { 
@@ -36,17 +59,8 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Get token from auth header or query param
-    const authHeader = req.headers.get('Authorization')
-    let token = authHeader?.replace('Bearer ', '')
-    
-    // If no auth header, try query parameter
-    if (!token && tokenParam) {
-      token = tokenParam
-    }
-
     if (!token) {
-      console.log('No token found in header or query param')
+      console.log('No token found in header or body')
       return new Response('Missing authentication', { 
         status: 401, 
         headers: corsHeaders 
