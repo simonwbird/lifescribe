@@ -30,7 +30,7 @@ import heroFamilyStories from '@/assets/hero-family-stories.jpg'
 import familyTechnology from '@/assets/family-technology.jpg'
 import grandfatherGranddaughter from '@/assets/grandfather-granddaughter.jpg'
 import familySelfie from '@/assets/family-selfie.jpg'
-import lifescribeInterface from '@/assets/lifescribe-interface.jpg'
+import familyInterfaceMockup from '@/assets/family-interface-mockup.jpg'
 
 // HERO SECTION
 const Hero = () => {
@@ -196,8 +196,8 @@ const HowLifeScribeWorksSection = () => (
           <div className="relative">
             <div className="relative rounded-lg overflow-hidden shadow-photo aspect-[4/3] border border-border">
               <img 
-                src={lifescribeInterface} 
-                alt="Clean LifeScribe interface showing family timeline with photos, stories, and voice notes"
+                src={familyInterfaceMockup} 
+                alt="LifeScribe family interface showing photo gallery with family members and warm navigation"
                 className="w-full h-full object-cover"
               />
             </div>
