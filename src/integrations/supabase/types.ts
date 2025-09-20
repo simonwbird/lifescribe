@@ -332,6 +332,13 @@ export type Database = {
             foreignKeyName: "answers_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "family_member_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -495,6 +502,13 @@ export type Database = {
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -800,6 +814,13 @@ export type Database = {
           verified_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "families_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "families_created_by_fkey"
             columns: ["created_by"]
@@ -1435,6 +1456,13 @@ export type Database = {
             foreignKeyName: "invites_invited_by_fkey"
             columns: ["invited_by"]
             isOneToOne: false
+            referencedRelation: "family_member_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1490,6 +1518,13 @@ export type Database = {
           with_person_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "life_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "life_events_created_by_fkey"
             columns: ["created_by"]
@@ -1601,6 +1636,13 @@ export type Database = {
             columns: ["individual_story_id"]
             isOneToOne: false
             referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1820,6 +1862,13 @@ export type Database = {
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -2089,7 +2138,21 @@ export type Database = {
             foreignKeyName: "notifications_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
+            referencedRelation: "family_member_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -3327,6 +3390,13 @@ export type Database = {
             foreignKeyName: "reactions_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "family_member_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3642,6 +3712,13 @@ export type Database = {
             columns: ["happened_at_property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -4245,6 +4322,28 @@ export type Database = {
           simple_mode: boolean | null
           timezone: string | null
         }
+        Insert: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          locale?: string | null
+          settings?: Json | null
+          simple_mode?: boolean | null
+          timezone?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          locale?: string | null
+          settings?: Json | null
+          simple_mode?: boolean | null
+          timezone?: string | null
+        }
         Relationships: []
       }
       invites_masked: {
@@ -4287,6 +4386,13 @@ export type Database = {
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "family_member_profiles"
             referencedColumns: ["id"]
           },
           {
