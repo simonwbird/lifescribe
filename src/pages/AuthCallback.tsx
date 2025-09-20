@@ -102,11 +102,17 @@ export default function AuthCallback() {
           .single()
 
         // Navigate based on family membership
-        if (member) {
-          navigate('/home')
-        } else {
-          navigate('/onboarding')
-        }
+          if (member) {
+            navigate('/home')
+          } else {
+            // Check if we should redirect to onboarding (from OAuth redirect)
+            const url = new URL(window.location.href)
+            if (url.pathname === '/onboarding' || url.searchParams.get('redirect') === 'onboarding') {
+              navigate('/onboarding')
+            } else {
+              navigate('/onboarding')
+            }
+          }
 
         toast({
           title: "Welcome back!",

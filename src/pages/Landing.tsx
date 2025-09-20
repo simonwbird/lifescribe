@@ -21,8 +21,6 @@ import {
   Globe,
   Plus
 } from 'lucide-react'
-import FamilyCreateModal from '@/components/FamilyCreateModal'
-
 // Import family photos
 import heroFamilyStories from '@/assets/hero-family-stories.jpg'
 import familyTechnology from '@/assets/family-technology.jpg'
@@ -31,11 +29,8 @@ import familySelfie from '@/assets/family-selfie.jpg'
 
 // HERO SECTION
 const Hero = () => {
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  
   return (
-    <>
-      <section className="relative bg-gradient-paper min-h-[60vh] flex items-center">
+    <section className="relative bg-gradient-paper min-h-[60vh] flex items-center">
     <div className="container mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
         <div className="text-center lg:text-left space-y-8">
@@ -54,9 +49,11 @@ const Hero = () => {
             LifeScribe is a private home for the memories that matter most — the voices, photos, recipes, and adventures you never want to lose.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
-            <Button size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg" onClick={() => setShowCreateModal(true)}>
-              <Plus className="mr-2 h-5 w-5" />
-              Create Family Space
+            <Button asChild size="lg" className="text-lg px-8 py-6 rounded-md font-sans font-medium bg-brand-700 hover:bg-brand-600 text-white shadow-photo transition-all duration-300 hover:shadow-lg">
+              <Link to="/login?redirect=onboarding">
+                <Plus className="mr-2 h-5 w-5" />
+                Create Family Space
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 text-brand-700 border-brand-700 hover:bg-brand-700 hover:text-white">
               <Link to="/login">Sign In</Link>
@@ -81,12 +78,6 @@ const Hero = () => {
         </div>
       </div>
     </section>
-    
-      <FamilyCreateModal 
-        open={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
-      />
-    </>
   )
 }
 

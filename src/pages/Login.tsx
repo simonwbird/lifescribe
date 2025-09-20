@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -17,22 +17,32 @@ export default function Login() {
   const [message, setMessage] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect')
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        navigate('/')
+        if (redirectTo === 'onboarding') {
+          navigate('/onboarding')
+        } else {
+          navigate('/')
+        }
       }
     })
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate('/')
+        if (redirectTo === 'onboarding') {
+          navigate('/onboarding')
+        } else {
+          navigate('/')
+        }
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [navigate])
+  }, [navigate, redirectTo])
 
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -47,7 +57,9 @@ export default function Login() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: redirectTo === 'onboarding' 
+              ? `${window.location.origin}/onboarding` 
+              : `${window.location.origin}/`,
             data: {
               full_name: email.split('@')[0] // Use email username as initial name
             }
@@ -78,7 +90,9 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectTo === 'onboarding' 
+            ? `${window.location.origin}/onboarding`
+            : `${window.location.origin}/auth/callback`,
         }
       })
       if (error) throw error
