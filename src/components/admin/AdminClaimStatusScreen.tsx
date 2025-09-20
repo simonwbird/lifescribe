@@ -10,9 +10,8 @@ import { toast } from '@/components/ui/use-toast'
 interface AdminClaim {
   id: string
   family_id: string
-  claim_type: 'endorsement' | 'email_challenge'
-  status: 'pending' | 'approved' | 'denied' | 'expired' | 'completed'
-  reason: string
+  claim_type: string
+  status: string
   endorsements_required: number
   endorsements_received: number
   cooling_off_until?: string
@@ -58,7 +57,20 @@ export function AdminClaimStatusScreen({ familyId, familyName }: AdminClaimStatu
 
       const { data, error } = await supabase
         .from('admin_claims')
-        .select('*')
+        .select(`
+          id,
+          family_id,
+          claimant_id,
+          claim_type,
+          status,
+          endorsements_required,
+          endorsements_received,
+          cooling_off_until,
+          claimed_at,
+          expires_at,
+          created_at,
+          metadata
+        `)
         .eq('family_id', familyId)
         .eq('claimant_id', user.user.id)
         .order('created_at', { ascending: false })
@@ -144,6 +156,29 @@ export function AdminClaimStatusScreen({ familyId, familyName }: AdminClaimStatu
         return 'secondary'
     }
   }
+
+    switch (claim.status) {
+      case 'pending':
+        if (claim.claim_type === 'endorsement') {
+          return `Waiting for endorsements (${claim.endorsements_received}/${claim.endorsements_required} received)`
+        } else {
+          return 'Waiting for email verification'
+        }
+      case 'approved':
+        if (claim.cooling_off_until && new Date(claim.cooling_off_until) > new Date()) {
+          return 'Approved - cooling-off period in progress'
+        } else {
+          return 'Approved - ready to grant admin rights'
+        }
+      case 'denied':
+        return 'Claim was denied'
+      case 'completed':
+        return 'Admin rights granted'
+      case 'expired':
+        return 'Claim expired'
+      default:
+        return 'Status unknown'
+    }
 
   const getStatusMessage = (claim: AdminClaim) => {
     switch (claim.status) {
@@ -252,12 +287,9 @@ export function AdminClaimStatusScreen({ familyId, familyName }: AdminClaimStatu
             </div>
           </div>
 
-          {/* Reason */}
-          <div>
-            <p className="font-medium text-sm mb-2">Reason for Claim</p>
-            <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
-              {claim.reason}
-            </p>
+          {/* Claim Details */}
+          <div className="bg-muted p-4 rounded-lg">
+            <p className="font-medium">Admin claim submitted for family management rights</p>
           </div>
 
           {/* Endorsement Progress (for endorsement claims) */}

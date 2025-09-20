@@ -16,7 +16,6 @@ interface AdminClaim {
   claimant_id: string
   claim_type: string
   status: string
-  reason: string
   endorsements_required: number
   endorsements_received: number
   expires_at: string
@@ -83,7 +82,17 @@ export function EndorsementPanel({ familyId }: { familyId: string }) {
       // Get pending claims for this family
       const { data: claimsData, error: claimsError } = await supabase
         .from('admin_claims')
-        .select('*')
+        .select(`
+          id,
+          family_id,
+          claimant_id,
+          claim_type,
+          status,
+          endorsements_required,
+          endorsements_received,
+          expires_at,
+          created_at
+        `)
         .eq('family_id', familyId)
         .eq('status', 'pending')
         .eq('claim_type', 'endorsement') // Only endorsement-based claims
@@ -236,10 +245,12 @@ export function EndorsementPanel({ familyId }: { familyId: string }) {
             </CardHeader>
             
             <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium">Reason for Claim</Label>
-                <p className="text-sm text-muted-foreground mt-1">{claim.reason}</p>
-              </div>
+          <div>
+            <Label className="text-sm font-medium">Claim Details</Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              Admin claim for family management rights
+            </p>
+          </div>
 
               {/* Progress Bar */}
               <div className="space-y-2">
