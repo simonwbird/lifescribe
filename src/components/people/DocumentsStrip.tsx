@@ -213,6 +213,21 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
   }
 
+  const viewDocument = async (doc: Document) => {
+    try {
+      const signedUrl = await getSignedMediaUrl(doc.file_path, (person as any).family_id)
+      if (signedUrl) {
+        window.open(signedUrl, '_blank')
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to open document",
+        description: "Could not open the document for viewing.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const downloadDocument = async (doc: Document) => {
     try {
       const signedUrl = await getSignedMediaUrl(doc.file_path, (person as any).family_id)
@@ -294,7 +309,8 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
           ) : (
             <div className="space-y-2">
               {documents.slice(0, 3).map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                     onClick={() => viewDocument(doc)}>
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {getFileIcon(doc.mime_type)}
                     <div className="flex-1 min-w-0">
@@ -307,13 +323,30 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => downloadDocument(doc)}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        viewDocument(doc)
+                      }}
+                      title="View document"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        downloadDocument(doc)
+                      }}
+                      title="Download document"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
               {documents.length > 3 && (
