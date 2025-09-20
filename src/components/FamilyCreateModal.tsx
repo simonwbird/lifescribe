@@ -30,16 +30,16 @@ export default function FamilyCreateModal({ open, onClose }: FamilyCreateModalPr
     setError('')
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) throw new Error('Not authenticated')
 
       // Create or update profile first
       await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
-          email: user.email!,
-          full_name: user.user_metadata?.full_name || '',
+          id: session.user.id,
+          email: session.user.email!,
+          full_name: session.user.user_metadata?.full_name || '',
           updated_at: new Date().toISOString(),
         })
 
@@ -48,7 +48,7 @@ export default function FamilyCreateModal({ open, onClose }: FamilyCreateModalPr
         .from('families')
         .insert({
           name: familyName.trim(),
-          created_by: user.id,
+          created_by: session.user.id,
         })
         .select()
         .single()
@@ -60,7 +60,7 @@ export default function FamilyCreateModal({ open, onClose }: FamilyCreateModalPr
         .from('members')
         .insert({
           family_id: family.id,
-          profile_id: user.id,
+          profile_id: session.user.id,
           role: 'admin',
         })
 
