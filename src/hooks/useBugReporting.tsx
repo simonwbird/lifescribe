@@ -89,71 +89,106 @@ export const useBugReporting = () => {
     try {
       const html2canvas = (await import('html2canvas')).default;
       
-      // Find and temporarily hide modal/dialog elements
-      const modalsToHide = document.querySelectorAll('[role="dialog"], [data-radix-dialog-content], .fixed.inset-0, .z-50');
-      const originalDisplays: string[] = [];
+      // Find and temporarily hide ALL modal/dialog elements more aggressively
+      const modalsToHide = document.querySelectorAll([
+        '[role="dialog"]',
+        '[data-radix-dialog-content]', 
+        '[data-radix-dialog-overlay]',
+        '.fixed.inset-0',
+        '.z-50',
+        '.z-40',
+        '[data-state="open"]',
+        // Target the bug report modal specifically
+        'div[class*="fixed"][class*="inset-0"]',
+        'div[class*="bg-black"]'
+      ].join(', '));
       
+      const originalDisplays: string[] = [];
+      const originalVisibility: string[] = [];
+      const originalOpacity: string[] = [];
+      
+      // More aggressive hiding
       modalsToHide.forEach((modal, index) => {
         const element = modal as HTMLElement;
         originalDisplays[index] = element.style.display;
+        originalVisibility[index] = element.style.visibility;
+        originalOpacity[index] = element.style.opacity;
+        
         element.style.display = 'none';
+        element.style.visibility = 'hidden';
+        element.style.opacity = '0';
       });
       
-      // Wait a brief moment for the DOM to update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait longer for DOM to update
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Find the main content area - look for common content containers
+      // Find the main content area - be more specific about content detection
       const contentSelectors = [
-        'main', 
-        '[role="main"]', 
-        '.container', 
-        '.content', 
+        'main:not([role="dialog"])', 
+        '[role="main"]:not([role="dialog"])', 
+        'body > div:not([role="dialog"]):not(.fixed)',
+        '.container:not([role="dialog"])', 
+        '.content:not([role="dialog"])', 
         '.page-content',
         '#content',
-        '.main-content'
+        '.main-content',
+        'body > *:not([role="dialog"]):not(.fixed):first-child'
       ];
       
       let contentElement = document.body;
       for (const selector of contentSelectors) {
-        const found = document.querySelector(selector);
-        if (found) {
-          contentElement = found as HTMLElement;
-          break;
+        try {
+          const found = document.querySelector(selector);
+          if (found && !found.closest('[role="dialog"]')) {
+            contentElement = found as HTMLElement;
+            console.log('Found content element:', selector);
+            break;
+          }
+        } catch (e) {
+          continue;
         }
       }
       
       // Get content dimensions
-      const contentRect = contentElement.getBoundingClientRect();
-      const contentWidth = Math.min(contentElement.scrollWidth, 1200); // Max 1200px width
+      const contentWidth = Math.min(contentElement.scrollWidth, 1200);
       
       // Capture the content area at high quality
       const canvas = await html2canvas(contentElement, {
-        height: contentElement.scrollHeight, // Full content height
-        width: contentWidth, // Content width only
+        height: contentElement.scrollHeight,
+        width: contentWidth,
         useCORS: true,
         allowTaint: true,
-        scale: 2, // High quality 2x scale
+        scale: 2,
         scrollX: 0,
         scrollY: 0,
         logging: false,
-        imageTimeout: 15000,
-        backgroundColor: '#ffffff', // White background for clarity
+        imageTimeout: 20000,
+        backgroundColor: '#ffffff',
         ignoreElements: (element) => {
-          return (
+          // More comprehensive modal detection
+          if (
             element.hasAttribute('role') && element.getAttribute('role') === 'dialog' ||
             element.hasAttribute('data-radix-dialog-content') ||
-            element.classList.contains('fixed') && element.classList.contains('inset-0') ||
-            element.classList.contains('z-50') ||
+            element.hasAttribute('data-radix-dialog-overlay') ||
             element.closest('[role="dialog"]') !== null ||
-            element.closest('[data-radix-dialog-content]') !== null
-          );
+            element.closest('[data-radix-dialog-content]') !== null ||
+            element.classList.contains('fixed') ||
+            element.classList.contains('z-50') ||
+            element.classList.contains('z-40') ||
+            getComputedStyle(element).position === 'fixed'
+          ) {
+            return true;
+          }
+          return false;
         }
       });
       
-      // Restore original display values
+      // Restore original styles
       modalsToHide.forEach((modal, index) => {
         const element = modal as HTMLElement;
         element.style.display = originalDisplays[index] || '';
+        element.style.visibility = originalVisibility[index] || '';
+        element.style.opacity = originalOpacity[index] || '';
       });
       
       return canvas.toDataURL('image/png');
