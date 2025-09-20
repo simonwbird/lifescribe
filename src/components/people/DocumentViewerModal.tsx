@@ -189,13 +189,13 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
         return (
           <div className="w-full max-h-[70vh] overflow-auto border rounded-lg bg-background p-2">
             {useObjectViewer ? (
-              <object data={documentUrl} type="application/pdf" width="100%" height="800">
-                <div className="p-6 text-center text-muted-foreground">
-                  Failed to load PDF. You can
-                  <Button onClick={downloadDocument} variant="outline" className="ml-2">Download</Button>
-                  instead.
+              <div className="p-6 text-center text-muted-foreground">
+                <p className="mb-4">This browser blocked inline PDF preview. You can open it in a new tab or download.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Button onClick={() => window.open(documentUrl, '_blank')} variant="secondary">Open in new tab</Button>
+                  <Button onClick={downloadDocument} variant="outline">Download</Button>
                 </div>
-              </object>
+              </div>
             ) : (
               <PdfDocument 
                 file={{ data: pdfData }} 
