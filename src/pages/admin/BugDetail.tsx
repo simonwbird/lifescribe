@@ -268,11 +268,21 @@ export default function BugDetail() {
               {bugReport.status !== 'QA Ready' && bugReport.status !== 'Fixed' && bugReport.status !== 'Closed' && (
                 <Button 
                   onClick={() => setShowFixModal(true)}
+                  disabled={hasActiveTasks}
                   size="sm"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50"
                 >
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  Fix with Loveable
+                  {hasActiveTasks ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                      AI Working...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Fix with Loveable
+                    </>
+                  )}
                 </Button>
               )}
             </>
