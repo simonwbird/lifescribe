@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Download, X, Loader2 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { Document as PdfDocument, Page, pdfjs } from 'react-pdf'
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url'
 
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker
 interface Document {
   id: string
   file_name: string
@@ -27,6 +31,8 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
   const [documentUrl, setDocumentUrl] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null)
+  const [numPages, setNumPages] = useState<number>(0)
 
   useEffect(() => {
     if (isOpen && document) {
@@ -36,6 +42,7 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
       if (documentUrl && documentUrl.startsWith('blob:')) {
         URL.revokeObjectURL(documentUrl)
       }
+      setPdfData(null)
       setDocumentUrl('')
     }
   }, [isOpen, document])
@@ -74,7 +81,15 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
 
       const fileBlob = await response.blob()
       
-      // Create blob URL for the iframe
+      // If PDF, prepare PDF.js data
+      if (document.mime_type === 'application/pdf') {
+        const ab = await fileBlob.arrayBuffer()
+        setPdfData(new Uint8Array(ab))
+      } else {
+        setPdfData(null)
+      }
+      
+      // Create blob URL for fallback/other types
       const blobUrl = URL.createObjectURL(fileBlob)
       console.log('Created blob URL for document')
       setDocumentUrl(blobUrl)
@@ -152,11 +167,31 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
     }
 
     if (documentUrl && document) {
-      // For PDFs and other documents that can be displayed in iframe
-      if (document.mime_type === 'application/pdf' || 
-          document.mime_type.startsWith('text/') ||
-          document.mime_type.includes('document') ||
-          document.mime_type.includes('sheet')) {
+      if (document.mime_type === 'application/pdf') {
+        if (!pdfData) {
+          return (
+            <div className="flex items-center justify-center h-96">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span>Preparing PDF...</span>
+              </div>
+            </div>
+          )
+        }
+        return (
+          <div className="w-full max-h-[70vh] overflow-auto border rounded-lg bg-background p-2">
+            <PdfDocument file={{ data: pdfData }} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
+              {Array.from({ length: numPages }, (_, i) => (
+                <Page key={`page_${i + 1}`} pageNumber={i + 1} width={800} />
+              ))}
+            </PdfDocument>
+          </div>
+        )
+      } else if (
+        document.mime_type.startsWith('text/') ||
+        document.mime_type.includes('document') ||
+        document.mime_type.includes('sheet')
+      ) {
         return (
           <iframe
             src={documentUrl}
@@ -188,7 +223,7 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0 pr-4">
