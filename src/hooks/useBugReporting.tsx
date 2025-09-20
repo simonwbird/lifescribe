@@ -102,19 +102,43 @@ export const useBugReporting = () => {
       // Wait a brief moment for the DOM to update
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Capture the full page height, not just viewport
-      const canvas = await html2canvas(document.body, {
-        height: document.body.scrollHeight, // Full page height
-        width: document.body.scrollWidth,   // Full page width
+      // Find the main content area - look for common content containers
+      const contentSelectors = [
+        'main', 
+        '[role="main"]', 
+        '.container', 
+        '.content', 
+        '.page-content',
+        '#content',
+        '.main-content'
+      ];
+      
+      let contentElement = document.body;
+      for (const selector of contentSelectors) {
+        const found = document.querySelector(selector);
+        if (found) {
+          contentElement = found as HTMLElement;
+          break;
+        }
+      }
+      
+      // Get content dimensions
+      const contentRect = contentElement.getBoundingClientRect();
+      const contentWidth = Math.min(contentElement.scrollWidth, 1200); // Max 1200px width
+      
+      // Capture the content area at high quality
+      const canvas = await html2canvas(contentElement, {
+        height: contentElement.scrollHeight, // Full content height
+        width: contentWidth, // Content width only
         useCORS: true,
         allowTaint: true,
-        scale: 1.5, // Higher quality for zoom clarity
-        scrollX: 0, // Start from top-left
-        scrollY: 0, // Start from top-left
-        logging: false, // Disable console logs
-        imageTimeout: 15000, // Longer timeout for large pages
+        scale: 2, // High quality 2x scale
+        scrollX: 0,
+        scrollY: 0,
+        logging: false,
+        imageTimeout: 15000,
+        backgroundColor: '#ffffff', // White background for clarity
         ignoreElements: (element) => {
-          // Ignore elements that are likely modals or dialogs
           return (
             element.hasAttribute('role') && element.getAttribute('role') === 'dialog' ||
             element.hasAttribute('data-radix-dialog-content') ||
