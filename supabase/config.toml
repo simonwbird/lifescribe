@@ -45,6 +45,18 @@ verify_jwt = false
 [functions.families-verify]
 verify_jwt = true
 
+[functions.families-merge]
+verify_jwt = false
+
+[functions.families-suggest-merge]
+verify_jwt = false
+
+[functions.families-claim-admin]
+verify_jwt = false
+
+[functions.collision-detector]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

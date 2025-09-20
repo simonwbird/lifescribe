@@ -261,6 +261,36 @@ export interface ProvisionalVerifiedMetadata {
   final_member_count: number
 }
 
+// Admin claim events
+export interface AdminClaimStartedMetadata {
+  family_id: string
+  claim_type: 'endorsement' | 'email_challenge'
+  claimant_id: string
+  reason?: string
+}
+
+export interface AdminClaimEndorsedMetadata {
+  claim_id: string
+  endorsement_type: 'support' | 'oppose'
+  endorser_id: string
+  reason?: string
+}
+
+export interface AdminClaimGrantedMetadata {
+  claim_id: string
+  family_id: string
+  granted_to: string
+  claim_type: 'endorsement' | 'email_challenge'
+  cooling_off_days: number
+}
+
+export interface AdminClaimDeniedMetadata {
+  claim_id: string
+  family_id: string
+  reason: string
+  denied_by?: string
+}
+
 export const ANALYTICS_EVENTS = {
   // Core user actions
   USER_SIGNED_UP: 'user_signed_up',
@@ -307,7 +337,13 @@ export const ANALYTICS_EVENTS = {
   PREFLIGHT_POSSIBLE_SHOWN: 'preflight_possible_shown',
   CREATE_ABANDONED: 'create_abandoned',
   CREATE_COMPLETED: 'create_completed',
-  PROVISIONAL_VERIFIED: 'provisional_verified'
+  PROVISIONAL_VERIFIED: 'provisional_verified',
+  
+  // Admin claim events
+  ADMIN_CLAIM_STARTED: 'admin_claim_started',
+  ADMIN_CLAIM_ENDORSED: 'admin_claim_endorsed',
+  ADMIN_CLAIM_GRANTED: 'admin_claim_granted',
+  ADMIN_CLAIM_DENIED: 'admin_claim_denied',
 } as const
 
 export type EventMetadata =
@@ -342,6 +378,10 @@ export type EventMetadata =
   | CreateAbandonedMetadata
   | CreateCompletedMetadata
   | ProvisionalVerifiedMetadata
+  | AdminClaimStartedMetadata
+  | AdminClaimEndorsedMetadata
+  | AdminClaimGrantedMetadata
+  | AdminClaimDeniedMetadata
 
 // Complete event payload
 export interface AnalyticsEvent extends BaseEventData {

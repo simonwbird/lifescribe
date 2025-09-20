@@ -35,7 +35,11 @@ import {
   type ExportRequestedMetadata,
   type ExportCompletedMetadata,
   type RtbfRequestedMetadata,
-  type RtbfExecutedMetadata
+  type RtbfExecutedMetadata,
+  type AdminClaimStartedMetadata,
+  type AdminClaimEndorsedMetadata,
+  type AdminClaimGrantedMetadata,
+  type AdminClaimDeniedMetadata
 } from './eventTypes'
 
 /**
@@ -337,6 +341,23 @@ class EventTrackingService {
     await this.emitEvent(ANALYTICS_EVENTS.PROVISIONAL_VERIFIED, metadata)
   }
 
+  // Admin claim tracking methods
+  async trackAdminClaimStarted(metadata: AdminClaimStartedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.ADMIN_CLAIM_STARTED, metadata)
+  }
+
+  async trackAdminClaimEndorsed(metadata: AdminClaimEndorsedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.ADMIN_CLAIM_ENDORSED, metadata)
+  }
+
+  async trackAdminClaimGranted(metadata: AdminClaimGrantedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.ADMIN_CLAIM_GRANTED, metadata)
+  }
+
+  async trackAdminClaimDenied(metadata: AdminClaimDeniedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.ADMIN_CLAIM_DENIED, metadata)
+  }
+
   // Generic method for custom events (with less type safety)
   async trackCustomEvent(eventName: string, metadata: Record<string, any>): Promise<void> {
     await this.emitEvent(eventName, metadata as EventMetadata)
@@ -372,6 +393,11 @@ export const {
   trackCreateAbandoned,
   trackCreateCompleted,
   trackProvisionalVerified,
+  // Admin claim methods
+  trackAdminClaimStarted,
+  trackAdminClaimEndorsed,
+  trackAdminClaimGranted,
+  trackAdminClaimDenied,
   // Existing methods
   trackDigestScheduled,
   trackDigestSent,

@@ -117,6 +117,139 @@ export type Database = {
           },
         ]
       }
+      admin_claim_endorsements: {
+        Row: {
+          claim_id: string
+          created_at: string
+          endorsement_type: string
+          endorser_id: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          claim_id: string
+          created_at?: string
+          endorsement_type?: string
+          endorser_id: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          claim_id?: string
+          created_at?: string
+          endorsement_type?: string
+          endorser_id?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_claim_endorsements_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "admin_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_claim_notifications: {
+        Row: {
+          claim_id: string
+          created_at: string
+          id: string
+          message: string
+          notification_type: string
+          read_at: string | null
+          recipient_id: string
+          title: string
+        }
+        Insert: {
+          claim_id: string
+          created_at?: string
+          id?: string
+          message: string
+          notification_type: string
+          read_at?: string | null
+          recipient_id: string
+          title: string
+        }
+        Update: {
+          claim_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          notification_type?: string
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_claim_notifications_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "admin_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_claims: {
+        Row: {
+          claim_type: string
+          claimant_id: string
+          claimed_at: string | null
+          cooling_off_until: string | null
+          created_at: string
+          email_challenge_expires_at: string | null
+          email_challenge_sent_at: string | null
+          email_challenge_token: string | null
+          endorsements_received: number | null
+          endorsements_required: number | null
+          expires_at: string
+          family_id: string
+          id: string
+          metadata: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          claim_type: string
+          claimant_id: string
+          claimed_at?: string | null
+          cooling_off_until?: string | null
+          created_at?: string
+          email_challenge_expires_at?: string | null
+          email_challenge_sent_at?: string | null
+          email_challenge_token?: string | null
+          endorsements_received?: number | null
+          endorsements_required?: number | null
+          expires_at?: string
+          family_id: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          claim_type?: string
+          claimant_id?: string
+          claimed_at?: string | null
+          cooling_off_until?: string | null
+          created_at?: string
+          email_challenge_expires_at?: string | null
+          email_challenge_sent_at?: string | null
+          email_challenge_token?: string | null
+          endorsements_received?: number | null
+          endorsements_required?: number | null
+          expires_at?: string
+          family_id?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -4244,8 +4377,16 @@ export type Database = {
         Args: { user_id: string }
         Returns: string[]
       }
+      grant_admin_after_cooling_off: {
+        Args: { p_claim_id: string }
+        Returns: Json
+      }
       is_family_admin: {
         Args: { family_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_family_orphaned: {
+        Args: { p_family_id: string }
         Returns: boolean
       }
       is_super_admin: {
@@ -4295,6 +4436,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      process_admin_claim: {
+        Args: { p_claim_id: string }
+        Returns: Json
       }
       revoke_admin_access: {
         Args: {

@@ -21,7 +21,11 @@ import type {
   PreflightPossibleShownMetadata,
   CreateAbandonedMetadata,
   CreateCompletedMetadata,
-  ProvisionalVerifiedMetadata
+  ProvisionalVerifiedMetadata,
+  AdminClaimStartedMetadata,
+  AdminClaimEndorsedMetadata,
+  AdminClaimGrantedMetadata,
+  AdminClaimDeniedMetadata
 } from '@/lib/eventTypes'
 
 /**
@@ -122,6 +126,22 @@ export function useEventTracking() {
     await eventTracker.trackProvisionalVerified(metadata)
   }, [])
 
+  const trackAdminClaimStarted = useCallback(async (metadata: AdminClaimStartedMetadata) => {
+    await eventTracker.trackAdminClaimStarted(metadata)
+  }, [])
+
+  const trackAdminClaimEndorsed = useCallback(async (metadata: AdminClaimEndorsedMetadata) => {
+    await eventTracker.trackAdminClaimEndorsed(metadata)
+  }, [])
+
+  const trackAdminClaimGranted = useCallback(async (metadata: AdminClaimGrantedMetadata) => {
+    await eventTracker.trackAdminClaimGranted(metadata)
+  }, [])
+
+  const trackAdminClaimDenied = useCallback(async (metadata: AdminClaimDeniedMetadata) => {
+    await eventTracker.trackAdminClaimDenied(metadata)
+  }, [])
+
   const trackCustomEvent = useCallback(async (eventName: string, metadata: Record<string, any>) => {
     await eventTracker.trackCustomEvent(eventName, metadata)
   }, [])
@@ -148,6 +168,10 @@ export function useEventTracking() {
     trackCreateAbandoned,
     trackCreateCompleted,
     trackProvisionalVerified,
+    trackAdminClaimStarted,
+    trackAdminClaimEndorsed,
+    trackAdminClaimGranted,
+    trackAdminClaimDenied,
     trackCustomEvent
   }
 }
