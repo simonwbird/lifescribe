@@ -110,6 +110,39 @@ export const FeatureFlagManager = () => {
     }
   }
 
+  const handleBulkRollout = async () => {
+    try {
+      const activeFlags = flags.filter((flag: FeatureFlag) => flag.status === 'active')
+      
+      if (activeFlags.length === 0) {
+        toast({
+          title: 'No Active Flags',
+          description: 'There are no active flags to roll out.',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      // Update all active flags to 100% rollout
+      const promises = activeFlags.map((flag: FeatureFlag) => 
+        updateFlag(flag.id, { rollout_percentage: 100 })
+      )
+      
+      await Promise.all(promises)
+      
+      toast({
+        title: 'Bulk Rollout Complete',
+        description: `Successfully rolled out ${activeFlags.length} active flags to 100%`
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to complete bulk rollout',
+        variant: 'destructive'
+      })
+    }
+  }
+
   const getStatusBadge = (status: FeatureFlagStatus) => {
     const variants = {
       draft: 'outline',
@@ -154,6 +187,30 @@ export const FeatureFlagManager = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="secondary" className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Roll All to 100%
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Roll Out All Features</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will set all active feature flags to 100% rollout. This action cannot be undone and will immediately enable all features for all users.
+                      <br/><br/>
+                      Active flags to be updated: {flags.filter((f: FeatureFlag) => f.status === 'active').length}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkRollout}>
+                      Roll Out All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button 
                 variant="outline" 
                 onClick={() => setShowRemoteConfig(true)}
