@@ -13,7 +13,10 @@ import {
   Undo, 
   Redo,
   Download,
-  X
+  X,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -33,6 +36,10 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
   const [showTextInput, setShowTextInput] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -206,6 +213,46 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
     setStartPoint(null);
   };
 
+  const handleZoom = (delta: number) => {
+    const newZoom = Math.min(Math.max(zoom + delta, 0.5), 3);
+    setZoom(newZoom);
+  };
+
+  const resetZoom = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    handleZoom(delta);
+  };
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (activeTool === 'select' && !fabricCanvas?.getActiveObject()) {
+      setIsPanning(true);
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && lastPanPoint) {
+      const deltaX = e.clientX - lastPanPoint.x;
+      const deltaY = e.clientY - lastPanPoint.y;
+      setPanOffset(prev => ({
+        x: prev.x + deltaX / zoom,
+        y: prev.y + deltaY / zoom
+      }));
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsPanning(false);
+    setLastPanPoint(null);
+  };
+
   const handleUndo = () => {
     if (!fabricCanvas) return;
     const objects = fabricCanvas.getObjects();
@@ -280,6 +327,18 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
             })}
             
             <div className="ml-auto flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleZoom(-0.2)}>
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <span className="flex items-center px-2 text-sm font-medium">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button variant="outline" size="sm" onClick={() => handleZoom(0.2)}>
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetZoom}>
+                <RotateCcw className="w-4 h-4" />
+              </Button>
               <Button variant="outline" size="sm" onClick={handleUndo}>
                 <Undo className="w-4 h-4" />
               </Button>
@@ -293,7 +352,19 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
 
         <div className="p-4 max-h-[80vh] overflow-auto">
           <div className="flex justify-center">
-            <canvas ref={canvasRef} className="border border-border rounded" />
+            <div 
+              className="relative overflow-hidden border border-border rounded cursor-grab active:cursor-grabbing"
+              style={{
+                transform: `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+                transformOrigin: 'center center'
+              }}
+              onMouseDown={handleCanvasMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseUp={handleCanvasMouseUp}
+              onWheel={handleWheel}
+            >
+              <canvas ref={canvasRef} className="block" />
+            </div>
           </div>
         </div>
 
