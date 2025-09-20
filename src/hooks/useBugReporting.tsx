@@ -102,12 +102,15 @@ export const useBugReporting = () => {
       // Wait a brief moment for the DOM to update
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      // Capture the full page height, not just viewport
       const canvas = await html2canvas(document.body, {
-        height: window.innerHeight,
-        width: window.innerWidth,
+        height: document.body.scrollHeight, // Full page height
+        width: document.body.scrollWidth,   // Full page width
         useCORS: true,
         allowTaint: true,
-        scale: 0.5, // Reduce size for faster processing
+        scale: 0.8, // Good balance of quality and file size
+        scrollX: 0, // Start from top-left
+        scrollY: 0, // Start from top-left
         ignoreElements: (element) => {
           // Ignore elements that are likely modals or dialogs
           return (
