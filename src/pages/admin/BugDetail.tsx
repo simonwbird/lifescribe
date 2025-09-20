@@ -115,7 +115,7 @@ export default function BugDetail() {
           families(name)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
