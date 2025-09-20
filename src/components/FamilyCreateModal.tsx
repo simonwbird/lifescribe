@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,8 +19,21 @@ export default function FamilyCreateModal({ open, onClose }: FamilyCreateModalPr
   const [coverPhoto, setCoverPhoto] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session?.user)
+    })
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session?.user)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,6 +136,14 @@ export default function FamilyCreateModal({ open, onClose }: FamilyCreateModalPr
             </div>
           </div>
 
+          {!isAuthenticated && (
+            <Alert>
+              <AlertDescription>
+                Please sign in to create a family.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -130,7 +151,7 @@ export default function FamilyCreateModal({ open, onClose }: FamilyCreateModalPr
           )}
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={loading || !familyName.trim()} className="flex-1">
+            <Button type="submit" disabled={loading || !familyName.trim() || !isAuthenticated} className="flex-1">
               {loading ? 'Creating...' : 'Create Family'}
             </Button>
             <Button type="button" variant="outline" onClick={onClose}>
