@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useBugReporting, BugReportData } from '@/hooks/useBugReporting';
+import { useBugReporting, BugReportData, PossibleDuplicate } from '@/hooks/useBugReporting';
 
 interface BugReportModalProps {
   isOpen: boolean;
@@ -16,25 +16,51 @@ interface BugReportModalProps {
 }
 
 export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
-  const { captureScreenshot, submitBugReport } = useBugReporting();
+  const { captureScreenshot, submitBugReport, checkForDuplicates } = useBugReporting();
   const [formData, setFormData] = useState<BugReportData>({
     title: '',
     expectedBehavior: '',
     actualBehavior: '',
     notes: '',
     severity: 'Medium',
-    consentDeviceInfo: false
+    consentDeviceInfo: false,
+    consentConsoleInfo: false
   });
   
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [uploads, setUploads] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [duplicates, setDuplicates] = useState<PossibleDuplicate[]>([]);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: keyof BugReportData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Check for duplicates when title changes
+    if (field === 'title' && typeof value === 'string' && value.trim().length > 3) {
+      debounceCheckDuplicates(value);
+    }
   };
+
+  const debounceCheckDuplicates = (() => {
+    let timeout: NodeJS.Timeout;
+    return (title: string) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(async () => {
+        setCheckingDuplicates(true);
+        try {
+          const possibleDupes = await checkForDuplicates(title, window.location.pathname);
+          setDuplicates(possibleDupes);
+        } catch (error) {
+          console.error('Error checking duplicates:', error);
+        } finally {
+          setCheckingDuplicates(false);
+        }
+      }, 500);
+    };
+  })();
 
   const handleCaptureScreenshot = async () => {
     setIsCapturing(true);
@@ -128,10 +154,12 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
           actualBehavior: '',
           notes: '',
           severity: 'Medium',
-          consentDeviceInfo: false
+          consentDeviceInfo: false,
+          consentConsoleInfo: false
         });
         setScreenshots([]);
         setUploads([]);
+        setDuplicates([]);
         onClose();
       } else {
         toast({
@@ -297,15 +325,49 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="consent"
-              checked={formData.consentDeviceInfo}
-              onCheckedChange={(checked) => handleInputChange('consentDeviceInfo', !!checked)}
-            />
-            <Label htmlFor="consent" className="text-sm">
-              Attach device information (browser, OS, screen size) to help debug
-            </Label>
+          {/* Possible Duplicates */}
+          {duplicates.length > 0 && (
+            <div className="space-y-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  ⚠️ Possible Duplicates Found
+                </span>
+                {checkingDuplicates && <div className="animate-pulse text-xs text-muted-foreground">Checking...</div>}
+              </div>
+              <div className="space-y-1">
+                {duplicates.map((dup) => (
+                  <div key={dup.id} className="text-xs text-yellow-700 dark:text-yellow-300">
+                    • {dup.title} ({dup.status}) - {new Date(dup.created_at).toLocaleDateString()}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Privacy & Consent</Label>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="consentDevice"
+                checked={formData.consentDeviceInfo}
+                onCheckedChange={(checked) => handleInputChange('consentDeviceInfo', !!checked)}
+              />
+              <Label htmlFor="consentDevice" className="text-sm">
+                Attach device information (browser, OS, screen size) to help debug
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="consentConsole"
+                checked={formData.consentConsoleInfo}
+                onCheckedChange={(checked) => handleInputChange('consentConsoleInfo', !!checked)}
+              />
+              <Label htmlFor="consentConsole" className="text-sm">
+                Attach UI events and console logs (errors/warnings only) for better debugging
+              </Label>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2">

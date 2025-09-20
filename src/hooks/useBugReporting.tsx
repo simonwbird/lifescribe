@@ -8,14 +8,41 @@ export interface BugReportData {
   notes?: string;
   severity: 'Low' | 'Medium' | 'High';
   consentDeviceInfo: boolean;
+  consentConsoleInfo: boolean;
+}
+
+export interface UIEvent {
+  type: string;
+  timestamp: number;
+  element?: string;
+  details?: any;
+}
+
+export interface ConsoleLog {
+  level: 'error' | 'warn' | 'info' | 'log';
+  message: string;
+  timestamp: number;
+  stack?: string;
+}
+
+export interface PossibleDuplicate {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  similarity_score: number;
 }
 
 export const useBugReporting = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [uiEvents, setUIEvents] = useState<UIEvent[]>([]);
+  const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
 
   useEffect(() => {
     checkBugReportingEnabled();
+    setupEventTracking();
+    setupConsoleCapture();
   }, []);
 
   const checkBugReportingEnabled = async () => {
@@ -64,6 +91,74 @@ export const useBugReporting = () => {
     }
   };
 
+  const setupEventTracking = () => {
+    const trackEvent = (type: string, event: Event) => {
+      const uiEvent: UIEvent = {
+        type,
+        timestamp: Date.now(),
+        element: (event.target as HTMLElement)?.tagName || 'unknown',
+        details: {
+          id: (event.target as HTMLElement)?.id,
+          className: (event.target as HTMLElement)?.className,
+          textContent: (event.target as HTMLElement)?.textContent?.slice(0, 50)
+        }
+      };
+      
+      setUIEvents(prev => {
+        const updated = [...prev, uiEvent];
+        return updated.slice(-10); // Keep only last 10 events
+      });
+    };
+
+    // Track clicks and key presses
+    document.addEventListener('click', (e) => trackEvent('click', e));
+    document.addEventListener('keydown', (e) => trackEvent('keydown', e));
+
+    return () => {
+      document.removeEventListener('click', (e) => trackEvent('click', e));
+      document.removeEventListener('keydown', (e) => trackEvent('keydown', e));
+    };
+  };
+
+  const setupConsoleCapture = () => {
+    const originalConsole = {
+      error: console.error,
+      warn: console.warn,
+      log: console.log,
+      info: console.info
+    };
+
+    const captureConsoleLog = (level: ConsoleLog['level'], args: any[]) => {
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ');
+
+      const logEntry: ConsoleLog = {
+        level,
+        message: message.slice(0, 500), // Limit message length
+        timestamp: Date.now(),
+        stack: level === 'error' && args[0] instanceof Error ? args[0].stack : undefined
+      };
+
+      setConsoleLogs(prev => {
+        const updated = [...prev, logEntry];
+        return updated.slice(-20); // Keep only last 20 logs
+      });
+
+      // Call original console method
+      originalConsole[level](...args);
+    };
+
+    console.error = (...args) => captureConsoleLog('error', args);
+    console.warn = (...args) => captureConsoleLog('warn', args);
+    console.log = (...args) => captureConsoleLog('log', args);
+    console.info = (...args) => captureConsoleLog('info', args);
+
+    return () => {
+      Object.assign(console, originalConsole);
+    };
+  };
+
   const getDeviceInfo = () => ({
     userAgent: navigator.userAgent,
     platform: navigator.platform,
@@ -81,11 +176,33 @@ export const useBugReporting = () => {
     }
   });
 
+  const checkForDuplicates = async (title: string, route: string, familyId?: string): Promise<PossibleDuplicate[]> => {
+    try {
+      const { data: dedupeKey } = await supabase.rpc('compute_bug_dedupe_key', {
+        p_route: route,
+        p_title: title
+      });
+
+      if (!dedupeKey) return [];
+
+      const { data, error } = await supabase.rpc('find_possible_duplicates', {
+        p_dedupe_key: dedupeKey,
+        p_family_id: familyId || null
+      });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+      return [];
+    }
+  };
+
   const submitBugReport = async (
     data: BugReportData, 
     screenshots: File[], 
     uploads: File[]
-  ): Promise<{ success: boolean; bugId?: string; error?: string }> => {
+  ): Promise<{ success: boolean; bugId?: string; error?: string; duplicates?: PossibleDuplicate[] }> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -98,28 +215,42 @@ export const useBugReporting = () => {
         .single();
 
       const deviceInfo = data.consentDeviceInfo ? getDeviceInfo() : {};
+      const currentUIEvents = data.consentConsoleInfo ? uiEvents : [];
+      const currentConsoleLogs = data.consentConsoleInfo ? consoleLogs.filter(log => log.level === 'error' || log.level === 'warn') : [];
       
+      // Compute dedupe key
+      const { data: dedupeKey } = await supabase.rpc('compute_bug_dedupe_key', {
+        p_route: window.location.pathname,
+        p_title: data.title
+      });
+
       // Create bug report
+      const bugReportData: any = {
+        title: data.title,
+        expected_behavior: data.expectedBehavior,
+        actual_behavior: data.actualBehavior,
+        notes: data.notes,
+        severity: data.severity,
+        url: window.location.href,
+        route: window.location.pathname,
+        user_id: user.id,
+        family_id: member?.family_id,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        locale: navigator.language,
+        viewport_width: window.innerWidth,
+        viewport_height: window.innerHeight,
+        user_agent: navigator.userAgent,
+        device_info: deviceInfo,
+        consent_device_info: data.consentDeviceInfo,
+        ui_events: currentUIEvents,
+        console_logs: currentConsoleLogs,
+        consent_console_info: data.consentConsoleInfo,
+        dedupe_key: dedupeKey
+      };
+
       const { data: bugReport, error: bugError } = await supabase
         .from('bug_reports')
-        .insert({
-          title: data.title,
-          expected_behavior: data.expectedBehavior,
-          actual_behavior: data.actualBehavior,
-          notes: data.notes,
-          severity: data.severity,
-          url: window.location.href,
-          route: window.location.pathname,
-          user_id: user.id,
-          family_id: member?.family_id,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          locale: navigator.language,
-          viewport_width: window.innerWidth,
-          viewport_height: window.innerHeight,
-          user_agent: navigator.userAgent,
-          device_info: deviceInfo,
-          consent_device_info: data.consentDeviceInfo
-        })
+        .insert(bugReportData)
         .select()
         .single();
 
@@ -167,6 +298,9 @@ export const useBugReporting = () => {
     isEnabled,
     userRole,
     captureScreenshot,
-    submitBugReport
+    submitBugReport,
+    checkForDuplicates,
+    uiEvents,
+    consoleLogs
   };
 };

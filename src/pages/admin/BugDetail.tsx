@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Calendar, User, Globe, Monitor, Download, Save } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Globe, Monitor, Download, Save, Activity, Terminal, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 
 interface BugReport {
@@ -30,6 +31,10 @@ interface BugReport {
   user_agent?: string;
   device_info?: any;
   consent_device_info: boolean;
+  ui_events?: any;
+  console_logs?: any;
+  consent_console_info: boolean;
+  dedupe_key?: string;
   created_at: string;
   updated_at: string;
   resolved_at?: string;
@@ -297,6 +302,73 @@ export default function BugDetail() {
             </CardContent>
           </Card>
 
+          {/* Context Information */}
+          {(bugReport.consent_console_info && (bugReport.ui_events?.length > 0 || bugReport.console_logs?.length > 0)) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Context Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {bugReport.ui_events?.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      UI Events (Last {bugReport.ui_events.length})
+                    </Label>
+                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                      {bugReport.ui_events.map((event: any, index: number) => (
+                        <div key={index} className="text-xs bg-muted p-2 rounded border-l-2 border-blue-500">
+                          <div className="font-medium">{event.type} on {event.element}</div>
+                          <div className="text-muted-foreground">
+                            {new Date(event.timestamp).toLocaleTimeString()} • 
+                            {event.details?.textContent && ` "${event.details.textContent}"`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {bugReport.console_logs?.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Terminal className="w-4 h-4" />
+                      Console Logs ({bugReport.console_logs.length})
+                    </Label>
+                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                      {bugReport.console_logs.map((log: any, index: number) => (
+                        <div key={index} className={`text-xs p-2 rounded border-l-2 ${
+                          log.level === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-500' :
+                          log.level === 'warn' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500' :
+                          'bg-muted border-gray-400'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={log.level === 'error' ? 'destructive' : 'secondary'} className="text-xs">
+                              {log.level.toUpperCase()}
+                            </Badge>
+                            <span className="text-muted-foreground">
+                              {new Date(log.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <div className="mt-1 font-mono">{log.message}</div>
+                          {log.stack && (
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-muted-foreground">Stack trace</summary>
+                              <pre className="text-xs whitespace-pre-wrap mt-1 text-muted-foreground">{log.stack}</pre>
+                            </details>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Attachments */}
           {attachments.length > 0 && (
             <Card>
@@ -452,6 +524,14 @@ export default function BugDetail() {
                       <pre className="whitespace-pre-wrap">
                         {JSON.stringify(bugReport.device_info, null, 2)}
                       </pre>
+                    </div>
+                  </div>
+                )}
+                {bugReport.dedupe_key && (
+                  <div>
+                    <span className="font-medium">Dedupe Key:</span>
+                    <div className="text-muted-foreground font-mono text-xs">
+                      {bugReport.dedupe_key}
                     </div>
                   </div>
                 )}
