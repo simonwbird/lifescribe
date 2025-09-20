@@ -542,46 +542,21 @@ export default function BugDetail() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {attachments.map((attachment) => (
                     <div key={attachment.id} className="border rounded-lg p-4">
-                      {attachment.attachment_type === 'screenshot' ? (
-                        <div className="space-y-2">
-                          <img 
-                            src={`https://imgtnixyralpdrmedwzi.supabase.co/storage/v1/object/public/media/${attachment.file_path}`}
-                            alt={attachment.file_name}
-                            className="w-full rounded-lg border"
-                            style={{ maxHeight: '300px', objectFit: 'contain' }}
-                          />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
-                              {(attachment.file_size / 1024).toFixed(1)} KB • {format(new Date(attachment.created_at), "MMM dd, yyyy")}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => downloadAttachment(attachment)}
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-sm">
-                              📎 {attachment.file_name}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => downloadAttachment(attachment)}
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {(attachment.file_size / 1024).toFixed(1)} KB • {format(new Date(attachment.created_at), "MMM dd, yyyy")}
-                          </div>
-                        </>
-                      )}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">
+                          {attachment.attachment_type === 'screenshot' ? '📸' : '📎'} {attachment.file_name}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadAttachment(attachment)}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {(attachment.file_size / 1024).toFixed(1)} KB • {format(new Date(attachment.created_at), "MMM dd, yyyy")}
+                      </div>
                     </div>
                   ))}
                 </div>
