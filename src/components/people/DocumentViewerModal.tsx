@@ -83,18 +83,24 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
 
       const fileBlob = await response.blob()
       
-      // If PDF, prepare PDF.js data
+      // If PDF, prepare PDF.js data and ensure correct blob MIME
       if (document.mime_type === 'application/pdf') {
         const ab = await fileBlob.arrayBuffer()
-        setPdfData(new Uint8Array(ab))
+        const pdfBytes = new Uint8Array(ab)
+        setPdfData(pdfBytes)
+
+        // Create a Blob with the explicit PDF MIME type for reliable <object> rendering
+        const typedPdfBlob = new Blob([pdfBytes], { type: 'application/pdf' })
+        const blobUrl = URL.createObjectURL(typedPdfBlob)
+        console.log('Created blob URL for PDF document with correct MIME')
+        setDocumentUrl(blobUrl)
       } else {
         setPdfData(null)
+        // Create blob URL for fallback/other types
+        const blobUrl = URL.createObjectURL(fileBlob)
+        console.log('Created blob URL for document')
+        setDocumentUrl(blobUrl)
       }
-      
-      // Create blob URL for fallback/other types
-      const blobUrl = URL.createObjectURL(fileBlob)
-      console.log('Created blob URL for document')
-      setDocumentUrl(blobUrl)
     } catch (error) {
       console.error('Error loading document:', error)
       setError('Failed to load document. Please try again.')
