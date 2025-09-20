@@ -103,7 +103,7 @@ const ExperienceSection = () => <section className="py-20 bg-neutral-section rel
               </div>
               <div>
                 <h3 className="text-xl font-serif font-semibold mb-2 text-foreground">Recipes & heirlooms with their stories</h3>
-                <p className="text-muted-foreground font-sans leading-relaxed">"Photo + origin + who it came from"</p>
+                
               </div>
             </div>
             
