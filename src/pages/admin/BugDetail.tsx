@@ -251,9 +251,6 @@ export default function BugDetail() {
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-semibold text-foreground leading-tight mb-1 break-words">{bugReport.title}</h1>
-          </div>
         </div>
         
         <div className="flex flex-wrap gap-2 items-start">
