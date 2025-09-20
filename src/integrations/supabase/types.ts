@@ -503,8 +503,11 @@ export type Database = {
         Row: {
           actual_behavior: string | null
           app_version: string | null
+          consent_console_info: boolean | null
           consent_device_info: boolean | null
+          console_logs: Json | null
           created_at: string
+          dedupe_key: string | null
           device_info: Json | null
           expected_behavior: string | null
           family_id: string | null
@@ -517,6 +520,7 @@ export type Database = {
           status: string
           timezone: string | null
           title: string
+          ui_events: Json | null
           updated_at: string
           url: string
           user_agent: string | null
@@ -527,8 +531,11 @@ export type Database = {
         Insert: {
           actual_behavior?: string | null
           app_version?: string | null
+          consent_console_info?: boolean | null
           consent_device_info?: boolean | null
+          console_logs?: Json | null
           created_at?: string
+          dedupe_key?: string | null
           device_info?: Json | null
           expected_behavior?: string | null
           family_id?: string | null
@@ -541,6 +548,7 @@ export type Database = {
           status?: string
           timezone?: string | null
           title: string
+          ui_events?: Json | null
           updated_at?: string
           url: string
           user_agent?: string | null
@@ -551,8 +559,11 @@ export type Database = {
         Update: {
           actual_behavior?: string | null
           app_version?: string | null
+          consent_console_info?: boolean | null
           consent_device_info?: boolean | null
+          console_logs?: Json | null
           created_at?: string
+          dedupe_key?: string | null
           device_info?: Json | null
           expected_behavior?: string | null
           family_id?: string | null
@@ -565,6 +576,7 @@ export type Database = {
           status?: string
           timezone?: string | null
           title?: string
+          ui_events?: Json | null
           updated_at?: string
           url?: string
           user_agent?: string | null
@@ -4554,6 +4566,10 @@ export type Database = {
         Args: { p_family_id: string }
         Returns: boolean
       }
+      compute_bug_dedupe_key: {
+        Args: { p_route: string; p_title: string }
+        Returns: string
+      }
       compute_family_collision_signals: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -4572,6 +4588,16 @@ export type Database = {
       execute_family_merge: {
         Args: { p_confirmed_by: string; p_merge_proposal_id: string }
         Returns: Json
+      }
+      find_possible_duplicates: {
+        Args: { p_dedupe_key: string; p_family_id?: string }
+        Returns: {
+          created_at: string
+          id: string
+          similarity_score: number
+          status: string
+          title: string
+        }[]
       }
       generate_digest_preview: {
         Args: { p_family_id: string; p_preview_date?: string }
