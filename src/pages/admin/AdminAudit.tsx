@@ -7,13 +7,6 @@ import { Shield, FileText, Users } from 'lucide-react'
 export default function AdminAudit() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Audit & Access Management</h1>
-        <p className="text-muted-foreground">
-          Comprehensive audit logging and access review system with tamper-evident security
-        </p>
-      </div>
-
       <Tabs defaultValue="audit-logs" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="audit-logs" className="flex items-center gap-2">

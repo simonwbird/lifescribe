@@ -157,12 +157,6 @@ export default function AdminDigest() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Weekly Digest Management</h1>
-          <p className="text-muted-foreground">
-            Manage weekly digest settings across all families
-          </p>
-        </div>
         <Button 
           onClick={loadFamilies} 
           variant="outline"

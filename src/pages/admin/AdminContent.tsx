@@ -156,13 +156,6 @@ export default function AdminContent() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Content & Media</h1>
-        <p className="text-muted-foreground">
-          Browse and manage all platform content
-        </p>
-      </div>
-
       {/* Search and Filters */}
       <div className="flex gap-4 items-center">
         <div className="relative flex-1 max-w-md">

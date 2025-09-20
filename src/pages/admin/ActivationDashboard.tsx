@@ -56,13 +56,6 @@ export default function ActivationDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Activation Dashboard (TTV)</h1>
-        <p className="text-muted-foreground">
-          Track Time to Value and activation funnels across user cohorts
-        </p>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardHeader>

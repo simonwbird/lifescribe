@@ -37,16 +37,16 @@ export default function AdminShell() {
     const path = location.pathname.replace('/admin', '').replace('/', '') || 'dashboard'
     const titles: { [key: string]: string } = {
       'dashboard': 'Dashboard',
-      'people': 'People Management', 
+      'people': 'People & Families', 
       'families': 'Family Overview',
       'content': 'Content & Media',
-      'activation': 'Activation Analytics',
+      'activation': 'Activation Dashboard (TTV)',
       'feature-flags': 'Feature Flags',
-      'digest': 'Digest Management',
+      'digest': 'Weekly Digest Management',
       'nudges': 'Nudge Orchestrator',
       'moderation': 'Moderation Queue',
       'media-pipeline': 'Media Pipeline',
-      'audit': 'Audit & Compliance'
+      'audit': 'Audit & Access Management'
     }
     return titles[path] || 'Admin Panel'
   }
@@ -213,16 +213,14 @@ export default function AdminShell() {
                 <h1 className="text-lg font-semibold">{getPageTitle()}</h1>
                 <p className="text-sm text-muted-foreground">
                   {location.pathname === '/admin' && 'Overview of system health and key metrics'}
-                  {location.pathname === '/admin/people' && 'Manage users, profiles, and access permissions'}
-                  {location.pathname === '/admin/families' && 'Monitor family groups and membership'}
-                  {location.pathname === '/admin/content' && 'Review and moderate platform content'}
-                  {location.pathname === '/admin/activation' && 'Track user activation and engagement'}
-                  {location.pathname === '/admin/feature-flags' && 'Control feature rollouts and experiments'}
-                  {location.pathname === '/admin/digest' && 'Configure email digests and notifications'}
+                  {location.pathname === '/admin/people' && 'Manage users, profiles, and family memberships'}
+                  {location.pathname === '/admin/families' && 'Monitor family activation and health across your platform'}
+                  {location.pathname === '/admin/content' && 'Browse and manage all platform content'}
+                  {location.pathname === '/admin/activation' && 'Track Time to Value and activation funnels across user cohorts'}
+                  {location.pathname === '/admin/feature-flags' && 'Configure and manage platform feature rollouts'}
+                  {location.pathname === '/admin/digest' && 'Manage weekly digest settings across all families'}
                   {location.pathname === '/admin/nudges' && 'Manage user engagement campaigns'}
-                  {location.pathname === '/admin/moderation' && 'Review flagged content and take action'}
-                  {location.pathname === '/admin/media-pipeline' && 'Monitor media processing and AI services'}
-                  {location.pathname === '/admin/audit' && 'Review audit logs and compliance reports'}
+                  {location.pathname === '/admin/audit' && 'Comprehensive audit logging and access review system with tamper-evident security'}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground">

@@ -153,13 +153,6 @@ export default function AdminPeople() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">People & Families</h1>
-        <p className="text-muted-foreground">
-          Manage users, profiles, and family memberships
-        </p>
-      </div>
-
       {/* Tabs */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
         <button
