@@ -250,6 +250,65 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_tasks: {
+        Row: {
+          bug_report_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_message: string | null
+          github_pr_url: string | null
+          id: string
+          inline_patch: string | null
+          loveable_response: Json | null
+          loveable_task_id: string | null
+          result_type: string | null
+          status: string
+          task_brief: Json
+          updated_at: string
+        }
+        Insert: {
+          bug_report_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          github_pr_url?: string | null
+          id?: string
+          inline_patch?: string | null
+          loveable_response?: Json | null
+          loveable_task_id?: string | null
+          result_type?: string | null
+          status?: string
+          task_brief?: Json
+          updated_at?: string
+        }
+        Update: {
+          bug_report_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          github_pr_url?: string | null
+          id?: string
+          inline_patch?: string | null
+          loveable_response?: Json | null
+          loveable_task_id?: string | null
+          result_type?: string | null
+          status?: string
+          task_brief?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tasks_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string

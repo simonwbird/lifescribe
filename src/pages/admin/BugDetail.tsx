@@ -6,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Calendar, User, Globe, Monitor, Download, Save, Activity, Terminal, Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Globe, Monitor, Download, Save, Activity, Terminal, Eye, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { FixWithLoveableModal } from '@/components/FixWithLoveableModal';
+import { useAITaskPolling } from '@/hooks/useAITaskPolling';
 
 interface BugReport {
   id: string;
@@ -18,7 +20,7 @@ interface BugReport {
   actual_behavior?: string;
   notes?: string;
   severity: 'Low' | 'Medium' | 'High';
-  status: 'New' | 'In Progress' | 'Fixed' | 'Closed' | 'Duplicate';
+  status: 'New' | 'In Progress' | 'Fixed' | 'Closed' | 'Duplicate' | 'QA Ready';
   url: string;
   route?: string;
   user_id: string;
@@ -64,6 +66,11 @@ export default function BugDetail() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showFixModal, setShowFixModal] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  
+  // Use AI task polling hook
+  const { aiTasks, hasActiveTasks } = useAITaskPolling(id || '', !!id);
   
   // Editable fields
   const [status, setStatus] = useState<string>('');
@@ -72,10 +79,29 @@ export default function BugDetail() {
 
   useEffect(() => {
     if (id) {
+      checkUserRole();
       fetchBugReport();
       fetchAttachments();
     }
   }, [id]);
+
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('settings')
+        .eq('id', user.id)
+        .single();
+
+      const role = (profile?.settings as any)?.role;
+      setUserRole(role);
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
 
   const fetchBugReport = async () => {
     try {
@@ -229,10 +255,21 @@ export default function BugDetail() {
           </div>
         </div>
         
-        <Button onClick={handleSave} disabled={saving}>
-          <Save className="w-4 h-4 mr-2" />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
+        <div className="flex gap-2">
+          {userRole === 'super_admin' && bugReport.status !== 'QA Ready' && bugReport.status !== 'Fixed' && bugReport.status !== 'Closed' && (
+            <Button 
+              onClick={() => setShowFixModal(true)}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Fix with Loveable
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -254,6 +291,7 @@ export default function BugDetail() {
                     <SelectContent>
                       <SelectItem value="New">New</SelectItem>
                       <SelectItem value="In Progress">In Progress</SelectItem>
+                      <SelectItem value="QA Ready">QA Ready</SelectItem>
                       <SelectItem value="Fixed">Fixed</SelectItem>
                       <SelectItem value="Closed">Closed</SelectItem>
                       <SelectItem value="Duplicate">Duplicate</SelectItem>
@@ -301,6 +339,108 @@ export default function BugDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Tasks Section */}
+          {aiTasks.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  Loveable AI Tasks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {aiTasks.map((task) => (
+                    <div key={task.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={
+                            task.status === 'completed' ? 'default' :
+                            task.status === 'failed' ? 'destructive' :
+                            task.status === 'submitted' ? 'secondary' : 'outline'
+                          }>
+                            {task.status}
+                          </Badge>
+                          <span className="text-sm font-medium">
+                            Task #{task.id.slice(0, 8)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(task.created_at), "MMM dd, yyyy 'at' h:mm a")}
+                        </span>
+                      </div>
+                      
+                      {task.loveable_task_id && (
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Loveable ID: {task.loveable_task_id}
+                        </p>
+                      )}
+                      
+                      {task.status === 'completed' && task.loveable_response && (
+                        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                          {task.result_type === 'pr' ? (
+                            <div>
+                              <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-1">
+                                GitHub Pull Request Created
+                              </p>
+                              <a 
+                                href={task.github_pr_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                              >
+                                View PR: {task.loveable_response.title}
+                              </a>
+                              {task.loveable_response.files_changed && (
+                                <div className="mt-2">
+                                  <p className="text-xs font-medium">Files changed:</p>
+                                  <ul className="text-xs text-muted-foreground">
+                                    {task.loveable_response.files_changed.map((file: string, index: number) => (
+                                      <li key={index}>• {file}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-1">
+                                Inline Patch Generated
+                              </p>
+                              <p className="text-sm mb-2">{task.loveable_response.description}</p>
+                              <details className="text-xs">
+                                <summary className="cursor-pointer text-muted-foreground">View patch</summary>
+                                <pre className="mt-2 p-2 bg-background rounded border text-xs overflow-x-auto">
+                                  {task.inline_patch}
+                                </pre>
+                              </details>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {task.status === 'failed' && task.error_message && (
+                        <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                          <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                            Error: {task.error_message}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {task.status === 'submitted' && (
+                        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            Task submitted to Loveable. Waiting for completion...
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Context Information */}
           {(bugReport.consent_console_info && (bugReport.ui_events?.length > 0 || bugReport.console_logs?.length > 0)) && (
@@ -540,6 +680,17 @@ export default function BugDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Fix with Loveable Modal */}
+      {showFixModal && bugReport && (
+        <FixWithLoveableModal
+          isOpen={showFixModal}
+          onClose={() => {
+            setShowFixModal(false);
+          }}
+          bugReport={bugReport as any}
+        />
+      )}
     </div>
   );
 }
