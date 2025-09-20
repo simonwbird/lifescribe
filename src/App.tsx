@@ -69,6 +69,9 @@ import { MediaPipelineMonitor } from './components/admin/MediaPipelineMonitor';
 import { ContentTimelineAdmin } from './components/admin/ContentTimelineAdmin';
 import RequestAccess from "./pages/RequestAccess";
 import DateLocalizationTest from './components/admin/DateLocalizationTest';
+import BugInbox from './pages/admin/BugInbox';
+import BugDetail from './pages/admin/BugDetail';
+import { BugReportWidget } from './components/BugReportWidget';
 
 const queryClient = new QueryClient();
 
@@ -142,8 +145,10 @@ function AppContent() {
            <Route path="nudges" element={<NudgeOrchestrator />} />
            <Route path="moderation" element={<ModerationQueue />} />
            <Route path="media-pipeline" element={<MediaPipelineMonitor />} />
-           <Route path="content" element={<ContentTimelineAdmin />} />
-           <Route path="date-localization" element={<DateLocalizationTest />} />
+            <Route path="content" element={<ContentTimelineAdmin />} />
+            <Route path="date-localization" element={<DateLocalizationTest />} />
+            <Route path="bugs" element={<BugInbox />} />
+            <Route path="bugs/:id" element={<BugDetail />} />
           <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="config" element={<div className="p-8"><h1 className="text-2xl font-bold">Flags & Config</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
          <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
@@ -165,6 +170,7 @@ const App = () => (
         <BrowserRouter>
           <ImpersonationProvider>
             <AppContent />
+            <BugReportWidget />
           </ImpersonationProvider>
         </BrowserRouter>
       </ModeProvider>

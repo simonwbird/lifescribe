@@ -458,6 +458,122 @@ export type Database = {
           },
         ]
       }
+      bug_report_attachments: {
+        Row: {
+          attachment_type: string
+          bug_report_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+        }
+        Insert: {
+          attachment_type?: string
+          bug_report_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+        }
+        Update: {
+          attachment_type?: string
+          bug_report_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_attachments_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_reports: {
+        Row: {
+          actual_behavior: string | null
+          app_version: string | null
+          consent_device_info: boolean | null
+          created_at: string
+          device_info: Json | null
+          expected_behavior: string | null
+          family_id: string | null
+          id: string
+          locale: string | null
+          notes: string | null
+          resolved_at: string | null
+          route: string | null
+          severity: string
+          status: string
+          timezone: string | null
+          title: string
+          updated_at: string
+          url: string
+          user_agent: string | null
+          user_id: string
+          viewport_height: number | null
+          viewport_width: number | null
+        }
+        Insert: {
+          actual_behavior?: string | null
+          app_version?: string | null
+          consent_device_info?: boolean | null
+          created_at?: string
+          device_info?: Json | null
+          expected_behavior?: string | null
+          family_id?: string | null
+          id?: string
+          locale?: string | null
+          notes?: string | null
+          resolved_at?: string | null
+          route?: string | null
+          severity?: string
+          status?: string
+          timezone?: string | null
+          title: string
+          updated_at?: string
+          url: string
+          user_agent?: string | null
+          user_id: string
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Update: {
+          actual_behavior?: string | null
+          app_version?: string | null
+          consent_device_info?: boolean | null
+          created_at?: string
+          device_info?: Json | null
+          expected_behavior?: string | null
+          family_id?: string | null
+          id?: string
+          locale?: string | null
+          notes?: string | null
+          resolved_at?: string | null
+          route?: string | null
+          severity?: string
+          status?: string
+          timezone?: string | null
+          title?: string
+          updated_at?: string
+          url?: string
+          user_agent?: string | null
+          user_id?: string
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           answer_id: string | null

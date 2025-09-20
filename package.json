@@ -54,6 +54,7 @@
     "embla-carousel-react": "^8.6.0",
     "eslint-plugin-local": "^6.0.0",
     "glob": "^11.0.3",
+    "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "luxon": "^3.7.2",
