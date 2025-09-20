@@ -253,7 +253,6 @@ export default function BugDetail() {
           </Button>
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-semibold text-foreground leading-tight mb-1 break-words">{bugReport.title}</h1>
-            <p className="text-sm text-muted-foreground">Bug Report #{bugReport.id.slice(0, 8)}</p>
           </div>
         </div>
         
@@ -299,9 +298,10 @@ export default function BugDetail() {
             <CardContent className="space-y-4">
               {/* Bug Title/Description */}
               <div>
-                <h2 className="text-base font-medium text-foreground leading-relaxed mb-4 p-3 bg-muted rounded-md">
+                <h2 className="text-base font-medium text-foreground leading-relaxed mb-2 p-3 bg-muted rounded-md">
                   {bugReport.title}
                 </h2>
+                <p className="text-sm text-muted-foreground mb-4">Bug Report #{bugReport.id.slice(0, 8)}</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
