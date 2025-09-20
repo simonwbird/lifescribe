@@ -96,13 +96,45 @@ export const useBugReporting = () => {
   const captureScreenshot = async (): Promise<string | null> => {
     try {
       const html2canvas = (await import('html2canvas')).default;
+      
+      // Find and temporarily hide modal/dialog elements
+      const modalsToHide = document.querySelectorAll('[role="dialog"], [data-radix-dialog-content], .fixed.inset-0, .z-50');
+      const originalDisplays: string[] = [];
+      
+      modalsToHide.forEach((modal, index) => {
+        const element = modal as HTMLElement;
+        originalDisplays[index] = element.style.display;
+        element.style.display = 'none';
+      });
+      
+      // Wait a brief moment for the DOM to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const canvas = await html2canvas(document.body, {
         height: window.innerHeight,
         width: window.innerWidth,
         useCORS: true,
         allowTaint: true,
-        scale: 0.5 // Reduce size for faster processing
+        scale: 0.5, // Reduce size for faster processing
+        ignoreElements: (element) => {
+          // Ignore elements that are likely modals or dialogs
+          return (
+            element.hasAttribute('role') && element.getAttribute('role') === 'dialog' ||
+            element.hasAttribute('data-radix-dialog-content') ||
+            element.classList.contains('fixed') && element.classList.contains('inset-0') ||
+            element.classList.contains('z-50') ||
+            element.closest('[role="dialog"]') !== null ||
+            element.closest('[data-radix-dialog-content]') !== null
+          );
+        }
       });
+      
+      // Restore original display values
+      modalsToHide.forEach((modal, index) => {
+        const element = modal as HTMLElement;
+        element.style.display = originalDisplays[index] || '';
+      });
+      
       return canvas.toDataURL('image/png');
     } catch (error) {
       console.error('Error capturing screenshot:', error);
