@@ -6,10 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Upload, X, Loader2, Target, Edit3 } from 'lucide-react';
+import { Camera, Upload, X, Loader2, Edit3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useBugReporting, BugReportData, PossibleDuplicate } from '@/hooks/useBugReporting';
-import { ElementPicker } from './ElementPicker';
 import { ScreenshotAnnotator } from './ScreenshotAnnotator';
 import { DuplicateHandler } from './DuplicateHandler';
 
@@ -28,7 +27,6 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
     severity: 'Medium',
     consentDeviceInfo: false,
     consentConsoleInfo: false,
-    selectedElement: undefined
   });
   
   const [screenshots, setScreenshots] = useState<File[]>([]);
@@ -37,7 +35,6 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [duplicates, setDuplicates] = useState<PossibleDuplicate[]>([]);
   const [checkingDuplicates, setCheckingDuplicates] = useState(false);
-  const [showElementPicker, setShowElementPicker] = useState(false);
   const [showAnnotator, setShowAnnotator] = useState(false);
   const [currentScreenshot, setCurrentScreenshot] = useState<string | null>(null);
   const [showDuplicateHandler, setShowDuplicateHandler] = useState(false);
@@ -148,19 +145,6 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
     }
   };
 
-  const handleElementSelected = (elementInfo: any) => {
-    setFormData(prev => ({ ...prev, selectedElement: elementInfo }));
-    setShowElementPicker(false);
-    toast({
-      title: "Element selected",
-      description: `Selected: ${elementInfo.element} - ${elementInfo.fallbackText}`
-    });
-  };
-
-  const removeSelectedElement = () => {
-    setFormData(prev => ({ ...prev, selectedElement: undefined }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -223,7 +207,6 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
       severity: 'Medium',
       consentDeviceInfo: false,
       consentConsoleInfo: false,
-      selectedElement: undefined
     });
     setScreenshots([]);
     setUploads([]);
@@ -242,7 +225,6 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
   // Close modal handlers
   useEffect(() => {
     if (!isOpen) {
-      setShowElementPicker(false);
       setShowAnnotator(false);
       setCurrentScreenshot(null);
       setShowDuplicateHandler(false);
@@ -319,44 +301,7 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
             </Select>
           </div>
 
-          {/* Element Selection */}
-          <div className="space-y-2">
-            <Label>Element Selection (Optional)</Label>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowElementPicker(true)}
-                disabled={showElementPicker}
-                className="flex items-center gap-2"
-              >
-                <Target className="w-4 h-4" />
-                {formData.selectedElement ? 'Change Element' : 'Select Element'}
-              </Button>
-            </div>
-            
-            {formData.selectedElement && (
-              <div className="p-3 bg-muted rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm">
-                    <span className="font-medium">Selected:</span> {formData.selectedElement.element} - {formData.selectedElement.fallbackText}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeSelectedElement}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Selector: <code className="bg-background px-1 rounded">{formData.selectedElement.selector}</code>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Attachments */}
 
           <div className="space-y-4">
             <Label>Attachments</Label>
@@ -496,13 +441,6 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
             </Button>
           </div>
         </form>
-
-        {/* Element Picker Overlay */}
-        <ElementPicker
-          isActive={showElementPicker}
-          onElementSelected={handleElementSelected}
-          onCancel={() => setShowElementPicker(false)}
-        />
 
         {/* Screenshot Annotator */}
         {showAnnotator && currentScreenshot && (
