@@ -517,6 +517,130 @@ export type Database = {
           },
         ]
       }
+      bug_changelog: {
+        Row: {
+          bug_report_id: string
+          change_type: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_value: Json | null
+          notes: string | null
+          old_value: Json | null
+        }
+        Insert: {
+          bug_report_id: string
+          change_type: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          old_value?: Json | null
+        }
+        Update: {
+          bug_report_id?: string
+          change_type?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          old_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_changelog_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_merges: {
+        Row: {
+          created_at: string
+          id: string
+          merge_reason: string | null
+          merged_bug_id: string
+          merged_by: string | null
+          parent_bug_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merge_reason?: string | null
+          merged_bug_id: string
+          merged_by?: string | null
+          parent_bug_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merge_reason?: string | null
+          merged_bug_id?: string
+          merged_by?: string | null
+          parent_bug_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_merged_bug"
+            columns: ["merged_bug_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_parent_bug"
+            columns: ["parent_bug_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_notifications: {
+        Row: {
+          bug_report_id: string
+          created_at: string
+          id: string
+          message: string
+          notification_type: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          bug_report_id: string
+          created_at?: string
+          id?: string
+          message: string
+          notification_type: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          bug_report_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          notification_type?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_notifications_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bug_report_attachments: {
         Row: {
           attachment_type: string
@@ -4633,6 +4757,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      create_bug_notification: {
+        Args: {
+          p_bug_report_id: string
+          p_message: string
+          p_notification_type: string
+          p_title: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       evaluate_feature_flag: {
         Args: {
           p_family_id?: string
@@ -4715,6 +4849,17 @@ export type Database = {
           p_risk_score?: number
           p_session_id?: string
           p_user_agent?: string
+        }
+        Returns: string
+      }
+      log_bug_change: {
+        Args: {
+          p_bug_report_id: string
+          p_change_type: string
+          p_changed_by: string
+          p_new_value?: Json
+          p_notes?: string
+          p_old_value?: Json
         }
         Returns: string
       }

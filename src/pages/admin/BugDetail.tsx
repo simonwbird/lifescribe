@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { FixWithLoveableModal } from '@/components/FixWithLoveableModal';
 import { useAITaskPolling } from '@/hooks/useAITaskPolling';
+import { BugQAActions } from '@/components/BugQAActions';
+import { BugChangelog } from '@/components/BugChangelog';
 
 interface BugReport {
   id: string;
@@ -256,14 +258,27 @@ export default function BugDetail() {
         </div>
         
         <div className="flex gap-2">
-          {userRole === 'super_admin' && bugReport.status !== 'QA Ready' && bugReport.status !== 'Fixed' && bugReport.status !== 'Closed' && (
-            <Button 
-              onClick={() => setShowFixModal(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Fix with Loveable
-            </Button>
+          {userRole === 'super_admin' && (
+            <>
+              <BugQAActions 
+                bugId={bugReport.id}
+                currentStatus={bugReport.status}
+                onStatusChange={(newStatus) => {
+                  const statusValue = newStatus as BugReport['status'];
+                  setStatus(statusValue);
+                  setBugReport(prev => prev ? { ...prev, status: statusValue } : null);
+                }}
+              />
+              {bugReport.status !== 'QA Ready' && bugReport.status !== 'Fixed' && bugReport.status !== 'Closed' && (
+                <Button 
+                  onClick={() => setShowFixModal(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Fix with Loveable
+                </Button>
+              )}
+            </>
           )}
           <Button onClick={handleSave} disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
@@ -441,6 +456,9 @@ export default function BugDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Bug Changelog */}
+          <BugChangelog bugId={bugReport.id} />
 
           {/* Context Information */}
           {(bugReport.consent_console_info && (bugReport.ui_events?.length > 0 || bugReport.console_logs?.length > 0)) && (
