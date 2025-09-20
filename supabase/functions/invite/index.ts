@@ -264,7 +264,7 @@ This link expires on ${expiresAtFormatted}. If you didn't expect this email, you
 LifeScribe — Private family memories, preserved.`;
 
     // Send email
-    const fromAddress = Deno.env.get("INVITE_FROM_EMAIL") || "LifeScribe <invites@send.updates.lifescribe.family>";
+    const fromAddress = Deno.env.get("INVITE_FROM_EMAIL") || "LifeScribe <onboarding@resend.dev>";
     const sendResult = await resend.emails.send({
       from: fromAddress,
       to: [email],
