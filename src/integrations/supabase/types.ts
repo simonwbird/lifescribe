@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          family_id: string
+          id: string
+          message: string | null
+          requested_role: Database["public"]["Enums"]["role_type"]
+          requester_id: string
+          review_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          family_id: string
+          id?: string
+          message?: string | null
+          requested_role?: Database["public"]["Enums"]["role_type"]
+          requester_id: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          family_id?: string
+          id?: string
+          message?: string | null
+          requested_role?: Database["public"]["Enums"]["role_type"]
+          requester_id?: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_access_log: {
         Row: {
           admin_id: string
@@ -580,6 +633,8 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          privacy_settings_json: Json | null
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -588,6 +643,8 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          privacy_settings_json?: Json | null
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -596,6 +653,8 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          privacy_settings_json?: Json | null
+          status?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -604,6 +663,53 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_memberships: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          invited_by: string | null
+          invited_via: string | null
+          joined_at: string
+          profile_id: string
+          role: Database["public"]["Enums"]["role_type"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          invited_by?: string | null
+          invited_via?: string | null
+          joined_at?: string
+          profile_id: string
+          role?: Database["public"]["Enums"]["role_type"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          invited_by?: string | null
+          invited_via?: string | null
+          joined_at?: string
+          profile_id?: string
+          role?: Database["public"]["Enums"]["role_type"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_memberships_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
             referencedColumns: ["id"]
           },
         ]
@@ -1023,39 +1129,48 @@ export type Database = {
       invites: {
         Row: {
           accepted_at: string | null
+          code: string | null
           created_at: string
           email: string
           expires_at: string
           family_id: string
           id: string
           invited_by: string
+          max_uses: number | null
           role: Database["public"]["Enums"]["role_type"]
           status: string
           token: string
+          used_count: number | null
         }
         Insert: {
           accepted_at?: string | null
+          code?: string | null
           created_at?: string
           email: string
           expires_at: string
           family_id: string
           id?: string
           invited_by: string
+          max_uses?: number | null
           role?: Database["public"]["Enums"]["role_type"]
           status?: string
           token: string
+          used_count?: number | null
         }
         Update: {
           accepted_at?: string | null
+          code?: string | null
           created_at?: string
           email?: string
           expires_at?: string
           family_id?: string
           id?: string
           invited_by?: string
+          max_uses?: number | null
           role?: Database["public"]["Enums"]["role_type"]
           status?: string
           token?: string
+          used_count?: number | null
         }
         Relationships: [
           {
@@ -1461,6 +1576,72 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merge_proposals: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          merge_data: Json | null
+          message: string | null
+          proposal_type: string
+          proposed_by: string
+          review_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_family_id: string
+          status: string
+          target_family_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          merge_data?: Json | null
+          message?: string | null
+          proposal_type?: string
+          proposed_by: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_family_id: string
+          status?: string
+          target_family_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          merge_data?: Json | null
+          message?: string | null
+          proposal_type?: string
+          proposed_by?: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_family_id?: string
+          status?: string
+          target_family_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merge_proposals_source_family_id_fkey"
+            columns: ["source_family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merge_proposals_target_family_id_fkey"
+            columns: ["target_family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
             referencedColumns: ["id"]
           },
         ]

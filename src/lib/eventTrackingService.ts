@@ -13,6 +13,26 @@ import {
   type InviteSentMetadata,
   type InviteAcceptedMetadata,
   type ImportantDateAddedMetadata,
+  type InviteCreatedMetadata,
+  type InviteConsumedMetadata,
+  type JoinStartedMetadata,
+  type JoinCompletedMetadata,
+  type JoinPendingMetadata,
+  type CodeCreatedMetadata,
+  type CodeConsumedMetadata,
+  type RequestSubmittedMetadata,
+  type RequestApprovedMetadata,
+  type RequestDeniedMetadata,
+  type PreflightStartedMetadata,
+  type PreflightCompletedMetadata,
+  type PreflightFailedMetadata,
+  type MergeProposedMetadata,
+  type MergeApprovedMetadata,
+  type MergeDeniedMetadata,
+  type MergeCompletedMetadata,
+  type ClaimAdminStartedMetadata,
+  type ClaimAdminCompletedMetadata,
+  type ClaimAdminFailedMetadata,
   type DigestScheduledMetadata,
   type DigestSentMetadata,
   type ContentFlaggedMetadata,
@@ -123,6 +143,25 @@ class EventTrackingService {
       ANALYTICS_EVENTS.PERSON_ADDED,
       ANALYTICS_EVENTS.INVITE_SENT,
       ANALYTICS_EVENTS.INVITE_ACCEPTED,
+      // New onboarding events
+      ANALYTICS_EVENTS.INVITE_CREATED,
+      ANALYTICS_EVENTS.INVITE_CONSUMED,
+      ANALYTICS_EVENTS.JOIN_STARTED,
+      ANALYTICS_EVENTS.JOIN_COMPLETED,
+      ANALYTICS_EVENTS.JOIN_PENDING,
+      ANALYTICS_EVENTS.CODE_CREATED,
+      ANALYTICS_EVENTS.CODE_CONSUMED,
+      ANALYTICS_EVENTS.REQUEST_SUBMITTED,
+      ANALYTICS_EVENTS.REQUEST_APPROVED,
+      ANALYTICS_EVENTS.REQUEST_DENIED,
+      ANALYTICS_EVENTS.MERGE_PROPOSED,
+      ANALYTICS_EVENTS.MERGE_APPROVED,
+      ANALYTICS_EVENTS.MERGE_DENIED,
+      ANALYTICS_EVENTS.MERGE_COMPLETED,
+      ANALYTICS_EVENTS.CLAIM_ADMIN_STARTED,
+      ANALYTICS_EVENTS.CLAIM_ADMIN_COMPLETED,
+      ANALYTICS_EVENTS.CLAIM_ADMIN_FAILED,
+      // Existing events
       ANALYTICS_EVENTS.CONTENT_FLAGGED,
       ANALYTICS_EVENTS.MOD_ACTION_APPLIED,
       ANALYTICS_EVENTS.EXPORT_REQUESTED,
@@ -247,6 +286,87 @@ class EventTrackingService {
     await this.emitEvent(ANALYTICS_EVENTS.RTBF_EXECUTED, metadata)
   }
 
+  // Onboarding tracking methods
+  async trackInviteCreated(metadata: InviteCreatedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.INVITE_CREATED, metadata)
+  }
+
+  async trackInviteConsumed(metadata: InviteConsumedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.INVITE_CONSUMED, metadata)
+  }
+
+  async trackJoinStarted(metadata: JoinStartedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.JOIN_STARTED, metadata)
+  }
+
+  async trackJoinCompleted(metadata: JoinCompletedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.JOIN_COMPLETED, metadata)
+  }
+
+  async trackJoinPending(metadata: JoinPendingMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.JOIN_PENDING, metadata)
+  }
+
+  async trackCodeCreated(metadata: CodeCreatedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CODE_CREATED, metadata)
+  }
+
+  async trackCodeConsumed(metadata: CodeConsumedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CODE_CONSUMED, metadata)
+  }
+
+  async trackRequestSubmitted(metadata: RequestSubmittedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.REQUEST_SUBMITTED, metadata)
+  }
+
+  async trackRequestApproved(metadata: RequestApprovedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.REQUEST_APPROVED, metadata)
+  }
+
+  async trackRequestDenied(metadata: RequestDeniedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.REQUEST_DENIED, metadata)
+  }
+
+  async trackPreflightStarted(metadata: PreflightStartedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_STARTED, metadata)
+  }
+
+  async trackPreflightCompleted(metadata: PreflightCompletedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_COMPLETED, metadata)
+  }
+
+  async trackPreflightFailed(metadata: PreflightFailedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_FAILED, metadata)
+  }
+
+  async trackMergeProposed(metadata: MergeProposedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.MERGE_PROPOSED, metadata)
+  }
+
+  async trackMergeApproved(metadata: MergeApprovedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.MERGE_APPROVED, metadata)
+  }
+
+  async trackMergeDenied(metadata: MergeDeniedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.MERGE_DENIED, metadata)
+  }
+
+  async trackMergeCompleted(metadata: MergeCompletedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.MERGE_COMPLETED, metadata)
+  }
+
+  async trackClaimAdminStarted(metadata: ClaimAdminStartedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CLAIM_ADMIN_STARTED, metadata)
+  }
+
+  async trackClaimAdminCompleted(metadata: ClaimAdminCompletedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CLAIM_ADMIN_COMPLETED, metadata)
+  }
+
+  async trackClaimAdminFailed(metadata: ClaimAdminFailedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CLAIM_ADMIN_FAILED, metadata)
+  }
+
   // Generic method for custom events (with less type safety)
   async trackCustomEvent(eventName: string, metadata: Record<string, any>): Promise<void> {
     await this.emitEvent(eventName, metadata)
@@ -266,6 +386,28 @@ export const {
   trackInviteSent,
   trackInviteAccepted,
   trackImportantDateAdded,
+  // Onboarding methods
+  trackInviteCreated,
+  trackInviteConsumed,
+  trackJoinStarted,
+  trackJoinCompleted,
+  trackJoinPending,
+  trackCodeCreated,
+  trackCodeConsumed,
+  trackRequestSubmitted,
+  trackRequestApproved,
+  trackRequestDenied,
+  trackPreflightStarted,
+  trackPreflightCompleted,
+  trackPreflightFailed,
+  trackMergeProposed,
+  trackMergeApproved,
+  trackMergeDenied,
+  trackMergeCompleted,
+  trackClaimAdminStarted,
+  trackClaimAdminCompleted,
+  trackClaimAdminFailed,
+  // Existing methods
   trackDigestScheduled,
   trackDigestSent,
   trackContentFlagged,

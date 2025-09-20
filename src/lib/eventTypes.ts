@@ -20,6 +20,40 @@ export const ANALYTICS_EVENTS = {
   INVITE_ACCEPTED: 'INVITE_ACCEPTED',
   IMPORTANT_DATE_ADDED: 'IMPORTANT_DATE_ADDED',
   
+  // Onboarding - Invites
+  INVITE_CREATED: 'INVITE_CREATED',
+  INVITE_CONSUMED: 'INVITE_CONSUMED',
+  
+  // Onboarding - Join Flow
+  JOIN_STARTED: 'JOIN_STARTED',
+  JOIN_COMPLETED: 'JOIN_COMPLETED',
+  JOIN_PENDING: 'JOIN_PENDING',
+  
+  // Onboarding - Codes
+  CODE_CREATED: 'CODE_CREATED',
+  CODE_CONSUMED: 'CODE_CONSUMED',
+  
+  // Onboarding - Access Requests
+  REQUEST_SUBMITTED: 'REQUEST_SUBMITTED',
+  REQUEST_APPROVED: 'REQUEST_APPROVED',
+  REQUEST_DENIED: 'REQUEST_DENIED',
+  
+  // Onboarding - Preflight Checks
+  PREFLIGHT_STARTED: 'PREFLIGHT_STARTED',
+  PREFLIGHT_COMPLETED: 'PREFLIGHT_COMPLETED',
+  PREFLIGHT_FAILED: 'PREFLIGHT_FAILED',
+  
+  // Onboarding - Merge Proposals
+  MERGE_PROPOSED: 'MERGE_PROPOSED',
+  MERGE_APPROVED: 'MERGE_APPROVED',
+  MERGE_DENIED: 'MERGE_DENIED',
+  MERGE_COMPLETED: 'MERGE_COMPLETED',
+  
+  // Onboarding - Admin Claims
+  CLAIM_ADMIN_STARTED: 'CLAIM_ADMIN_STARTED',
+  CLAIM_ADMIN_COMPLETED: 'CLAIM_ADMIN_COMPLETED',
+  CLAIM_ADMIN_FAILED: 'CLAIM_ADMIN_FAILED',
+  
   // Engagement & Communication
   DIGEST_SCHEDULED: 'DIGEST_SCHEDULED',
   DIGEST_SENT: 'DIGEST_SENT',
@@ -180,6 +214,160 @@ export interface RtbfExecutedMetadata {
   backup_retention_days: number
 }
 
+// Onboarding - Invite Events
+export interface InviteCreatedMetadata {
+  invite_id: string
+  invite_type: 'email' | 'code' | 'link'
+  expires_at?: string
+  max_uses?: number
+  role: string
+}
+
+export interface InviteConsumedMetadata {
+  invite_id: string
+  invite_type: 'email' | 'code' | 'link'
+  invited_by_id?: string
+  join_method: string
+}
+
+// Onboarding - Join Events
+export interface JoinStartedMetadata {
+  join_method: 'invite' | 'code' | 'request'
+  family_id?: string
+  invite_id?: string
+}
+
+export interface JoinCompletedMetadata {
+  join_method: 'invite' | 'code' | 'request'
+  family_id: string
+  role_assigned: string
+  time_to_complete_minutes?: number
+}
+
+export interface JoinPendingMetadata {
+  join_method: 'invite' | 'code' | 'request'
+  family_id: string
+  pending_reason: 'approval_required' | 'verification_needed' | 'admin_review'
+}
+
+// Onboarding - Code Events
+export interface CodeCreatedMetadata {
+  code_id: string
+  code_type: 'family_join' | 'admin_invite'
+  expires_at?: string
+  max_uses?: number
+  created_by_role: string
+}
+
+export interface CodeConsumedMetadata {
+  code_id: string
+  code_type: 'family_join' | 'admin_invite'
+  family_id: string
+  success: boolean
+  failure_reason?: string
+}
+
+// Onboarding - Request Events
+export interface RequestSubmittedMetadata {
+  request_id: string
+  family_id: string
+  requested_role: string
+  has_message: boolean
+}
+
+export interface RequestApprovedMetadata {
+  request_id: string
+  family_id: string
+  approved_by_id: string
+  approved_role: string
+  time_to_approve_hours?: number
+}
+
+export interface RequestDeniedMetadata {
+  request_id: string
+  family_id: string
+  denied_by_id: string
+  denial_reason?: string
+  time_to_deny_hours?: number
+}
+
+// Onboarding - Preflight Events
+export interface PreflightStartedMetadata {
+  check_type: 'family_validation' | 'user_eligibility' | 'role_availability'
+  family_id?: string
+  context: string
+}
+
+export interface PreflightCompletedMetadata {
+  check_type: 'family_validation' | 'user_eligibility' | 'role_availability'
+  family_id?: string
+  checks_passed: string[]
+  warnings: string[]
+  processing_time_ms?: number
+}
+
+export interface PreflightFailedMetadata {
+  check_type: 'family_validation' | 'user_eligibility' | 'role_availability'
+  family_id?: string
+  failure_reason: string
+  failed_checks: string[]
+}
+
+// Onboarding - Merge Events
+export interface MergeProposedMetadata {
+  proposal_id: string
+  source_family_id: string
+  target_family_id: string
+  proposal_type: 'merge' | 'absorb' | 'split'
+  has_message: boolean
+}
+
+export interface MergeApprovedMetadata {
+  proposal_id: string
+  source_family_id: string
+  target_family_id: string
+  approved_by_id: string
+  time_to_approve_hours?: number
+}
+
+export interface MergeDeniedMetadata {
+  proposal_id: string
+  source_family_id: string
+  target_family_id: string
+  denied_by_id: string
+  denial_reason?: string
+}
+
+export interface MergeCompletedMetadata {
+  proposal_id: string
+  source_family_id: string
+  target_family_id: string
+  members_transferred: number
+  content_transferred: number
+  processing_time_minutes?: number
+}
+
+// Onboarding - Admin Claim Events
+export interface ClaimAdminStartedMetadata {
+  family_id: string
+  claim_method: 'verification' | 'approval' | 'override'
+  current_admin_count: number
+}
+
+export interface ClaimAdminCompletedMetadata {
+  family_id: string
+  claim_method: 'verification' | 'approval' | 'override'
+  approved_by_id?: string
+  time_to_complete_minutes?: number
+}
+
+export interface ClaimAdminFailedMetadata {
+  family_id: string
+  claim_method: 'verification' | 'approval' | 'override'
+  failure_reason: string
+  verification_attempts?: number
+}
+
 // Union type for all possible metadata
 export type EventMetadata =
   | UserSignedUpMetadata
@@ -190,6 +378,26 @@ export type EventMetadata =
   | InviteSentMetadata
   | InviteAcceptedMetadata
   | ImportantDateAddedMetadata
+  | InviteCreatedMetadata
+  | InviteConsumedMetadata
+  | JoinStartedMetadata
+  | JoinCompletedMetadata
+  | JoinPendingMetadata
+  | CodeCreatedMetadata
+  | CodeConsumedMetadata
+  | RequestSubmittedMetadata
+  | RequestApprovedMetadata
+  | RequestDeniedMetadata
+  | PreflightStartedMetadata
+  | PreflightCompletedMetadata
+  | PreflightFailedMetadata
+  | MergeProposedMetadata
+  | MergeApprovedMetadata
+  | MergeDeniedMetadata
+  | MergeCompletedMetadata
+  | ClaimAdminStartedMetadata
+  | ClaimAdminCompletedMetadata
+  | ClaimAdminFailedMetadata
   | DigestScheduledMetadata
   | DigestSentMetadata
   | ContentFlaggedMetadata
