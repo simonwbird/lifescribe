@@ -8,6 +8,7 @@ import { FileText, Upload, Eye, Download, X } from 'lucide-react'
 import { Person } from '@/utils/personUtils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
+import { supabase as supabaseClient } from '@/integrations/supabase/client'
 import { uploadMediaFile, getSignedMediaUrl } from '@/lib/media'
 
 interface DocumentsStripProps {
@@ -215,11 +216,23 @@ export function DocumentsStrip({ person }: DocumentsStripProps) {
 
   const viewDocument = async (doc: Document) => {
     try {
-      const signedUrl = await getSignedMediaUrl(doc.file_path, (person as any).family_id)
-      if (signedUrl) {
-        window.open(signedUrl, '_blank')
+      // Use the document-viewer edge function instead of direct storage access
+      const supabaseUrl = 'https://imgtnixyralpdrmedwzi.supabase.co'
+      const viewerUrl = `${supabaseUrl}/functions/v1/document-viewer?filePath=${encodeURIComponent(doc.file_path)}&familyId=${encodeURIComponent((person as any).family_id)}`
+      
+      // Open in new tab with proper auth headers
+      const { data: { session } } = await supabaseClient.auth.getSession()
+      if (session?.access_token) {
+        // Create a form to send the request with auth headers
+        const viewerWindow = window.open('about:blank', '_blank')
+        if (viewerWindow) {
+          viewerWindow.location.href = `${viewerUrl}&token=${encodeURIComponent(session.access_token)}`
+        }
+      } else {
+        window.open(viewerUrl, '_blank')
       }
     } catch (error) {
+      console.error('Error viewing document:', error)
       toast({
         title: "Failed to open document",
         description: "Could not open the document for viewing.",

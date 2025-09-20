@@ -12,6 +12,9 @@ max_rows = 1000
 [functions.media-proxy]
 verify_jwt = true
 
+[functions.document-viewer]
+verify_jwt = true
+
 [functions.transcribe]
 verify_jwt = true
 
