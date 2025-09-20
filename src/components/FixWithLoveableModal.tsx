@@ -286,22 +286,17 @@ ${bugReport.device_info && Object.keys(bugReport.device_info).length > 0 ? `- **
 
       if (taskError) throw taskError;
 
-      // Show the task brief in the current chat interface
-      // Create a message element that will appear in the chat
-      const chatMessage = document.createElement('div');
-      chatMessage.className = 'bg-muted/30 border border-border rounded-lg p-4 mb-4 font-mono text-sm whitespace-pre-wrap';
-      chatMessage.textContent = customBrief;
-      
-      // Find the chat container and add the message
-      const chatContainer = document.querySelector('[data-chat-container]') || document.body;
-      chatContainer.appendChild(chatMessage);
-      
-      // Scroll to the new message
-      chatMessage.scrollIntoView({ behavior: 'smooth' });
+      // Copy the task brief to clipboard so it can be pasted in chat
+      await navigator.clipboard.writeText(`Here's the comprehensive bug fix task brief I've prepared:
+
+${customBrief}
+
+I'm ready to start working on this bug fix. Should I proceed with implementing the solution?`);
 
       toast({
-        title: "Working on your bug fix",
-        description: "The task brief has been added to your chat. An AI assistant will start working on this shortly."
+        title: "Task brief copied to clipboard",
+        description: "The task brief has been copied. You can now paste it in your chat to continue the conversation here.",
+        duration: 8000
       });
 
       // Update bug status to indicate it's being worked on
