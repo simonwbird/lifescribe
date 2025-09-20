@@ -36,6 +36,9 @@ verify_jwt = true
 [functions.join-by-code]
 verify_jwt = true
 
+[functions.family-requests]
+verify_jwt = true
+
 [db]
 # Port to use for the local database URL.
 port = 54322

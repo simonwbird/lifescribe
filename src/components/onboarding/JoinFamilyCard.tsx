@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase'
 import { useFeatureFlags } from '@/hooks/useFeatureFlags'
 import { trackCodeConsumed, trackJoinStarted } from '@/lib/eventTrackingService'
+import { RequestAccessModal } from '@/components/onboarding/RequestAccessModal'
 import { toast } from 'sonner'
-import { Users, Link, Hash, AlertTriangle, Clock, Ban } from 'lucide-react'
+import { Users, Link, Hash, AlertTriangle, Clock, Ban, HelpCircle } from 'lucide-react'
 
 interface JoinFamilyCardProps {
   onSuccess?: () => void
@@ -23,11 +24,13 @@ export function JoinFamilyCard({ onSuccess }: JoinFamilyCardProps) {
   const [error, setError] = useState<string | null>(null)
   const [errorCode, setErrorCode] = useState<string | null>(null)
   const [familyName, setFamilyName] = useState<string | null>(null)
+  const [showRequestModal, setShowRequestModal] = useState(false)
   const navigate = useNavigate()
   const { isEnabled } = useFeatureFlags()
 
   const codesEnabled = isEnabled('onboarding.codes_v1')
   const joinEnabled = isEnabled('onboarding.join_v1')
+  const requestsEnabled = isEnabled('onboarding.requests_v1')
 
   if (!joinEnabled) {
     return null
@@ -143,7 +146,11 @@ export function JoinFamilyCard({ onSuccess }: JoinFamilyCardProps) {
   }
 
   const handleRequestAccess = () => {
-    navigate('/request-access')
+    if (requestsEnabled) {
+      setShowRequestModal(true)
+    } else {
+      navigate('/request-access')
+    }
   }
 
   const getErrorIcon = () => {
@@ -273,20 +280,36 @@ export function JoinFamilyCard({ onSuccess }: JoinFamilyCardProps) {
               onClick={handleRequestAccess}
               className="w-full"
             >
+              <HelpCircle className="h-4 w-4 mr-2" />
               Request Access Instead
             </Button>
           </div>
         )}
 
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">
             Don't have an invite?{' '}
             <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/onboarding')}>
               Create your own family space
             </Button>
           </p>
+          
+          {requestsEnabled && (
+            <p className="text-sm text-muted-foreground">
+              or{' '}
+              <Button variant="link" className="p-0 h-auto" onClick={handleRequestAccess}>
+                request access to an existing family
+              </Button>
+            </p>
+          )}
         </div>
       </CardContent>
+
+      <RequestAccessModal 
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        familyName={familyName || undefined}
+      />
     </Card>
   )
 }
