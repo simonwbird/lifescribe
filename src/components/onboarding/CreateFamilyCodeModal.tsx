@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import { Copy, Hash, Clock, Users, CheckCircle } from 'lucide-react'
 
 interface CreateFamilyCodeModalProps {
-  isOpen: boolean
+  open: boolean
   onClose: () => void
   familyId: string
   familyName: string
@@ -26,7 +26,7 @@ interface FamilyCode {
   used_count: number
 }
 
-export function CreateFamilyCodeModal({ isOpen, onClose, familyId, familyName }: CreateFamilyCodeModalProps) {
+export function CreateFamilyCodeModal({ open, onClose, familyId, familyName }: CreateFamilyCodeModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedCode, setGeneratedCode] = useState<FamilyCode | null>(null)
@@ -103,7 +103,7 @@ export function CreateFamilyCodeModal({ isOpen, onClose, familyId, familyName }:
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

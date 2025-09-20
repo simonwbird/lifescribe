@@ -632,30 +632,39 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          locale: string | null
           name: string
           privacy_settings_json: Json | null
           status: string | null
+          timezone: string | null
           updated_at: string
+          verified_at: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
           description?: string | null
           id?: string
+          locale?: string | null
           name: string
           privacy_settings_json?: Json | null
           status?: string | null
+          timezone?: string | null
           updated_at?: string
+          verified_at?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
           description?: string | null
           id?: string
+          locale?: string | null
           name?: string
           privacy_settings_json?: Json | null
           status?: string | null
+          timezone?: string | null
           updated_at?: string
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -666,6 +675,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      families_preflight_log: {
+        Row: {
+          checked_at: string
+          created_at: string
+          hashed_signals: Json
+          id: string
+          name_slug: string
+          requester_ip: unknown | null
+          risk_level: string
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          hashed_signals?: Json
+          id?: string
+          name_slug: string
+          requester_ip?: unknown | null
+          risk_level: string
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          hashed_signals?: Json
+          id?: string
+          name_slug?: string
+          requester_ip?: unknown | null
+          risk_level?: string
+        }
+        Relationships: []
       }
       family_memberships: {
         Row: {
@@ -4182,6 +4221,10 @@ export type Database = {
       verify_audit_integrity: {
         Args: { p_end_sequence?: number; p_start_sequence?: number }
         Returns: Json
+      }
+      verify_expired_provisional_families: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
     }
     Enums: {

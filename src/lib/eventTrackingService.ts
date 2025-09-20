@@ -23,7 +23,12 @@ import {
   type RequestSubmittedMetadata,
   type RequestApprovedMetadata,
   type RequestDeniedMetadata,
-  type PreflightStartedMetadata,
+  type PreflightNoneMetadata,
+  type PreflightPossibleShownMetadata,
+  type CreateAbandonedMetadata,
+  type CreateCompletedMetadata,
+  type ProvisionalVerifiedMetadata,
+  type PreflightCompletedMetadata,
   type PreflightCompletedMetadata,
   type PreflightFailedMetadata,
   type MergeProposedMetadata,
@@ -327,16 +332,24 @@ class EventTrackingService {
     await this.emitEvent(ANALYTICS_EVENTS.REQUEST_DENIED, metadata)
   }
 
-  async trackPreflightStarted(metadata: PreflightStartedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_STARTED, metadata)
+  async trackPreflightNone(metadata: PreflightNoneMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_NONE, metadata)
   }
 
-  async trackPreflightCompleted(metadata: PreflightCompletedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_COMPLETED, metadata)
+  async trackPreflightPossibleShown(metadata: PreflightPossibleShownMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_POSSIBLE_SHOWN, metadata)
   }
 
-  async trackPreflightFailed(metadata: PreflightFailedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.PREFLIGHT_FAILED, metadata)
+  async trackCreateAbandoned(metadata: CreateAbandonedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CREATE_ABANDONED, metadata)
+  }
+
+  async trackCreateCompleted(metadata: CreateCompletedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.CREATE_COMPLETED, metadata)
+  }
+
+  async trackProvisionalVerified(metadata: ProvisionalVerifiedMetadata): Promise<void> {
+    await this.emitEvent(ANALYTICS_EVENTS.PROVISIONAL_VERIFIED, metadata)
   }
 
   async trackMergeProposed(metadata: MergeProposedMetadata): Promise<void> {
@@ -397,9 +410,11 @@ export const {
   trackRequestSubmitted,
   trackRequestApproved,
   trackRequestDenied,
-  trackPreflightStarted,
-  trackPreflightCompleted,
-  trackPreflightFailed,
+  trackPreflightNone,
+  trackPreflightPossibleShown,
+  trackCreateAbandoned,
+  trackCreateCompleted,
+  trackProvisionalVerified,
   trackMergeProposed,
   trackMergeApproved,
   trackMergeDenied,

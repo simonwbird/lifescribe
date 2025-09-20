@@ -16,7 +16,12 @@ import type {
   ExportRequestedMetadata,
   ExportCompletedMetadata,
   RtbfRequestedMetadata,
-  RtbfExecutedMetadata
+  RtbfExecutedMetadata,
+  PreflightNoneMetadata,
+  PreflightPossibleShownMetadata,
+  CreateAbandonedMetadata,
+  CreateCompletedMetadata,
+  ProvisionalVerifiedMetadata
 } from '@/lib/eventTypes'
 
 /**
@@ -97,6 +102,26 @@ export function useEventTracking() {
     await eventTracker.trackRtbfExecuted(metadata)
   }, [])
 
+  const trackPreflightNone = useCallback(async (metadata: PreflightNoneMetadata) => {
+    await eventTracker.trackPreflightNone(metadata)
+  }, [])
+
+  const trackPreflightPossibleShown = useCallback(async (metadata: PreflightPossibleShownMetadata) => {
+    await eventTracker.trackPreflightPossibleShown(metadata)
+  }, [])
+
+  const trackCreateAbandoned = useCallback(async (metadata: CreateAbandonedMetadata) => {
+    await eventTracker.trackCreateAbandoned(metadata)
+  }, [])
+
+  const trackCreateCompleted = useCallback(async (metadata: CreateCompletedMetadata) => {
+    await eventTracker.trackCreateCompleted(metadata)
+  }, [])
+
+  const trackProvisionalVerified = useCallback(async (metadata: ProvisionalVerifiedMetadata) => {
+    await eventTracker.trackProvisionalVerified(metadata)
+  }, [])
+
   const trackCustomEvent = useCallback(async (eventName: string, metadata: Record<string, any>) => {
     await eventTracker.trackCustomEvent(eventName, metadata)
   }, [])
@@ -118,6 +143,11 @@ export function useEventTracking() {
     trackExportCompleted,
     trackRtbfRequested,
     trackRtbfExecuted,
+    trackPreflightNone,
+    trackPreflightPossibleShown,
+    trackCreateAbandoned,
+    trackCreateCompleted,
+    trackProvisionalVerified,
     trackCustomEvent
   }
 }

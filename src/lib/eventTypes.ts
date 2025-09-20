@@ -1,202 +1,134 @@
-/**
- * Data & Events Spine - Standardized event tracking for analytics and audit
- * 
- * All events should be emitted consistently with:
- * - user_id: UUID of the acting user
- * - family_id: UUID of the relevant family/space
- * - actor_role: Role of the user performing the action
- * - metadata: Event-specific additional data
- */
-
-// Standardized event names - use these exact constants
-export const ANALYTICS_EVENTS = {
-  // Core User Actions
-  USER_SIGNED_UP: 'USER_SIGNED_UP',
-  MEMORY_RECORDED: 'MEMORY_RECORDED',
-  MEDIA_UPLOADED: 'MEDIA_UPLOADED',
-  TRANSCRIPTION_COMPLETED: 'TRANSCRIPTION_COMPLETED',
-  PERSON_ADDED: 'PERSON_ADDED',
-  INVITE_SENT: 'INVITE_SENT',
-  INVITE_ACCEPTED: 'INVITE_ACCEPTED',
-  IMPORTANT_DATE_ADDED: 'IMPORTANT_DATE_ADDED',
-  
-  // Onboarding - Invites
-  INVITE_CREATED: 'INVITE_CREATED',
-  INVITE_CONSUMED: 'INVITE_CONSUMED',
-  
-  // Onboarding - Join Flow
-  JOIN_STARTED: 'JOIN_STARTED',
-  JOIN_COMPLETED: 'JOIN_COMPLETED',
-  JOIN_PENDING: 'JOIN_PENDING',
-  
-  // Onboarding - Codes
-  CODE_CREATED: 'CODE_CREATED',
-  CODE_CONSUMED: 'CODE_CONSUMED',
-  
-  // Onboarding - Access Requests
-  REQUEST_SUBMITTED: 'REQUEST_SUBMITTED',
-  REQUEST_APPROVED: 'REQUEST_APPROVED',
-  REQUEST_DENIED: 'REQUEST_DENIED',
-  
-  // Onboarding - Preflight Checks
-  PREFLIGHT_STARTED: 'PREFLIGHT_STARTED',
-  PREFLIGHT_COMPLETED: 'PREFLIGHT_COMPLETED',
-  PREFLIGHT_FAILED: 'PREFLIGHT_FAILED',
-  
-  // Onboarding - Merge Proposals
-  MERGE_PROPOSED: 'MERGE_PROPOSED',
-  MERGE_APPROVED: 'MERGE_APPROVED',
-  MERGE_DENIED: 'MERGE_DENIED',
-  MERGE_COMPLETED: 'MERGE_COMPLETED',
-  
-  // Onboarding - Admin Claims
-  CLAIM_ADMIN_STARTED: 'CLAIM_ADMIN_STARTED',
-  CLAIM_ADMIN_COMPLETED: 'CLAIM_ADMIN_COMPLETED',
-  CLAIM_ADMIN_FAILED: 'CLAIM_ADMIN_FAILED',
-  
-  // Engagement & Communication
-  DIGEST_SCHEDULED: 'DIGEST_SCHEDULED',
-  DIGEST_SENT: 'DIGEST_SENT',
-  
-  // Moderation & Safety
-  CONTENT_FLAGGED: 'CONTENT_FLAGGED',
-  MOD_ACTION_APPLIED: 'MOD_ACTION_APPLIED',
-  
-  // Compliance & Privacy
-  EXPORT_REQUESTED: 'EXPORT_REQUESTED',
-  EXPORT_COMPLETED: 'EXPORT_COMPLETED',
-  RTBF_REQUESTED: 'RTBF_REQUESTED',
-  RTBF_EXECUTED: 'RTBF_EXECUTED',
-} as const
-
-export type AnalyticsEventName = keyof typeof ANALYTICS_EVENTS
-
-// Base interface for all events
+// Base event interface that all events must include
 export interface BaseEventData {
   user_id: string
-  family_id: string | null
-  actor_role: 'admin' | 'member' | 'system' | 'super_admin'
+  family_id?: string
+  actor_role: 'member' | 'admin' | 'super_admin' | 'system'
   session_id?: string
-  ip_address?: string
+}
+
+// Core user action events
+export interface UserSignedUpMetadata {
+  signup_method: 'email' | 'phone' | 'oauth'
+  provider?: string
+  referral_source?: string
   user_agent?: string
 }
 
-// Event-specific metadata interfaces
-export interface UserSignedUpMetadata {
-  signup_method: 'email' | 'google' | 'apple' | 'invite_link'
-  invite_token?: string
-  referrer?: string
-  utm_source?: string
-  utm_medium?: string
-  utm_campaign?: string
-}
-
 export interface MemoryRecordedMetadata {
-  story_type: 'text' | 'voice' | 'video' | 'photo'
-  content_length?: number
+  story_type: 'text' | 'audio' | 'video' | 'photo'
+  content_length: number
+  privacy_level: 'private' | 'family' | 'public'
+  capture_method: 'web' | 'mobile' | 'import' | 'api'
+  has_media: boolean
+  media_count?: number
   tags?: string[]
-  privacy_level: 'family' | 'private' | 'descendants'
-  capture_method: 'web' | 'mobile' | 'phone_import'
 }
 
 export interface MediaUploadedMetadata {
   file_type: string
   file_size_bytes: number
-  upload_method: 'drag_drop' | 'file_picker' | 'camera' | 'phone_import'
-  processing_required: boolean
-  attached_to: 'story' | 'answer' | 'recipe' | 'property' | 'standalone'
+  upload_method: 'direct' | 'drag_drop' | 'paste' | 'api'
+  processing_time_ms?: number
+  compression_applied: boolean
 }
 
 export interface TranscriptionCompletedMetadata {
-  audio_duration_seconds: number
+  media_id: string
+  media_type: 'audio' | 'video'
+  duration_seconds: number
+  transcription_provider: string
   word_count: number
-  confidence_score: number
-  vendor_used: string
+  confidence_score?: number
   processing_time_ms: number
-  cost_usd: number
 }
 
 export interface PersonAddedMetadata {
-  method: 'manual' | 'gedcom_import' | 'ai_suggestion'
-  relationship_type?: string
+  person_type: 'family_member' | 'friend' | 'other'
   has_photo: boolean
-  has_birth_date: boolean
-  generation_relative_to_user?: number
+  relationship_count: number
+  birth_date_provided: boolean
+  added_via: 'manual' | 'photo_tag' | 'story_mention' | 'import'
 }
 
 export interface InviteSentMetadata {
-  invite_method: 'email' | 'link_share' | 'sms'
-  recipient_role: 'admin' | 'member'
-  relationship_to_inviter?: string
-  expires_in_hours: number
+  invite_method: 'email' | 'sms' | 'link' | 'qr_code'
+  recipient_relationship: string
+  expiry_days: number
+  role_assigned: string
 }
 
 export interface InviteAcceptedMetadata {
+  invite_method: 'email' | 'sms' | 'link' | 'qr_code'
   time_to_accept_hours: number
-  invite_method: 'email' | 'link_share' | 'sms'
-  first_action_after_signup?: string
+  user_was_existing: boolean
 }
 
 export interface ImportantDateAddedMetadata {
-  event_type: 'birthday' | 'anniversary' | 'death' | 'custom'
-  person_count: number
-  has_photo: boolean
-  recurrence: 'yearly' | 'none'
+  date_type: 'birthday' | 'anniversary' | 'memorial' | 'custom'
+  recurrence: 'yearly' | 'monthly' | 'none'
+  privacy_level: 'private' | 'family'
+  person_associated: boolean
 }
 
+// Digest and communication events
 export interface DigestScheduledMetadata {
   digest_type: 'weekly' | 'monthly' | 'custom'
   recipient_count: number
-  content_item_count: number
+  content_items: number
   scheduled_for: string
 }
 
 export interface DigestSentMetadata {
   digest_type: 'weekly' | 'monthly' | 'custom'
   recipient_count: number
-  content_item_count: number
-  send_method: 'email' | 'push'
-  template_version: string
+  content_items: number
+  delivery_method: 'email' | 'in_app'
+  send_time_ms: number
 }
 
+// Moderation and safety events
 export interface ContentFlaggedMetadata {
-  content_type: 'story' | 'comment' | 'media' | 'answer'
-  flag_reason: string
-  flagged_by_type: 'user' | 'ai' | 'system'
-  severity_score: number
-  auto_action_taken?: string
+  content_type: 'story' | 'comment' | 'photo' | 'profile'
+  content_id: string
+  flag_type: 'inappropriate' | 'spam' | 'copyright' | 'other'
+  reporter_relationship: 'family' | 'admin' | 'system'
+  severity: 'low' | 'medium' | 'high' | 'critical'
 }
 
 export interface ModActionAppliedMetadata {
-  action_type: 'hide' | 'delete' | 'warn' | 'suspend' | 'approve'
-  content_type: 'story' | 'comment' | 'media' | 'answer'
-  moderator_id: string
-  appeal_available: boolean
-  rationale: string
+  action_type: 'warn' | 'hide' | 'delete' | 'ban'
+  content_type: 'story' | 'comment' | 'photo' | 'profile'
+  content_id: string
+  moderator_type: 'admin' | 'super_admin' | 'system'
+  flag_id?: string
 }
 
+// Privacy and data rights events
 export interface ExportRequestedMetadata {
-  export_type: 'full' | 'stories_only' | 'media_only'
-  requested_format: 'zip' | 'json'
-  estimated_size_mb: number
-  estimated_items: number
+  export_format: 'json' | 'pdf' | 'zip'
+  data_types: string[]
+  date_range_days?: number
+  estimated_size_mb?: number
 }
 
 export interface ExportCompletedMetadata {
-  export_type: 'full' | 'stories_only' | 'media_only'
-  final_size_mb: number
-  total_items: number
-  processing_time_seconds: number
-  download_expires_at: string
+  export_format: 'json' | 'pdf' | 'zip'
+  file_size_mb: number
+  processing_time_minutes: number
+  items_exported: {
+    stories: number
+    photos: number
+    comments: number
+    people: number
+  }
+  download_expires_days: number
 }
 
 export interface RtbfRequestedMetadata {
-  impact_analysis: {
-    stories_affected: number
-    media_affected: number
-    families_affected: number
-    total_items: number
-  }
+  data_types: string[]
+  reason: 'user_request' | 'gdpr' | 'ccpa' | 'admin_action'
+  verification_required: boolean
+  estimated_items: number
   confirmation_method: 'email' | 'phone' | 'in_person'
   legal_basis: string
 }
@@ -292,83 +224,92 @@ export interface RequestDeniedMetadata {
 }
 
 // Onboarding - Preflight Events
-export interface PreflightStartedMetadata {
-  check_type: 'family_validation' | 'user_eligibility' | 'role_availability'
-  family_id?: string
-  context: string
+export interface PreflightNoneMetadata {
+  family_name: string
+  check_signals: string[]
+  response_time_ms: number
 }
 
-export interface PreflightCompletedMetadata {
-  check_type: 'family_validation' | 'user_eligibility' | 'role_availability'
-  family_id?: string
-  checks_passed: string[]
-  warnings: string[]
-  processing_time_ms?: number
+export interface PreflightPossibleShownMetadata {
+  family_name: string
+  risk_level: 'possible' | 'high'
+  match_signals: string[]
+  user_action: 'continue' | 'abandoned' | 'switched_to_join'
 }
 
-export interface PreflightFailedMetadata {
-  check_type: 'family_validation' | 'user_eligibility' | 'role_availability'
-  family_id?: string
-  failure_reason: string
-  failed_checks: string[]
+export interface CreateAbandonedMetadata {
+  family_name: string
+  abandon_stage: 'preflight' | 'form' | 'submission'
+  time_spent_seconds: number
+  reason?: string
 }
 
-// Onboarding - Merge Events
-export interface MergeProposedMetadata {
-  proposal_id: string
-  source_family_id: string
-  target_family_id: string
-  proposal_type: 'merge' | 'absorb' | 'split'
-  has_message: boolean
-}
-
-export interface MergeApprovedMetadata {
-  proposal_id: string
-  source_family_id: string
-  target_family_id: string
-  approved_by_id: string
-  time_to_approve_hours?: number
-}
-
-export interface MergeDeniedMetadata {
-  proposal_id: string
-  source_family_id: string
-  target_family_id: string
-  denied_by_id: string
-  denial_reason?: string
-}
-
-export interface MergeCompletedMetadata {
-  proposal_id: string
-  source_family_id: string
-  target_family_id: string
-  members_transferred: number
-  content_transferred: number
-  processing_time_minutes?: number
-}
-
-// Onboarding - Admin Claim Events
-export interface ClaimAdminStartedMetadata {
+export interface CreateCompletedMetadata {
   family_id: string
-  claim_method: 'verification' | 'approval' | 'override'
-  current_admin_count: number
+  family_name: string
+  status: 'active' | 'provisional'
+  locale: string
+  timezone: string
+  preflight_risk?: 'none' | 'possible' | 'high'
+  time_to_complete_minutes: number
 }
 
-export interface ClaimAdminCompletedMetadata {
+export interface ProvisionalVerifiedMetadata {
   family_id: string
-  claim_method: 'verification' | 'approval' | 'override'
-  approved_by_id?: string
-  time_to_complete_minutes?: number
+  verification_method: 'auto_member_join' | 'auto_timeout' | 'manual_admin'
+  days_provisional: number
+  final_member_count: number
 }
 
-export interface ClaimAdminFailedMetadata {
-  family_id: string
-  claim_method: 'verification' | 'approval' | 'override'
-  failure_reason: string
-  verification_attempts?: number
-}
+export const ANALYTICS_EVENTS = {
+  // Core user actions
+  USER_SIGNED_UP: 'user_signed_up',
+  MEMORY_RECORDED: 'memory_recorded',
+  MEDIA_UPLOADED: 'media_uploaded',
+  TRANSCRIPTION_COMPLETED: 'transcription_completed',
+  PERSON_ADDED: 'person_added',
+  INVITE_SENT: 'invite_sent',
+  INVITE_ACCEPTED: 'invite_accepted',
+  IMPORTANT_DATE_ADDED: 'important_date_added',
+  DIGEST_SCHEDULED: 'digest_scheduled',
+  DIGEST_SENT: 'digest_sent',
+  
+  // Moderation and safety
+  CONTENT_FLAGGED: 'content_flagged',
+  MOD_ACTION_APPLIED: 'mod_action_applied',
+  
+  // Privacy and data rights
+  EXPORT_REQUESTED: 'export_requested',
+  EXPORT_COMPLETED: 'export_completed',
+  RTBF_REQUESTED: 'rtbf_requested',
+  RTBF_EXECUTED: 'rtbf_executed',
+  
+  // Onboarding - Invites
+  INVITE_CREATED: 'invite_created',
+  INVITE_CONSUMED: 'invite_consumed',
+  
+  // Onboarding - Join Flow
+  JOIN_STARTED: 'join_started',
+  JOIN_COMPLETED: 'join_completed',
+  JOIN_PENDING: 'join_pending',
+  
+  // Onboarding - Codes
+  CODE_CREATED: 'code_created',
+  CODE_CONSUMED: 'code_consumed',
+  
+  // Onboarding - Requests
+  REQUEST_SUBMITTED: 'request_submitted',
+  REQUEST_APPROVED: 'request_approved',
+  REQUEST_DENIED: 'request_denied',
+  
+  // Onboarding - Preflight & Create
+  PREFLIGHT_NONE: 'preflight_none',
+  PREFLIGHT_POSSIBLE_SHOWN: 'preflight_possible_shown',
+  CREATE_ABANDONED: 'create_abandoned',
+  CREATE_COMPLETED: 'create_completed',
+  PROVISIONAL_VERIFIED: 'provisional_verified'
+} as const
 
-// Union type for all possible metadata
 export type EventMetadata =
   | UserSignedUpMetadata
   | MemoryRecordedMetadata
@@ -378,6 +319,14 @@ export type EventMetadata =
   | InviteSentMetadata
   | InviteAcceptedMetadata
   | ImportantDateAddedMetadata
+  | DigestScheduledMetadata
+  | DigestSentMetadata
+  | ContentFlaggedMetadata
+  | ModActionAppliedMetadata
+  | ExportRequestedMetadata
+  | ExportCompletedMetadata
+  | RtbfRequestedMetadata
+  | RtbfExecutedMetadata
   | InviteCreatedMetadata
   | InviteConsumedMetadata
   | JoinStartedMetadata
@@ -388,25 +337,11 @@ export type EventMetadata =
   | RequestSubmittedMetadata
   | RequestApprovedMetadata
   | RequestDeniedMetadata
-  | PreflightStartedMetadata
-  | PreflightCompletedMetadata
-  | PreflightFailedMetadata
-  | MergeProposedMetadata
-  | MergeApprovedMetadata
-  | MergeDeniedMetadata
-  | MergeCompletedMetadata
-  | ClaimAdminStartedMetadata
-  | ClaimAdminCompletedMetadata
-  | ClaimAdminFailedMetadata
-  | DigestScheduledMetadata
-  | DigestSentMetadata
-  | ContentFlaggedMetadata
-  | ModActionAppliedMetadata
-  | ExportRequestedMetadata
-  | ExportCompletedMetadata
-  | RtbfRequestedMetadata
-  | RtbfExecutedMetadata
-  | Record<string, any> // Fallback for custom metadata
+  | PreflightNoneMetadata
+  | PreflightPossibleShownMetadata
+  | CreateAbandonedMetadata
+  | CreateCompletedMetadata
+  | ProvisionalVerifiedMetadata
 
 // Complete event payload
 export interface AnalyticsEvent extends BaseEventData {

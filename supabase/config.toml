@@ -37,6 +37,12 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.family-requests]
+verify_jwt = false
+
+[functions.families-preflight]
+verify_jwt = false
+
+[functions.families-verify]
 verify_jwt = true
 
 [db]
