@@ -33,6 +33,7 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
   const [error, setError] = useState('')
   const [pdfData, setPdfData] = useState<Uint8Array | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
+  const [useObjectViewer, setUseObjectViewer] = useState(false)
 
   useEffect(() => {
     if (isOpen && document) {
@@ -43,6 +44,7 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
         URL.revokeObjectURL(documentUrl)
       }
       setPdfData(null)
+      setUseObjectViewer(false)
       setDocumentUrl('')
     }
   }, [isOpen, document])
@@ -180,11 +182,25 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
         }
         return (
           <div className="w-full max-h-[70vh] overflow-auto border rounded-lg bg-background p-2">
-            <PdfDocument file={{ data: pdfData }} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
-              {Array.from({ length: numPages }, (_, i) => (
-                <Page key={`page_${i + 1}`} pageNumber={i + 1} width={800} />
-              ))}
-            </PdfDocument>
+            {useObjectViewer ? (
+              <object data={documentUrl} type="application/pdf" width="100%" height="800">
+                <div className="p-6 text-center text-muted-foreground">
+                  Failed to load PDF. You can
+                  <Button onClick={downloadDocument} variant="outline" className="ml-2">Download</Button>
+                  instead.
+                </div>
+              </object>
+            ) : (
+              <PdfDocument 
+                file={{ data: pdfData }} 
+                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                onLoadError={(err) => { console.error('PDF.js load error', err); setUseObjectViewer(true); }}
+              >
+                {Array.from({ length: numPages }, (_, i) => (
+                  <Page key={`page_${i + 1}`} pageNumber={i + 1} width={800} />
+                ))}
+              </PdfDocument>
+            )}
           </div>
         )
       } else if (
