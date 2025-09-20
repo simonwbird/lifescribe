@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { JoinFamilyCard } from '@/components/onboarding/JoinFamilyCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -75,6 +76,42 @@ const Hero = () => {
           {/* Decorative photo corner */}
           <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-card border border-border rounded-lg shadow-frame transform rotate-6 opacity-80"></div>
         </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// JOIN FAMILY SECTION
+const JoinFamilySection = () => {
+  const navigate = useNavigate()
+  
+  const handleJoinSuccess = () => {
+    navigate('/feed')
+  }
+
+  return (
+    <section className="py-16 bg-neutral-canvas">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-h1 font-serif font-semibold text-foreground">
+                Already have a family on LifeScribe?
+              </h2>
+              <p className="text-body font-sans text-muted-foreground leading-relaxed">
+                Join your family's existing space with an invite link or family code. 
+                Start exploring memories and adding your own stories right away.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span>Secure and private - only for invited family members</span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <JoinFamilyCard onSuccess={handleJoinSuccess} />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -611,8 +648,9 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
-      <Hero />
-      <ExperienceSection />
+        <Hero />
+        <JoinFamilySection />
+        <ExperienceSection />
       <BenefitsSection />
       <EmotionalSection />
       <TestimonialsSection />

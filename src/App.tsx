@@ -67,6 +67,7 @@ import NudgeOrchestrator from './components/admin/NudgeOrchestrator';
 import { ModerationQueue } from './components/admin/ModerationQueue';
 import { MediaPipelineMonitor } from './components/admin/MediaPipelineMonitor';
 import { ContentTimelineAdmin } from './components/admin/ContentTimelineAdmin';
+import RequestAccess from "./pages/RequestAccess";
 import DateLocalizationTest from './components/admin/DateLocalizationTest';
 
 const queryClient = new QueryClient();
@@ -82,6 +83,7 @@ function AppContent() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/request-access" element={<RequestAccess />} />
        <Route path="/invite/:token" element={<InviteLanding />} />
        <Route path="/privacy" element={<Privacy />} />
        <Route path="/terms" element={<Terms />} />
