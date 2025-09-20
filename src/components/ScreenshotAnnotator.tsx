@@ -38,26 +38,32 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
     if (!canvasRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
+      width: 1200,
+      height: 800,
       backgroundColor: 'transparent',
     });
 
     // Load the screenshot as background
     FabricImage.fromURL(imageDataUrl).then((img) => {
       const aspectRatio = img.width! / img.height!;
-      let canvasWidth = 800;
-      let canvasHeight = 600;
+      let canvasWidth = 1200;
+      let canvasHeight = 800;
       
-      if (aspectRatio > canvasWidth / canvasHeight) {
-        canvasHeight = canvasWidth / aspectRatio;
+      // Calculate optimal size to show more detail while maintaining aspect ratio
+      const maxWidth = Math.min(window.innerWidth * 0.8, 1400);
+      const maxHeight = Math.min(window.innerHeight * 0.7, 900);
+      
+      if (aspectRatio > maxWidth / maxHeight) {
+        canvasWidth = maxWidth;
+        canvasHeight = maxWidth / aspectRatio;
       } else {
-        canvasWidth = canvasHeight * aspectRatio;
+        canvasHeight = maxHeight;
+        canvasWidth = maxHeight * aspectRatio;
       }
       
       canvas.setDimensions({ width: canvasWidth, height: canvasHeight });
       
-      // Scale and position the background image
+      // Scale and position the background image with better quality
       img.scaleToWidth(canvasWidth);
       img.scaleToHeight(canvasHeight);
       img.set({
@@ -213,8 +219,8 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
     
     const dataUrl = fabricCanvas.toDataURL({
       format: 'png',
-      quality: 1,
-      multiplier: 1,
+      quality: 0.9,
+      multiplier: 2, // Higher resolution export
     });
     
     onSave(dataUrl);
@@ -246,8 +252,8 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
   ] as const;
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-      <div className="bg-background rounded-lg shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2">
+      <div className="bg-background rounded-lg shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Annotate Screenshot</h3>
@@ -285,7 +291,7 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
           </div>
         </div>
 
-        <div className="p-4 max-h-[70vh] overflow-auto">
+        <div className="p-4 max-h-[80vh] overflow-auto">
           <div className="flex justify-center">
             <canvas ref={canvasRef} className="border border-border rounded" />
           </div>
