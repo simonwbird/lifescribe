@@ -279,32 +279,29 @@ ${bugReport.device_info && Object.keys(bugReport.device_info).length > 0 ? `- **
               url: bugReport.url
             }
           },
-          status: 'pending'
+          status: 'in_progress'
         })
         .select()
         .single();
 
       if (taskError) throw taskError;
 
-      // Call edge function to submit to Loveable
-      const { data, error } = await supabase.functions.invoke('submit-to-loveable', {
-        body: {
-          taskId: aiTask.id,
-          taskBrief: customBrief,
-          bugReport: {
-            id: bugReport.id,
-            title: bugReport.title,
-            severity: bugReport.severity,
-            route: bugReport.route
-          }
-        }
-      });
-
-      if (error) throw error;
+      // Show the task brief in the current chat interface
+      // Create a message element that will appear in the chat
+      const chatMessage = document.createElement('div');
+      chatMessage.className = 'bg-muted/30 border border-border rounded-lg p-4 mb-4 font-mono text-sm whitespace-pre-wrap';
+      chatMessage.textContent = customBrief;
+      
+      // Find the chat container and add the message
+      const chatContainer = document.querySelector('[data-chat-container]') || document.body;
+      chatContainer.appendChild(chatMessage);
+      
+      // Scroll to the new message
+      chatMessage.scrollIntoView({ behavior: 'smooth' });
 
       toast({
-        title: "Task submitted to Loveable",
-        description: "The bug fix task has been sent to Loveable. You'll be notified when it's complete."
+        title: "Working on your bug fix",
+        description: "The task brief has been added to your chat. An AI assistant will start working on this shortly."
       });
 
       // Update bug status to indicate it's being worked on
@@ -315,10 +312,10 @@ ${bugReport.device_info && Object.keys(bugReport.device_info).length > 0 ? `- **
 
       onClose();
     } catch (error) {
-      console.error('Error submitting to Loveable:', error);
+      console.error('Error processing task:', error);
       toast({
-        title: "Submission failed",
-        description: "Failed to submit task to Loveable. Please try again.",
+        title: "Processing failed",
+        description: "Failed to process the task. Please try again.",
         variant: "destructive"
       });
     } finally {
