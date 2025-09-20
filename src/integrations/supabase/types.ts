@@ -706,6 +706,85 @@ export type Database = {
         }
         Relationships: []
       }
+      family_aliases: {
+        Row: {
+          created_at: string
+          id: string
+          merge_id: string | null
+          new_family_id: string
+          old_family_id: string
+          old_name_slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merge_id?: string | null
+          new_family_id: string
+          old_family_id: string
+          old_name_slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merge_id?: string | null
+          new_family_id?: string
+          old_family_id?: string
+          old_name_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_aliases_new_family_id_fkey"
+            columns: ["new_family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_collision_signals: {
+        Row: {
+          collision_candidates: string[] | null
+          created_at: string
+          family_id: string
+          hashed_signals: Json
+          id: string
+          last_computed_at: string
+          name_slug: string
+          risk_score: number
+          updated_at: string
+        }
+        Insert: {
+          collision_candidates?: string[] | null
+          created_at?: string
+          family_id: string
+          hashed_signals?: Json
+          id?: string
+          last_computed_at?: string
+          name_slug: string
+          risk_score?: number
+          updated_at?: string
+        }
+        Update: {
+          collision_candidates?: string[] | null
+          created_at?: string
+          family_id?: string
+          hashed_signals?: Json
+          id?: string
+          last_computed_at?: string
+          name_slug?: string
+          risk_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_collision_signals_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: true
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_memberships: {
         Row: {
           created_at: string
@@ -1621,11 +1700,13 @@ export type Database = {
       }
       merge_proposals: {
         Row: {
+          collision_score: number
           created_at: string
           expires_at: string | null
           id: string
           merge_data: Json | null
           message: string | null
+          pre_merge_analysis: Json
           proposal_type: string
           proposed_by: string
           review_reason: string | null
@@ -1637,11 +1718,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          collision_score?: number
           created_at?: string
           expires_at?: string | null
           id?: string
           merge_data?: Json | null
           message?: string | null
+          pre_merge_analysis?: Json
           proposal_type?: string
           proposed_by: string
           review_reason?: string | null
@@ -1653,11 +1736,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          collision_score?: number
           created_at?: string
           expires_at?: string | null
           id?: string
           merge_data?: Json | null
           message?: string | null
+          pre_merge_analysis?: Json
           proposal_type?: string
           proposed_by?: string
           review_reason?: string | null
