@@ -245,19 +245,19 @@ export default function BugDetail() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate('/admin/bugs')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Inbox
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <Button variant="outline" size="sm" onClick={() => navigate('/admin/bugs')}>
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{bugReport.title}</h1>
-            <p className="text-muted-foreground">Bug Report #{bugReport.id.slice(0, 8)}</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold text-foreground leading-tight mb-1 break-words">{bugReport.title}</h1>
+            <p className="text-sm text-muted-foreground">Bug Report #{bugReport.id.slice(0, 8)}</p>
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-start">
           {userRole === 'super_admin' && (
             <>
               <BugQAActions 
@@ -272,17 +272,18 @@ export default function BugDetail() {
               {bugReport.status !== 'QA Ready' && bugReport.status !== 'Fixed' && bugReport.status !== 'Closed' && (
                 <Button 
                   onClick={() => setShowFixModal(true)}
+                  size="sm"
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-1" />
                   Fix with Loveable
                 </Button>
               )}
             </>
           )}
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Changes'}
+          <Button onClick={handleSave} disabled={saving} size="sm">
+            <Save className="w-4 h-4 mr-1" />
+            {saving ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </div>
