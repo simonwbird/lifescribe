@@ -123,7 +123,7 @@ const ExperienceSection = () => <section className="py-20 bg-neutral-section rel
               <img src={familyTechnology} alt="Family using LifeScribe to explore their memories together on a tablet" className="w-full h-full object-cover" />
             </div>
             {/* Polaroid-style decoration */}
-            <div className="absolute -top-3 -left-3 w-20 h-24 bg-card border border-border rounded-sm shadow-frame transform -rotate-12"></div>
+            
           </div>
         </div>
       </div>
