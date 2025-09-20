@@ -52,10 +52,13 @@ export function DocumentViewerModal({ isOpen, onClose, document, familyId }: Doc
         throw new Error('Not authenticated')
       }
 
-      // Create the URL for the document viewer
+      console.log('Loading document with session token')
+
+      // Create the URL for the document viewer with proper token
       const supabaseUrl = 'https://imgtnixyralpdrmedwzi.supabase.co'
       const viewerUrl = `${supabaseUrl}/functions/v1/document-viewer?filePath=${encodeURIComponent(document.file_path)}&familyId=${encodeURIComponent(familyId)}&token=${encodeURIComponent(session.access_token)}`
       
+      console.log('Document viewer URL:', viewerUrl.replace(session.access_token, '[TOKEN]'))
       setDocumentUrl(viewerUrl)
     } catch (error) {
       console.error('Error loading document:', error)

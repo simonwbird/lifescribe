@@ -36,30 +36,40 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Use token from auth header or query param
+    // Get token from auth header or query param
     const authHeader = req.headers.get('Authorization')
     let token = authHeader?.replace('Bearer ', '')
+    
+    // If no auth header, try query parameter
     if (!token && tokenParam) {
       token = tokenParam
     }
 
     if (!token) {
+      console.log('No token found in header or query param')
       return new Response('Missing authentication', { 
         status: 401, 
         headers: corsHeaders 
       })
     }
 
+    console.log('Authenticating with token:', token.substring(0, 20) + '...')
+
     // Verify the user's JWT token
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
       console.error('Auth error:', authError)
-      return new Response('Unauthorized', { 
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized', 
+        details: authError?.message 
+      }), { 
         status: 401, 
-        headers: corsHeaders 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    console.log('User authenticated:', user.id)
 
     // Verify user has access to this family
     const { data: membership, error: memberError } = await supabase
