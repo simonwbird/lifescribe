@@ -19,7 +19,7 @@ interface BugReportModalProps {
 }
 
 export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
-  const { captureScreenshot, submitBugReport: submitBugReportHook, checkForDuplicates } = useBugReporting();
+  const { captureScreenshot, submitBugReport: submitBugReportAPI, checkForDuplicates } = useBugReporting();
   const [formData, setFormData] = useState<BugReportData>({
     title: '',
     expectedBehavior: '',
@@ -179,14 +179,14 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
       return;
     }
 
-    await submitNewBugReport();
+    await handleBugReportSubmission();
   };
 
-  const submitNewBugReport = async (forceCreate = false) => {
+  const handleBugReportSubmission = async (forceCreate = false) => {
     setIsSubmitting(true);
     
     try {
-      const result = await submitBugReportHook(formData, screenshots, uploads);
+      const result = await submitBugReportAPI(formData, screenshots, uploads);
       
       if (result.success) {
         toast({
@@ -523,7 +523,7 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
           onAddComment={handleAddComment}
           onCreateNew={() => {
             setShowDuplicateHandler(false);
-            submitNewBugReport(true);
+            handleBugReportSubmission(true);
           }}
           onCancel={() => setShowDuplicateHandler(false)}
         />
