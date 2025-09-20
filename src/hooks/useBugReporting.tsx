@@ -108,9 +108,11 @@ export const useBugReporting = () => {
         width: document.body.scrollWidth,   // Full page width
         useCORS: true,
         allowTaint: true,
-        scale: 0.8, // Good balance of quality and file size
+        scale: 1.5, // Higher quality for zoom clarity
         scrollX: 0, // Start from top-left
         scrollY: 0, // Start from top-left
+        logging: false, // Disable console logs
+        imageTimeout: 15000, // Longer timeout for large pages
         ignoreElements: (element) => {
           // Ignore elements that are likely modals or dialogs
           return (

@@ -48,6 +48,9 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
       width: 1200,
       height: 800,
       backgroundColor: 'transparent',
+      // Improve rendering quality
+      enableRetinaScaling: true,
+      imageSmoothingEnabled: false,
     });
 
     // Load the screenshot as background
@@ -78,6 +81,8 @@ export const ScreenshotAnnotator = ({ imageDataUrl, onSave, onCancel }: Screensh
         top: 0,
         selectable: false,
         evented: false,
+        // Maintain image quality when scaled
+        imageSmoothing: false,
       });
       
       canvas.add(img);
