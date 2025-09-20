@@ -9,6 +9,14 @@ export interface BugReportData {
   severity: 'Low' | 'Medium' | 'High';
   consentDeviceInfo: boolean;
   consentConsoleInfo: boolean;
+  selectedElement?: ElementInfo;
+}
+
+export interface ElementInfo {
+  selector: string;
+  fallbackText: string;
+  element: string;
+  position: { x: number; y: number; width: number; height: number };
 }
 
 export interface UIEvent {
@@ -247,6 +255,11 @@ export const useBugReporting = () => {
         consent_console_info: data.consentConsoleInfo,
         dedupe_key: dedupeKey
       };
+
+      // Add selected element info if available
+      if (data.selectedElement) {
+        bugReportData.notes = `${bugReportData.notes || ''}\n\n--- Selected Element ---\nElement: ${data.selectedElement.element}\nSelector: ${data.selectedElement.selector}\nText: ${data.selectedElement.fallbackText}\nPosition: ${data.selectedElement.position.x}, ${data.selectedElement.position.y} (${data.selectedElement.position.width}x${data.selectedElement.position.height})`.trim();
+      }
 
       const { data: bugReport, error: bugError } = await supabase
         .from('bug_reports')

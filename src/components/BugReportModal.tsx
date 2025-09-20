@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,9 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Upload, X, Loader2 } from 'lucide-react';
+import { Camera, Upload, X, Loader2, Target, Edit3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useBugReporting, BugReportData, PossibleDuplicate } from '@/hooks/useBugReporting';
+import { ElementPicker } from './ElementPicker';
+import { ScreenshotAnnotator } from './ScreenshotAnnotator';
+import { DuplicateHandler } from './DuplicateHandler';
 
 interface BugReportModalProps {
   isOpen: boolean;
@@ -16,7 +19,7 @@ interface BugReportModalProps {
 }
 
 export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
-  const { captureScreenshot, submitBugReport, checkForDuplicates } = useBugReporting();
+  const { captureScreenshot, submitBugReport: submitBugReportHook, checkForDuplicates } = useBugReporting();
   const [formData, setFormData] = useState<BugReportData>({
     title: '',
     expectedBehavior: '',
@@ -24,7 +27,8 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
     notes: '',
     severity: 'Medium',
     consentDeviceInfo: false,
-    consentConsoleInfo: false
+    consentConsoleInfo: false,
+    selectedElement: undefined
   });
   
   const [screenshots, setScreenshots] = useState<File[]>([]);
@@ -33,6 +37,10 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [duplicates, setDuplicates] = useState<PossibleDuplicate[]>([]);
   const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [showElementPicker, setShowElementPicker] = useState(false);
+  const [showAnnotator, setShowAnnotator] = useState(false);
+  const [currentScreenshot, setCurrentScreenshot] = useState<string | null>(null);
+  const [showDuplicateHandler, setShowDuplicateHandler] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: keyof BugReportData, value: string | boolean) => {
@@ -67,24 +75,8 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
     try {
       const screenshotData = await captureScreenshot();
       if (screenshotData) {
-        // Convert data URL to File
-        const response = await fetch(screenshotData);
-        const blob = await response.blob();
-        const file = new File([blob], `screenshot-${Date.now()}.png`, { type: 'image/png' });
-        
-        if (screenshots.length < 1) { // Limit to 1 screenshot for now
-          setScreenshots(prev => [...prev, file]);
-          toast({
-            title: "Screenshot captured",
-            description: "Screenshot has been added to your bug report."
-          });
-        } else {
-          toast({
-            title: "Screenshot limit reached",
-            description: "You can only attach 1 screenshot per bug report.",
-            variant: "destructive"
-          });
-        }
+        setCurrentScreenshot(screenshotData);
+        setShowAnnotator(true);
       }
     } catch (error) {
       toast({
@@ -95,6 +87,38 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
     } finally {
       setIsCapturing(false);
     }
+  };
+
+  const handleAnnotatedScreenshot = async (annotatedDataUrl: string) => {
+    try {
+      // Convert data URL to File
+      const response = await fetch(annotatedDataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `annotated-screenshot-${Date.now()}.png`, { type: 'image/png' });
+      
+      if (screenshots.length < 1) { // Limit to 1 screenshot for now
+        setScreenshots(prev => [...prev, file]);
+        toast({
+          title: "Annotated screenshot saved",
+          description: "Your annotated screenshot has been added to your bug report."
+        });
+      } else {
+        toast({
+          title: "Screenshot limit reached",
+          description: "You can only attach 1 screenshot per bug report.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to save screenshot",
+        description: "Unable to save annotated screenshot.",
+        variant: "destructive"
+      });
+    }
+    
+    setShowAnnotator(false);
+    setCurrentScreenshot(null);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,6 +148,19 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
     }
   };
 
+  const handleElementSelected = (elementInfo: any) => {
+    setFormData(prev => ({ ...prev, selectedElement: elementInfo }));
+    setShowElementPicker(false);
+    toast({
+      title: "Element selected",
+      description: `Selected: ${elementInfo.element} - ${elementInfo.fallbackText}`
+    });
+  };
+
+  const removeSelectedElement = () => {
+    setFormData(prev => ({ ...prev, selectedElement: undefined }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -136,10 +173,20 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
       return;
     }
 
+    // Check for duplicates before submitting
+    if (duplicates.length > 0) {
+      setShowDuplicateHandler(true);
+      return;
+    }
+
+    await submitNewBugReport();
+  };
+
+  const submitNewBugReport = async (forceCreate = false) => {
     setIsSubmitting(true);
     
     try {
-      const result = await submitBugReport(formData, screenshots, uploads);
+      const result = await submitBugReportHook(formData, screenshots, uploads);
       
       if (result.success) {
         toast({
@@ -147,19 +194,7 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
           description: `Your bug report has been submitted with ID: ${result.bugId}. Our team will review it soon.`
         });
         
-        // Reset form and close modal
-        setFormData({
-          title: '',
-          expectedBehavior: '',
-          actualBehavior: '',
-          notes: '',
-          severity: 'Medium',
-          consentDeviceInfo: false,
-          consentConsoleInfo: false
-        });
-        setScreenshots([]);
-        setUploads([]);
-        setDuplicates([]);
+        resetForm();
         onClose();
       } else {
         toast({
@@ -178,6 +213,41 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
       setIsSubmitting(false);
     }
   };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      expectedBehavior: '',
+      actualBehavior: '',
+      notes: '',
+      severity: 'Medium',
+      consentDeviceInfo: false,
+      consentConsoleInfo: false,
+      selectedElement: undefined
+    });
+    setScreenshots([]);
+    setUploads([]);
+    setDuplicates([]);
+  };
+
+  const handleAddComment = async (bugId: string) => {
+    // TODO: Implement adding comment to existing bug
+    toast({
+      title: "Feature coming soon",
+      description: "Adding comments to existing bugs will be available soon."
+    });
+    setShowDuplicateHandler(false);
+  };
+
+  // Close modal handlers
+  useEffect(() => {
+    if (!isOpen) {
+      setShowElementPicker(false);
+      setShowAnnotator(false);
+      setCurrentScreenshot(null);
+      setShowDuplicateHandler(false);
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -249,6 +319,45 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
             </Select>
           </div>
 
+          {/* Element Selection */}
+          <div className="space-y-2">
+            <Label>Element Selection (Optional)</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowElementPicker(true)}
+                disabled={showElementPicker}
+                className="flex items-center gap-2"
+              >
+                <Target className="w-4 h-4" />
+                {formData.selectedElement ? 'Change Element' : 'Select Element'}
+              </Button>
+            </div>
+            
+            {formData.selectedElement && (
+              <div className="p-3 bg-muted rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm">
+                    <span className="font-medium">Selected:</span> {formData.selectedElement.element} - {formData.selectedElement.fallbackText}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={removeSelectedElement}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Selector: <code className="bg-background px-1 rounded">{formData.selectedElement.selector}</code>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="space-y-4">
             <Label>Attachments</Label>
             
@@ -259,13 +368,14 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
                 size="sm"
                 onClick={handleCaptureScreenshot}
                 disabled={screenshots.length >= 1 || isCapturing}
+                className="flex items-center gap-2"
               >
                 {isCapturing ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Camera className="w-4 h-4 mr-2" />
+                  <Camera className="w-4 h-4" />
                 )}
-                Capture Screenshot
+                {screenshots.length > 0 ? 'Retake Screenshot' : 'Capture & Annotate'}
               </Button>
 
               <Button
@@ -386,6 +496,37 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
             </Button>
           </div>
         </form>
+
+        {/* Element Picker Overlay */}
+        <ElementPicker
+          isActive={showElementPicker}
+          onElementSelected={handleElementSelected}
+          onCancel={() => setShowElementPicker(false)}
+        />
+
+        {/* Screenshot Annotator */}
+        {showAnnotator && currentScreenshot && (
+          <ScreenshotAnnotator
+            imageDataUrl={currentScreenshot}
+            onSave={handleAnnotatedScreenshot}
+            onCancel={() => {
+              setShowAnnotator(false);
+              setCurrentScreenshot(null);
+            }}
+          />
+        )}
+
+        {/* Duplicate Handler */}
+        <DuplicateHandler
+          isOpen={showDuplicateHandler}
+          duplicates={duplicates}
+          onAddComment={handleAddComment}
+          onCreateNew={() => {
+            setShowDuplicateHandler(false);
+            submitNewBugReport(true);
+          }}
+          onCancel={() => setShowDuplicateHandler(false)}
+        />
       </DialogContent>
     </Dialog>
   );
