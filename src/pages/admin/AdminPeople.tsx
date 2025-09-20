@@ -156,7 +156,7 @@ export default function AdminPeople() {
       <div>
         <h1 className="text-2xl font-bold">People & Families</h1>
         <p className="text-muted-foreground">
-          Manage users, families, and memberships
+          Manage users, profiles, and family memberships
         </p>
       </div>
 

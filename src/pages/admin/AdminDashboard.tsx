@@ -120,9 +120,9 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Overview of your LifeScribe platform
+          Overview of system health and key metrics
         </p>
       </div>
 
@@ -157,21 +157,21 @@ export default function AdminDashboard() {
               System Health
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm">Database Status</span>
+              <span className="text-sm font-medium">Database Status</span>
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 Healthy
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">API Response Time</span>
+              <span className="text-sm font-medium">API Response Time</span>
               <Badge variant="secondary">
                 &lt;200ms
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Storage Usage</span>
+              <span className="text-sm font-medium">Storage Usage</span>
               <Badge variant="secondary">
                 76%
               </Badge>
@@ -183,18 +183,18 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-1 gap-2">
-              <button className="text-left p-2 rounded-lg hover:bg-muted transition-colors text-sm">
+          <CardContent>
+            <div className="space-y-2">
+              <button className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors text-sm font-medium">
                 View Recent Signups
               </button>
-              <button className="text-left p-2 rounded-lg hover:bg-muted transition-colors text-sm">
+              <button className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors text-sm font-medium">
                 Export User Data
               </button>
-              <button className="text-left p-2 rounded-lg hover:bg-muted transition-colors text-sm">
+              <button className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors text-sm font-medium">
                 Review Flagged Content
               </button>
-              <button className="text-left p-2 rounded-lg hover:bg-muted transition-colors text-sm">
+              <button className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors text-sm font-medium">
                 System Configuration
               </button>
             </div>

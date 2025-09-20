@@ -146,12 +146,6 @@ export default function FamilyOverviewTable() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">People & Families Overview</h2>
-        <p className="text-muted-foreground">
-          Monitor family activation and health across your platform
-        </p>
-      </div>
 
       {/* Filters */}
       <Card>

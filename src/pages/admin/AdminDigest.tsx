@@ -278,10 +278,10 @@ export default function AdminDigest() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Families</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Families</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{families.length}</div>
@@ -289,8 +289,8 @@ export default function AdminDigest() {
         </Card>
         
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Active Digests</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Digests</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -300,8 +300,8 @@ export default function AdminDigest() {
         </Card>
         
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Paused</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Paused</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
@@ -311,8 +311,8 @@ export default function AdminDigest() {
         </Card>
         
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Disabled</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Disabled</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
