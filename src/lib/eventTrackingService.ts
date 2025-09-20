@@ -28,16 +28,6 @@ import {
   type CreateAbandonedMetadata,
   type CreateCompletedMetadata,
   type ProvisionalVerifiedMetadata,
-  type PreflightCompletedMetadata,
-  type PreflightCompletedMetadata,
-  type PreflightFailedMetadata,
-  type MergeProposedMetadata,
-  type MergeApprovedMetadata,
-  type MergeDeniedMetadata,
-  type MergeCompletedMetadata,
-  type ClaimAdminStartedMetadata,
-  type ClaimAdminCompletedMetadata,
-  type ClaimAdminFailedMetadata,
   type DigestScheduledMetadata,
   type DigestSentMetadata,
   type ContentFlaggedMetadata,
@@ -159,13 +149,8 @@ class EventTrackingService {
       ANALYTICS_EVENTS.REQUEST_SUBMITTED,
       ANALYTICS_EVENTS.REQUEST_APPROVED,
       ANALYTICS_EVENTS.REQUEST_DENIED,
-      ANALYTICS_EVENTS.MERGE_PROPOSED,
-      ANALYTICS_EVENTS.MERGE_APPROVED,
-      ANALYTICS_EVENTS.MERGE_DENIED,
-      ANALYTICS_EVENTS.MERGE_COMPLETED,
-      ANALYTICS_EVENTS.CLAIM_ADMIN_STARTED,
-      ANALYTICS_EVENTS.CLAIM_ADMIN_COMPLETED,
-      ANALYTICS_EVENTS.CLAIM_ADMIN_FAILED,
+      ANALYTICS_EVENTS.CREATE_COMPLETED,
+      ANALYTICS_EVENTS.PROVISIONAL_VERIFIED,
       // Existing events
       ANALYTICS_EVENTS.CONTENT_FLAGGED,
       ANALYTICS_EVENTS.MOD_ACTION_APPLIED,
@@ -352,37 +337,9 @@ class EventTrackingService {
     await this.emitEvent(ANALYTICS_EVENTS.PROVISIONAL_VERIFIED, metadata)
   }
 
-  async trackMergeProposed(metadata: MergeProposedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.MERGE_PROPOSED, metadata)
-  }
-
-  async trackMergeApproved(metadata: MergeApprovedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.MERGE_APPROVED, metadata)
-  }
-
-  async trackMergeDenied(metadata: MergeDeniedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.MERGE_DENIED, metadata)
-  }
-
-  async trackMergeCompleted(metadata: MergeCompletedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.MERGE_COMPLETED, metadata)
-  }
-
-  async trackClaimAdminStarted(metadata: ClaimAdminStartedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.CLAIM_ADMIN_STARTED, metadata)
-  }
-
-  async trackClaimAdminCompleted(metadata: ClaimAdminCompletedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.CLAIM_ADMIN_COMPLETED, metadata)
-  }
-
-  async trackClaimAdminFailed(metadata: ClaimAdminFailedMetadata): Promise<void> {
-    await this.emitEvent(ANALYTICS_EVENTS.CLAIM_ADMIN_FAILED, metadata)
-  }
-
   // Generic method for custom events (with less type safety)
   async trackCustomEvent(eventName: string, metadata: Record<string, any>): Promise<void> {
-    await this.emitEvent(eventName, metadata)
+    await this.emitEvent(eventName, metadata as EventMetadata)
   }
 }
 
@@ -415,13 +372,6 @@ export const {
   trackCreateAbandoned,
   trackCreateCompleted,
   trackProvisionalVerified,
-  trackMergeProposed,
-  trackMergeApproved,
-  trackMergeDenied,
-  trackMergeCompleted,
-  trackClaimAdminStarted,
-  trackClaimAdminCompleted,
-  trackClaimAdminFailed,
   // Existing methods
   trackDigestScheduled,
   trackDigestSent,

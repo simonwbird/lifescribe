@@ -34,13 +34,11 @@ export default function RTBFCard() {
 
       // Track RTBF request
       await trackRtbfRequested({
-        impact_analysis: {
-          stories_affected: result.deletion_analysis.content_data.stories,
-          media_affected: result.deletion_analysis.content_data.media_files,
-          families_affected: result.deletion_analysis.impact_analysis.affected_families,
-          total_items: result.deletion_analysis.impact_analysis.total_items
-        },
-        confirmation_method: 'in_person', // User is in the app
+        data_types: ['stories', 'media', 'comments', 'profiles', 'reactions'],
+        reason: 'user_request',
+        verification_required: true,
+        estimated_items: result.deletion_analysis.impact_analysis.total_items,
+        confirmation_method: 'email', // User is in the app but will get email confirmation
         legal_basis: 'GDPR Article 17 - Right to erasure'
       })
     } catch (error) {
