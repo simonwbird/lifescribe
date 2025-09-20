@@ -4199,6 +4199,10 @@ export type Database = {
         Args: { p_family_id: string }
         Returns: boolean
       }
+      compute_family_collision_signals: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       evaluate_feature_flag: {
         Args: {
           p_family_id?: string
@@ -4208,6 +4212,10 @@ export type Database = {
           p_user_id?: string
           p_user_role?: string
         }
+        Returns: Json
+      }
+      execute_family_merge: {
+        Args: { p_confirmed_by: string; p_merge_proposal_id: string }
         Returns: Json
       }
       generate_digest_preview: {
@@ -4227,6 +4235,10 @@ export type Database = {
           simple_mode: boolean
           timezone: string
         }[]
+      }
+      get_merge_analysis: {
+        Args: { p_source_family_id: string; p_target_family_id: string }
+        Returns: Json
       }
       get_user_family_ids: {
         Args: { user_id: string }
