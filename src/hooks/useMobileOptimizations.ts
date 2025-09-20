@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useIsMobile } from './use-mobile'
+import { useIsMobile } from './use-mobile.tsx'
 
 /**
  * Hook that applies mobile-specific optimizations and behaviors
