@@ -13,7 +13,7 @@ max_rows = 1000
 verify_jwt = true
 
 [functions.document-viewer]
-verify_jwt = true
+verify_jwt = false
 
 [functions.transcribe]
 verify_jwt = true
