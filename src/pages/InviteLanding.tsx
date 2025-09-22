@@ -105,13 +105,23 @@ export default function InviteLanding() {
           password,
         })
 
-        if (error) throw error
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            setError('Please check your email and click the confirmation link before signing in. Check your spam folder if needed.')
+          } else if (error.message.includes('Invalid login credentials')) {
+            setError('Invalid email or password. If you don\'t have an account yet, click "Need an account? Sign up" below.')
+          } else {
+            throw error
+          }
+          return
+        }
 
         if (data.user) {
           await joinFamily(data.user.id)
         }
       }
     } catch (error: any) {
+      console.error('Auth error:', error)
       setError(error.message)
     } finally {
       setLoading(false)
@@ -234,8 +244,8 @@ export default function InviteLanding() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={true}
-                className="bg-muted"
+                placeholder="Enter your email"
+                required
               />
             </div>
 
