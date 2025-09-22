@@ -102,7 +102,7 @@ export default function AddUserToFamilyModal() {
         .select('id')
         .eq('profile_id', selectedUser.id)
         .eq('family_id', selectedFamily)
-        .single()
+        .maybeSingle()
 
       if (existingMember) {
         toast({
@@ -143,12 +143,22 @@ export default function AddUserToFamilyModal() {
       setSearchEmail('')
       setSearchResults([])
       setOpen(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding user to family:', error)
+      const raw = (error?.message || '').toLowerCase()
+      let description = 'Failed to add user to family'
+      if (
+        raw.includes('row level security') ||
+        raw.includes('rls') ||
+        raw.includes('not authorized') ||
+        raw.includes('permission denied')
+      ) {
+        description = 'Action blocked by security (RLS): you must be an admin of the selected family to add members.'
+      }
       toast({
-        title: "Error",
-        description: "Failed to add user to family",
-        variant: "destructive"
+        title: 'Action Blocked',
+        description,
+        variant: 'destructive'
       })
     } finally {
       setLoading(false)
