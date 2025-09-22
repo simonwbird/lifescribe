@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { UserPlus, Search, Users, Mail } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { toast } from '@/components/ui/use-toast'
+import { supabase } from '@/integrations/supabase/client'
+import { toast } from '@/hooks/use-toast'
 
 interface User {
   id: string
@@ -81,7 +81,10 @@ export default function AddUserToFamilyModal() {
   }
 
   const addUserToFamily = async () => {
+    console.log('addUserToFamily called', { selectedUser, selectedFamily, selectedRole })
+    
     if (!selectedUser || !selectedFamily) {
+      console.log('Missing user or family')
       toast({
         title: "Error",
         description: "Please select both a user and a family",
@@ -111,6 +114,12 @@ export default function AddUserToFamilyModal() {
       }
 
       // Add user to family
+      console.log('Attempting to add user to family', { 
+        profile_id: selectedUser.id, 
+        family_id: selectedFamily, 
+        role: selectedRole 
+      })
+      
       const { error } = await supabase
         .from('members')
         .insert({
@@ -119,6 +128,7 @@ export default function AddUserToFamilyModal() {
           role: selectedRole
         })
 
+      console.log('Insert result:', { error })
       if (error) throw error
 
       toast({
@@ -134,7 +144,7 @@ export default function AddUserToFamilyModal() {
       setSearchResults([])
       setOpen(false)
     } catch (error) {
-      console.error('Failed to add user to family:', error)
+      console.error('Error adding user to family:', error)
       toast({
         title: "Error",
         description: "Failed to add user to family",
@@ -156,6 +166,9 @@ export default function AddUserToFamilyModal() {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add User to Family</DialogTitle>
+          <DialogDescription>
+            Search for a user by email and add them directly to a family
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
