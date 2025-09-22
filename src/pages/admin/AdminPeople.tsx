@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Users, UserCheck, UserX, Filter } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import ImpersonateButton from '@/components/admin/ImpersonateButton'
+import AddUserToFamilyModal from '@/components/admin/AddUserToFamilyModal'
 import type { ImpersonationTarget } from '@/lib/impersonationTypes'
 
 interface AdminUser {
@@ -153,28 +154,34 @@ export default function AdminPeople() {
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
-      <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'users'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Users ({users.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('families')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'families'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Families ({families.length})
-        </button>
+      {/* Header with Tabs and Admin Actions */}
+      <div className="flex items-center justify-between">
+        {/* Tabs */}
+        <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'users'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Users ({users.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('families')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'families'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Families ({families.length})
+          </button>
+        </div>
+
+        {/* Admin Actions */}
+        <AddUserToFamilyModal />
       </div>
 
       {/* Search and Filters */}
