@@ -1,0 +1,238 @@
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { Session, User } from '@supabase/supabase-js'
+import { supabase } from '@/integrations/supabase/client'
+import { UserProfile, UserRole, OnboardingState, getProfile, getRolesFromMembers, getOnboardingState } from '@/services/user'
+import { MappedAuthError } from '@/services/errors'
+import * as Sentry from '@sentry/react'
+
+export interface AuthState {
+  // Core auth state
+  session: Session | null
+  user: User | null
+  
+  // Extended user data
+  profile: UserProfile | null
+  roles: UserRole[]
+  onboarding: OnboardingState | null
+  
+  // Loading states
+  loading: boolean
+  profileLoading: boolean
+  rolesLoading: boolean
+  
+  // Actions
+  refreshProfile: () => Promise<void>
+  refreshRoles: () => Promise<void>
+  refreshOnboarding: () => Promise<void>
+  
+  // Computed properties
+  isAuthenticated: boolean
+  isSuperAdmin: boolean
+  needsOnboarding: boolean
+}
+
+const AuthContext = createContext<AuthState | null>(null)
+
+export interface AuthProviderProps {
+  children: React.ReactNode
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  // Core auth state
+  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  
+  // Extended user data
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [roles, setRoles] = useState<UserRole[]>([])
+  const [onboarding, setOnboarding] = useState<OnboardingState | null>(null)
+  
+  // Loading states
+  const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [rolesLoading, setRolesLoading] = useState(false)
+
+  // Refresh profile data
+  const refreshProfile = useCallback(async () => {
+    if (!user?.id) return
+    
+    setProfileLoading(true)
+    try {
+      const { data, error } = await getProfile(user.id)
+      if (error) {
+        console.error('Failed to refresh profile:', error)
+        Sentry.captureException(error.originalError, {
+          tags: { auth: 'profile_refresh' },
+          user: { id: user.id }
+        })
+      } else {
+        setProfile(data)
+      }
+    } catch (error) {
+      console.error('Profile refresh error:', error)
+      Sentry.captureException(error, {
+        tags: { auth: 'profile_refresh' },
+        user: { id: user.id }
+      })
+    } finally {
+      setProfileLoading(false)
+    }
+  }, [user?.id])
+
+  // Refresh roles data
+  const refreshRoles = useCallback(async () => {
+    if (!user?.id) return
+    
+    setRolesLoading(true)
+    try {
+      const { data, error } = await getRolesFromMembers(user.id)
+      if (error) {
+        console.error('Failed to refresh roles:', error)
+        Sentry.captureException(error.originalError, {
+          tags: { auth: 'roles_refresh' },
+          user: { id: user.id }
+        })
+      } else {
+        setRoles(data || [])
+      }
+    } catch (error) {
+      console.error('Roles refresh error:', error)
+      Sentry.captureException(error, {
+        tags: { auth: 'roles_refresh' },
+        user: { id: user.id }
+      })
+    } finally {
+      setRolesLoading(false)
+    }
+  }, [user?.id])
+
+  // Refresh onboarding state
+  const refreshOnboarding = useCallback(async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await getOnboardingState(user.id)
+      if (error) {
+        console.error('Failed to refresh onboarding:', error)
+        Sentry.captureException(error.originalError, {
+          tags: { auth: 'onboarding_refresh' },
+          user: { id: user.id }
+        })
+      } else {
+        setOnboarding(data)
+      }
+    } catch (error) {
+      console.error('Onboarding refresh error:', error)
+      Sentry.captureException(error, {
+        tags: { auth: 'onboarding_refresh' },
+        user: { id: user.id }
+      })
+    }
+  }, [user?.id])
+
+  // Handle auth state changes
+  const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
+    console.log('Auth state change:', event, newSession?.user?.id)
+    
+    setSession(newSession)
+    setUser(newSession?.user ?? null)
+    
+    // Clear extended data when signing out
+    if (!newSession?.user) {
+      setProfile(null)
+      setRoles([])
+      setOnboarding(null)
+      setLoading(false)
+      return
+    }
+    
+    // Set user context for Sentry
+    Sentry.setUser({
+      id: newSession.user.id,
+      email: newSession.user.email
+    })
+    
+    // Load extended user data when signing in
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Don't set loading for refreshes
+      if (event === 'SIGNED_IN') {
+        setLoading(true)
+      }
+      
+      try {
+        // Load all user data in parallel
+        await Promise.all([
+          refreshProfile(),
+          refreshRoles(),
+          refreshOnboarding()
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+  }, [refreshProfile, refreshRoles, refreshOnboarding])
+
+  // Initialize auth state
+  useEffect(() => {
+    let mounted = true
+    
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!mounted) return
+      handleAuthStateChange('INITIAL_SESSION', initialSession)
+    })
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
+    
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [handleAuthStateChange])
+
+  // Computed properties
+  const isAuthenticated = !!(session && user)
+  const isSuperAdmin = profile?.settings?.role === 'super_admin'
+  const needsOnboarding = onboarding ? !onboarding.isComplete : false
+
+  const value: AuthState = {
+    // Core auth state
+    session,
+    user,
+    
+    // Extended user data
+    profile,
+    roles,
+    onboarding,
+    
+    // Loading states
+    loading,
+    profileLoading,
+    rolesLoading,
+    
+    // Actions
+    refreshProfile,
+    refreshRoles,
+    refreshOnboarding,
+    
+    // Computed properties
+    isAuthenticated,
+    isSuperAdmin,
+    needsOnboarding
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth(): AuthState {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
