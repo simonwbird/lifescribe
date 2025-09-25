@@ -35,24 +35,28 @@ export default function CommentThread({ targetType, targetId, familyId }: Commen
         // Fetch family member profiles separately for comments 
         const profileIds = [...new Set(commentsData.map((c: any) => c.profile_id))]
         const { data: profilesData } = await supabase
-          .from('family_member_profiles')
-          .select('*')
-          .in('id', profileIds.map(id => String(id)))
+          .rpc('get_family_member_safe_profiles')
         
-        // Combine the data
-        const commentsWithProfiles = commentsData.map((comment: any) => ({
-          ...comment,
-          profiles: profilesData?.find((p: any) => p.id === comment.profile_id) || {
-            id: comment.profile_id,
-            email: 'Unknown User',
-            full_name: null,
-            avatar_url: null,
-            created_at: '',
-            updated_at: ''
-          }
-        }))
+        if (profilesData) {
+          const filteredProfiles = profilesData.filter((p: any) => 
+            profileIds.includes(p.id)
+          )
         
-        setComments(commentsWithProfiles)
+          // Combine the data
+          const commentsWithProfiles = commentsData.map((comment: any) => ({
+            ...comment,
+            profiles: filteredProfiles?.find((p: any) => p.id === comment.profile_id) || {
+              id: comment.profile_id,
+              email: 'Unknown User',
+              full_name: null,
+              avatar_url: null,
+              created_at: '',
+              updated_at: ''
+            }
+          }))
+          
+          setComments(commentsWithProfiles)
+        }
       }
     }
 

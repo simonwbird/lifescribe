@@ -77,12 +77,10 @@ export function InlineStoryViewer({
 
         // Fetch author profile
         const { data: profileData } = await supabase
-          .from('family_member_profiles')
-          .select('id, full_name, avatar_url')
-          .eq('id', storyData.profile_id)
-          .single()
-
-        setAuthor(profileData)
+          .rpc('get_family_member_safe_profiles')
+        
+        const targetProfile = profileData?.find((p: any) => p.id === storyData.profile_id)
+        setAuthor(targetProfile)
 
         // Fetch media
         const { data: mediaData } = await supabase

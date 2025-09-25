@@ -102,10 +102,12 @@ export default function FamilyTree() {
 
           // Get profile photos for linked users from safe view
           if (userLinks?.length) {
-            const { data: profiles } = await supabase
-              .from('family_member_profiles')
-              .select('id, avatar_url')
-              .in('id', userLinks.map(link => link.user_id))
+            const { data: allProfiles } = await supabase
+              .rpc('get_family_member_safe_profiles')
+            
+            const profiles = allProfiles?.filter((p: any) => 
+              userLinks.some((link: any) => link.user_id === p.id)
+            ) || []
 
           // Merge photos into people data
           const peopleWithAvatars = peopleData.map(person => {

@@ -74,11 +74,10 @@ export function Contributions({ person, userRole, pageType }: ContributionsProps
           }
           
           // Use safe family member profiles view
-          const { data: profile } = await supabase
-            .from('family_member_profiles')
-            .select('full_name, avatar_url')
-            .eq('id', entry.author_profile_id)
-            .single()
+          const { data: allProfiles } = await supabase
+            .rpc('get_family_member_safe_profiles')
+          
+          const profile = allProfiles?.find((p: any) => p.id === entry.author_profile_id)
             
           return { ...entry, author_profile: profile }
         })

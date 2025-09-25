@@ -153,8 +153,10 @@ export default function Home() {
       if (stories?.length) {
         const authorIds = [...new Set(stories.map(story => story.profile_id))];
         const {
-          data: profiles
-        } = await supabase.from('family_member_profiles').select('id, full_name').in('id', authorIds);
+          data: allProfiles
+        } = await supabase.rpc('get_family_member_safe_profiles');
+        
+        const profiles = allProfiles?.filter((p: any) => authorIds.includes(p.id)) || [];
         stories.forEach(story => {
           const profile = profiles?.find(p => p.id === story.profile_id);
           activities.push({
