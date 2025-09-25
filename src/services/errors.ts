@@ -6,6 +6,7 @@ export type AuthErrorCode =
   | 'AUTH/RATE_LIMITED'
   | 'AUTH/SESSION_EXPIRED'
   | 'AUTH/NETWORK'
+  | 'AUTH/CAPTCHA_REQUIRED'
   | 'AUTH/UNKNOWN'
 
 export interface MappedAuthError {
@@ -137,6 +138,8 @@ function getErrorTitle(code: AuthErrorCode): string {
       return 'Session Expired'
     case 'AUTH/NETWORK':
       return 'Connection Error'
+    case 'AUTH/CAPTCHA_REQUIRED':
+      return 'Security Verification Required'
     case 'AUTH/UNKNOWN':
       return 'Authentication Error'
     default:

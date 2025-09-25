@@ -517,6 +517,36 @@ export type Database = {
           },
         ]
       }
+      auth_rate_limits: {
+        Row: {
+          attempted_at: string
+          created_at: string
+          email: string
+          id: string
+          ip_address: unknown | null
+          tracking_key: string
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: unknown | null
+          tracking_key: string
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: unknown | null
+          tracking_key?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       bug_changelog: {
         Row: {
           bug_report_id: string
@@ -4789,6 +4819,10 @@ export type Database = {
         Args: { p_family_id: string }
         Returns: boolean
       }
+      cleanup_auth_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       compute_bug_dedupe_key: {
         Args: { p_route: string; p_title: string }
         Returns: string
@@ -4878,6 +4912,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_user_locked_out: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
       log_audit_event: {
         Args: {
           p_action?: Database["public"]["Enums"]["audit_action_type"]
@@ -4955,6 +4993,10 @@ export type Database = {
           p_role: string
         }
         Returns: string
+      }
+      unlock_user: {
+        Args: { p_email: string }
+        Returns: boolean
       }
       update_onboarding_step: {
         Args: {
