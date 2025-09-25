@@ -1,12 +1,13 @@
 import { ChevronRight } from 'lucide-react'
-import { WIZARD_STEPS, PHOTO_FIRST_STEPS, VOICE_FIRST_STEPS, type WizardStep, type AutosaveStatus } from './StoryWizardTypes'
+import { WIZARD_STEPS, PHOTO_FIRST_STEPS, AUDIO_FIRST_STEPS, VIDEO_FIRST_STEPS, type WizardStep, type AutosaveStatus } from './StoryWizardTypes'
 
 interface StoryWizardProgressProps {
   currentStep: WizardStep
   completedSteps: WizardStep[]
   autosaveStatus: AutosaveStatus
   isPhotoFirst?: boolean
-  isVoiceFirst?: boolean
+  isAudioFirst?: boolean
+  isVideoFirst?: boolean
 }
 
 export default function StoryWizardProgress({ 
@@ -14,11 +15,13 @@ export default function StoryWizardProgress({
   completedSteps, 
   autosaveStatus,
   isPhotoFirst = false,
-  isVoiceFirst = false
+  isAudioFirst = false,
+  isVideoFirst = false
 }: StoryWizardProgressProps) {
   
   const stepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : 
-                  isVoiceFirst ? VOICE_FIRST_STEPS : 
+                  isAudioFirst ? AUDIO_FIRST_STEPS :
+                  isVideoFirst ? VIDEO_FIRST_STEPS :
                   WIZARD_STEPS
   const currentIndex = stepOrder.findIndex(s => s.id === currentStep)
   

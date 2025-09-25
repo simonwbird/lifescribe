@@ -11,16 +11,19 @@ import {
   type AIAssist,
   WIZARD_STEPS,
   PHOTO_FIRST_STEPS,
-  VOICE_FIRST_STEPS
+  AUDIO_FIRST_STEPS,
+  VIDEO_FIRST_STEPS
 } from './StoryWizardTypes'
 import { MediaService } from '@/lib/mediaService'
 import StoryWizardProgress from './StoryWizardProgress'
 import StoryWizardSidebar from './StoryWizardSidebar'
+import StoryWizardStep0 from './steps/StoryWizardStep0'
 import StoryWizardStep1 from './steps/StoryWizardStep1'
 import StoryWizardStep2 from './steps/StoryWizardStep2'
 import StoryWizardStep3 from './steps/StoryWizardStep3'
 import StoryWizardStep4 from './steps/StoryWizardStep4'
 import StoryWizardStep5 from './steps/StoryWizardStep5'
+import StoryWizardStep6 from './steps/StoryWizardStep6'
 
 // Mock modals for AI assists
 import VoiceToTextModal from './modals/VoiceToTextModal'
@@ -46,7 +49,7 @@ export default function StoryWizard() {
   const { toast } = useToast()
   const isEditing = location.pathname.includes('/edit')
   
-  const [currentStep, setCurrentStep] = useState<WizardStep>(1)
+  const [currentStep, setCurrentStep] = useState<WizardStep>(0)
   const [completedSteps, setCompletedSteps] = useState<WizardStep[]>([])
   const [formData, setFormData] = useState<StoryFormData>(initialFormData)
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>({
@@ -58,11 +61,16 @@ export default function StoryWizard() {
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
   
-  // Check if we're in photo-first or voice-first mode
-  const isPhotoFirst = searchParams.get('type') === 'photo'
-  const isVoiceFirst = searchParams.get('type') === 'voice'
+  // Check workflow type
+  const workflowType = searchParams.get('type')
+  const isPhotoFirst = workflowType === 'photo'
+  const isAudioFirst = workflowType === 'audio'
+  const isVideoFirst = workflowType === 'video'
+  const isTextOnly = workflowType === 'text'
+  
   const currentStepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : 
-                          isVoiceFirst ? VOICE_FIRST_STEPS : 
+                          isAudioFirst ? AUDIO_FIRST_STEPS :
+                          isVideoFirst ? VIDEO_FIRST_STEPS :
                           WIZARD_STEPS
 
   // Mock AI assist data
@@ -80,17 +88,22 @@ export default function StoryWizard() {
     const promptDescription = searchParams.get('description')
     const storyType = searchParams.get('type')
 
-    // If type=photo, start at first step in photo-first order (step 3 - Photos & Video)
+    // Set starting step based on workflow type
     if (storyType === 'photo') {
       setCurrentStep(3) // Start with Photos & Video step
-      setCompletedSteps([]) // No steps completed yet
-    } else if (storyType === 'voice') {
-      // Voice-first mode - start at step 5 (Voice Recording)
-      setCurrentStep(5) // Start with Voice Recording step
-      setCompletedSteps([]) // No steps completed yet
-    } else if (storyType === 'write') {
-      // Explicit handling for write mode - start at step 1 (normal flow)
-      setCurrentStep(1)
+      setCompletedSteps([])
+    } else if (storyType === 'audio') {
+      setCurrentStep(5) // Start with Audio Recording step  
+      setCompletedSteps([])
+    } else if (storyType === 'video') {
+      setCurrentStep(6) // Start with Video Recording step
+      setCompletedSteps([])
+    } else if (storyType === 'text') {
+      setCurrentStep(1) // Start with Basics step
+      setCompletedSteps([])
+    } else {
+      // Default to input selection
+      setCurrentStep(0)
       setCompletedSteps([])
     }
 
@@ -375,8 +388,11 @@ export default function StoryWizard() {
       
       // Add workflow-specific tags
       let tagsToUse = [...formData.tags]
-      if (isVoiceFirst && !tagsToUse.includes('voice-recording')) {
-        tagsToUse.push('voice-recording')
+      if (isAudioFirst && !tagsToUse.includes('audio-recording')) {
+        tagsToUse.push('audio-recording')
+      }
+      if (isVideoFirst && !tagsToUse.includes('video-story')) {
+        tagsToUse.push('video-story')
       }
       if (isPhotoFirst && !tagsToUse.includes('photo-story')) {
         tagsToUse.push('photo-story')
@@ -537,15 +553,22 @@ export default function StoryWizard() {
 
   const renderCurrentStep = () => {
     switch (currentStep) {
+      case 0:
+        return (
+          <StoryWizardStep0
+            formData={formData}
+            onChange={updateFormData}
+            onNext={goToNextStep}
+          />
+        )
       case 1:
         return (
           <StoryWizardStep1
             formData={formData}
             onChange={updateFormData}
             onNext={goToNextStep}
-            onPrevious={isPhotoFirst || isVoiceFirst ? goToPreviousStep : undefined}
+            onPrevious={isPhotoFirst || isAudioFirst ? goToPreviousStep : undefined}
             isPhotoFirst={isPhotoFirst}
-            isVoiceFirst={isVoiceFirst}
           />
         )
       case 2:
@@ -557,7 +580,6 @@ export default function StoryWizard() {
           onPrevious={goToPreviousStep}
           familyId={familyId}
           isPhotoFirst={isPhotoFirst}
-          isVoiceFirst={isVoiceFirst}
         />
         )
       case 3:
@@ -588,8 +610,17 @@ export default function StoryWizard() {
             formData={formData}
             onChange={updateFormData}
             onNext={goToNextStep}
-            onPrevious={isVoiceFirst ? undefined : goToPreviousStep}
-            isVoiceFirst={isVoiceFirst}
+            onPrevious={isAudioFirst ? undefined : goToPreviousStep}
+          />
+        )
+      case 6:
+        return (
+          <StoryWizardStep6
+            formData={formData}
+            onChange={updateFormData}
+            onNext={goToNextStep}
+            onPrevious={isVideoFirst ? undefined : goToPreviousStep}
+            isVideoFirst={isVideoFirst}
           />
         )
       default:
@@ -605,7 +636,8 @@ export default function StoryWizard() {
           completedSteps={completedSteps}
           autosaveStatus={autosaveStatus}
           isPhotoFirst={isPhotoFirst}
-          isVoiceFirst={isVoiceFirst}
+          isAudioFirst={isAudioFirst}
+          isVideoFirst={isVideoFirst}
         />
 
         <div className="grid gap-8 lg:grid-cols-4">

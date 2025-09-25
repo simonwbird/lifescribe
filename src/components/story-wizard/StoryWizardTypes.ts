@@ -1,4 +1,7 @@
 export interface StoryFormData {
+  // Step 0 - Input type
+  inputType?: 'text' | 'audio' | 'video'
+  
   // Step 1 - Basics
   title: string
   content: string
@@ -16,6 +19,11 @@ export interface StoryFormData {
   // Step 4 - Publishing
   visibility: 'family' | 'branch' | 'private'
   collection: 'none' | 'recipe' | 'object' | 'property'
+  
+  // New fields for enhanced recording
+  audioBlob?: Blob
+  videoBlob?: Blob
+  transcript?: string
 }
 
 export interface SelectedPerson {
@@ -45,10 +53,28 @@ export interface AIAssist {
   peopleSuggestions: string[]
 }
 
+// Input type selection first: Choose input → Basics → People & Places → Media → Review
 export const WIZARD_STEPS = [
+  { id: 0, title: 'How to Share', description: 'Choose your input method' },
   { id: 1, title: '1. Basics', description: 'Title and story' },
   { id: 2, title: '2. People & Places', description: 'When, where, and who' },
   { id: 3, title: '3. Photos & Video', description: 'Add media' },
+  { id: 4, title: '4. Review & Publish', description: 'Final review' }
+] as const
+
+// Audio-first workflow: Audio → Basics → People & Places → Review
+export const AUDIO_FIRST_STEPS = [
+  { id: 5, title: '1. Record Audio', description: 'Record or upload audio' },
+  { id: 1, title: '2. Basics', description: 'Title and story' },
+  { id: 2, title: '3. People & Places', description: 'When, where, and who' },
+  { id: 4, title: '4. Review & Publish', description: 'Final review' }
+] as const
+
+// Video-first workflow: Video → Basics → People & Places → Review  
+export const VIDEO_FIRST_STEPS = [
+  { id: 6, title: '1. Record Video', description: 'Record or upload video' },
+  { id: 1, title: '2. Basics', description: 'Title and story' },
+  { id: 2, title: '3. People & Places', description: 'When, where, and who' },
   { id: 4, title: '4. Review & Publish', description: 'Final review' }
 ] as const
 
@@ -60,12 +86,4 @@ export const PHOTO_FIRST_STEPS = [
   { id: 4, title: '4. Review & Publish', description: 'Final review' }
 ] as const
 
-// Voice-first workflow: Voice Recording → Basics → People & Places → Review & Publish
-export const VOICE_FIRST_STEPS = [
-  { id: 5, title: '1. Voice Recording', description: 'Record or upload voice' },
-  { id: 1, title: '2. Basics', description: 'Title and story' },
-  { id: 2, title: '3. People & Places', description: 'When, where, and who' },
-  { id: 4, title: '4. Review & Publish', description: 'Final review' }
-] as const
-
-export type WizardStep = typeof WIZARD_STEPS[number]['id'] | 5 // Include step 5 for voice recording
+export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6
