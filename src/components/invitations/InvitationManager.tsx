@@ -26,7 +26,7 @@ import { formatDistanceToNow } from 'date-fns'
 interface Invitation {
   id: string
   email: string
-  role: 'admin' | 'member' | 'guest'
+  role: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
   status: string
   created_at: string
   expires_at: string
@@ -42,7 +42,7 @@ interface Member {
     full_name: string
     email: string
   }
-  role: 'admin' | 'member' | 'guest'
+  role: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
   joined_at: string
   invited_by: string | null
   inviter_name?: string
@@ -227,7 +227,7 @@ export default function InvitationManager({ familyId, currentUserRole }: Invitat
     }
   }
 
-  const changeMemberRole = async (memberId: string, newRole: 'admin' | 'member' | 'guest') => {
+  const changeMemberRole = async (memberId: string, newRole: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest') => {
     if (currentUserRole !== 'admin') {
       toast({
         title: "Permission denied",

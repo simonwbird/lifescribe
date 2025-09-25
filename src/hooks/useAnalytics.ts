@@ -202,6 +202,8 @@ export type AnalyticsEvent =
   | 'invite_revoked'
   | 'invite_resent' 
   | 'member_role_update'
+  | 'share_link_generated'
+  | 'share_link_copied'
   // Feed banner events
   | 'feed_banner_dismissed'
   | 'feed_banner_clicked';

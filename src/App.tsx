@@ -26,6 +26,7 @@ import StoryDetail from "./pages/StoryDetail";
 import Prompts from "./pages/Prompts";
 import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
+import SharingPermissions from "./pages/SharingPermissions";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import FamilyTree from "./pages/FamilyTree";
@@ -120,7 +121,7 @@ function AppContent() {
       <Route path="/stories/:id/edit" element={<AuthGate><StoryEdit /></AuthGate>} />
       <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />
       <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
-      <Route path="/family/members" element={<AuthGate><FamilyMembers /></AuthGate>} />
+      <Route path="/sharing" element={<AuthGate><SharingPermissions /></AuthGate>} />
       <Route path="/family/tree" element={<AuthGate><FamilyTree /></AuthGate>} />
       <Route path="/family-tree/explorer" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthGate>} />
       <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />

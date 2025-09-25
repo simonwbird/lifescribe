@@ -58,21 +58,21 @@ export type Database = {
           id: string
           family_id: string
           profile_id: string
-          role: 'admin' | 'member' | 'guest'
+          role: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
           joined_at: string
         }
         Insert: {
           id?: string
           family_id: string
           profile_id: string
-          role?: 'admin' | 'member' | 'guest'
+          role?: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
           joined_at?: string
         }
         Update: {
           id?: string
           family_id?: string
           profile_id?: string
-          role?: 'admin' | 'member' | 'guest'
+          role?: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
           joined_at?: string
         }
       }
@@ -81,34 +81,55 @@ export type Database = {
           id: string
           family_id: string
           email: string
-          role: 'admin' | 'member' | 'guest'
+          role: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
           token: string
           invited_by: string
           expires_at: string
           accepted_at: string | null
           created_at: string
+          status?: string
+          sent_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoke_reason?: string | null
+          invite_method?: string
+          metadata?: any
         }
         Insert: {
           id?: string
           family_id: string
           email: string
-          role?: 'admin' | 'member' | 'guest'
+          role?: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
           token: string
           invited_by: string
           expires_at: string
           accepted_at?: string | null
           created_at?: string
+          status?: string
+          sent_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoke_reason?: string | null
+          invite_method?: string
+          metadata?: any
         }
         Update: {
           id?: string
           family_id?: string
           email?: string
-          role?: 'admin' | 'member' | 'guest'
+          role?: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
           token?: string
           invited_by?: string
           expires_at?: string
           accepted_at?: string | null
           created_at?: string
+          status?: string
+          sent_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoke_reason?: string | null
+          invite_method?: string
+          metadata?: any
         }
       }
       questions: {

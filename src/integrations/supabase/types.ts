@@ -1742,9 +1742,15 @@ export type Database = {
           expires_at: string
           family_id: string
           id: string
+          invite_method: string | null
           invited_by: string
           max_uses: number | null
+          metadata: Json | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
           role: Database["public"]["Enums"]["role_type"]
+          sent_at: string | null
           status: string
           token: string
           used_count: number | null
@@ -1757,9 +1763,15 @@ export type Database = {
           expires_at: string
           family_id: string
           id?: string
+          invite_method?: string | null
           invited_by: string
           max_uses?: number | null
+          metadata?: Json | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           role?: Database["public"]["Enums"]["role_type"]
+          sent_at?: string | null
           status?: string
           token: string
           used_count?: number | null
@@ -1772,9 +1784,15 @@ export type Database = {
           expires_at?: string
           family_id?: string
           id?: string
+          invite_method?: string | null
           invited_by?: string
           max_uses?: number | null
+          metadata?: Json | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           role?: Database["public"]["Enums"]["role_type"]
+          sent_at?: string | null
           status?: string
           token?: string
           used_count?: number | null
@@ -4792,6 +4810,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_role_permissions: {
+        Args: { user_role: Database["public"]["Enums"]["role_type"] }
+        Returns: Json
+      }
       get_user_family_ids: {
         Args: { user_id: string }
         Returns: string[]
@@ -4875,6 +4897,10 @@ export type Database = {
         Args: { p_claim_id: string }
         Returns: Json
       }
+      resend_invite: {
+        Args: { p_invite_id: string }
+        Returns: Json
+      }
       revoke_admin_access: {
         Args: {
           p_admin_id: string
@@ -4884,6 +4910,10 @@ export type Database = {
           p_role: string
         }
         Returns: boolean
+      }
+      revoke_invite: {
+        Args: { p_invite_id: string; p_reason?: string; p_revoked_by: string }
+        Returns: Json
       }
       track_admin_access: {
         Args: {
@@ -4905,6 +4935,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      validate_email: {
+        Args: { email_address: string }
+        Returns: boolean
       }
       verify_audit_integrity: {
         Args: { p_end_sequence?: number; p_start_sequence?: number }
@@ -5070,7 +5104,7 @@ export type Database = {
         | "land"
         | "other"
       relationship_type: "parent" | "spouse" | "divorced" | "unmarried"
-      role_type: "admin" | "member" | "guest"
+      role_type: "admin" | "member" | "guest" | "viewer" | "contributor"
       rollout_type: "global" | "cohort" | "family" | "user"
       targeting_type: "role" | "country" | "cohort" | "family_id" | "user_id"
       visit_occasion: "holiday" | "celebration" | "reunion" | "other"
@@ -5365,7 +5399,7 @@ export const Constants = {
         "other",
       ],
       relationship_type: ["parent", "spouse", "divorced", "unmarried"],
-      role_type: ["admin", "member", "guest"],
+      role_type: ["admin", "member", "guest", "viewer", "contributor"],
       rollout_type: ["global", "cohort", "family", "user"],
       targeting_type: ["role", "country", "cohort", "family_id", "user_id"],
       visit_occasion: ["holiday", "celebration", "reunion", "other"],

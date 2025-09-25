@@ -16,7 +16,7 @@ interface Family {
 }
 
 interface UserRole {
-  role: 'admin' | 'member' | 'guest'
+  role: 'admin' | 'contributor' | 'member' | 'viewer' | 'guest'
   family_id: string
 }
 
@@ -184,7 +184,7 @@ export default function FamilyInvitations() {
             {/* Invitation Manager */}
             <InvitationManager 
               familyId={family.id}
-              currentUserRole={userRole.role}
+              currentUserRole={userRole.role as any}
             />
 
           </div>
