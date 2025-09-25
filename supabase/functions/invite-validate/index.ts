@@ -74,7 +74,7 @@ serve(async (req) => {
         family_id: invite.family_id,
         email: invite.email,
         role: invite.role,
-        family_name: invite.families?.name ?? "",
+        family_name: (invite.families as any)?.name ?? "",
       }
     }), {
       status: 200,

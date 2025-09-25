@@ -210,7 +210,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send notification emails to admins
       if (adminMembers && adminMembers.length > 0) {
         for (const admin of adminMembers) {
-          if (!admin.profiles?.email) continue
+          if (!(admin.profiles as any)?.email) continue
 
           const approveUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/family-requests/${familyId}/requests/${request.id}/approve?token=${btoa(JSON.stringify({ adminId: admin.profile_id, requestId: request.id, action: 'approve' }))}`
           const denyUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/family-requests/${familyId}/requests/${request.id}/deny?token=${btoa(JSON.stringify({ adminId: admin.profile_id, requestId: request.id, action: 'deny' }))}`
@@ -218,7 +218,7 @@ const handler = async (req: Request): Promise<Response> => {
           try {
             await resend.emails.send({
               from: "LifeScribe <notifications@lifescribe.app>",
-              to: [admin.profiles.email],
+              to: [(admin.profiles as any).email],
               subject: `New family access request for ${family.name}`,
               html: `
                 <h2>New Access Request</h2>

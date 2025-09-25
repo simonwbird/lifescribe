@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       
       // Get token from auth header
       const authHeader = req.headers.get('Authorization')
-      token = authHeader?.replace('Bearer ', '')
+      token = authHeader?.replace('Bearer ', '') || null
     } else {
       return new Response('Method not allowed', { 
         status: 405, 

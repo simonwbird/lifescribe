@@ -105,7 +105,6 @@ serve(async (req) => {
 
     // Log audit event
     await supabaseClient
-      .select('log_audit_event')
       .rpc('log_audit_event', {
         p_actor_id: user.id,
         p_action: 'FAMILY_VERIFIED',

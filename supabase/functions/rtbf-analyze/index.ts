@@ -69,8 +69,8 @@ serve(async (req) => {
       impact_analysis: {
         total_items: 0,
         affected_families: familyNames.length,
-        orphaned_content: [],
-        shared_content_warnings: [],
+        orphaned_content: [] as any[],
+        shared_content_warnings: [] as string[],
       }
     }
 

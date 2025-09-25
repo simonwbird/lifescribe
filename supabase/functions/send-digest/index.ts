@@ -204,7 +204,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in send-digest function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: corsHeaders }
     );
   }
@@ -246,7 +246,7 @@ function generateDigestHTML({ familyName, digestContent, stories, photos, weekSt
       ${stories.length > 0 ? `
         <div class="content-section">
           <h3>📖 Recent Stories</h3>
-          ${stories.map(story => `
+          ${stories.map((story: any) => `
             <div class="story-item">
               <h4>${story.title}</h4>
               <p>${story.excerpt || 'New family story shared...'}</p>
@@ -260,7 +260,7 @@ function generateDigestHTML({ familyName, digestContent, stories, photos, weekSt
         <div class="content-section">
           <h3>📸 Recent Photos</h3>
           <div class="photo-grid">
-            ${photos.map(photo => `
+            ${photos.map((photo: any) => `
               <div class="photo-placeholder"></div>
             `).join('')}
           </div>

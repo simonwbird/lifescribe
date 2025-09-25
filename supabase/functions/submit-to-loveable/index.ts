@@ -43,7 +43,8 @@ serve(async (req) => {
     }
 
     // Start background task to poll for completion (simulated)
-    EdgeRuntime.waitUntil(simulateLoveableProcessing(supabaseClient, taskId, loveableTaskId, bugReport));
+    // Note: EdgeRuntime.waitUntil is not available in current Deno environment
+    simulateLoveableProcessing(supabaseClient, taskId, loveableTaskId, bugReport).catch(console.error);
 
     return new Response(JSON.stringify({
       success: true,
@@ -57,7 +58,7 @@ serve(async (req) => {
     console.error('Error in submit-to-loveable function:', error);
     
     return new Response(JSON.stringify({
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       success: false
     }), {
       status: 500,
@@ -140,8 +141,8 @@ async function simulateLoveableProcessing(supabaseClient: any, taskId: string, l
 
     // Add comment to the bug report
     const commentText = responseType === 'pr' 
-      ? `🤖 **Loveable AI Fix Complete**\n\nA fix has been generated and submitted as a GitHub PR: ${resultData.github_pr_url}\n\n**Files Changed:**\n${loveableResponse.files_changed.map((f: string) => `- ${f}`).join('\n')}\n\nPlease review and merge the PR to complete the fix.`
-      : `🤖 **Loveable AI Fix Complete**\n\nAn inline patch has been generated to fix this issue:\n\n**Explanation:** ${loveableResponse.explanation}\n\n**Files Modified:**\n${loveableResponse.files_modified.map((f: string) => `- ${f}`).join('\n')}\n\n\`\`\`diff\n${loveableResponse.patch}\n\`\`\`\n\nApply this patch to resolve the issue.`;
+      ? `🤖 **Loveable AI Fix Complete**\n\nA fix has been generated and submitted as a GitHub PR: ${resultData.github_pr_url}\n\n**Files Changed:**\n${(loveableResponse.files_changed || []).map((f: string) => `- ${f}`).join('\n')}\n\nPlease review and merge the PR to complete the fix.`
+      : `🤖 **Loveable AI Fix Complete**\n\nAn inline patch has been generated to fix this issue:\n\n**Explanation:** ${loveableResponse.explanation}\n\n**Files Modified:**\n${(loveableResponse.files_modified || []).map((f: string) => `- ${f}`).join('\n')}\n\n\`\`\`diff\n${loveableResponse.patch}\n\`\`\`\n\nApply this patch to resolve the issue.`;
 
     // Get the user who created the AI task to use as commenter
     const { data: aiTaskData } = await supabaseClient
@@ -191,7 +192,7 @@ async function simulateLoveableProcessing(supabaseClient: any, taskId: string, l
       .from('ai_tasks')
       .update({
         status: 'failed',
-        error_message: error.message,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId);
