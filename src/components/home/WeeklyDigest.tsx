@@ -9,7 +9,9 @@ import { Calendar, Mail, Settings, Eye, Send, Users } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { DigestPreviewModal } from '@/components/admin/DigestPreviewModal'
-import { DigestRecipientManager } from './DigestRecipientManager'
+import DigestQuickActions from './DigestQuickActions'
+import { EnhancedDigestRecipientManager } from './EnhancedDigestRecipientManager'
+import DigestMetricsSummary from './DigestMetricsSummary'
 import { weeklyDigestService } from '@/lib/weeklyDigestService'
 import { supabase } from '@/integrations/supabase/client'
 import type { DigestSettings, DigestPreview } from '@/lib/digestTypes'
@@ -306,6 +308,11 @@ export default function WeeklyDigest() {
       <CardContent className="space-y-4">
         {digestSettings.enabled ? (
           <>
+            {/* Metrics Summary */}
+            {familyId && (
+              <DigestMetricsSummary familyId={familyId} className="bg-muted/30" />
+            )}
+            
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -365,38 +372,19 @@ export default function WeeklyDigest() {
               </div>
             </div>
             
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 text-xs"
-                onClick={handlePreviewDigest}
-              >
-                <Eye className="h-3 w-3" />
-                Preview
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 text-xs"
-                onClick={handleSendTestCopy}
-                disabled={sendingTest}
-              >
-                <Send className="h-3 w-3" />
-                {sendingTest ? 'Sending...' : 'Test'}
-              </Button>
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full gap-2 text-xs"
-              onClick={handleCustomizeClick}
-            >
-              <Settings className="h-3 w-3" />
-              Customize content
-            </Button>
+            {/* Enhanced Quick Actions */}
+            <DigestQuickActions
+              onPreviewDigest={handlePreviewDigest}
+              onSendTest={handleSendTestCopy}
+              onCustomizeContent={handleCustomizeClick}
+              onManageRecipients={() => setShowRecipientManager(true)}
+              sendingTest={sendingTest}
+              recipientCount={getRecipientCount()}
+              nextDigestDate={digestSettings.last_sent_at ? 
+                new Date(new Date(digestSettings.last_sent_at).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
+                : 'This weekend'
+              }
+            />
           </>
         ) : (
           <div className="text-center py-4">
@@ -518,9 +506,9 @@ export default function WeeklyDigest() {
         />
       )}
 
-      {/* Recipient Manager */}
+      {/* Enhanced Recipient Manager */}
       {familyId && (
-        <DigestRecipientManager
+        <EnhancedDigestRecipientManager
           isOpen={showRecipientManager}
           onClose={() => setShowRecipientManager(false)}
           familyId={familyId}
