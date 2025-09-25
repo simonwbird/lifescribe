@@ -87,10 +87,24 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
-    id: 'moderation',
-    label: 'Moderation Queue',
-    href: '/admin/moderation',
+    id: 'content-moderation',
+    label: 'Content Moderation',
+    href: '/admin/content-moderation', 
     icon: Shield,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
+    id: 'user-management',
+    label: 'User Management',
+    href: '/admin/user-management',
+    icon: Users,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
+    id: 'activity-reports',
+    label: 'Activity Reports',
+    href: '/admin/activity-reports',
+    icon: Activity,
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {

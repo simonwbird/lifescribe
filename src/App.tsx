@@ -73,7 +73,9 @@ import AdminContent from './pages/admin/AdminContent'
 import FamilyOverviewTable from './components/admin/FamilyOverviewTable'
 import ActivationDashboard from './pages/admin/ActivationDashboard'
 import NudgeOrchestrator from './components/admin/NudgeOrchestrator';
-import { ModerationQueue } from './components/admin/ModerationQueue';
+import ContentModerationPanel from './components/admin/ContentModerationPanel'
+import UserPermissionsDashboard from './components/admin/UserPermissionsDashboard'  
+import ActivityReportsPanel from './components/admin/ActivityReportsPanel'
 import { MediaPipelineMonitor } from './components/admin/MediaPipelineMonitor';
 import { ContentTimelineAdmin } from './components/admin/ContentTimelineAdmin';
 import RequestAccess from "./pages/RequestAccess";
@@ -167,7 +169,9 @@ function AppContent() {
             <Route path="content" element={<AdminContent />} />
             <Route path="activation" element={<ActivationDashboard />} />
             <Route path="nudges" element={<NudgeOrchestrator />} />
-            <Route path="moderation" element={<ModerationQueue />} />
+          <Route path="content-moderation" element={<ContentModerationPanel />} />
+          <Route path="user-management" element={<UserPermissionsDashboard />} />
+          <Route path="activity-reports" element={<ActivityReportsPanel />} />
             <Route path="media-pipeline" element={<MediaPipelineMonitor />} />
              <Route path="content" element={<ContentTimelineAdmin />} />
              <Route path="date-localization" element={<DateLocalizationTest />} />

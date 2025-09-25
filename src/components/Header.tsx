@@ -11,9 +11,9 @@ import { useLabs } from '@/hooks/useLabs'
 import { useMode } from '@/contexts/ModeContext'
 
 // MVP Navigation components
-import MicButton from '@/components/navigation/MicButton'
+import EnhancedMicButton from '@/components/navigation/EnhancedMicButton'
 import MoreMenu from '@/components/navigation/MoreMenu'
-import CreateDropdown from '@/components/navigation/CreateDropdown'
+import EnhancedCreateDropdown from '@/components/navigation/EnhancedCreateDropdown'
 import CapturesStreak from '@/components/navigation/CapturesStreak'
 import NotificationsBell from '@/components/navigation/NotificationsBell'
 import ProfileDropdown from '@/components/navigation/ProfileDropdown'
@@ -224,7 +224,7 @@ export default function Header() {
             </div>
             {/* Mic Button */}
             <div data-mic-button>
-            <MicButton onStoryCreated={(storyId) => {
+            <EnhancedMicButton onStoryCreated={(storyId) => {
               // TODO: Navigate to story or show success toast
               console.log('Story created:', storyId)
             }} />
@@ -243,7 +243,7 @@ export default function Header() {
             {/* Create Button (Studio only) */}
             {modeFlags.showCreateMenu && (
               <div className="hidden sm:block">
-                <CreateDropdown />
+                <EnhancedCreateDropdown />
               </div>
             )}
 
