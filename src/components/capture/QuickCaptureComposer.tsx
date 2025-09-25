@@ -16,6 +16,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useDraftManager } from '@/hooks/useDraftManager'
 import { useNavigate } from 'react-router-dom'
 import EnhancedMediaUploader from '@/components/story-wizard/EnhancedMediaUploader'
 import PeoplePicker from '@/components/story-wizard/PeoplePicker'
@@ -103,6 +104,8 @@ export default function QuickCaptureComposer({
   const navigate = useNavigate()
   
   const { track } = useAnalytics()
+  const draftKey = prompt ? `prompt_${prompt.id}` : `quick_capture_${Date.now()}`
+  const { autosaveStatus, hasDraft, saveDraft, loadDraft, clearDraft, startAutosave, stopAutosave } = useDraftManager(draftKey)
 
   useEffect(() => {
     const videoEl = liveVideoRef.current
