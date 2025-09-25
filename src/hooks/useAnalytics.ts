@@ -135,6 +135,17 @@ export type AnalyticsEvent =
   | 'realtime_update_received'
   | 'story_expanded_inline'
   | 'realtime_toggled'
+  | 'story_liked'
+  | 'story_commented' 
+  | 'story_shared'
+  | 'feed_filter_applied'
+  | 'inline_story_opened'
+  | 'inline_story_closed'
+  | 'live_mode_toggled'
+  | 'weekly_digest_settings_saved'
+  | 'weekly_digest_preview_opened'
+  | 'weekly_digest_test_sent'
+  | 'weekly_digest_recipients_updated'
   // Admin impersonation events
   | 'ADMIN_IMPERSONATE_STARTED'
   | 'ADMIN_IMPERSONATE_ENDED'
@@ -177,7 +188,7 @@ export type AnalyticsEvent =
   | 'REGION_PREFS_CONFIRMED'
   | 'REGION_PREFS_UPDATED';
 
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 import { useMode } from './useMode'
 import { useLabs } from './useLabs'
 
