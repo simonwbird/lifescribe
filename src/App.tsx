@@ -170,12 +170,10 @@ const App = () => (
       <ModeProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <ImpersonationProvider>
-            <AppContent />
-            <BugReportWidget />
-          </ImpersonationProvider>
-        </BrowserRouter>
+        <ImpersonationProvider>
+          <AppContent />
+          <BugReportWidget />
+        </ImpersonationProvider>
       </ModeProvider>
     </TooltipProvider>
   </QueryClientProvider>
