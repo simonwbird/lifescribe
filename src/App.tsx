@@ -9,10 +9,16 @@ import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
+import LoginPage from "./pages/auth/Login";
+import SignupPage from "./pages/auth/Signup";
+import VerifyPage from "./pages/auth/Verify";
+import ResetRequestPage from "./pages/auth/ResetRequest";
+import ResetConfirmPage from "./pages/auth/ResetConfirm";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
-import AuthGate from "./components/AuthGate";
+import AuthGate from "./components/auth/AuthGate";
+import RoleGate from "./components/auth/RoleGate";
 import NewStory from "./pages/NewStory";
 import StoryDetail from "./pages/StoryDetail";
 import Prompts from "./pages/Prompts";
@@ -53,7 +59,6 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import People from './pages/People'
 import DateFormattingExamplePage from './pages/DateFormattingExample'
-import AdminAuthGuard from './components/admin/AdminAuthGuard'
 import AdminShell from './components/admin/AdminShell'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminPeople from './pages/admin/AdminPeople'
@@ -83,15 +88,25 @@ function AppContent() {
   
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/landing" element={<Landing />} />
-      <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/request-access" element={<RequestAccess />} />
-       <Route path="/invite/:token" element={<InviteLanding />} />
-       <Route path="/privacy" element={<Privacy />} />
-       <Route path="/terms" element={<Terms />} />
+      <Route path="/invite/:token" element={<InviteLanding />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      
+      {/* Auth routes */}
+      <Route path="/auth/login" element={<LoginPage />} />
+      <Route path="/auth/signup" element={<SignupPage />} />
+      <Route path="/auth/verify" element={<VerifyPage />} />
+      <Route path="/auth/reset/request" element={<ResetRequestPage />} />
+      <Route path="/auth/reset/confirm" element={<ResetConfirmPage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      
+      {/* Onboarding (auth required) */}
+      <Route path="/onboarding" element={<AuthGate><Onboarding /></AuthGate>} />
        <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
       {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />
@@ -135,29 +150,29 @@ function AppContent() {
         <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
         <Route path="/date-formatting-example" element={<DateFormattingExamplePage />} />
         
-        {/* Admin Routes */}
-       <Route path="/admin" element={<AuthGate><AdminAuthGuard><AdminShell /></AdminAuthGuard></AuthGate>}>
-         <Route index element={<AdminDashboard />} />
-         <Route path="people" element={<AdminPeople />} />
-           <Route path="families" element={<FamilyOverviewTable />} />
-           <Route path="users" element={<AdminUserManagement />} />
-           <Route path="feature-flags" element={<AdminFeatureFlags />} />
-           <Route path="digest" element={<AdminDigest />} />
-           <Route path="content" element={<AdminContent />} />
-           <Route path="activation" element={<ActivationDashboard />} />
-           <Route path="nudges" element={<NudgeOrchestrator />} />
-           <Route path="moderation" element={<ModerationQueue />} />
-           <Route path="media-pipeline" element={<MediaPipelineMonitor />} />
-            <Route path="content" element={<ContentTimelineAdmin />} />
-            <Route path="date-localization" element={<DateLocalizationTest />} />
-            <Route path="bugs" element={<BugInbox />} />
-            <Route path="bugs/:id" element={<BugDetail />} />
-          <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-         <Route path="config" element={<AdminConfig />} />
-         <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-         <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-         <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-       </Route>
+         {/* Admin Routes - Role-protected */}
+       <Route path="/admin" element={<AuthGate><RoleGate role="admin"><AdminShell /></RoleGate></AuthGate>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="people" element={<AdminPeople />} />
+            <Route path="families" element={<FamilyOverviewTable />} />
+            <Route path="users" element={<AdminUserManagement />} />
+            <Route path="feature-flags" element={<AdminFeatureFlags />} />
+            <Route path="digest" element={<AdminDigest />} />
+            <Route path="content" element={<AdminContent />} />
+            <Route path="activation" element={<ActivationDashboard />} />
+            <Route path="nudges" element={<NudgeOrchestrator />} />
+            <Route path="moderation" element={<ModerationQueue />} />
+            <Route path="media-pipeline" element={<MediaPipelineMonitor />} />
+             <Route path="content" element={<ContentTimelineAdmin />} />
+             <Route path="date-localization" element={<DateLocalizationTest />} />
+             <Route path="bugs" element={<BugInbox />} />
+             <Route path="bugs/:id" element={<BugDetail />} />
+           <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+          <Route path="config" element={<AdminConfig />} />
+          <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+          <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+          <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+        </Route>
        
        <Route path="*" element={<NotFound />} />
     </Routes>
