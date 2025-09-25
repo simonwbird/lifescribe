@@ -53,8 +53,7 @@ export default function LiveFeedBanner({
     setVisibleItems(prev => prev.filter(i => i.id !== item.id))
     onDismiss(item.id)
     
-    track('feed_interaction', { 
-      action: 'banner_dismissed',
+    track('feed_banner_dismissed', { 
       itemId: item.id, 
       type: item.type,
       storyId: item.story_id 
@@ -65,8 +64,7 @@ export default function LiveFeedBanner({
     onViewStory(item.story_id)
     handleDismiss(item)
     
-    track('feed_interaction', { 
-      action: 'banner_clicked',
+    track('feed_banner_clicked', { 
       itemId: item.id, 
       type: item.type,
       storyId: item.story_id 

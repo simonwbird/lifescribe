@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,6 +12,11 @@ import { uploadMediaFile } from '@/lib/media'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import EnhancedReactionBar from './EnhancedReactionBar'
 import type { Comment, Profile } from '@/lib/types'
+
+// Use the supabase client without complex typing
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
 
 interface MediaComment extends Comment {
   profiles: Profile
@@ -47,18 +52,25 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
 
   useEffect(() => {
     const getComments = async () => {
-      const column = `${targetType}_id`
-      const { data: commentsData } = await (supabase as any)
-        .from('comments')
-        .select('*')
-        .eq(column, targetId)
-        .eq('family_id', familyId)
-        .order('created_at')
+      try {
+        const column = `${targetType}_id`
+        
+        // Use simpler client to avoid type issues
+        const { data: commentsData, error: commentsError } = await supabaseClient
+          .from('comments')
+          .select('*')
+          .eq(column, targetId)
+          .eq('family_id', familyId)
+          .order('created_at')
+        
+        if (commentsError || !commentsData) {
+          console.error('Error fetching comments:', commentsError)
+          return
+        }
 
-      if (commentsData) {
-        // Fetch family member profiles separately for comments 
+        // Fetch family member profiles 
         const profileIds = [...new Set(commentsData.map((c: any) => c.profile_id))]
-        const { data: profilesData } = await supabase
+        const { data: profilesData } = await supabaseClient
           .rpc('get_family_member_safe_profiles')
         
         if (profilesData) {
@@ -66,11 +78,11 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
             profileIds.includes(p.id)
           )
         
-          // Fetch comment media attachments using existing media table
+          // Fetch media attachments with simpler approach
           const commentIds = commentsData.map((c: any) => c.id)
-          const { data: mediaData } = await supabase
+          const { data: mediaData } = await supabaseClient
             .from('media')
-            .select('*')
+            .select('id, file_path, mime_type, file_name, comment_id')
             .in('comment_id', commentIds)
             .not('comment_id', 'is', null)
         
@@ -90,6 +102,8 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
           
           setComments(commentsWithProfiles)
         }
+      } catch (error) {
+        console.error('Error fetching comments:', error)
       }
     }
 
@@ -211,13 +225,13 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
     setLoading(true)
     
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabaseClient.auth.getUser()
       if (!user) return
 
       const column = `${targetType}_id`
       
       // Create comment
-      const { data: commentData } = await (supabase as any)
+      const { data: commentData } = await supabaseClient
         .from('comments')
         .insert({
           [column]: targetId,
@@ -236,19 +250,19 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
         for (const file of attachments) {
           const { path, error } = await uploadMediaFile(file, familyId, user.id)
           if (path && !error) {
-            const { data: attachment } = await supabase
-              .from('media')
-              .insert({
-                comment_id: commentData.id,
-                family_id: familyId,
-                profile_id: user.id,
-                file_path: path,
-                file_name: file.name,
-                mime_type: file.type,
-                file_size: file.size
-              })
-              .select('*')
-              .single()
+          const { data: attachment } = await supabaseClient
+            .from('media')
+            .insert({
+              comment_id: commentData.id,
+              family_id: familyId,
+              profile_id: user.id,
+              file_path: path,
+              file_name: file.name,
+              mime_type: file.type,
+              file_size: file.size
+            })
+            .select('*')
+            .single()
             
             if (attachment) uploadedAttachments.push(attachment)
           }
@@ -261,7 +275,7 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
           })
           const { path, error } = await uploadMediaFile(voiceFile, familyId, user.id)
           if (path && !error) {
-            const { data: attachment } = await supabase
+            const { data: attachment } = await supabaseClient
               .from('media')
               .insert({
                 comment_id: commentData.id,
@@ -280,7 +294,7 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
         }
         
         // Fetch the user's own profile
-        const { data: profileData } = await supabase
+        const { data: profileData } = await supabaseClient
           .from('profiles')
           .select('*')
           .eq('id', user.id)

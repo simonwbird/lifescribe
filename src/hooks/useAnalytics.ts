@@ -201,7 +201,10 @@ export type AnalyticsEvent =
   // Invitation management events
   | 'invite_revoked'
   | 'invite_resent' 
-  | 'member_role_update';
+  | 'member_role_update'
+  // Feed banner events
+  | 'feed_banner_dismissed'
+  | 'feed_banner_clicked';
 
 import { supabase } from '@/integrations/supabase/client'
 import { useMode } from './useMode'
