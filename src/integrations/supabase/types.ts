@@ -3261,10 +3261,16 @@ export type Database = {
           date_format_preference: string | null
           default_space_id: string | null
           email: string
+          email_verified_at: string | null
           feature_flags: Json | null
           full_name: string | null
           id: string
           locale: string | null
+          locked_until: string | null
+          onboarding_completed_at: string | null
+          onboarding_step:
+            | Database["public"]["Enums"]["onboarding_step_type"]
+            | null
           region_confirmed_at: string | null
           region_inferred_source: string | null
           settings: Json | null
@@ -3279,10 +3285,16 @@ export type Database = {
           date_format_preference?: string | null
           default_space_id?: string | null
           email: string
+          email_verified_at?: string | null
           feature_flags?: Json | null
           full_name?: string | null
           id: string
           locale?: string | null
+          locked_until?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_step?:
+            | Database["public"]["Enums"]["onboarding_step_type"]
+            | null
           region_confirmed_at?: string | null
           region_inferred_source?: string | null
           settings?: Json | null
@@ -3297,10 +3309,16 @@ export type Database = {
           date_format_preference?: string | null
           default_space_id?: string | null
           email?: string
+          email_verified_at?: string | null
           feature_flags?: Json | null
           full_name?: string | null
           id?: string
           locale?: string | null
+          locked_until?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_step?:
+            | Database["public"]["Enums"]["onboarding_step_type"]
+            | null
           region_confirmed_at?: string | null
           region_inferred_source?: string | null
           settings?: Json | null
@@ -4836,6 +4854,10 @@ export type Database = {
         Args: { p_source_family_id: string; p_target_family_id: string }
         Returns: Json
       }
+      get_onboarding_state: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_user_family_ids: {
         Args: { user_id: string }
         Returns: string[]
@@ -4933,6 +4955,14 @@ export type Database = {
           p_role: string
         }
         Returns: string
+      }
+      update_onboarding_step: {
+        Args: {
+          p_data?: Json
+          p_step: Database["public"]["Enums"]["onboarding_step_type"]
+          p_user_id: string
+        }
+        Returns: Json
       }
       verify_audit_integrity: {
         Args: { p_end_sequence?: number; p_start_sequence?: number }
@@ -5034,6 +5064,12 @@ export type Database = {
         | "host"
         | "relative"
         | "roommate"
+      onboarding_step_type:
+        | "welcome"
+        | "profile_setup"
+        | "family_setup"
+        | "preferences"
+        | "completed"
       property_event_type:
         | "moved_in"
         | "moved_out"
@@ -5318,6 +5354,13 @@ export const Constants = {
         "host",
         "relative",
         "roommate",
+      ],
+      onboarding_step_type: [
+        "welcome",
+        "profile_setup",
+        "family_setup",
+        "preferences",
+        "completed",
       ],
       property_event_type: [
         "moved_in",

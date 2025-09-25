@@ -16,6 +16,7 @@ import ResetRequestPage from "./pages/auth/ResetRequest";
 import ResetConfirmPage from "./pages/auth/ResetConfirm";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
+import OnboardingWizard from "./pages/OnboardingWizard";
 import Home from "./pages/Home";
 import AuthGate from "./components/auth/AuthGate";
 import RoleGate from "./components/auth/RoleGate";
@@ -106,7 +107,7 @@ function AppContent() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       
       {/* Onboarding (auth required) */}
-      <Route path="/onboarding" element={<AuthGate><Onboarding /></AuthGate>} />
+      <Route path="/onboarding" element={<AuthGate><OnboardingWizard /></AuthGate>} />
        <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
       {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />
