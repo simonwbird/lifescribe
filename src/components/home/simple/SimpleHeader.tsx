@@ -6,6 +6,8 @@ import { getElderPrompts, ElderPrompt, truncatePrompt } from '@/lib/prompts/getE
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
 import { PromptControls } from './PromptControls'
+import { InputTypeModal } from './InputTypeModal'
+import { BlankCanvasModal } from './BlankCanvasModal'
 
 interface SimpleHeaderProps {
   profileId: string
@@ -21,6 +23,9 @@ export function SimpleHeader({
   const [prompts, setPrompts] = useState<ElderPrompt[]>([])
   const [loading, setLoading] = useState(true)
   const [shuffling, setShuffling] = useState(false)
+  const [showInputTypeModal, setShowInputTypeModal] = useState(false)
+  const [showBlankCanvasModal, setShowBlankCanvasModal] = useState(false)
+  const [selectedPrompt, setSelectedPrompt] = useState<ElderPrompt | null>(null)
   const { track } = useAnalytics()
   const navigate = useNavigate()
 
@@ -99,13 +104,57 @@ export function SimpleHeader({
       has_person: !!prompt.context?.personId
     })
     
-    onRecordPrompt(prompt)
+    // Show input type selection modal
+    setSelectedPrompt(prompt)
+    setShowInputTypeModal(true)
   }
 
   const handleRecordWithoutPrompt = () => {
     track('simple_mode.record_without_prompt')
-    // Navigate to free recording mode
-    navigate('/stories/new')
+    // Show blank canvas modal for input type selection
+    setShowBlankCanvasModal(true)
+  }
+
+  const handleInputTypeSelected = (type: 'text' | 'audio' | 'video', prompt?: ElderPrompt) => {
+    setShowInputTypeModal(false)
+    setShowBlankCanvasModal(false)
+    
+    if (prompt) {
+      // Handle prompt recording with specific input type
+      if (type === 'audio') {
+        onRecordPrompt(prompt)
+      } else {
+        // Navigate to text/video story creation with prompt
+        const title = `Prompt: ${prompt.text.substring(0, 50)}...`
+        const searchParams = new URLSearchParams({
+          type: type,
+          promptTitle: title,
+          prompt_id: prompt.id,
+          prompt_text: prompt.text,
+          ...(prompt.context?.personId && { 
+            person_id: prompt.context.personId 
+          })
+        })
+        
+        navigate(`/stories/new?${searchParams.toString()}`)
+      }
+    } else {
+      // Handle blank canvas recording
+      const searchParams = new URLSearchParams({
+        type: type,
+        blank: 'true'
+      })
+      
+      navigate(`/stories/new?${searchParams.toString()}`)
+    }
+    
+    setSelectedPrompt(null)
+  }
+
+  const handleModalCancel = () => {
+    setShowInputTypeModal(false)
+    setShowBlankCanvasModal(false)
+    setSelectedPrompt(null)
   }
 
   if (loading) {
@@ -178,8 +227,9 @@ export function SimpleHeader({
                 <button
                   onClick={handleRecordWithoutPrompt}
                   className="text-primary hover:text-primary/80 underline underline-offset-4 text-base font-medium"
+                  title="Share any memory or thought that comes to mind — no prompt needed"
                 >
-                  Record without a prompt
+                  Share whatever's on your mind
                 </button>
               </div>
             </div>
@@ -216,6 +266,23 @@ export function SimpleHeader({
           ))}
         </div>
       )}
+
+      {/* Input Type Modal for Prompts */}
+      {selectedPrompt && (
+        <InputTypeModal
+          isOpen={showInputTypeModal}
+          prompt={selectedPrompt}
+          onSelectType={(type) => handleInputTypeSelected(type, selectedPrompt)}
+          onCancel={handleModalCancel}
+        />
+      )}
+
+      {/* Blank Canvas Modal */}
+      <BlankCanvasModal
+        isOpen={showBlankCanvasModal}
+        onSelectType={(type) => handleInputTypeSelected(type)}
+        onCancel={handleModalCancel}
+      />
     </div>
   )
 }

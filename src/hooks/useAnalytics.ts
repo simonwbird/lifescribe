@@ -126,6 +126,8 @@ export type AnalyticsEvent =
   | 'prompt.shuffle'
   | 'prompt.tts_play'
   | 'prompt.record_start'
+  | 'prompt.input_type_selected'
+  | 'blank_canvas.input_type_selected'
   | 'story.created_from_prompt'
   | 'recorder.permission_denied'
   | 'recorder.offline_queue'
