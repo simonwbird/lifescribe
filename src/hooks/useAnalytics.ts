@@ -131,6 +131,10 @@ export type AnalyticsEvent =
   | 'story.created_from_prompt'
   | 'recorder.permission_denied'
   | 'recorder.offline_queue'
+  // Feed and social events
+  | 'realtime_update_received'
+  | 'story_expanded_inline'
+  | 'realtime_toggled'
   // Admin impersonation events
   | 'ADMIN_IMPERSONATE_STARTED'
   | 'ADMIN_IMPERSONATE_ENDED'

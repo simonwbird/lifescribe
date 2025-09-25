@@ -3,12 +3,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MessageCircle, Heart, Share } from 'lucide-react'
+import { MessageCircle, Heart, Share, Eye, MoreHorizontal, Filter, Zap, ZapOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
+import { FeedFilters, type FeedFilterOptions } from './FeedFilters'
+import { InlineStoryViewer } from './InlineStoryViewer'
+import { isAfter, isBefore, isWithinInterval } from 'date-fns'
 
 interface ActivityItem {
   id: string
@@ -19,19 +22,39 @@ interface ActivityItem {
   snippet?: string
   time: string
   unread: boolean
+  author_id?: string
+  content_type?: 'text' | 'photo' | 'audio' | 'video'
+  created_at?: string
+}
+
+interface FamilyMember {
+  id: string
+  name: string
 }
 
 interface FamilyUpdatesFeedProps {
   activities: ActivityItem[]
   variant?: 'simple' | 'studio'
   className?: string
+  familyMembers?: FamilyMember[]
+  familyId?: string
 }
 
-export default function FamilyUpdatesFeed({ activities, variant = 'simple', className }: FamilyUpdatesFeedProps) {
+export default function FamilyUpdatesFeed({ 
+  activities, 
+  variant = 'simple', 
+  className,
+  familyMembers = [],
+  familyId = ''
+}: FamilyUpdatesFeedProps) {
   const { track } = useAnalytics()
   const navigate = useNavigate()
   const { toast } = useToast()
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string; full_name?: string } | null>(null)
+  const [filters, setFilters] = useState<FeedFilterOptions>({})
+  const [expandedStory, setExpandedStory] = useState<string | null>(null)
+  const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(false)
+  const [reactionStates, setReactionStates] = useState<Record<string, { liked: boolean; likeCount: number }>>({})
   const tickerRef = useRef<HTMLDivElement | null>(null)
 
   // Load current user's profile (for avatar)
@@ -57,46 +80,135 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
     getUserProfile()
   }, [])
 
-  // Marquee animation using requestAnimationFrame (smooth and reliable)
-  useEffect(() => {
-    let raf = 0
-    let pos = 0
-    const speed = 0.8 // px per frame ~48px/s at 60fps
-
-    const step = () => {
-      const track = tickerRef.current
-      if (track) {
-        // Ensure we have 2 blocks for seamless looping
-        const blocks = track.querySelectorAll(':scope > .ticker-block')
-        if (blocks.length < 2 && blocks[0]) {
-          const clone = (blocks[0] as HTMLElement).cloneNode(true) as HTMLElement
-          clone.classList.add('ticker-block')
-          clone.setAttribute('aria-hidden', 'true')
-          track.appendChild(clone)
-        }
-
-        const first = track.querySelector(':scope > .ticker-block') as HTMLElement | null
-        const width = first?.offsetWidth ?? 0
-
-        pos -= speed
-        if (width > 0 && Math.abs(pos) >= width) {
-          pos += width
-        }
-        track.style.transform = `translateX(${pos}px)`
-      }
-      raf = requestAnimationFrame(step)
+  // Filter activities based on current filters
+  const filteredActivities = activities.filter((activity) => {
+    // Filter by family member
+    if (filters.member && activity.author_id !== filters.member) {
+      return false
     }
 
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [activities])
+    // Filter by content type
+    if (filters.contentType && filters.contentType !== 'all') {
+      if (activity.content_type !== filters.contentType) {
+        return false
+      }
+    }
+
+    // Filter by date range
+    if (filters.dateRange) {
+      const activityDate = new Date(activity.created_at || activity.time)
+      if (filters.dateRange.from && isBefore(activityDate, filters.dateRange.from)) {
+        return false
+      }
+      if (filters.dateRange.to && isAfter(activityDate, filters.dateRange.to)) {
+        return false
+      }
+    }
+
+    return true
+  })
+
+  // Real-time updates subscription
+  useEffect(() => {
+    if (!isRealTimeEnabled || !familyId) return
+
+    const channel = supabase
+      .channel('family-updates-live')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stories',
+          filter: `family_id=eq.${familyId}`
+        },
+        (payload) => {
+          track('realtime_update_received', { 
+            type: 'story',
+            storyId: payload.new.id 
+          })
+          
+          toast({
+            title: "New story shared!",
+            description: `${payload.new.title || 'A family member'} just shared something new.`,
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'comments',
+          filter: `family_id=eq.${familyId}`
+        },
+        (payload) => {
+          track('realtime_update_received', { 
+            type: 'comment',
+            commentId: payload.new.id 
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [isRealTimeEnabled, familyId, track, toast])
 
   const handleActivityClick = (activity: ActivityItem) => {
     track('activity_clicked', { activityId: activity.id, type: activity.type, variant })
+    
     if (activity.id.startsWith('story-') || activity.type === 'story' || activity.type === 'comment') {
       const storyId = activity.id.replace('story-', '')
-      navigate(`/stories/${storyId}`)
+      
+      // Show inline expansion for simple variant, navigate for studio
+      if (variant === 'simple' && expandedStory !== storyId) {
+        setExpandedStory(storyId)
+        track('story_expanded_inline', { storyId })
+      } else {
+        navigate(`/stories/${storyId}`)
+      }
     }
+  }
+
+  const handleLikeToggle = async (activityId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    
+    const currentState = reactionStates[activityId] || { liked: false, likeCount: 0 }
+    const newLiked = !currentState.liked
+    const newCount = newLiked ? currentState.likeCount + 1 : Math.max(0, currentState.likeCount - 1)
+    
+    // Optimistic update
+    setReactionStates(prev => ({
+      ...prev,
+      [activityId]: { liked: newLiked, likeCount: newCount }
+    }))
+
+    track('activity_reaction', { 
+      activityId, 
+      reaction: 'like',
+      action: newLiked ? 'add' : 'remove'
+    })
+
+    toast({ 
+      title: newLiked ? 'Story liked!' : 'Like removed',
+      description: newLiked ? 'Thanks for the feedback' : '',
+    })
+  }
+
+  const toggleRealTime = () => {
+    const newState = !isRealTimeEnabled
+    setIsRealTimeEnabled(newState)
+    
+    track('realtime_toggled', { enabled: newState })
+    
+    toast({
+      title: newState ? 'Real-time updates enabled' : 'Real-time updates disabled',
+      description: newState 
+        ? 'You\'ll see new stories and comments as they happen' 
+        : 'Updates will only refresh when you reload the page',
+    })
   }
 
   const handleReaction = async (activityId: string, reaction: string) => {
@@ -138,6 +250,27 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
     }
   }
 
+  if (filteredActivities.length === 0 && activities.length > 0) {
+    return (
+      <Card className={className}>
+        <CardContent className="p-8 text-center space-y-4">
+          <p className="text-muted-foreground">No updates match your current filters</p>
+          <FeedFilters 
+            filters={filters}
+            onFiltersChange={setFilters}
+            familyMembers={familyMembers}
+          />
+          <Button 
+            variant="outline" 
+            onClick={() => setFilters({})}
+          >
+            Clear all filters
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (activities.length === 0) {
     return (
       <Card className={className}>
@@ -150,116 +283,282 @@ export default function FamilyUpdatesFeed({ activities, variant = 'simple', clas
   }
 
   if (variant === 'simple') {
-    // Vertical scrollable feed that fits the container height
     return (
-      <div className={cn('relative h-full', className)}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-2 rounded-t-lg">
+      <div className={cn('space-y-4', className)}>
+        {/* Controls */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            <span className="text-sm font-semibold">FAMILY UPDATES</span>
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <h3 className="text-lg font-semibold">Family Updates</h3>
+            <Badge variant={isRealTimeEnabled ? "default" : "secondary"} className="flex items-center gap-1">
+              {isRealTimeEnabled ? <Zap className="w-3 h-3" /> : <ZapOff className="w-3 h-3" />}
+              {isRealTimeEnabled ? 'LIVE' : 'Static'}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleRealTime}
+              className="flex items-center gap-2"
+            >
+              {isRealTimeEnabled ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+              {isRealTimeEnabled ? 'Disable Live' : 'Enable Live'}
+            </Button>
+            <FeedFilters 
+              filters={filters}
+              onFiltersChange={setFilters}
+              familyMembers={familyMembers}
+            />
           </div>
         </div>
 
-        {/* Scrollable content area */}
-        <div className="bg-card border-x border-b rounded-b-lg overflow-hidden relative flex-1 min-h-[320px]">
-          <div className="h-full overflow-y-auto scrollbar-thin">
-            <div className="space-y-1">
-              {activities.map((activity, index) => (
-                <div
-                  key={`${activity.id}-${index}`}
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors border-b border-muted/30 last:border-b-0"
-                  onClick={() => handleActivityClick(activity)}
-                >
-                  {/* Live indicator */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-xs font-mono text-muted-foreground">LIVE</span>
-                  </div>
+        {/* Expanded Story Viewer */}
+        {expandedStory && (
+          <InlineStoryViewer
+            storyId={expandedStory}
+            familyId={familyId}
+            onClose={() => setExpandedStory(null)}
+            onOpenFull={() => setExpandedStory(null)}
+          />
+        )}
 
-                  <Avatar className="h-8 w-8 border-2 border-primary/20 flex-shrink-0">
-                    <AvatarImage src={userProfile?.avatar_url ?? undefined} alt={userProfile?.full_name || activity.actor} className="object-cover" referrerPolicy="no-referrer" />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                      {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+        {/* Feed Content */}
+        <div className="relative h-full min-h-[400px]">
+          {/* Scrollable content area */}
+          <div className="bg-card border rounded-lg overflow-hidden">
+            <div className="h-full max-h-[600px] overflow-y-auto scrollbar-thin">
+              <div className="space-y-1">
+                {filteredActivities.map((activity, index) => {
+                  const activityReactions = reactionStates[activity.id] || { liked: false, likeCount: 0 }
+                  
+                  return (
+                    <div
+                      key={`${activity.id}-${index}`}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors border-b border-muted/30 last:border-b-0"
+                      onClick={() => handleActivityClick(activity)}
+                    >
+                      <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
+                        <AvatarImage 
+                          src={userProfile?.avatar_url ?? undefined} 
+                          alt={userProfile?.full_name || activity.actor} 
+                          className="object-cover" 
+                          referrerPolicy="no-referrer" 
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                          {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
-                      </p>
-                      {activity.unread && (<Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
+                          </p>
+                          {activity.unread && (
+                            <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>
+                          )}
+                          {activity.content_type && (
+                            <Badge variant="outline" className="text-xs capitalize">{activity.content_type}</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground font-mono">{activity.time}</p>
+                        {activity.snippet && (
+                          <p className="text-xs text-foreground mt-1 truncate">{activity.snippet}</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1 opacity-60 flex-shrink-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={cn(
+                            "h-8 w-8 p-0 hover:bg-primary/20",
+                            activityReactions.liked && "text-red-500"
+                          )} 
+                          onClick={(e) => handleLikeToggle(activity.id, e)}
+                        >
+                          <Heart className={cn("h-4 w-4", activityReactions.liked && "fill-current")} />
+                          {activityReactions.likeCount > 0 && (
+                            <span className="text-xs ml-1">{activityReactions.likeCount}</span>
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 hover:bg-primary/20" 
+                          onClick={(e) => { 
+                            e.stopPropagation()
+                            navigate(`/stories/${activity.id.replace('story-', '')}#comments`) 
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 hover:bg-primary/20" 
+                          onClick={(e) => { 
+                            e.stopPropagation()
+                            handleReaction(activity.id, 'share') 
+                          }}
+                        >
+                          <Share className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 hover:bg-primary/20" 
+                          onClick={(e) => { 
+                            e.stopPropagation()
+                            setExpandedStory(activity.id.replace('story-', ''))
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground font-mono">{activity.time}</p>
-                    {activity.snippet && (<p className="text-xs text-foreground mt-1 truncate">{activity.snippet}</p>)}
-                  </div>
-
-                  <div className="flex items-center gap-1 opacity-60 flex-shrink-0">
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'like') }}>
-                      <Heart className="h-3 w-3" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); handleReaction(activity.id, 'share') }}>
-                      <Share className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                  )
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Status bar */}
-        <div className="bg-red-600 text-white px-4 py-1 text-xs font-semibold animate-pulse rounded-b-lg">
-          <div className="flex items-center justify-center gap-2">
-            <span>🔴</span>
-            <span>LIVE FAMILY UPDATES</span>
-            <span>•</span>
-            <span>{activities.length} STORIES</span>
-            <span>🔴</span>
+          {/* Status bar */}
+          <div className={cn(
+            "mt-2 px-4 py-2 text-xs font-semibold rounded-lg text-center",
+            isRealTimeEnabled 
+              ? "bg-green-600 text-white animate-pulse" 
+              : "bg-muted text-muted-foreground"
+          )}>
+            <div className="flex items-center justify-center gap-2">
+              {isRealTimeEnabled ? (
+                <>
+                  <span>🟢</span>
+                  <span>LIVE UPDATES ACTIVE</span>
+                  <span>•</span>
+                  <span>{filteredActivities.length} STORIES</span>
+                  <span>🟢</span>
+                </>
+              ) : (
+                <>
+                  <span>⚪</span>
+                  <span>STATIC VIEW</span>
+                  <span>•</span>
+                  <span>{filteredActivities.length} STORIES</span>
+                  <span>⚪</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
-  // Dense list for Studio mode
+  // Studio mode with enhanced social features
   return (
-    <Card className={className}>
-      <CardContent className="p-4">
-        <div className="space-y-3">
-          {activities.slice(0, 8).map((activity, index) => (
-            <div
-              key={activity.id}
-              className={cn(
-                'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-muted/50',
-                activity.unread && 'bg-primary/5 border border-primary/20',
-                index !== activities.length - 1 && 'border-b border-border/50'
-              )}
-              onClick={() => handleActivityClick(activity)}
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                  {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+    <div className={cn('space-y-4', className)}>
+      {/* Filters */}
+      <FeedFilters 
+        filters={filters}
+        onFiltersChange={setFilters}
+        familyMembers={familyMembers}
+      />
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            {filteredActivities.slice(0, 8).map((activity, index) => {
+              const activityReactions = reactionStates[activity.id] || { liked: false, likeCount: 0 }
+              
+              return (
+                <div
+                  key={activity.id}
+                  className={cn(
+                    'flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-colors hover:bg-muted/50 border',
+                    activity.unread && 'bg-primary/5 border-primary/20',
+                    index !== filteredActivities.length - 1 && 'border-b border-border/50'
+                  )}
+                  onClick={() => handleActivityClick(activity)}
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                      {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">{activity.actor}</span> {activity.action}{' '}
-                    <span className="text-primary font-medium">{activity.target}</span>
-                  </p>
-                  {activity.unread && (<div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />)}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm text-foreground">
+                        <span className="font-medium">{activity.actor}</span> {activity.action}{' '}
+                        <span className="text-primary font-medium">{activity.target}</span>
+                      </p>
+                      {activity.unread && (
+                        <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                      )}
+                      {activity.content_type && (
+                        <Badge variant="outline" className="text-xs capitalize">{activity.content_type}</Badge>
+                      )}
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    
+                    {activity.snippet && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{activity.snippet}</p>
+                    )}
+
+                    {/* Social Actions */}
+                    <div className="flex items-center gap-4 pt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "h-8 px-3 text-xs",
+                          activityReactions.liked && "text-red-500"
+                        )}
+                        onClick={(e) => handleLikeToggle(activity.id, e)}
+                      >
+                        <Heart className={cn("h-4 w-4 mr-1", activityReactions.liked && "fill-current")} />
+                        {activityReactions.likeCount > 0 ? activityReactions.likeCount : 'Like'}
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigate(`/stories/${activity.id.replace('story-', '')}#comments`)
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Comment
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleReaction(activity.id, 'share')
+                        }}
+                      >
+                        <Share className="h-4 w-4 mr-1" />
+                        Share
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                {activity.snippet && (<p className="text-xs text-muted-foreground mt-1 line-clamp-2">{activity.snippet}</p>)}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

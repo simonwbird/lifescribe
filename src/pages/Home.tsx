@@ -54,6 +54,7 @@ interface DraftItem {
 
 export default function Home() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [familyMembers, setFamilyMembers] = useState<Array<{id: string; name: string}>>([])
   const [drafts, setDrafts] = useState<DraftItem[]>([])
   const [loading, setLoading] = useState(true)
   const [profileId, setProfileId] = useState<string>('')
@@ -579,6 +580,8 @@ export default function Home() {
                   <FamilyUpdatesFeed 
                     activities={activities}
                     variant="simple"
+                    familyMembers={familyMembers}
+                    familyId={spaceId}
                   />
                 </div>
               </div>
@@ -639,6 +642,8 @@ export default function Home() {
                 <FamilyUpdatesFeed 
                   activities={activities}
                   variant="studio"
+                  familyMembers={familyMembers}
+                  familyId={spaceId}
                 />
               </div>
             </div>
