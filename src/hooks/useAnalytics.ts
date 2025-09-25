@@ -197,7 +197,11 @@ export type AnalyticsEvent =
   | 'DATE_FORMAT_ERROR'
   | 'TIMEZONE_ERROR_SENTINEL'
   | 'REGION_PREFS_CONFIRMED'
-  | 'REGION_PREFS_UPDATED';
+  | 'REGION_PREFS_UPDATED'
+  // Invitation management events
+  | 'invite_revoked'
+  | 'invite_resent' 
+  | 'member_role_update';
 
 import { supabase } from '@/integrations/supabase/client'
 import { useMode } from './useMode'
