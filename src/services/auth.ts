@@ -31,7 +31,7 @@ export async function signUp(
         email,
         password,
         options: {
-          emailRedirectTo: `${import.meta.env.VITE_APP_URL}/auth/verify`,
+          emailRedirectTo: `https://lifescribe.family/auth/verify`,
           data: {
             full_name: fullName,
             ...metadata
@@ -138,7 +138,7 @@ export async function sendPasswordReset(
   try {
     const { error } = await makeCancellable(
       supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${import.meta.env.VITE_APP_URL}/auth/reset/confirm`
+        redirectTo: `https://lifescribe.family/auth/reset/confirm`
       }),
       signal
     )
@@ -175,7 +175,7 @@ export async function resendVerification(
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${import.meta.env.VITE_APP_URL}/auth/verify`
+          emailRedirectTo: `https://lifescribe.family/auth/verify`
         }
       }),
       signal

@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 import { useAuth } from '@/contexts/AuthProvider'
 import { useAuthErrors } from '@/hooks/useAuthErrors'
+import { useToast } from '@/hooks/use-toast'
 import { signUp } from '@/services/auth'
 
 const signupSchema = z.object({
@@ -36,6 +37,7 @@ export default function Signup() {
   const [searchParams] = useSearchParams()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { handleError } = useAuthErrors()
+  const { toast } = useToast()
   
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -76,14 +78,17 @@ export default function Signup() {
         return
       }
 
-      if (authData) {
-        // Show success message for email confirmation
-        setSuccessMessage(
-          'Account created successfully! Please check your email and click the verification link to activate your account.'
-        )
-        
-        // Clear form
-        form.reset()
+      if (error) {
+        handleError(error)
+      } else {
+        toast({
+          title: 'Account created!',
+          description: 'Please check your email to verify your account.'
+        })
+        navigate('/auth/verify', { 
+          state: { email: data.email },
+          replace: true 
+        })
       }
     } catch (error) {
       handleError({

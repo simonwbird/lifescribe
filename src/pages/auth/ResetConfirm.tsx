@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { CheckCircle, XCircle } from 'lucide-react'
 import { updatePassword } from '@/services/auth'
 import { useAuthErrors } from '@/hooks/useAuthErrors'
 import { useToast } from '@/hooks/use-toast'
@@ -73,9 +74,9 @@ export default function ResetConfirm() {
       } else {
         toast({
           title: 'Password updated',
-          description: 'Your password has been successfully updated.'
+          description: 'Your password has been successfully updated. You can now sign in with your new password.'
         })
-        navigate('/home')
+        navigate('/auth/login')
       }
     } finally {
       setIsLoading(false)
@@ -95,14 +96,20 @@ export default function ResetConfirm() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <XCircle className="w-6 h-6 text-destructive" />
+            </div>
             <CardTitle className="text-xl">Invalid Reset Link</CardTitle>
             <CardDescription>
-              This password reset link is invalid or has expired.
+              This password reset link is invalid or has expired. Reset links are only valid for 1 hour after being sent.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
+          <CardContent className="text-center space-y-3">
             <Button onClick={() => navigate('/auth/reset/request')} className="w-full">
               Request New Reset Link
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/auth/login')} className="w-full">
+              Back to Login
             </Button>
           </CardContent>
         </Card>

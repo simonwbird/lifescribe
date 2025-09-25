@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 import { useAuth } from '@/contexts/AuthProvider'
 import { useAuthErrors } from '@/hooks/useAuthErrors'
+import { useToast } from '@/hooks/use-toast'
 import { signIn } from '@/services/auth'
 
 const loginSchema = z.object({
@@ -27,6 +28,7 @@ export default function Login() {
   const [searchParams] = useSearchParams()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { handleError } = useAuthErrors()
+  const { toast } = useToast()
   
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -70,13 +72,23 @@ export default function Login() {
 
       if (error) {
         handleError(error)
-        return
-      }
-
-      if (authData) {
-        // Redirect will happen via useEffect when auth state updates
-        const redirectTo = searchParams.get('redirectTo') || '/home'
-        navigate(redirectTo)
+      } else {
+        // Check if email is verified
+        if (authData.user && !authData.user.email_confirmed_at) {
+          navigate('/auth/verify', { 
+            state: { email: authData.user.email },
+            replace: true 
+          })
+          return
+        }
+        
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully signed in.'
+        })
+        
+        const nextUrl = searchParams.get('next') || '/home'
+        navigate(nextUrl)
       }
     } catch (error) {
       handleError({

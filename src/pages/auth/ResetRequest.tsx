@@ -42,9 +42,11 @@ export default function ResetRequest() {
         setIsSuccess(true)
         toast({
           title: 'Reset email sent',
-          description: 'Check your email for password reset instructions.'
+          description: 'Check your email for password reset instructions. The link will expire in 1 hour.'
         })
       }
+    } catch (error) {
+      handleError(error as any)
     } finally {
       setIsLoading(false)
     }
@@ -60,7 +62,7 @@ export default function ResetRequest() {
             </div>
             <CardTitle className="text-xl">Check Your Email</CardTitle>
             <CardDescription>
-              We've sent password reset instructions to your email address.
+              We've sent password reset instructions to your email address. Please check your email and click the reset link. The link will expire in 1 hour.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
