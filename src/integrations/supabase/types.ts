@@ -4898,6 +4898,19 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_family_member_safe_profiles: {
+        Args: { p_user_id?: string }
+        Returns: {
+          avatar_url: string
+          country: string
+          created_at: string
+          full_name: string
+          id: string
+          locale: string
+          simple_mode: boolean
+          timezone: string
+        }[]
+      }
       get_merge_analysis: {
         Args: { p_source_family_id: string; p_target_family_id: string }
         Returns: Json
