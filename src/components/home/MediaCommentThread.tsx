@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { uploadMediaFile } from '@/lib/media'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import EnhancedReactionBar from './EnhancedReactionBar'
+import GifReactionPicker from '@/components/reactions/GifReactionPicker'
 import type { Comment, Profile } from '@/lib/types'
 
 // Use the supabase client without complex typing
@@ -418,12 +419,20 @@ export default function MediaCommentThread({ targetType, targetId, familyId }: M
                   </div>
                 )}
                 
-                <EnhancedReactionBar 
-                  targetType="comment" 
-                  targetId={comment.id}
-                  familyId={familyId}
-                  compact
-                />
+                <div className="flex items-center gap-2">
+                  <EnhancedReactionBar 
+                    targetType="comment" 
+                    targetId={comment.id}
+                    familyId={familyId}
+                    compact
+                  />
+                  <GifReactionPicker
+                    onReactionSelect={(type, url) => {
+                      // Handle GIF/sticker reaction
+                      console.log('GIF reaction:', type, url)
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}

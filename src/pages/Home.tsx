@@ -10,6 +10,7 @@ import Upcoming from '@/components/home/Upcoming';
 import DraftsRow from '@/components/home/DraftsRow';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import FloatingCoachMark from '@/components/onboarding/FloatingCoachMark';
+import QuickStoryCreator from '@/components/stories/QuickStoryCreator';
 import { SimpleHeader } from '@/components/home/simple/SimpleHeader';
 import SimpleRecordingController from '@/components/home/simple/SimpleRecordingController';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -510,21 +511,27 @@ export default function Home() {
           {/* Invite Banner */}
           <InviteBanner />
 
-          {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Primary Column */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Pinned Drafts Row */}
-              {drafts.length > 0 && <DraftsRow drafts={drafts} onResume={handleResumeDraft} onDelete={handleDeleteDraft} />}
+            {/* Main Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Primary Column */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Quick Story Creator */}
+                <QuickStoryCreator 
+                  familyId={spaceId}
+                  onStoryCreated={() => loadHomeData()}
+                />
 
-              {/* Dense Feed */}
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground">
-                  What's New
-                </h2>
-                <FamilyUpdatesFeed activities={activities} variant="studio" familyMembers={familyMembers} familyId={spaceId} />
+                {/* Pinned Drafts Row */}
+                {drafts.length > 0 && <DraftsRow drafts={drafts} onResume={handleResumeDraft} onDelete={handleDeleteDraft} />}
+
+                {/* Dense Feed */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold text-foreground">
+                    What's New
+                  </h2>
+                  <FamilyUpdatesFeed activities={activities} variant="studio" familyMembers={familyMembers} familyId={spaceId} />
+                </div>
               </div>
-            </div>
 
             {/* Right Rail */}
             <div className="space-y-6">

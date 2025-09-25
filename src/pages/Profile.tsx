@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import ExportDataCard from '@/components/compliance/ExportDataCard'
 import RTBFCard from '@/components/compliance/RTBFCard'
 import RegionSettings from '@/components/RegionSettings'
+import ProfilePersonalization from '@/components/profile/ProfilePersonalization'
 import TimezoneMismatchBanner from '@/components/TimezoneMismatchBanner'
 import type { UserLocale } from '@/lib/localizationTypes'
 import type { Profile as ProfileType } from '@/lib/types'
@@ -194,6 +195,19 @@ export default function Profile() {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Profile Personalization */}
+            {profile && (
+              <ProfilePersonalization
+                userId={profile.id}
+                currentNickname={(profile as any).settings?.nickname || ''}
+                currentTheme={(profile as any).settings?.theme || 'default'}
+                onUpdate={() => {
+                  // Refetch profile to show updated data
+                  window.location.reload()
+                }}
+              />
+            )}
 
             {/* Region & Format Settings */}
             <RegionSettings 
