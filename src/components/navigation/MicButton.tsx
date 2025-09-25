@@ -23,12 +23,13 @@ export default function MicButton({ onStoryCreated }: MicButtonProps) {
         variant="default"
         size="sm"
         onClick={handleMicClick}
-        className="gap-1"
-        aria-label="Start voice capture"
+        className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+        aria-label="Quick voice recording"
         data-mic-button
+        title="Quick voice recording"
       >
         <Mic className="h-4 w-4" />
-        <span className="hidden sm:inline">Mic</span>
+        <span className="hidden sm:inline font-medium">Voice</span>
       </Button>
       
       <VoiceCaptureModal
