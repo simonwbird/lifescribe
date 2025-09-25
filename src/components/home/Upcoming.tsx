@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Calendar, Plus, Camera, PenTool, Heart, Users } from 'lucide-react'
+import { Calendar, Plus, Camera, PenTool, Heart, Users, Info } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
@@ -11,6 +11,7 @@ import { getUpcomingEvents, type UpcomingEvent } from '@/lib/eventsService'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import AddBirthdayModal from './AddBirthdayModal'
 import AddEventModal from './AddEventModal'
+import { EventDetailsModal } from './EventDetailsModal'
 
 export default function Upcoming() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
@@ -18,6 +19,8 @@ export default function Upcoming() {
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [showBirthdayModal, setShowBirthdayModal] = useState(false)
   const [showEventModal, setShowEventModal] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<UpcomingEvent | null>(null)
+  const [showEventDetails, setShowEventDetails] = useState(false)
   const { track } = useAnalytics()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -118,6 +121,16 @@ export default function Upcoming() {
     })
   }
 
+  const handleEventClick = (event: UpcomingEvent) => {
+    setSelectedEvent(event)
+    setShowEventDetails(true)
+    track('event_details_opened', { 
+      eventType: event.type, 
+      daysUntil: event.days_until,
+      eventId: event.id 
+    })
+  }
+
   if (loading) {
     return (
       <Card className="shadow-sm">
@@ -213,7 +226,11 @@ export default function Upcoming() {
           ) : (
             <>
               {events.map((event) => (
-                <div key={event.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div 
+                  key={event.id} 
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleEventClick(event)}
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-medium text-sm truncate">
@@ -243,7 +260,10 @@ export default function Upcoming() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => handleWriteNote(event)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleWriteNote(event)
+                      }}
                       title="Write note"
                     >
                       <PenTool className="h-3 w-3" />
@@ -253,10 +273,26 @@ export default function Upcoming() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => handleAddPhoto(event)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleAddPhoto(event)
+                      }}
                       title="Add photo"
                     >
                       <Camera className="h-3 w-3" />
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEventClick(event)
+                      }}
+                      title="View details"
+                    >
+                      <Info className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
@@ -292,6 +328,16 @@ export default function Upcoming() {
         open={showEventModal}
         onOpenChange={setShowEventModal}
         onSuccess={handleAddSuccess}
+      />
+
+      {/* Event Details Modal */}
+      <EventDetailsModal
+        event={selectedEvent}
+        isOpen={showEventDetails}
+        onClose={() => {
+          setShowEventDetails(false)
+          setSelectedEvent(null)
+        }}
       />
     </>
   )
