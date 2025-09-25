@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import LoginPageEnhanced from "./pages/auth/LoginPageEnhanced";
+import TestAdminBootstrap from "./pages/admin/TestAdminBootstrap";
 import SignupPage from "./pages/auth/Signup";
 import VerifyPage from "./pages/auth/Verify";
 import ResetRequestPage from "./pages/auth/ResetRequest";
@@ -99,7 +100,8 @@ function AppContent() {
       <Route path="/terms" element={<Terms />} />
       
       {/* Auth routes */}
-      <Route path="/auth/login" element={<LoginPageEnhanced />} />
+          <Route path="/auth/login" element={<LoginPageEnhanced />} />
+          <Route path="/admin/test-bootstrap" element={<TestAdminBootstrap />} />
       <Route path="/auth/signup" element={<SignupPage />} />
       <Route path="/auth/verify" element={<VerifyPage />} />
       <Route path="/auth/reset/request" element={<ResetRequestPage />} />
