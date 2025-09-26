@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SecondaryActionsProps {
-  onBrowseFeed: () => void;
+  onLifePage: () => void;
   onCreateFreeform: () => void;
   onAddPhoto: () => void;
   onQuickVoice: () => void;
@@ -20,7 +20,7 @@ const getLifePageAction = (userAge: 'child' | 'teen' | 'adult' | 'elder') => {
     label: 'Build Your Life Page',
     icon: PenTool, // Using PenTool as placeholder for 📖
     description: 'Collect stories, photos, and memories in one place',
-    action: 'onBrowseFeed' as const, // Keeping same handler for now
+    action: 'onLifePage' as const, // Updated to use life page handler
     emoji: '📖'
   }
 }
@@ -46,7 +46,7 @@ const getSecondaryActions = (userAge: 'child' | 'teen' | 'adult' | 'elder') => [
 ];
 
 export default function SecondaryActions({
-  onBrowseFeed,
+  onLifePage,
   onCreateFreeform,
   onAddPhoto,
   onQuickVoice,
@@ -55,7 +55,7 @@ export default function SecondaryActions({
   const { track } = useAnalytics();
 
   const actionHandlers = {
-    onBrowseFeed,
+    onLifePage,
     onCreateFreeform,
     onAddPhoto,
     onQuickVoice

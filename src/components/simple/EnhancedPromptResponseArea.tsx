@@ -18,7 +18,7 @@ interface EnhancedPromptResponseAreaProps {
     type: 'general' | 'personal';
   };
   onRecord: (format: 'voice' | 'video' | 'text') => void;
-  onBrowseFeed: () => void;
+  onLifePage: () => void;
   onCreateFreeform: () => void;
   onAddPhoto: () => void;
   onQuickVoice: () => void;
@@ -55,7 +55,7 @@ const formatOptions = [
 export default function EnhancedPromptResponseArea({
   prompt,
   onRecord,
-  onBrowseFeed,
+  onLifePage,
   onCreateFreeform,
   onAddPhoto,
   onQuickVoice,
@@ -198,7 +198,7 @@ export default function EnhancedPromptResponseArea({
 
       {/* Secondary Actions */}
       <SecondaryActions
-        onBrowseFeed={onBrowseFeed}
+        onLifePage={onLifePage}
         onCreateFreeform={onCreateFreeform}
         onAddPhoto={onAddPhoto}
         onQuickVoice={onQuickVoice}

@@ -15,6 +15,7 @@ import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager';
 import { DraftProgressBanner } from '@/components/drafts/DraftProgressBanner';
 import { ResumeSessionModal } from '@/components/drafts/ResumeSessionModal';
 import QuickVoiceRecordModal from '@/components/voice/QuickVoiceRecordModal';
+import { supabase } from '@/lib/supabase'
 
 interface SimpleHeaderProps {
   profileId: string
@@ -35,6 +36,7 @@ export function SimpleHeader({
   const [selectedPrompt, setSelectedPrompt] = useState<ElderPrompt | null>(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
   const [showQuickVoiceModal, setShowQuickVoiceModal] = useState(false)
+  const [currentUserPersonId, setCurrentUserPersonId] = useState<string | null>(null)
   const { track } = useAnalytics()
   const navigate = useNavigate()
   
@@ -313,9 +315,14 @@ export function SimpleHeader({
                 }), draftFormat)
                 handleRecordWithPrompt(primaryPrompt)
               }}
-              onBrowseFeed={() => {
-                track('activity_clicked', { action: 'browse_feed' })
-                navigate('/feed')
+              onLifePage={() => {
+                track('activity_clicked', { action: 'life_page' })
+                if (currentUserPersonId) {
+                  navigate(`/people/${currentUserPersonId}`)
+                } else {
+                  // Fallback to family feed if no person linked
+                  navigate('/feed')
+                }
               }}
               onCreateFreeform={() => {
                 track('activity_clicked', { action: 'create_freeform' })
