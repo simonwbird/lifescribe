@@ -90,16 +90,20 @@ export default function Home() {
   const memoizedDrafts = useMemo(() => drafts, [drafts])
 
   // Handle URL param for voice focus after invite flow
-  const urlParams = new URLSearchParams(window.location.search);
-  const focusVoice = urlParams.get('focus') === 'voice';
+  const [focusVoice, setFocusVoice] = useState(false);
+  
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setFocusVoice(urlParams.get('focus') === 'voice');
     loadHomeData();
     track('home_v2_load');
   }, []);
 
-  // Set up real-time updates for new stories
+  // Set up real-time updates for new stories (debounced)
   useEffect(() => {
     if (!spaceId) return;
+    
+    let debounceTimer: NodeJS.Timeout;
     const channel = supabase.channel('family-updates').on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
@@ -107,10 +111,15 @@ export default function Home() {
       filter: `family_id=eq.${spaceId}`
     }, payload => {
       console.log('New story published:', payload);
-      // Refresh the activities when a new story is added
-      loadActivities(spaceId);
+      // Debounce to prevent rapid re-renders
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        loadActivities(spaceId);
+      }, 1000);
     }).subscribe();
+    
     return () => {
+      clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [spaceId]);
@@ -224,8 +233,8 @@ export default function Home() {
         return timeB - timeA;
       });
 
-      // Add sample activities if we have few real ones
-      if (activities.length < 10) {
+      // Only add sample activities on initial load to prevent layout shifts
+      if (activities.length === 0) {
         const sampleActivities: ActivityItem[] = [{
           id: 'sample-1',
           type: 'photo',
@@ -244,44 +253,8 @@ export default function Home() {
           snippet: 'Remember how he taught us to build birdhouses every weekend...',
           time: '5 hours ago',
           unread: false
-        }, {
-          id: 'sample-3',
-          type: 'invite',
-          actor: 'Sarah',
-          action: 'invited',
-          target: 'Cousin Jake to join',
-          snippet: 'Welcome to our family space!',
-          time: '1 day ago',
-          unread: true
-        }, {
-          id: 'sample-4',
-          type: 'photo',
-          actor: 'David',
-          action: 'added photos to',
-          target: 'Grandma\'s 85th Birthday',
-          snippet: '8 new photos from the celebration',
-          time: '2 days ago',
-          unread: false
-        }, {
-          id: 'sample-5',
-          type: 'story',
-          actor: 'Lisa',
-          action: 'recorded a voice story about',
-          target: 'Christmas Morning 1995',
-          snippet: 'The year we got our first computer and dad spent hours...',
-          time: '3 days ago',
-          unread: false
-        }, {
-          id: 'sample-6',
-          type: 'comment',
-          actor: 'Robert',
-          action: 'commented on',
-          target: 'Mom\'s Apple Pie Recipe',
-          snippet: 'I remember she always added a pinch of cinnamon to the crust',
-          time: '4 days ago',
-          unread: false
         }];
-        activities.push(...sampleActivities.slice(0, 10 - activities.length));
+        activities.push(...sampleActivities);
       }
       setActivities(activities);
     } catch (error) {
