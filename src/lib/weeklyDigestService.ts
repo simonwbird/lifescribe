@@ -18,24 +18,58 @@ export interface WeeklyDigestSettings {
 
 export class WeeklyDigestService {
   async getSettings(userId: string): Promise<DigestSettings | null> {
+    // Prefer family-based settings; user-based may not exist if another admin created it
+    const { data: membership } = await supabase
+      .from('members')
+      .select('family_id')
+      .eq('profile_id', userId)
+      .limit(1)
+      .maybeSingle()
+
+    if (membership?.family_id) {
+      const byFamily = await this.getSettingsByFamily(membership.family_id)
+      if (byFamily) return byFamily
+    }
+
+    // Fallback to creator-based lookup for backward compatibility
     const { data, error } = await supabase
       .from('weekly_digest_settings')
       .select('*')
       .eq('created_by', userId)
-      .single()
+      .maybeSingle()
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No rows found, return default settings
-        return null
-      }
       console.error('Error fetching digest settings:', error)
       throw error
     }
 
+    if (!data) return null
+
     return {
       ...data,
-      recipients: Array.isArray(data.recipients) ? (data.recipients as string[]) : 
+      recipients: Array.isArray(data.recipients) ? (data.recipients as string[]) :
+                  (typeof data.recipients === 'object' && data.recipients !== null) ? data.recipients : [],
+      content_settings: (data.content_settings as unknown as DigestContentSettings) || DEFAULT_DIGEST_SETTINGS.content_settings!
+    } as DigestSettings
+  }
+
+  async getSettingsByFamily(familyId: string): Promise<DigestSettings | null> {
+    const { data, error } = await supabase
+      .from('weekly_digest_settings')
+      .select('*')
+      .eq('family_id', familyId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error fetching digest settings by family:', error)
+      throw error
+    }
+
+    if (!data) return null
+
+    return {
+      ...data,
+      recipients: Array.isArray(data.recipients) ? (data.recipients as string[]) :
                   (typeof data.recipients === 'object' && data.recipients !== null) ? data.recipients : [],
       content_settings: (data.content_settings as unknown as DigestContentSettings) || DEFAULT_DIGEST_SETTINGS.content_settings!
     } as DigestSettings
@@ -66,7 +100,7 @@ export class WeeklyDigestService {
 
     const { error } = await supabase
       .from('weekly_digest_settings')
-      .upsert(updateData)
+      .upsert(updateData, { onConflict: 'family_id' })
 
     if (error) {
       console.error('Error updating digest settings:', error)

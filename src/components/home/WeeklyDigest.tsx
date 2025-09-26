@@ -17,6 +17,7 @@ import SimpleRecipientDisplay from './simple/SimpleRecipientDisplay'
 import { weeklyDigestService } from '@/lib/weeklyDigestService'
 import { supabase } from '@/integrations/supabase/client'
 import type { DigestSettings, DigestPreview } from '@/lib/digestTypes'
+import { DEFAULT_DIGEST_SETTINGS } from '@/lib/digestTypes'
 
 export default function WeeklyDigest() {
   const [digestSettings, setDigestSettings] = useState<DigestSettings | null>(null)
@@ -40,19 +41,30 @@ export default function WeeklyDigest() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const settings = await weeklyDigestService.getSettings(user.id)
-      setDigestSettings(settings)
-
-      // Get user's family ID
+      // Get user's family ID first
       const { data: memberData } = await supabase
         .from('members')
         .select('family_id')
         .eq('profile_id', user.id)
         .limit(1)
-        .single()
+        .maybeSingle()
 
-      if (memberData) {
+      if (memberData?.family_id) {
         setFamilyId(memberData.family_id)
+        const settings = await weeklyDigestService.getSettingsByFamily(memberData.family_id)
+        setDigestSettings(
+          settings || ({
+            ...(DEFAULT_DIGEST_SETTINGS as DigestSettings),
+            family_id: memberData.family_id,
+            created_by: user.id
+          } as DigestSettings)
+        )
+      } else {
+        setDigestSettings({
+          ...(DEFAULT_DIGEST_SETTINGS as DigestSettings),
+          family_id: '',
+          created_by: user.id
+        } as DigestSettings)
       }
     } catch (error) {
       console.error('Error loading digest settings:', error)
