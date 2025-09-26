@@ -4928,6 +4928,10 @@ export type Database = {
         Args: { p_family_id: string; p_preview_date?: string }
         Returns: Json
       }
+      generate_person_prompt_instances: {
+        Args: { p_family_id: string; p_person_id: string }
+        Returns: number
+      }
       get_family_member_profiles: {
         Args: { p_user_id?: string }
         Returns: {
@@ -4976,6 +4980,10 @@ export type Database = {
       get_onboarding_state: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      get_person_relationship_role: {
+        Args: { p_family_id: string; p_person_id: string }
+        Returns: string
       }
       get_role_permissions: {
         Args: { user_role: Database["public"]["Enums"]["role_type"] }
@@ -5270,7 +5278,26 @@ export type Database = {
         | "business_premises"
         | "land"
         | "other"
-      relationship_type: "parent" | "spouse" | "divorced" | "unmarried"
+      relationship_type:
+        | "parent"
+        | "spouse"
+        | "divorced"
+        | "unmarried"
+        | "child"
+        | "sibling"
+        | "brother"
+        | "sister"
+        | "grandparent"
+        | "grandmother"
+        | "grandfather"
+        | "grandchild"
+        | "grandson"
+        | "granddaughter"
+        | "aunt"
+        | "uncle"
+        | "niece"
+        | "nephew"
+        | "cousin"
       role_type: "admin" | "member" | "guest" | "viewer" | "contributor"
       rollout_type: "global" | "cohort" | "family" | "user"
       targeting_type: "role" | "country" | "cohort" | "family_id" | "user_id"
@@ -5565,7 +5592,27 @@ export const Constants = {
         "land",
         "other",
       ],
-      relationship_type: ["parent", "spouse", "divorced", "unmarried"],
+      relationship_type: [
+        "parent",
+        "spouse",
+        "divorced",
+        "unmarried",
+        "child",
+        "sibling",
+        "brother",
+        "sister",
+        "grandparent",
+        "grandmother",
+        "grandfather",
+        "grandchild",
+        "grandson",
+        "granddaughter",
+        "aunt",
+        "uncle",
+        "niece",
+        "nephew",
+        "cousin",
+      ],
       role_type: ["admin", "member", "guest", "viewer", "contributor"],
       rollout_type: ["global", "cohort", "family", "user"],
       targeting_type: ["role", "country", "cohort", "family_id", "user_id"],

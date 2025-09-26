@@ -4,17 +4,20 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Play, BookOpen } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
+import PersonChip from './PersonChip'
 
 interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
   onRespond: (instanceId: string) => void
   onBrowseAll: () => void
+  people?: Array<{ id: string; full_name: string }> // For person chips
 }
 
 export default function TodaysPromptCard({ 
   promptInstance, 
   onRespond, 
-  onBrowseAll 
+  onBrowseAll,
+  people = []
 }: TodaysPromptCardProps) {
   if (!promptInstance?.prompt) {
     return (
@@ -50,6 +53,18 @@ export default function TodaysPromptCard({
           <p className="text-muted-foreground">
             {promptInstance.prompt.body}
           </p>
+          
+          {/* Person chips for person-specific prompts */}
+          {promptInstance.person_ids && promptInstance.person_ids.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {promptInstance.person_ids.map(personId => {
+                const person = people.find(p => p.id === personId)
+                return person ? (
+                  <PersonChip key={personId} name={person.full_name} />
+                ) : null
+              })}
+            </div>
+          )}
         </div>
         
         <div className="flex flex-col gap-2">

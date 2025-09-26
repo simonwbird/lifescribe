@@ -51,13 +51,13 @@ export interface PromptCounts {
   completed: number
 }
 
-export function usePrompts(familyId: string) {
+export function usePrompts(familyId: string, personId?: string) {
   const [instances, setInstances] = useState<PromptInstance[]>([])
   const [counts, setCounts] = useState<PromptCounts>({ open: 0, in_progress: 0, completed: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress') => {
+  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -73,6 +73,12 @@ export function usePrompts(familyId: string) {
 
       if (status) {
         query = query.eq('status', status)
+      }
+
+      // Filter by person if specified
+      const targetPersonId = filterPersonId || personId
+      if (targetPersonId) {
+        query = query.contains('person_ids', [targetPersonId])
       }
 
       const { data, error: fetchError } = await query
@@ -187,11 +193,43 @@ export function usePrompts(familyId: string) {
     return instances.filter(i => i.status === 'in_progress').slice(0, 3)
   }
 
+  const getPersonProgress = (targetPersonId: string) => {
+    const personInstances = instances.filter(i => 
+      i.person_ids && i.person_ids.includes(targetPersonId)
+    )
+    return {
+      completed: personInstances.filter(i => i.status === 'completed').length,
+      total: personInstances.length,
+      instances: personInstances
+    }
+  }
+
+  const getNextPromptForPerson = (targetPersonId: string) => {
+    const personInstances = instances.filter(i => 
+      i.person_ids && i.person_ids.includes(targetPersonId)
+    )
+    
+    // Priority: in_progress first → due_at soonest → diversity (different categories)
+    const inProgress = personInstances.find(i => i.status === 'in_progress')
+    if (inProgress) return inProgress
+    
+    const open = personInstances.filter(i => i.status === 'open')
+    if (open.length === 0) return null
+    
+    // Sort by due_at if available, then by category diversity
+    return open.sort((a, b) => {
+      if (a.due_at && b.due_at) {
+        return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
+      }
+      return 0
+    })[0]
+  }
+
   useEffect(() => {
     if (familyId) {
       fetchPrompts()
     }
-  }, [familyId])
+  }, [familyId, personId])
 
   return {
     instances,
@@ -202,6 +240,8 @@ export function usePrompts(familyId: string) {
     startPrompt,
     createResponse,
     getTodaysPrompt,
-    getInProgressInstances
+    getInProgressInstances,
+    getPersonProgress,
+    getNextPromptForPerson
   }
 }
