@@ -152,7 +152,7 @@ export function EnhancedFeedItem({
   };
   if (compact) {
     return <Card className="w-full hover:shadow-sm transition-all duration-200">
-        <CardContent className="p-3 space-y-3">
+        <CardContent className="p-3 space-y-3 cursor-pointer" onClick={onToggleExpand || (() => {})}>
           {/* Compact Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export function EnhancedFeedItem({
             </p>}
 
           {/* Compact Actions */}
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={handleLike} className={cn("flex items-center gap-1 h-7 px-2 hover:bg-red-50 hover:text-red-600", isLiked && "text-red-500 bg-red-50")}>
                 <Heart className={cn("h-3 w-3", isLiked && "fill-current")} />
@@ -208,10 +208,12 @@ export function EnhancedFeedItem({
           </div>
 
           {/* Enhanced Reactions in Compact Mode */}
-          <EnhancedReactionBar targetType="story" targetId={activity.id.replace('story-', '')} familyId={familyId} compact={true} />
+          <div onClick={(e) => e.stopPropagation()}>
+            <EnhancedReactionBar targetType="story" targetId={activity.id.replace('story-', '')} familyId={familyId} compact={true} />
+          </div>
 
           {/* Comment Section in Compact Mode */}
-          {showComments && <div className="space-y-3 pt-2 border-t">
+          {showComments && <div className="space-y-3 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
               <InteractiveCommentField storyId={activity.id.replace('story-', '')} familyId={familyId} onCommentAdded={onCommentAdded} compact={true} />
             </div>}
         </CardContent>
