@@ -1,234 +1,275 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useNavigate } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
-import Header from '@/components/Header'
+import React, { useState, useEffect } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft } from 'lucide-react'
-import type { Question } from '@/lib/types'
-
-const CATEGORY_ICONS: Record<string, string> = {
-  childhood: '🧸',
-  family: '👨‍👩‍👧‍👦',
-  teenage: '🎵',
-  adulthood: '💼',
-  travel: '🌍',
-  love: '💕',
-  food: '🍽️',
-  work: '⚒️',
-  life_lessons: '💡',
-  funny: '😄'
-}
-
-const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  childhood: 'Early memories and growing up',
-  family: 'Family traditions and relationships', 
-  teenage: 'Teenage years and coming of age',
-  adulthood: 'Adult milestones and experiences',
-  travel: 'Adventures and places visited',
-  love: 'Relationships and romance',
-  food: 'Favorite meals and cooking memories',
-  work: 'Career experiences and jobs',
-  life_lessons: 'Wisdom and life advice',
-  funny: 'Humorous stories and moments'
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CheckCircle, Circle, Clock, Play, Eye, ArrowRight } from 'lucide-react'
+import { usePrompts } from '@/hooks/usePrompts'
+import { supabase } from '@/integrations/supabase/client'
+import { useNavigate } from 'react-router-dom'
+import Header from '@/components/Header'
+import AuthGate from '@/components/AuthGate'
 
 export default function PromptsBrowse() {
-  const [questionsByCategory, setQuestionsByCategory] = useState<Record<string, Question[]>>({})
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [familyId, setFamilyId] = useState<string | null>(null)
-  const [answeredQuestionIds, setAnsweredQuestionIds] = useState<Set<string>>(new Set())
+  const [familyId, setFamilyId] = useState('')
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const defaultTab = searchParams.get('status') || 'open'
+  
+  const { instances, counts, loading, error, fetchPrompts, startPrompt } = usePrompts(familyId)
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Get user's family and answered questions
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: member } = await supabase
-            .from('members')
-            .select('family_id')
-            .eq('profile_id', user.id)
-            .single()
-          
-          if (member) {
-            setFamilyId(member.family_id)
-            
-            // Get answered questions for this user/family
-            const { data: answers } = await supabase
-              .from('answers')
-              .select('question_id')
-              .eq('profile_id', user.id)
-              .eq('family_id', member.family_id)
-            
-            setAnsweredQuestionIds(new Set(answers?.map(a => a.question_id) || []))
-          }
-        }
+    async function loadFamilyId() {
+      const { data: user } = await supabase.auth.getUser()
+      if (!user.user) return
 
-        // Get all active questions grouped by category
-        const { data: questions } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('is_active', true)
-          .order('question_text')
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.user.id)
+        .single()
 
-        if (questions) {
-          const grouped = questions.reduce((acc, question) => {
-            if (!acc[question.category]) {
-              acc[question.category] = []
-            }
-            acc[question.category].push(question)
-            return acc
-          }, {} as Record<string, Question[]>)
-          
-          setQuestionsByCategory(grouped)
-        }
-      } catch (error) {
-        console.error('Error loading browse data:', error)
+      if (member) {
+        setFamilyId(member.family_id)
       }
     }
 
-    loadData()
+    loadFamilyId()
   }, [])
 
-  const handleAnswerQuestion = (questionId: string) => {
-    navigate(`/prompts?question_id=${questionId}`)
+  const handleStartPrompt = async (instanceId: string) => {
+    try {
+      await startPrompt(instanceId)
+      // Navigate to story creation with prompt context
+      const instance = instances.find(i => i.id === instanceId)
+      if (instance?.prompt) {
+        const searchParams = new URLSearchParams({
+          type: 'text',
+          promptTitle: instance.prompt.title,
+          prompt_id: instance.id,
+          prompt_text: instance.prompt.body
+        })
+        navigate(`/stories/new?${searchParams.toString()}`)
+      }
+    } catch (error) {
+      console.error('Failed to start prompt:', error)
+    }
   }
 
-  const categories = Object.keys(questionsByCategory).sort()
+  const handleContinuePrompt = (instanceId: string) => {
+    const instance = instances.find(i => i.id === instanceId)
+    if (instance?.prompt) {
+      const searchParams = new URLSearchParams({
+        type: 'text',
+        promptTitle: instance.prompt.title,
+        prompt_id: instance.id,
+        prompt_text: instance.prompt.body
+      })
+      navigate(`/stories/new?${searchParams.toString()}`)
+    }
+  }
+
+  const handleViewPrompt = (instanceId: string) => {
+    // Navigate to view completed response
+    navigate(`/stories?prompt=${instanceId}`)
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'open':
+        return <Circle className="h-4 w-4 text-muted-foreground" />
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-yellow-500" />
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      default:
+        return <Circle className="h-4 w-4" />
+    }
+  }
+
+  const getActionButton = (instance: any) => {
+    switch (instance.status) {
+      case 'open':
+        return (
+          <Button 
+            onClick={() => handleStartPrompt(instance.id)}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Play className="h-4 w-4" />
+            Start
+          </Button>
+        )
+      case 'in_progress':
+        return (
+          <Button 
+            onClick={() => handleContinuePrompt(instance.id)}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <ArrowRight className="h-4 w-4" />
+            Continue
+          </Button>
+        )
+      case 'completed':
+        return (
+          <Button 
+            onClick={() => handleViewPrompt(instance.id)}
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            View
+          </Button>
+        )
+      default:
+        return null
+    }
+  }
+
+  if (loading) {
+    return (
+      <AuthGate>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <main className="container mx-auto px-4 py-6">
+            <div className="space-y-4">
+              <div className="h-8 bg-muted animate-pulse rounded" />
+              <div className="grid gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </AuthGate>
+    )
+  }
+
+  const openInstances = instances.filter(i => i.status === 'open')
+  const inProgressInstances = instances.filter(i => i.status === 'in_progress')
+  const completedInstances = instances.filter(i => i.status === 'completed')
 
   return (
     <AuthGate>
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/prompts')}
-                className="mb-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Prompts
-              </Button>
-              <h1 className="text-3xl font-bold mb-2">Browse by Category</h1>
-              <p className="text-muted-foreground">
-                Explore questions organized by theme and topic
+        <main className="container mx-auto px-4 py-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Browse Prompts</h1>
+              <p className="text-muted-foreground mt-1">
+                Open ({counts.open}) • Completed ({counts.completed})
               </p>
             </div>
+          </div>
 
-            {!selectedCategory ? (
-              /* Category Grid */
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categories.map(category => {
-                  const questions = questionsByCategory[category] || []
-                  const answered = questions.filter(q => answeredQuestionIds.has(q.id)).length
-                  const total = questions.length
-                  
-                  return (
-                    <Card 
-                      key={category}
-                      className="cursor-pointer hover:shadow-lg transition-all border-0 shadow-md"
-                      onClick={() => setSelectedCategory(category)}
-                    >
-                      <CardHeader className="text-center pb-4">
-                        <div className="text-4xl mb-2">
-                          {CATEGORY_ICONS[category] || '📝'}
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="open" className="flex items-center gap-2">
+                <Circle className="h-4 w-4" />
+                Open ({counts.open})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Completed ({counts.completed})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="open" className="space-y-4 mt-6">
+              {openInstances.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">You're all caught up!</h3>
+                    <p className="text-muted-foreground text-center">
+                      Check Completed to see your finished prompts, or explore everything in our full catalog.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {openInstances.map((instance) => (
+                    <Card key={instance.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3 flex-1">
+                            {getStatusIcon(instance.status)}
+                            <div className="flex-1">
+                              <CardTitle className="text-lg">
+                                {instance.prompt?.title || 'Untitled Prompt'}
+                              </CardTitle>
+                              <Badge variant="outline" className="mt-2">
+                                {instance.prompt?.category}
+                              </Badge>
+                            </div>
+                          </div>
+                          {getActionButton(instance)}
                         </div>
-                        <CardTitle className="capitalize text-xl">
-                          {category.replace('_', ' ')}
-                        </CardTitle>
-                        <CardDescription>
-                          {CATEGORY_DESCRIPTIONS[category] || 'Questions about this topic'}
-                        </CardDescription>
                       </CardHeader>
-                      <CardContent className="text-center pt-0">
-                        <div className="mb-4">
-                          <Badge variant="secondary" className="text-sm">
-                            {answered}/{total} answered
-                          </Badge>
-                        </div>
-                        <Button variant="outline" className="w-full">
-                          View {total} Questions
-                        </Button>
+                      <CardContent className="pt-0">
+                        <p className="text-muted-foreground">
+                          {instance.prompt?.body}
+                        </p>
                       </CardContent>
                     </Card>
-                  )
-                })}
-              </div>
-            ) : (
-              /* Question List for Selected Category */
-              <div>
-                <div className="mb-6 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setSelectedCategory(null)}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      All Categories
-                    </Button>
-                    <div className="text-3xl">{CATEGORY_ICONS[selectedCategory] || '📝'}</div>
-                    <div>
-                      <h2 className="text-2xl font-bold capitalize">
-                        {selectedCategory.replace('_', ' ')}
-                      </h2>
-                      <p className="text-muted-foreground text-sm">
-                        {CATEGORY_DESCRIPTIONS[selectedCategory]}
-                      </p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
+              )}
+            </TabsContent>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  {(questionsByCategory[selectedCategory] || []).slice(0, 10).map(question => {
-                    const isAnswered = answeredQuestionIds.has(question.id)
-                    
-                    return (
-                      <Card key={question.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <CardTitle className="text-lg leading-relaxed flex-1 pr-4">
-                              {question.question_text}
-                            </CardTitle>
-                            {isAnswered && (
-                              <Badge variant="default" className="shrink-0">
-                                ✓ Answered
-                              </Badge>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <Button 
-                            onClick={() => handleAnswerQuestion(question.id)}
-                            variant={isAnswered ? "outline" : "default"}
-                            className="w-full"
-                          >
-                            {isAnswered ? 'Answer Again' : 'Answer This'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-
-                {(questionsByCategory[selectedCategory]?.length || 0) > 10 && (
-                  <div className="mt-6 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Showing first 10 questions. More available when you answer these!
+            <TabsContent value="completed" className="space-y-4 mt-6">
+              {completedInstances.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No completed prompts yet</h3>
+                    <p className="text-muted-foreground text-center">
+                      Start working on some prompts and they'll appear here when completed.
                     </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {completedInstances.map((instance) => (
+                    <Card key={instance.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3 flex-1">
+                            {getStatusIcon(instance.status)}
+                            <div className="flex-1">
+                              <CardTitle className="text-lg">
+                                {instance.prompt?.title || 'Untitled Prompt'}
+                              </CardTitle>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline">
+                                  {instance.prompt?.category}
+                                </Badge>
+                                <Badge variant="secondary" className="text-green-700 bg-green-100">
+                                  Completed
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          {getActionButton(instance)}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-muted-foreground">
+                          {instance.prompt?.body}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </main>
       </div>
     </AuthGate>
   )

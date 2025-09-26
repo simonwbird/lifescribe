@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Search, BookHeart, Home, Users, GitBranch, Plus, User } from 'lucide-react'
+import { Search, BookHeart, Home, Users, GitBranch, Plus, User, FileText } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import GlobalSearch from '@/components/search/GlobalSearch'
@@ -126,6 +126,9 @@ export default function Header() {
     if (path === '/family') {
       return location.pathname.startsWith('/family')
     }
+    if (path === '/prompts') {
+      return location.pathname.startsWith('/prompts')
+    }
     return location.pathname === path
   }
 
@@ -169,6 +172,18 @@ export default function Header() {
                 <Link to="/home" className="flex items-center gap-1">
                   <Home className="h-4 w-4" />
                   Home
+                </Link>
+              </Button>
+              
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className={isActivePath('/prompts') ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <Link to="/prompts/browse" className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  Prompts
                 </Link>
               </Button>
               
