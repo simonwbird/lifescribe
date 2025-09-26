@@ -32,3 +32,7 @@ export { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 export { toast, useToast } from '@/hooks/use-toast'
 export { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 export { Skeleton } from '@/components/ui/skeleton'
+
+// Performance & Accessibility
+export * from '@/components/performance'
+export * from '@/components/accessibility'

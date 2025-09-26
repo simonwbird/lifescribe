@@ -419,18 +419,21 @@ export default function Home() {
         <AuthGate>
           <div className="min-h-screen bg-background">
             <Header />
-            <main className="container mx-auto px-4 py-6 space-y-6">
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-20 w-full" />
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  <Skeleton className="h-40 w-full" />
-                  <Skeleton className="h-40 w-full" />
+            <main id="main-content" className="container mx-auto px-4 py-6 space-y-6" tabIndex={-1}>
+              <div role="status" aria-label="Loading home page">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 space-y-6">
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                  </div>
+                  <div className="space-y-6">
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-32 w-full" />
+                  </div>
                 </div>
-                <div className="space-y-6">
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-32 w-full" />
-                </div>
+                <span className="sr-only">Loading your family home page...</span>
               </div>
             </main>
           </div>
@@ -441,7 +444,7 @@ export default function Home() {
     return <AuthGate>
         <div className="min-h-screen bg-background">
           <Header />
-          <main className="container mx-auto px-4 py-6 space-y-6">
+          <main id="main-content" className="container mx-auto px-4 py-6 space-y-6" tabIndex={-1}>
             {/* Progress Header for Simple Mode */}
             {flags['prompts.progressAndFilters'] && (
               <ProgressHeader familyId={spaceId || ''} variant="compact" />

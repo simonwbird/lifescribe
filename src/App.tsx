@@ -6,34 +6,45 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 import { ModeProvider } from "@/contexts/ModeContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { FocusManager } from "@/components/accessibility/FocusManager";
+import { PerformanceMonitor } from "@/components/performance/PerformanceMonitor";
+import { SkipLink } from "@/components/performance/SkipLink";
+import { LazyRoute } from "@/components/performance/LazyRoute";
+// Critical routes - load immediately
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import LoginPageEnhanced from "./pages/auth/LoginPageEnhanced";
+import Landing from "./pages/Landing";
+
+// Lazy load heavy pages for better initial load performance
+const Home = () => <LazyRoute factory={() => import("./pages/Home")} />
+const NewStory = () => <LazyRoute factory={() => import("./pages/NewStory")} />
+const StoryDetail = () => <LazyRoute factory={() => import("./pages/StoryDetail")} />
+const Prompts = () => <LazyRoute factory={() => import("./pages/Prompts")} />
+const FamilyTree = () => <LazyRoute factory={() => import("./pages/FamilyTree")} />
+const PersonProfile = () => <LazyRoute factory={() => import("./pages/PersonProfile")} />
+const Collections = () => <LazyRoute factory={() => import("./pages/Collections")} />
+const Media = () => <LazyRoute factory={() => import("./pages/Media")} />
+const SearchPage = () => <LazyRoute factory={() => import("./pages/Search")} />
+const Profile = () => <LazyRoute factory={() => import("./pages/Profile")} />
+const Settings = () => <LazyRoute factory={() => import("./pages/Settings")} />
+
+// Keep smaller/lighter pages as regular imports
 import TestAdminBootstrap from "./pages/admin/TestAdminBootstrap";
 import SignupPage from "./pages/auth/Signup";
 import VerifyPage from "./pages/auth/Verify";
 import ResetRequestPage from "./pages/auth/ResetRequest";
 import ResetConfirmPage from "./pages/auth/ResetConfirm";
-import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import OnboardingWizard from "./pages/OnboardingWizard";
-import Home from "./pages/Home";
 import AuthGate from "./components/auth/AuthGate";
 import RoleGate from "./components/auth/RoleGate";
-import NewStory from "./pages/NewStory";
-import StoryDetail from "./pages/StoryDetail";
-import Prompts from "./pages/Prompts";
 import PromptsBrowse from "./pages/PromptsBrowse";
 import FamilyMembers from "./pages/FamilyMembers";
 import SharingPermissions from "./pages/SharingPermissions";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
-import FamilyTree from "./pages/FamilyTree";
 import FamilyTreeExplorer from "./pages/FamilyTreeExplorer";
 import FamilyTreeFan from "./pages/FamilyTreeFan";
-import PersonProfile from "./pages/PersonProfile";
-import Collections from "./pages/Collections";
 import { PersonTimeline } from "./pages/PersonTimeline";
 import RecipeWizard from "./components/recipe/RecipeWizard";
 import ObjectsNew from "./pages/ObjectsNew";
@@ -49,9 +60,7 @@ import PetEdit from "./pages/PetEdit";
 import PropertyNew from "./pages/PropertyNew";
 import PropertyEdit from "./pages/PropertyEdit";
 import StoryEdit from "./pages/StoryEdit";
-import SearchPage from "./pages/Search";
 import Capture from "./pages/Capture";
-import Media from "./pages/Media";
 import Events from "./pages/Events";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
@@ -93,7 +102,12 @@ function AppContent() {
   useMobileOptimizations()
   
   return (
-    <Routes>
+    <FocusManager>
+      {/* Skip links for keyboard navigation */}
+      <SkipLink href="#main-content">Skip to main content</SkipLink>
+      <SkipLink href="#navigation">Skip to navigation</SkipLink>
+      
+      <Routes>
       {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
@@ -186,6 +200,7 @@ function AppContent() {
        
        <Route path="*" element={<NotFound />} />
     </Routes>
+    </FocusManager>
   )
 }
 
@@ -195,8 +210,11 @@ const App = () => (
       <ModeProvider>
         <Toaster />
         <Sonner />
+        <PerformanceMonitor />
         <ImpersonationProvider>
-          <AppContent />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
           <BugReportWidget />
         </ImpersonationProvider>
       </ModeProvider>

@@ -162,7 +162,7 @@ export default function Header() {
             </Link>
 
             {/* Navigation */}
-            <nav className="hidden lg:flex items-center gap-1" role="navigation">
+            <nav id="navigation" className="hidden lg:flex items-center gap-1" role="navigation" aria-label="Primary navigation">
               <Button
                 asChild
                 variant="ghost"
@@ -284,7 +284,7 @@ export default function Header() {
       <MobileBottomNav />
 
       {/* Main content landmark */}
-      <div id="main-content" className="sr-only" aria-hidden="true" />
+      <main id="main-content" className="sr-only" aria-hidden="true" tabIndex={-1} />
     </>
   )
 }
