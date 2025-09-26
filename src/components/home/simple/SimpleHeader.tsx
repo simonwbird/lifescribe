@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mic, Shuffle } from 'lucide-react'
+import { Mic } from 'lucide-react'
 import { getElderPrompts, ElderPrompt, truncatePrompt } from '@/lib/prompts/getElderPrompts'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
@@ -213,27 +213,16 @@ export function SimpleHeader({
 
             {/* Primary Action */}
             <div className="space-y-4 sm:space-y-6">
-              {/* Enhanced "Hear It" button - prominent for elder accessibility */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-                <PromptControls
-                  prompt={primaryPrompt}
-                  onShuffle={handleShuffle}
-                  shuffling={shuffling}
-                  enhanced={true}
-                />
-              </div>
-
               {/* Large, prominent "Record" button for elder accessibility */}
               <div className="flex flex-col items-center gap-4">
                 <Button
                   onClick={() => handleRecordWithPrompt(primaryPrompt)}
                   size="lg"
-                  className="w-full max-w-lg h-24 text-xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 border-4 border-primary/20 hover:scale-105"
+                  className="w-full max-w-sm h-20 text-2xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 border-4 border-primary/20"
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <Mic className="w-10 h-10" />
+                    <Mic className="w-8 h-8" />
                     <span>Tap to Record Your Story</span>
-                    <span className="text-sm font-normal opacity-90">(Audio or Video)</span>
                   </div>
                 </Button>
                 
@@ -261,19 +250,14 @@ export function SimpleHeader({
               </div>
             </div>
 
-            {/* Controls Row - Only shuffle since TTS is now prominent above */}
-            <div className="flex justify-center items-center pt-2 sm:pt-4">
-              <Button
-                onClick={handleShuffle}
-                variant="outline"
-                size="sm"
-                disabled={shuffling}
-                className="h-10 px-4 text-sm font-medium"
-                aria-label="Shuffle prompts"
-              >
-                <Shuffle className={`w-4 h-4 mr-2 ${shuffling ? 'animate-spin' : ''}`} />
-                <span>Try different prompts</span>
-              </Button>
+            {/* Controls Row */}
+            <div className="flex justify-between items-center pt-2 sm:pt-4">
+              <div className="flex-1" />
+              <PromptControls
+                prompt={primaryPrompt}
+                onShuffle={handleShuffle}
+                shuffling={shuffling}
+              />
             </div>
           </div>
         </CardContent>
