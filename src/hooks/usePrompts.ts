@@ -23,7 +23,7 @@ export interface PromptInstance {
   family_id: string
   assignee_user_id: string | null
   source: string
-  status: 'open' | 'in_progress' | 'completed'
+  status: 'open' | 'in_progress' | 'completed' | 'skipped' | 'not_applicable' | 'snoozed'
   person_ids: string[]
   due_at: string | null
   snoozed_until: string | null
@@ -130,6 +130,67 @@ export function usePrompts(familyId: string, personId?: string) {
       const { data, error: fetchError } = await query
 
       if (fetchError) throw fetchError
+
+      // If no instances exist for this family, initialize them
+      if (!data || data.length === 0) {
+        console.log('No prompt instances found, initializing...')
+        try {
+          const { initializeFamilyPrompts } = await import('@/services/promptService')
+          await initializeFamilyPrompts(familyId)
+          
+          // Retry the query after initialization
+          const { data: retryData, error: retryError } = await query
+          if (retryError) throw retryError
+          
+          const initializedData = retryData || []
+          console.log(`Initialized ${initializedData.length} prompt instances`)
+          
+          const processedInstances = initializedData.filter(instance => {
+            if (instance.prompt?.scope === 'general') return true
+            if (instance.prompt?.scope === 'person_specific') return isPeopleSpecificEnabled
+            return true
+          }).map(instance => {
+            if (instance.prompt) {
+              const relevantPeople: Record<string, { name: string; relationship?: string }> = {}
+              instance.person_ids?.forEach((id: string) => {
+                if (peopleMap[id]) {
+                  relevantPeople[id] = peopleMap[id]
+                }
+              })
+              
+              return {
+                ...instance,
+                status: instance.status as PromptInstance['status'], // Type assertion
+                prompt: {
+                  ...instance.prompt,
+                  scope: instance.prompt.scope as 'general' | 'person_specific', // Type assertion
+                  title: replacePlaceholders(instance.prompt.title, relevantPeople),
+                  body: replacePlaceholders(instance.prompt.body, relevantPeople)
+                }
+              } as PromptInstance
+            }
+            return {
+              ...instance,
+              status: instance.status as PromptInstance['status'] // Type assertion
+            } as PromptInstance
+          })
+          
+          setInstances(processedInstances)
+          
+          // Update counts
+          const newCounts = {
+            open: processedInstances.filter(i => i.status === 'open').length,
+            in_progress: processedInstances.filter(i => i.status === 'in_progress').length,
+            completed: processedInstances.filter(i => i.status === 'completed').length
+          }
+          setCounts(newCounts)
+          
+          return // Exit early after initialization
+        } catch (initError) {
+          console.error('Failed to initialize prompt instances:', initError)
+          // Continue with empty state
+        }
+      }
 
       // Filter instances based on feature flag and apply placeholder replacement
       const filteredData = (data || []).filter(instance => {
