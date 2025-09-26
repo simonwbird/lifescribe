@@ -4982,6 +4982,19 @@ export type Database = {
         Args: { p_family_id: string; p_person_id: string }
         Returns: number
       }
+      get_family_invites_masked: {
+        Args: { p_family_id: string }
+        Returns: {
+          accepted_at: string
+          created_at: string
+          email: string
+          expires_at: string
+          family_id: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["role_type"]
+        }[]
+      }
       get_family_member_profiles: {
         Args: { p_user_id?: string }
         Returns: {
