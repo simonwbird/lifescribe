@@ -94,8 +94,11 @@ import BugInbox from './pages/admin/BugInbox';
 import BugDetail from './pages/admin/BugDetail';
 import AdminConfig from './pages/admin/AdminConfig';
 import AdminUserManagement from '@/pages/admin/AdminUserManagement';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 import { BugReportWidget } from './components/BugReportWidget';
 import PromptsWow from './pages/PromptsWow';
+import { ABTestProvider } from './components/analytics/ABTestProvider';
+import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
 
 const queryClient = new QueryClient();
 
@@ -196,10 +199,11 @@ function AppContent() {
              <Route path="bugs" element={<BugInbox />} />
              <Route path="bugs/:id" element={<BugDetail />} />
            <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-          <Route path="config" element={<AdminConfig />} />
-          <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-          <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-          <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+           <Route path="config" element={<AdminConfig />} />
+           <Route path="analytics" element={<AdminAnalytics />} />
+           <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+           <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+           <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
         </Route>
        
        <Route path="*" element={<NotFound />} />
@@ -212,13 +216,17 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ModeProvider>
-        <Toaster />
-        <Sonner />
-        <PerformanceMonitor />
-        <ImpersonationProvider>
-          <AppContent />
-          <BugReportWidget />
-        </ImpersonationProvider>
+        <ABTestProvider>
+          <AnalyticsProvider>
+            <Toaster />
+            <Sonner />
+            <PerformanceMonitor />
+            <ImpersonationProvider>
+              <AppContent />
+              <BugReportWidget />
+            </ImpersonationProvider>
+          </AnalyticsProvider>
+        </ABTestProvider>
       </ModeProvider>
     </TooltipProvider>
   </QueryClientProvider>
