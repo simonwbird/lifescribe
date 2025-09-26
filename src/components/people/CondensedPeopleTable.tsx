@@ -7,6 +7,7 @@ import { Phone, Mail, Plus, MoreHorizontal } from 'lucide-react'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import type { Person } from '@/lib/familyTreeTypes'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,25 +15,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-interface Person {
-  id: string
-  full_name: string
-  given_name: string
-  surname: string | null
-  avatar_url?: string
-  birth_date?: string
-  is_living: boolean
-  account_status: 'joined' | 'invited' | 'not_on_app'
-  member_role?: string
+interface PersonWithCounts extends Person {
   stories_count: number
   media_count: number
 }
 
 interface CondensedPeopleTableProps {
-  people: Person[]
+  people: PersonWithCounts[]
   currentUserRole: string | null
-  onInvite?: (person: Person) => void
-  onCall?: (person: Person) => void
+  onInvite?: (person: PersonWithCounts) => void
+  onCall?: (person: PersonWithCounts) => void
 }
 
 export function CondensedPeopleTable({ 
@@ -104,9 +96,9 @@ export function CondensedPeopleTable({
                 <td className="p-3">
                   <Badge 
                     variant="secondary" 
-                    className={cn("text-xs", getStatusColor(person.account_status))}
+                    className={cn("text-xs", getStatusColor(person.account_status || 'not_on_app'))}
                   >
-                    {formatStatus(person.account_status)}
+                    {formatStatus(person.account_status || 'not_on_app')}
                   </Badge>
                 </td>
                 <td className="p-3">
@@ -226,9 +218,9 @@ export function CondensedPeopleTable({
                   <div className="flex items-center space-x-2 mt-1">
                     <Badge 
                       variant="secondary" 
-                      className={cn("text-xs", getStatusColor(person.account_status))}
+                      className={cn("text-xs", getStatusColor(person.account_status || 'not_on_app'))}
                     >
-                      {formatStatus(person.account_status)}
+                      {formatStatus(person.account_status || 'not_on_app')}
                     </Badge>
                     {person.member_role && (
                       <span className="text-xs text-muted-foreground capitalize">

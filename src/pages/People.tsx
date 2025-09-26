@@ -16,10 +16,10 @@ import DirectInviteModal from '@/components/people/DirectInviteModal'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import type { Person as BasePerson } from '@/lib/familyTreeTypes'
+import type { Person } from '@/lib/familyTreeTypes'
 import { CondensedPeopleTable } from '@/components/people/CondensedPeopleTable'
 
-interface Person extends BasePerson {
+interface PersonWithCounts extends Person {
   stories_count: number
   media_count: number
 }
@@ -31,8 +31,8 @@ interface MemberRole {
 export default function People() {
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [people, setPeople] = useState<Person[]>([])
-  const [filteredPeople, setFilteredPeople] = useState<Person[]>([])
+  const [people, setPeople] = useState<PersonWithCounts[]>([])
+  const [filteredPeople, setFilteredPeople] = useState<PersonWithCounts[]>([])
   const [personUserLinks, setPersonUserLinks] = useState<Array<{ person_id: string, user_id: string }>>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -269,7 +269,7 @@ export default function People() {
           stories_count: storyCounts[person.id] || 0,
           media_count: mediaCounts[person.id] || 0
         }
-      }) as Person[]
+      }) as PersonWithCounts[]
 
       setPeople(peopleWithStatus)
       setFilteredPeople(peopleWithStatus)
