@@ -4,6 +4,7 @@ import Header from '@/components/Header'
 import { FeedGrid } from '@/components/feed/FeedGrid'
 import { getCurrentSpaceId } from '@/lib/spaceUtils'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { PrivacyBadge } from '@/components/ui/privacy-badge'
 
 export default function FeedPage() {
   const [familyId, setFamilyId] = useState<string>('')
@@ -56,10 +57,13 @@ export default function FeedPage() {
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Family Feed</h1>
-          <p className="text-muted-foreground">
-            Stay connected with your family's latest stories and memories
-          </p>
+          <h1 className="text-3xl font-bold mb-2 text-heritage-gray-dark">Family Feed</h1>
+          <div className="flex items-center gap-3">
+            <p className="text-heritage-gray">
+              Stay connected with your family's latest stories and memories
+            </p>
+            <PrivacyBadge size="sm" />
+          </div>
         </div>
 
         <FeedGrid 

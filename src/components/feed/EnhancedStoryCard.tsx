@@ -8,6 +8,7 @@ import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { PrivacyBadge } from '@/components/ui/privacy-badge'
 
 interface Story {
   id: string
@@ -124,9 +125,12 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
             </Avatar>
             <div>
               <p className="font-semibold text-sm">{story.profile.full_name}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatForUser(story.created_at, 'relative', getCurrentUserRegion())}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {formatForUser(story.created_at, 'relative', getCurrentUserRegion())}
+                </p>
+                <PrivacyBadge size="sm" variant="minimal" showInfo={false} />
+              </div>
             </div>
           </div>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -136,8 +140,8 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
 
         {/* Content */}
         <div className="mb-4">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2">{story.title}</h3>
-          <p className="text-muted-foreground line-clamp-3">{story.content}</p>
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-heritage-gray-dark">{story.title}</h3>
+          <p className="text-heritage-gray line-clamp-3">{story.content}</p>
         </div>
 
         {/* Media Preview */}
@@ -231,7 +235,7 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
               className="h-8 gap-2 hover:text-green-500 transition-colors duration-200"
             >
               <Share2 className="h-4 w-4" />
-              <span className="text-xs font-medium">Share</span>
+              <span className="text-xs font-medium">Share memory</span>
             </Button>
           </div>
 

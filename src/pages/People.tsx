@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast'
 import type { Person } from '@/lib/familyTreeTypes'
 import { CondensedPeopleTable } from '@/components/people/CondensedPeopleTable'
+import { PrivacyBadge } from '@/components/ui/privacy-badge'
 
 interface PersonWithCounts extends Person {
   stories_count: number
@@ -368,31 +369,34 @@ export default function People() {
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h1 className="text-3xl font-bold mb-2">People</h1>
-                <p className="text-muted-foreground">
-                  {currentUserRole === 'admin' ? 'Manage your family members and invitations' : 
-                   currentUserRole === 'member' ? 'View and contribute to your family directory' :
-                   currentUserRole === 'guest' ? 'Browse your family directory (read-only access)' :
-                   'Loading family directory...'}
-                </p>
+                <h1 className="text-3xl font-bold mb-2 text-heritage-gray-dark">People</h1>
+                <div className="flex items-center gap-3">
+                  <p className="text-heritage-gray">
+                    {currentUserRole === 'admin' ? 'Manage your family members and invitations' : 
+                     currentUserRole === 'member' ? 'View and contribute to your family directory' :
+                     currentUserRole === 'guest' ? 'Browse your family directory (read-only access)' :
+                     'Loading family directory...'}
+                  </p>
+                  <PrivacyBadge size="sm" />
+                </div>
               </div>
               
               {(currentUserRole === 'admin' || currentUserRole === 'member') && (
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setShowDirectInvite(true)}>
                     <Mail className="h-4 w-4 mr-2" />
-                    Invite Someone
+                    Invite Family
                   </Button>
                   <Dialog open={showPersonForm} onOpenChange={setShowPersonForm}>
                     <DialogTrigger asChild>
                       <Button>
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Add Person
+                        Add Family Member
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                       <DialogHeader>
-                        <DialogTitle>Add New Person</DialogTitle>
+                        <DialogTitle>Add Family Member</DialogTitle>
                       </DialogHeader>
                       <div className="overflow-y-auto flex-1 pr-2">
                         <PersonForm

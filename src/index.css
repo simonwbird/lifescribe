@@ -137,31 +137,49 @@ small, .overline {
     --transition-normal: 250ms ease-out;
     --transition-slow: 350ms ease-out;
 
+    /* ==================== HERITAGE PALETTE ==================== */
+    
+    /* Heritage Colors - Deep Forest Green, Soft Cream, Warm Gray, Accent Gold */
+    --heritage-forest: 160 25% 35%;      /* Deep forest green - primary */
+    --heritage-forest-light: 160 30% 45%; /* Lighter forest green - hover */
+    --heritage-forest-dark: 160 20% 25%;  /* Darker forest green - active */
+    
+    --heritage-cream: 45 35% 92%;         /* Soft cream - surfaces */
+    --heritage-cream-dark: 45 30% 88%;    /* Darker cream - hover */
+    
+    --heritage-gray: 210 10% 55%;         /* Warm gray - text */
+    --heritage-gray-light: 210 15% 75%;   /* Light gray - muted */
+    --heritage-gray-dark: 210 15% 35%;    /* Dark gray - headings */
+    
+    --heritage-gold: 42 85% 55%;          /* Accent gold */
+    --heritage-gold-light: 42 90% 65%;    /* Light gold - hover */
+    --heritage-gold-dark: 42 80% 45%;     /* Dark gold - active */
+    
     /* ==================== COLOR ROLES ==================== */
     
-    /* Background System */
-    --bg-canvas: 0 0% 100%;           /* Main page background */
-    --bg-surface: 0 0% 100%;          /* Card/elevated surfaces */
-    --bg-surface-secondary: 210 40% 98%; /* Secondary surfaces */
-    --bg-overlay: 0 0% 0% / 0.5;      /* Modal overlays */
+    /* Background System - Heritage Palette */
+    --bg-canvas: var(--heritage-cream);           /* Main page background */
+    --bg-surface: 0 0% 100%;                      /* Card/elevated surfaces */
+    --bg-surface-secondary: var(--heritage-cream-dark); /* Secondary surfaces */
+    --bg-overlay: 0 0% 0% / 0.5;                  /* Modal overlays */
 
-    /* Primary Brand Colors */
-    --primary: 172 77% 36%;           /* Sea-glass primary */
+    /* Primary Brand Colors - Forest Green */
+    --primary: var(--heritage-forest);           /* Heritage forest green */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 173 78% 31%;
-    --primary-active: 174 79% 26%;
+    --primary-hover: var(--heritage-forest-light);
+    --primary-active: var(--heritage-forest-dark);
 
-    /* Secondary Colors */
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --secondary-hover: 210 40% 92%;
-    --secondary-active: 210 40% 88%;
+    /* Secondary Colors - Cream Tones */
+    --secondary: var(--heritage-cream);
+    --secondary-foreground: var(--heritage-gray-dark);
+    --secondary-hover: var(--heritage-cream-dark);
+    --secondary-active: 45 25% 84%;
 
-    /* Accent Colors (Coral) */
-    --accent: 12 100% 68%;            /* Coral accent */
+    /* Accent Colors - Heritage Gold */
+    --accent: var(--heritage-gold);              /* Heritage gold accent */
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 12 95% 63%;
-    --accent-active: 12 90% 58%;
+    --accent-hover: var(--heritage-gold-light);
+    --accent-active: var(--heritage-gold-dark);
 
     /* Semantic State Colors */
     --success: 122 39% 49%;
@@ -171,17 +189,17 @@ small, .overline {
     --error: 4 90% 58%;
     --error-foreground: 0 0% 100%;
 
-    /* Neutral Text Colors */
-    --neutral-50: 210 20% 98%;
-    --neutral-100: 210 20% 95%;
-    --neutral-200: 210 20% 90%;
-    --neutral-300: 210 20% 85%;
-    --neutral-400: 210 16% 65%;
-    --neutral-500: 210 14% 45%;
-    --neutral-600: 210 14% 35%;
-    --neutral-700: 210 14% 25%;
-    --neutral-800: 210 14% 15%;
-    --neutral-900: 210 14% 8%;
+    /* Neutral Text Colors - Heritage Grays */
+    --neutral-50: var(--heritage-cream);
+    --neutral-100: 45 30% 90%;
+    --neutral-200: 45 25% 85%;
+    --neutral-300: var(--heritage-gray-light);
+    --neutral-400: var(--heritage-gray);
+    --neutral-500: 210 12% 45%;
+    --neutral-600: 210 15% 35%;
+    --neutral-700: var(--heritage-gray-dark);
+    --neutral-800: 210 20% 25%;
+    --neutral-900: 210 25% 15%;
 
     /* ==================== SEMANTIC MAPPINGS ==================== */
     
@@ -192,27 +210,27 @@ small, .overline {
     --popover: var(--bg-surface);
     --popover-foreground: var(--neutral-900);
     --muted: var(--bg-surface-secondary);
-    --muted-foreground: var(--neutral-600);
+    --muted-foreground: var(--heritage-gray);
     --destructive: var(--error);
     --destructive-foreground: var(--error-foreground);
-    --border: var(--neutral-200);
-    --input: var(--neutral-200);
+    --border: var(--heritage-cream-dark);
+    --input: var(--heritage-cream-dark);
     --ring: var(--primary);
     --radius: var(--radius-md);
 
-    /* Sea-Glass + Coral theme - fresh and celebratory */
-    --brand-700: 172 77% 36%;          /* #16A39A - Primary (AA compliant) */
-    --brand-600: 173 78% 31%;          /* #108E86 - Hover state */
-    --accent-500: 12 100% 68%;         /* #FF7A64 - Coral accent (large text only) */
+    /* Heritage brand colors */
+    --brand-700: var(--heritage-forest);         /* Primary forest green */
+    --brand-600: var(--heritage-forest-light);   /* Hover state */
+    --accent-500: var(--heritage-gold);          /* Accent gold */
     
-    /* Semantic text colors */
-    --ink: 210 14% 14%;                /* #1C2228 - Body text */
-    --ink-muted: 210 10% 44%;          /* #66707B - Secondary text */
+    /* Semantic text colors - Heritage palette */
+    --ink: var(--heritage-gray-dark);            /* Body text */
+    --ink-muted: var(--heritage-gray);           /* Secondary text */
     
-    /* Layout neutrals - clean white palette */
-    --neutral-canvas: 0 0% 100%;       /* #FFFFFF - Pure white page background */
-    --neutral-section: 210 40% 98%;    /* #FAFBFC - Very light section background */
-    --neutral-card: 0 0% 100%;         /* #FFFFFF - Cards stay white */
+    /* Layout neutrals - Heritage cream palette */
+    --neutral-canvas: var(--heritage-cream);     /* Cream page background */
+    --neutral-section: var(--heritage-cream-dark); /* Darker cream sections */
+    --neutral-card: 0 0% 100%;                   /* Cards stay white */
     
     /* State colors */
     --success: 122 39% 49%;

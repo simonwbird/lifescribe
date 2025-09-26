@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { EnhancedStoryCard } from './EnhancedStoryCard'
 import { FilterChips } from './FilterChips'
+import { PrivacyBadge } from '@/components/ui/privacy-badge'
+import { TrustMicrocopy } from '@/components/microcopy/TrustMicrocopy'
 
 interface Story {
   id: string
@@ -239,9 +241,13 @@ export function FeedGrid({ familyId, currentUserId }: FeedGridProps) {
       {stories.length === 0 && !loading && (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="text-muted-foreground">
-              <h3 className="font-semibold mb-2">No stories yet</h3>
-              <p>Start sharing memories to see them here</p>
+            <div className="text-heritage-gray">
+              <h3 className="font-semibold mb-2 text-heritage-gray-dark">{TrustMicrocopy.empty_states.stories.title}</h3>
+              <p className="mb-4">{TrustMicrocopy.empty_states.stories.description}</p>
+              <div className="flex items-center justify-center gap-2">
+                <Button>{TrustMicrocopy.empty_states.stories.cta}</Button>
+                <PrivacyBadge size="sm" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -256,14 +262,14 @@ export function FeedGrid({ familyId, currentUserId }: FeedGridProps) {
             size="lg"
             className="min-w-32"
           >
-            {loadingMore ? 'Loading...' : 'Load 10 More'}
+            {loadingMore ? 'Loading...' : 'Load 10 More Memories'}
           </Button>
         </div>
       )}
 
       {!hasMore && stories.length > 0 && (
         <div className="text-center py-4">
-          <p className="text-muted-foreground text-sm">You've reached the end</p>
+          <p className="text-heritage-gray text-sm">You've seen all your family's memories</p>
         </div>
       )}
     </div>
