@@ -9,7 +9,6 @@ import { usePrompts } from '@/hooks/usePrompts'
 import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
-import AuthGate from '@/components/AuthGate'
 import CategorySection from '@/components/prompts/CategorySection'
 import { ProgressHeader } from '@/components/prompts/ProgressHeader'
 import { FilterBar, type FilterOptions, type ActiveFilters } from '@/components/prompts/FilterBar'
@@ -178,21 +177,19 @@ export default function PromptsBrowse() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto px-4 py-6">
-            <div className="space-y-4">
-              <div className="h-8 bg-muted animate-pulse rounded" />
-              <div className="grid gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
-                ))}
-              </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-6">
+          <div className="space-y-4">
+            <div className="h-8 bg-muted animate-pulse rounded" />
+            <div className="grid gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+              ))}
             </div>
-          </main>
-        </div>
-      </AuthGate>
+          </div>
+        </main>
+      </div>
     )
   }
 
@@ -265,8 +262,7 @@ export default function PromptsBrowse() {
   const favoritePrompts = flags['prompts.favorites'] ? getFavoritePrompts() : []
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-6 space-y-6">
           {/* Progress Header */}
@@ -471,7 +467,6 @@ export default function PromptsBrowse() {
             )}
           </Tabs>
         </main>
-      </div>
-    </AuthGate>
-  )
-}
+     </div>
+   )
+ }

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MediaService } from '@/lib/mediaService';
-import AuthGate from '@/components/AuthGate';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -231,39 +230,34 @@ export default function PropertyDetail() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto px-4 py-8">
-            <div className="flex justify-center p-8">Loading property...</div>
-          </main>
-        </div>
-      </AuthGate>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex justify-center p-8">Loading property...</div>
+        </main>
+      </div>
     );
   }
 
   if (!property) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto px-4 py-8">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">Property not found</h3>
-              <Button onClick={() => navigate('/archive')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Archive
-              </Button>
-            </div>
-          </main>
-        </div>
-      </AuthGate>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium mb-2">Property not found</h3>
+            <Button onClick={() => navigate('/archive')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Archive
+            </Button>
+          </div>
+        </main>
+      </div>
     );
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="mb-6">
@@ -554,6 +548,5 @@ export default function PropertyDetail() {
           </div>
         </main>
       </div>
-    </AuthGate>
-  );
-}
+     );
+   }

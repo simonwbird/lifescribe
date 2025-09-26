@@ -433,23 +433,21 @@ export default function Prompts() {
 
   if (!currentQuestion) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="max-w-2xl mx-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle>No Questions Available</CardTitle>
-                  <CardDescription>
-                    Questions will appear here once they're added to the system.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>No Questions Available</CardTitle>
+                <CardDescription>
+                  Questions will appear here once they're added to the system.
+                </CardDescription>
+              </CardHeader>
+            </Card>
           </div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
