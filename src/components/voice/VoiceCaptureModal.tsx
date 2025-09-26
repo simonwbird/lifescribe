@@ -13,6 +13,8 @@ import { useLabs } from '@/hooks/useLabs'
 import { autoTitle, suggestPeople, inferDate } from '@/lib/voiceHelpers'
 import { transcribeAudio } from '@/lib/transcriptionService'
 import { uploadVoiceRecording, createStoryFromVoice } from '@/lib/voiceService'
+import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager'
+import { DraftProgressBanner } from '@/components/drafts/DraftProgressBanner'
 
 type CaptureState = 'idle' | 'recording' | 'transcribing' | 'review' | 'publishing' | 'drafting'
 
@@ -78,6 +80,7 @@ export default function VoiceCaptureModal({
 
   const { track } = useAnalytics()
   const { labsEnabled } = useLabs()
+  const draftManager = useUnifiedDraftManager('voice_capture')
 
   // Initialize review data with preselected people and prompt
   useEffect(() => {
@@ -214,7 +217,22 @@ export default function VoiceCaptureModal({
             tags: mergedTags
           })
           
-          setState('review')
+        setState('review')
+
+        // Start autosave with the captured audio and transcript
+        draftManager.startAutosave(() => ({
+          audio: blob,
+          transcript: result.text,
+          reviewData: {
+            title: mergedTitle || suggestedTitle || 'Untitled story',
+            content: result.text,
+            people: mergedPeople,
+            date: mergedDate,
+            datePrecision: mergedPrecision,
+            privacy: 'family',
+            tags: mergedTags
+          }
+        }), 'audio')
     } catch (error) {
       track('transcribe_error', { error: (error as Error).message })
       console.error('Transcription failed:', error)
@@ -244,6 +262,10 @@ export default function VoiceCaptureModal({
     if (state === 'recording') {
       stopRecording()
     }
+    
+    // Stop autosave when closing
+    draftManager.stopAutosave()
+    
     setState('idle')
     setAudioUrl(null)
     setAudioBlob(null)
@@ -267,6 +289,10 @@ export default function VoiceCaptureModal({
     setState('publishing')
     try {
       const storyId = await createStoryFromVoice(audioBlob, reviewData, transcript)
+      
+      // Clear draft on successful publish
+      draftManager.stopAutosave()
+      
       onStoryCreated?.(storyId)
       handleClose()
     } catch (error) {
@@ -312,7 +338,13 @@ export default function VoiceCaptureModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <>
+      {/* Draft Progress Banner */}
+      <DraftProgressBanner 
+        autosaveStatus={draftManager.autosaveStatus}
+      />
+      
+      <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -583,5 +615,6 @@ export default function VoiceCaptureModal({
         )}
       </DialogContent>
     </Dialog>
+    </>
   )
 }

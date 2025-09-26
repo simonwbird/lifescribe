@@ -8,6 +8,9 @@ import { useNavigate } from 'react-router-dom'
 import { PromptControls } from './PromptControls'
 import { InputTypeModal } from './InputTypeModal'
 import { BlankCanvasModal } from './BlankCanvasModal'
+import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager'
+import { DraftProgressBanner } from '@/components/drafts/DraftProgressBanner'
+import { ResumeSessionModal } from '@/components/drafts/ResumeSessionModal'
 
 interface SimpleHeaderProps {
   profileId: string
@@ -26,11 +29,20 @@ export function SimpleHeader({
   const [showInputTypeModal, setShowInputTypeModal] = useState(false)
   const [showBlankCanvasModal, setShowBlankCanvasModal] = useState(false)
   const [selectedPrompt, setSelectedPrompt] = useState<ElderPrompt | null>(null)
+  const [showResumeModal, setShowResumeModal] = useState(false)
   const { track } = useAnalytics()
   const navigate = useNavigate()
+  
+  const draftManager = useUnifiedDraftManager('simple_mode')
 
   useEffect(() => {
     loadPrompts()
+    
+    // Check for existing drafts on load
+    const existingDrafts = draftManager.loadAllDrafts()
+    if (existingDrafts.length > 0) {
+      setShowResumeModal(true)
+    }
   }, [profileId, spaceId])
 
   const loadPrompts = async () => {
@@ -151,6 +163,45 @@ export function SimpleHeader({
     setSelectedPrompt(null)
   }
 
+  const handleResumeDraft = (draft: any) => {
+    track('draft_resumed', { 
+      draftId: draft.id, 
+      type: draft.type,
+      source: 'simple_mode' 
+    })
+    
+    setShowResumeModal(false)
+    
+    // Navigate to appropriate editor based on draft type
+    const searchParams = new URLSearchParams({
+      type: draft.type,
+      draft_id: draft.id,
+      resume: 'true'
+    })
+    
+    navigate(`/stories/new?${searchParams.toString()}`)
+  }
+
+  const handleDiscardDraft = (draftId: string) => {
+    track('draft_deleted', { 
+      draftId, 
+      source: 'simple_mode' 
+    })
+    
+    draftManager.clearDraft(draftId)
+    
+    // Close modal if no more drafts
+    const remainingDrafts = draftManager.loadAllDrafts()
+    if (remainingDrafts.length === 0) {
+      setShowResumeModal(false)
+    }
+  }
+
+  const handleStartFresh = () => {
+    track('simple_mode.record_without_prompt')
+    setShowResumeModal(false)
+  }
+
   const handleModalCancel = () => {
     setShowInputTypeModal(false)
     setShowBlankCanvasModal(false)
@@ -190,6 +241,21 @@ export function SimpleHeader({
 
   return (
     <div className="w-full mb-8 space-y-4">
+      {/* Draft Progress Banner */}
+      <DraftProgressBanner 
+        autosaveStatus={draftManager.autosaveStatus}
+      />
+      
+      {/* Resume Session Modal */}
+      <ResumeSessionModal
+        isOpen={showResumeModal}
+        onClose={() => setShowResumeModal(false)}
+        drafts={draftManager.availableDrafts}
+        onResume={handleResumeDraft}
+        onDiscard={handleDiscardDraft}
+        onStartFresh={handleStartFresh}
+      />
+
       {/* Main Hero Card */}
       <Card className="w-full border-2 hover:border-primary/20 transition-colors">
         <CardContent className="p-4 sm:p-6 lg:p-8 xl:p-10">
@@ -226,7 +292,14 @@ export function SimpleHeader({
               {/* Large, prominent "Record" button for elder accessibility */}
               <div className="flex flex-col items-center gap-4">
                 <Button
-                  onClick={() => handleRecordWithPrompt(primaryPrompt)}
+                  onClick={() => {
+                    // Start autosave when user begins recording
+                    draftManager.startAutosave(() => ({
+                      prompt: primaryPrompt.text,
+                      mode: 'audio'
+                    }), 'audio')
+                    handleRecordWithPrompt(primaryPrompt)
+                  }}
                   size="lg"
                   className="w-full max-w-sm h-24 text-xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 border-4 border-primary/30 focus:ring-4 focus:ring-primary/50 focus:border-primary focus:outline-none"
                 >
@@ -238,7 +311,14 @@ export function SimpleHeader({
                 
                 {/* Alternative: Start with prompt */}
                 <Button
-                  onClick={() => handleRecordWithPrompt(primaryPrompt)}
+                  onClick={() => {
+                    // Start autosave for alternative prompt recording
+                    draftManager.startAutosave(() => ({
+                      prompt: primaryPrompt.text,
+                      mode: 'audio'
+                    }), 'audio')
+                    handleRecordWithPrompt(primaryPrompt)
+                  }}
                   variant="outline"
                   size="lg"
                   className="w-full max-w-sm h-14 text-lg font-medium px-8 border-2 hover:bg-accent/50"
@@ -295,7 +375,13 @@ export function SimpleHeader({
                     />
                   </div>
                   <Button
-                    onClick={() => handleRecordWithPrompt(prompt)}
+                    onClick={() => {
+                      // Start autosave for blank canvas
+                      draftManager.startAutosave(() => ({
+                        mode: 'blank'
+                      }), 'text')
+                      handleRecordWithoutPrompt()
+                    }}
                     variant="outline"
                     size="sm"
                     className="w-full h-10 text-sm font-medium border-2 hover:bg-accent/50 gap-2"
