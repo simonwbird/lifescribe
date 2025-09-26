@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Play, BookOpen } from 'lucide-react'
+import { Play, BookOpen, Volume2, Shuffle, Sparkles } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
 import PersonChip from './PersonChip'
 import { ResponseModal } from './ResponseModal'
@@ -55,57 +55,137 @@ export default function TodaysPromptCard({
   }
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-background to-background/80">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Today's Prompt</CardTitle>
-          <Badge variant="outline">
-            {promptInstance.prompt.category}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <h3 className="font-medium text-foreground mb-2">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="space-y-4">
+        <h2 className="text-2xl text-muted-foreground">Today's prompt</h2>
+        
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-2xl font-medium text-foreground flex-1">
             {promptInstance.prompt.title}
-          </h3>
-          <p className="text-muted-foreground">
-            {promptInstance.prompt.body}
-          </p>
-          
-          {/* Person chips for person-specific prompts */}
-          {promptInstance.person_ids && promptInstance.person_ids.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {promptInstance.person_ids.map(personId => {
-                const person = people.find(p => p.id === personId)
-                return person ? (
-                  <PersonChip key={personId} name={person.full_name} />
-                ) : null
-              })}
-            </div>
-          )}
+          </h1>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Volume2 className="h-4 w-4" />
+              Hear it
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Shuffle className="h-4 w-4" />
+              Shuffle
+            </Button>
+          </div>
         </div>
         
-        <div className="flex flex-col gap-2">
-          <Button 
-            onClick={() => setShowResponseModal(true)}
-            className="w-full flex items-center gap-2"
-            size="lg"
-          >
-            <Play className="h-4 w-4" />
-            Respond to this prompt
-          </Button>
-          
-          <Button 
-            onClick={onBrowseAll}
-            variant="ghost"
-            size="sm"
-            className="w-full"
-          >
-            Browse all prompts
-          </Button>
+        <p className="text-muted-foreground">
+          No need to be perfect—just talk.
+        </p>
+      </div>
+
+      {/* Prompt Card */}
+      <Card className="bg-muted/30">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0">
+              <Sparkles className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-foreground">
+                  {promptInstance.prompt.category || 'Personal Prompt'}
+                </p>
+                {promptInstance.prompt.category && (
+                  <Badge variant="outline" className="text-xs">
+                    {promptInstance.prompt.category}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-foreground">
+                {promptInstance.prompt.body}
+              </p>
+              
+              {/* Person chips for person-specific prompts */}
+              {promptInstance.person_ids && promptInstance.person_ids.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {promptInstance.person_ids.map(personId => {
+                    const person = people.find(p => p.id === personId)
+                    return person ? (
+                      <PersonChip key={personId} name={person.full_name} />
+                    ) : null
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main CTA */}
+      <Button 
+        onClick={() => setShowResponseModal(true)}
+        className="w-full h-14 text-lg font-medium"
+        size="lg"
+      >
+        <Play className="h-5 w-5 mr-2" />
+        Respond to this prompt
+      </Button>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <div className="p-2">
+              <BookOpen className="h-6 w-6 text-muted-foreground" />
+            </div>
+          </div>
+          <h3 className="font-medium">Build Your Life Page</h3>
+          <p className="text-sm text-muted-foreground">
+            Collect stories, photos, and memories in one place
+          </p>
         </div>
-      </CardContent>
+        
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <div className="p-2">
+              <Volume2 className="h-6 w-6 text-muted-foreground" />
+            </div>
+          </div>
+          <h3 className="font-medium">Try Quick Voice</h3>
+          <p className="text-sm text-muted-foreground">
+            Just start talking
+          </p>
+        </div>
+        
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <div className="p-2">
+              <div className="text-amber-500">✏️</div>
+            </div>
+          </div>
+          <h3 className="font-medium">Create Your Own Story</h3>
+          <p className="text-sm text-muted-foreground">
+            Share anything you like
+          </p>
+        </div>
+      </div>
+
+      {/* Browse All Prompts */}
+      <div className="text-center">
+        <Button 
+          onClick={onBrowseAll}
+          variant="outline"
+          className="gap-2"
+        >
+          <BookOpen className="h-4 w-4" />
+          Browse all prompts
+        </Button>
+      </div>
+
+      {/* Encouragement */}
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">
+          💬 Just hit record and be yourself.
+        </p>
+      </div>
 
       {/* Response Modal */}
       {promptInstance?.prompt && (
@@ -119,6 +199,6 @@ export default function TodaysPromptCard({
           onSelectResponse={handleResponseSelect}
         />
       )}
-    </Card>
+    </div>
   )
 }
