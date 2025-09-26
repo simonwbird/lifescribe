@@ -142,10 +142,8 @@ export function usePromptSequencing() {
 
   const loadUserPromptData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Mock data since tables don't exist yet
+      // For now, mock the data since tables don't exist yet
+      // TODO: Create user_prompt_history and user_streaks tables
       const history: UserPromptHistory[] = []
       const streak = 0
       const totalCompleted = 0
@@ -293,21 +291,8 @@ export function usePromptSequencing() {
       currentPrompt: newPrompt
     }))
 
-    // Record the shuffle in history (but not as completed)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user && newPrompt) {
-        await supabase.from('user_prompt_history').insert({
-          user_id: user.id,
-          prompt_id: newPrompt.id,
-          used_at: new Date().toISOString(),
-          completed: false,
-          action: 'shuffled'
-        })
-      }
-    } catch (error) {
-      console.error('Error recording shuffle:', error)
-    }
+    // TODO: Record the shuffle in database when tables are created
+    console.log('Shuffled to new prompt:', newPrompt?.id)
   }, [state, track])
 
   const markPromptCompleted = useCallback(async (
@@ -315,58 +300,30 @@ export function usePromptSequencing() {
     responseLength: number, 
     topics: string[] = []
   ) => {
-    track('prompt.completed', { 
+    track('create_item_selected', { 
       promptId, 
       responseLength, 
       topics: topics.join(','),
       personalizationLevel: state.personalizationLevel 
     })
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    // TODO: Update database when tables are created
+    console.log('Marked prompt completed:', promptId)
 
-      // Update prompt history
-      await supabase.from('user_prompt_history').upsert({
-        user_id: user.id,
-        prompt_id: promptId,
-        used_at: new Date().toISOString(),
-        completed: true,
-        response_length: responseLength,
-        response_topics: topics
-      })
+    // Mock streak increment for now
+    const newStreakCount = state.streak + 1
+    const newTotalCompleted = state.personalizationLevel + 1
 
-      // Update streak
-      const { data: currentStreak } = await supabase
-        .from('user_streaks')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
+    // Update local state
+    setState(prev => ({
+      ...prev,
+      streak: newStreakCount,
+      progress: Math.min((newTotalCompleted % 7) * (100 / 7), 100),
+      personalizationLevel: Math.min(Math.floor(newTotalCompleted / 3), 5)
+    }))
 
-      const newStreakCount = (currentStreak?.current_streak || 0) + 1
-      const newTotalCompleted = (currentStreak?.total_completed || 0) + 1
-
-      await supabase.from('user_streaks').upsert({
-        user_id: user.id,
-        current_streak: newStreakCount,
-        total_completed: newTotalCompleted,
-        last_completed_at: new Date().toISOString()
-      })
-
-      // Update local state
-      setState(prev => ({
-        ...prev,
-        streak: newStreakCount,
-        progress: Math.min((newTotalCompleted % 7) * (100 / 7), 100),
-        personalizationLevel: Math.min(Math.floor(newTotalCompleted / 3), 5)
-      }))
-
-      // Reload prompt data to get fresh recommendations
-      setTimeout(loadUserPromptData, 1000)
-
-    } catch (error) {
-      console.error('Error marking prompt completed:', error)
-    }
+    // Reload prompt data to get fresh recommendations
+    setTimeout(loadUserPromptData, 1000)
   }, [state, track])
 
   return {

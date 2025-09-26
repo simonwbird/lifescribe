@@ -35,7 +35,7 @@ export default function PromptsWow() {
 
   useEffect(() => {
     // Track page load for analytics
-    track('prompt_wow_page_loaded', {
+    track('home_activity_open', {
       hasCurrentPrompt: !!currentPrompt,
       streak,
       personalizationLevel,
@@ -46,7 +46,7 @@ export default function PromptsWow() {
   const handleModeSelect = (mode: 'write' | 'voice' | 'photo' | 'quick') => {
     if (!currentPrompt) return
 
-    track('prompt_mode_selected', {
+    track('create_item_selected', {
       mode,
       promptId: currentPrompt.id,
       theme: currentPrompt.theme,
@@ -69,7 +69,7 @@ export default function PromptsWow() {
   }
 
   const handleStarterPromptSelect = (promptId: string) => {
-    track('starter_prompt_selected', { promptId })
+    track('create_item_selected', { promptId })
     
     // Navigate to story creation with starter prompt
     const searchParams = new URLSearchParams({
@@ -83,7 +83,7 @@ export default function PromptsWow() {
 
   const handleGetStarted = () => {
     setShowStarterSet(false)
-    track('starter_set_dismissed')
+    track('create_item_selected')
   }
 
   const handleCelebrationComplete = () => {

@@ -87,7 +87,7 @@ export function StarterSet({ onPromptSelect, onGetStarted, className }: StarterS
 
   const handlePromptSelect = (prompt: StarterPrompt) => {
     track('create_item_selected', { 
-      promptId,
+      promptId: prompt.id,
       theme: prompt.theme,
       difficulty: prompt.difficulty
     })
