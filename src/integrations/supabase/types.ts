@@ -3314,6 +3314,169 @@ export type Database = {
           },
         ]
       }
+      prompt_instances: {
+        Row: {
+          assignee_user_id: string | null
+          created_at: string | null
+          due_at: string | null
+          expires_at: string | null
+          family_id: string
+          id: string
+          person_ids: string[] | null
+          prompt_id: string | null
+          snoozed_until: string | null
+          source: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignee_user_id?: string | null
+          created_at?: string | null
+          due_at?: string | null
+          expires_at?: string | null
+          family_id: string
+          id?: string
+          person_ids?: string[] | null
+          prompt_id?: string | null
+          snoozed_until?: string | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignee_user_id?: string | null
+          created_at?: string | null
+          due_at?: string | null
+          expires_at?: string | null
+          family_id?: string
+          id?: string
+          person_ids?: string[] | null
+          prompt_id?: string | null
+          snoozed_until?: string | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_instances_assignee_user_id_fkey"
+            columns: ["assignee_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_instances_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_instances_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompt_responses: {
+        Row: {
+          author_user_id: string | null
+          caption: string | null
+          created_at: string | null
+          id: string
+          media_duration_seconds: number | null
+          media_url: string | null
+          prompt_instance_id: string
+          text_body: string | null
+          transcript: string | null
+          type: string
+        }
+        Insert: {
+          author_user_id?: string | null
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          media_duration_seconds?: number | null
+          media_url?: string | null
+          prompt_instance_id: string
+          text_body?: string | null
+          transcript?: string | null
+          type: string
+        }
+        Update: {
+          author_user_id?: string | null
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          media_duration_seconds?: number | null
+          media_url?: string | null
+          prompt_instance_id?: string
+          text_body?: string | null
+          transcript?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_responses_author_user_id_fkey"
+            columns: ["author_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_responses_prompt_instance_id_fkey"
+            columns: ["prompt_instance_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompts: {
+        Row: {
+          body: string
+          category: string
+          created_at: string | null
+          enabled: boolean
+          id: string
+          person_role: string | null
+          scope: string
+          slug: string
+          tags: string[] | null
+          title: string
+          version: number
+        }
+        Insert: {
+          body: string
+          category: string
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          person_role?: string | null
+          scope: string
+          slug: string
+          tags?: string[] | null
+          title: string
+          version?: number
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          person_role?: string | null
+          scope?: string
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          version?: number
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           acquired_year: number | null
@@ -4731,6 +4894,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      create_default_prompt_instances: {
+        Args: { p_family_id: string }
+        Returns: number
       }
       evaluate_feature_flag: {
         Args: {
