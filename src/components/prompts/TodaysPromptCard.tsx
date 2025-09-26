@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Play, BookOpen, Volume2, Shuffle, Sparkles } from 'lucide-react'
+import { Play, BookOpen, Volume2, Shuffle, Sparkles, Mic, MessageCircle, PenTool } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
 import PersonChip from './PersonChip'
 import { ResponseModal } from './ResponseModal'
@@ -89,16 +88,9 @@ export default function TodaysPromptCard({
               <Sparkles className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <p className="font-medium text-foreground">
-                  {promptInstance.prompt.category || 'Personal Prompt'}
-                </p>
-                {promptInstance.prompt.category && (
-                  <Badge variant="outline" className="text-xs">
-                    {promptInstance.prompt.category}
-                  </Badge>
-                )}
-              </div>
+              <p className="font-medium text-foreground">
+                Personal Prompt
+              </p>
               <p className="text-foreground">
                 {promptInstance.prompt.body}
               </p>
@@ -122,19 +114,22 @@ export default function TodaysPromptCard({
       {/* Main CTA */}
       <Button 
         onClick={() => setShowResponseModal(true)}
-        className="w-full h-14 text-lg font-medium"
+        className="w-full h-14 text-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90"
         size="lg"
       >
-        <Play className="h-5 w-5 mr-2" />
+        <Mic className="h-5 w-5 mr-2" />
         Respond to this prompt
       </Button>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center">
             <div className="p-2">
-              <BookOpen className="h-6 w-6 text-muted-foreground" />
+              <div className="flex items-center">
+                <BookOpen className="h-6 w-6 text-muted-foreground mr-1" />
+                <span className="text-muted-foreground">🏷️</span>
+              </div>
             </div>
           </div>
           <h3 className="font-medium">Build Your Life Page</h3>
@@ -146,7 +141,10 @@ export default function TodaysPromptCard({
         <div className="text-center space-y-2">
           <div className="flex justify-center">
             <div className="p-2">
-              <Volume2 className="h-6 w-6 text-muted-foreground" />
+              <div className="flex items-center">
+                <Mic className="h-6 w-6 text-muted-foreground mr-1" />
+                <PenTool className="h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
           </div>
           <h3 className="font-medium">Try Quick Voice</h3>
@@ -158,7 +156,10 @@ export default function TodaysPromptCard({
         <div className="text-center space-y-2">
           <div className="flex justify-center">
             <div className="p-2">
-              <div className="text-amber-500">✏️</div>
+              <div className="flex items-center">
+                <span className="text-amber-500 text-xl mr-1">⚡</span>
+                <span className="text-muted-foreground">🏷️</span>
+              </div>
             </div>
           </div>
           <h3 className="font-medium">Create Your Own Story</h3>
@@ -181,9 +182,10 @@ export default function TodaysPromptCard({
       </div>
 
       {/* Encouragement */}
-      <div className="text-center">
+      <div className="text-center flex items-center justify-center gap-2">
+        <MessageCircle className="h-4 w-4 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          💬 Just hit record and be yourself.
+          Just hit record and be yourself.
         </p>
       </div>
 
