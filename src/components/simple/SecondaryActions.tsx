@@ -80,7 +80,7 @@ export default function SecondaryActions({
           key={action.id}
           className={cn(
             "cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
-            "border-muted/40 hover:border-primary/30 bg-card/60 hover:bg-card/80",
+            "border-border hover:border-brand-primary/30 bg-card hover:bg-neutral-canvas",
             "group"
           )}
           onClick={() => handleActionClick(action.id, action.action)}
@@ -94,7 +94,7 @@ export default function SecondaryActions({
                 </span>
                 <action.icon className={cn(
                   "h-5 w-5 text-primary transition-all duration-300",
-                  "group-hover:scale-110 group-hover:text-primary-glow"
+                  "group-hover:scale-110 group-hover:text-brand-primary"
                 )} />
               </div>
               
