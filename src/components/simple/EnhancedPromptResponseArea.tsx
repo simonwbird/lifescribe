@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, Video, PenTool, Sparkles } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Mic, Video, PenTool, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useToast } from '@/hooks/use-toast';
@@ -32,23 +33,23 @@ const formatOptions = [
     id: 'voice' as ResponseFormat,
     label: 'Voice Recording',
     icon: Mic,
-    description: 'Natural and easy',
-    color: 'bg-green-500 hover:bg-green-600',
+    description: 'Speak naturally — just like having a conversation',
+    color: 'bg-gray-100 hover:bg-gray-200',
     isDefault: true
-  },
-  {
-    id: 'video' as ResponseFormat,
-    label: 'Video Message',
-    icon: Video,
-    description: 'Show your expressions',
-    color: 'bg-blue-500 hover:bg-blue-600'
   },
   {
     id: 'text' as ResponseFormat,
     label: 'Write Your Story',
     icon: PenTool,
-    description: 'Take your time',
-    color: 'bg-purple-500 hover:bg-purple-600'
+    description: 'Type your thoughts and memories',
+    color: 'bg-blue-100 hover:bg-blue-200'
+  },
+  {
+    id: 'video' as ResponseFormat,
+    label: 'Video Message',
+    icon: Video,
+    description: 'Record yourself telling the story',
+    color: 'bg-purple-100 hover:bg-purple-200'
   }
 ];
 
@@ -61,6 +62,7 @@ export default function EnhancedPromptResponseArea({
   onQuickVoice,
   userAge = 'adult'
 }: EnhancedPromptResponseAreaProps) {
+  const [showResponseModal, setShowResponseModal] = useState(false);
   const [showFormatOptions, setShowFormatOptions] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ResponseFormat>('voice');
   const { track } = useAnalytics();
@@ -68,16 +70,12 @@ export default function EnhancedPromptResponseArea({
   const { isFirstTime, markCompleted, showGuide } = useFirstTimeExperience();
 
   const handlePrimaryAction = () => {
-    if (!showFormatOptions) {
-      setShowFormatOptions(true);
-      track('activity_clicked', { 
-        action: 'prompt_response_expanded',
-        prompt_id: prompt.id,
-        prompt_type: prompt.type
-      });
-    } else {
-      handleFormatSelected(selectedFormat);
-    }
+    setShowResponseModal(true);
+    track('activity_clicked', { 
+      action: 'prompt_response_modal_opened',
+      prompt_id: prompt.id,
+      prompt_type: prompt.type
+    });
   };
 
   const handleFormatSelected = (format: ResponseFormat) => {
@@ -89,6 +87,7 @@ export default function EnhancedPromptResponseArea({
       is_first_time: isFirstTime
     });
 
+    setShowResponseModal(false);
     onRecord(format);
     
     // Show celebration for first-time users
@@ -142,59 +141,68 @@ export default function EnhancedPromptResponseArea({
             "w-full h-16 text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300",
             "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground",
             "focus:ring-4 focus:ring-primary/30 focus:outline-none",
-            "border-2 border-primary/20 hover:border-primary/40",
-            showFormatOptions && "rounded-b-none"
+            "border-2 border-primary/20 hover:border-primary/40"
           )}
-          aria-label={showFormatOptions ? `Record using ${selectedFormatOption.label}` : "Respond to this prompt"}
+          aria-label="Respond to this prompt"
         >
           <div className="flex items-center gap-3">
-            {showFormatOptions ? (
-              <>
-                <selectedFormatOption.icon className="h-6 w-6" />
-                <span>Record with {selectedFormatOption.label}</span>
-              </>
-            ) : (
-              <>
-                <Mic className="h-6 w-6" />
-                <span>Respond to this prompt</span>
-              </>
-            )}
+            <Mic className="h-6 w-6" />
+            <span>Respond to this prompt</span>
           </div>
         </Button>
+      </div>
 
-        {/* Inline Format Options */}
-        {showFormatOptions && (
-          <Card className="rounded-t-none border-t-0 shadow-lg">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Response Format Modal */}
+      <Dialog open={showResponseModal} onOpenChange={setShowResponseModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif">How would you like to respond?</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Your prompt:</p>
+              <p className="font-medium text-foreground">{prompt.text}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-muted-foreground mb-4">Choose your preferred way to share:</p>
+              
+              <div className="space-y-3">
                 {formatOptions.map((option) => (
                   <Button
                     key={option.id}
-                    variant={selectedFormat === option.id ? "default" : "outline"}
+                    variant="ghost"
                     onClick={() => handleFormatSelected(option.id)}
                     className={cn(
-                      "h-20 flex-col gap-2 transition-all duration-200 cursor-pointer",
-                      selectedFormat === option.id && option.color,
-                      option.isDefault && selectedFormat !== option.id && "border-primary/50"
+                      "w-full h-auto p-4 justify-start gap-4",
+                      "hover:bg-gray-50 border border-gray-200 rounded-lg",
+                      "transition-all duration-200"
                     )}
                   >
-                    <option.icon className="h-5 w-5" />
-                    <div className="text-center">
-                      <div className="font-semibold text-sm">{option.label}</div>
-                      <div className="text-xs opacity-80">{option.description}</div>
+                    <div className={cn(
+                      "p-3 rounded-full flex-shrink-0",
+                      option.color
+                    )}>
+                      <option.icon className="h-5 w-5 text-gray-700" />
                     </div>
-                    {option.isDefault && selectedFormat !== option.id && (
-                      <Badge variant="secondary" className="text-xs">
-                        Recommended
-                      </Badge>
-                    )}
+                    <div className="text-left flex-1">
+                      <div className="font-semibold text-gray-900">{option.label}</div>
+                      <div className="text-sm text-gray-600">{option.description}</div>
+                    </div>
                   </Button>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Don't worry about being perfect — your family will love hearing from you
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Secondary Actions */}
       <SecondaryActions
