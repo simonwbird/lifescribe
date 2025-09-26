@@ -60,6 +60,9 @@ verify_jwt = false
 [functions.collision-detector]
 verify_jwt = false
 
+[functions.setup-qa-family]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322
