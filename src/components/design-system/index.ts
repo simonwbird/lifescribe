@@ -1,6 +1,9 @@
 // Phase 1 Design System Components
 export { AppHeader } from './AppHeader'
 export { AppFooter } from './AppFooter'
+export { MobileBottomNav } from './MobileBottomNav'
+export { ContextualSubnav, StoriesSubnav, FamilySubnav } from './ContextualSubnav'
+export { NavigationLayout, StoriesPageLayout, FamilyPageLayout } from './NavigationPatterns'
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card'
 export { EmptyState } from './EmptyState'
 export { ProgressRing } from './ProgressRing'

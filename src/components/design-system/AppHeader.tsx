@@ -1,78 +1,96 @@
-import { memo } from 'react'
+import React, { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { ChevronDown, BookHeart, FileText, Users, GitBranch, Plus, PenTool, Mic, Camera, Archive, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Search, Bell, User } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import GlobalSearch from '@/components/search/GlobalSearch'
+import NotificationsBell from '@/components/navigation/NotificationsBell'
+import ProfileDropdown from '@/components/navigation/ProfileDropdown'
+import { useLabs } from '@/hooks/useLabs'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
-interface AppHeaderProps {
-  className?: string
-  onSearch?: (query: string) => void
-  onNotifications?: () => void
-  onProfile?: () => void
-  showSearch?: boolean
-  title?: string
-}
+export function AppHeader() {
+  const location = useLocation()
+  const { track } = useAnalytics()
+  const { labsEnabled, flags } = useLabs()
 
-export const AppHeader = memo(function AppHeader({
-  className,
-  onSearch,
-  onNotifications,
-  onProfile,
-  showSearch = true,
-  title = "Lifescribe"
-}: AppHeaderProps) {
+  // Don't render header on marketing homepage
+  if (location.pathname === '/' && !location.search) {
+    return null
+  }
+
+  const getActiveSection = () => {
+    if (location.pathname.startsWith('/stories') || 
+        location.pathname.startsWith('/prompts') ||
+        location.pathname.startsWith('/capture')) {
+      return 'stories'
+    }
+    if (location.pathname.startsWith('/people') || 
+        location.pathname.startsWith('/family') ||
+        location.pathname.startsWith('/events') ||
+        location.pathname.startsWith('/media')) {
+      return 'family'
+    }
+    return null
+  }
+
+  const activeSection = getActiveSection()
+
   return (
-    <header 
-      className={cn(
-        "flex items-center justify-between px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-        "sticky top-0 z-4",
-        className
-      )}
-      role="banner"
-    >
-      {/* Logo/Title */}
-      <div className="flex items-center gap-4">
-        <h1 className="text-h3 font-serif font-semibold text-foreground">
-          {title}
-        </h1>
-      </div>
+    <header className="header-modern sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur">
+      <div className="container mx-auto px-4 h-full flex items-center">
+        {/* Left: Logo */}
+        <Link to="/home" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <BookHeart className="h-6 w-6 text-primary" />
+          <span className="hidden sm:inline text-lg font-serif font-bold">LifeScribe</span>
+        </Link>
 
-      {/* Search - Global */}
-      {showSearch && (
-        <div className="flex-1 max-w-md mx-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search stories, people, memories..."
-              className="pl-9 bg-muted/50 border-0 focus:bg-background"
-              onChange={(e) => onSearch?.(e.target.value)}
-              aria-label="Global search"
-            />
+        {/* Center: Search */}
+        <div className="flex-1 flex justify-center px-4">
+          <div className="w-full max-w-md">
+            <GlobalSearch />
           </div>
         </div>
-      )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onNotifications}
-          aria-label="Notifications"
-          className="relative"
-        >
-          <Bell className="h-4 w-4" />
-          {/* Notification badge could go here */}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onProfile}
-          aria-label="Profile menu"
-        >
-          <User className="h-4 w-4" />
-        </Button>
+        {/* Right: Navigation + Actions */}
+        <div className="flex items-center gap-1">
+          {/* Desktop Navigation Tabs */}
+          <nav className="hidden lg:flex items-center gap-1 mr-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={activeSection === 'stories' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <Link to="/prompts">Stories</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={activeSection === 'family' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <Link to="/people">Family</Link>
+            </Button>
+          </nav>
+
+          {/* Create Button */}
+          <Button size="sm" className="gap-1">
+            <Plus className="h-3 w-3" />
+            <Link to="/stories/new">Create</Link>
+          </Button>
+
+          {/* Notifications */}
+          {labsEnabled && flags.notifications && <NotificationsBell />}
+
+          {/* Profile */}
+          <ProfileDropdown />
+        </div>
       </div>
     </header>
   )
-})
+}
