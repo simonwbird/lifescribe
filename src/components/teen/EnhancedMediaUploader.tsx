@@ -307,7 +307,7 @@ export function TeenMediaUploader({
                         {playingVideo === item.id ? 
                           <Pause className="w-8 h-8" /> : 
                           <Play className="w-8 h-8" />
-export { TeenMediaUploader as default }
+                        }
                       </Button>
                       {item.isCover && (
                         <Badge className="absolute top-2 right-2 bg-pink-600 text-white">
@@ -394,3 +394,5 @@ export { TeenMediaUploader as default }
     </div>
   )
 }
+
+export { TeenMediaUploader as EnhancedMediaUploader }
