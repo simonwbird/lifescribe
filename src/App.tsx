@@ -94,6 +94,7 @@ import BugDetail from './pages/admin/BugDetail';
 import AdminConfig from './pages/admin/AdminConfig';
 import AdminUserManagement from '@/pages/admin/AdminUserManagement';
 import { BugReportWidget } from './components/BugReportWidget';
+import PromptsWow from './pages/PromptsWow';
 
 const queryClient = new QueryClient();
 
@@ -130,7 +131,9 @@ function AppContent() {
       {/* Onboarding (auth required) */}
       <Route path="/onboarding" element={<AuthGate><OnboardingWizard /></AuthGate>} />
        <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
-      {/* Redirect /feed to /home */}
+        <Route path="/prompts/wow" element={<AuthGate><PromptsWow /></AuthGate>} />
+        
+        {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />
       <Route path="/stories/new" element={<AuthGate><NewStory /></AuthGate>} />
       <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />
