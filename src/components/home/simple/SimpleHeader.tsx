@@ -50,6 +50,33 @@ export function SimpleHeader({
     if (existingDrafts.length > 0) {
       setShowResumeModal(true)
     }
+
+    // Get current user's person ID for MyLifePage navigation
+    const getCurrentUserPerson = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        console.log('Current user:', user?.id)
+        if (user) {
+          const { data: personLink, error } = await supabase
+            .from('person_user_links')
+            .select('person_id')
+            .eq('user_id', user.id)
+            .maybeSingle()
+          
+          console.log('Person link query result:', { personLink, error })
+          
+          if (personLink) {
+            console.log('Setting currentUserPersonId to:', personLink.person_id)
+            setCurrentUserPersonId(personLink.person_id)
+          } else {
+            console.log('No person link found for user')
+          }
+        }
+      } catch (error) {
+        console.error('Error getting current user person:', error)
+      }
+    }
+    getCurrentUserPerson()
   }, [profileId, spaceId])
 
   const loadPrompts = async () => {
@@ -317,9 +344,12 @@ export function SimpleHeader({
               }}
               onLifePage={() => {
                 track('activity_clicked', { action: 'life_page' })
+                console.log('Life Page clicked, currentUserPersonId:', currentUserPersonId)
                 if (currentUserPersonId) {
+                  console.log('Navigating to person profile:', `/people/${currentUserPersonId}`)
                   navigate(`/people/${currentUserPersonId}`)
                 } else {
+                  console.log('No person linked, navigating to feed as fallback')
                   // Fallback to family feed if no person linked
                   navigate('/feed')
                 }
