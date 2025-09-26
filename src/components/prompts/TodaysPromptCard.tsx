@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Play, BookOpen } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
 import PersonChip from './PersonChip'
+import { ResponseModal } from './ResponseModal'
+import { useNavigate } from 'react-router-dom'
 
 interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
@@ -19,6 +21,23 @@ export default function TodaysPromptCard({
   onBrowseAll,
   people = []
 }: TodaysPromptCardProps) {
+  const [showResponseModal, setShowResponseModal] = useState(false)
+  const navigate = useNavigate()
+
+  const handleResponseSelect = (type: 'voice' | 'text' | 'video') => {
+    setShowResponseModal(false)
+    
+    if (!promptInstance) return
+    
+    const searchParams = new URLSearchParams({
+      type,
+      promptTitle: promptInstance.prompt?.title || '',
+      prompt_id: promptInstance.id,
+      prompt_text: promptInstance.prompt?.body || ''
+    })
+    
+    navigate(`/stories/new?${searchParams.toString()}`)
+  }
   if (!promptInstance?.prompt) {
     return (
       <Card>
@@ -69,7 +88,7 @@ export default function TodaysPromptCard({
         
         <div className="flex flex-col gap-2">
           <Button 
-            onClick={() => onRespond(promptInstance.id)}
+            onClick={() => setShowResponseModal(true)}
             className="w-full flex items-center gap-2"
             size="lg"
           >
@@ -87,6 +106,19 @@ export default function TodaysPromptCard({
           </Button>
         </div>
       </CardContent>
+
+      {/* Response Modal */}
+      {promptInstance?.prompt && (
+        <ResponseModal
+          isOpen={showResponseModal}
+          onClose={() => setShowResponseModal(false)}
+          prompt={{
+            title: promptInstance.prompt.title,
+            body: promptInstance.prompt.body
+          }}
+          onSelectResponse={handleResponseSelect}
+        />
+      )}
     </Card>
   )
 }
