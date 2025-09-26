@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Mail, Settings, Eye, Send, Users, Lock } from 'lucide-react'
+import { Calendar, Mail, Settings, Eye, Send, Users, Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { SimpleDigestPreview } from '@/components/home/simple/SimpleDigestPreview'
@@ -28,6 +28,7 @@ export default function WeeklyDigest() {
   const [sendingTest, setSendingTest] = useState(false)
   const [userEmail, setUserEmail] = useState('')
   const [familyId, setFamilyId] = useState<string | null>(null)
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const { track } = useAnalytics()
   const { toast } = useToast()
 
@@ -318,10 +319,14 @@ export default function WeeklyDigest() {
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-serif flex items-center gap-2">
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center gap-2 text-lg font-serif hover:text-primary transition-colors"
+          >
             <Mail className="h-5 w-5" />
             Weekly Digest
-          </CardTitle>
+            {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </button>
           <Switch
             checked={digestSettings.enabled}
             onCheckedChange={handleToggle}
@@ -329,7 +334,8 @@ export default function WeeklyDigest() {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      {!isCollapsed && (
+        <CardContent className="space-y-4">
         {digestSettings.enabled ? (
           <>
             {/* Lock Status Warning */}
@@ -469,6 +475,7 @@ export default function WeeklyDigest() {
           </div>
         )}
       </CardContent>
+      )}
 
       {/* Customize Content Dialog */}
       <Dialog open={showCustomizeDialog} onOpenChange={setShowCustomizeDialog}>
