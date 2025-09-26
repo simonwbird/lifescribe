@@ -79,9 +79,9 @@ export function AppHeader() {
           </nav>
 
           {/* Create Button */}
-          <Button size="sm" className="gap-1">
+          <Button size="sm" className="gap-1 text-primary-foreground hover:text-primary-foreground">
             <Plus className="h-3 w-3" />
-            <Link to="/stories/new">Create</Link>
+            <Link to="/stories/new" className="text-inherit hover:text-inherit no-underline">Create</Link>
           </Button>
 
           {/* Notifications */}
