@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useLabs } from './useLabs'
@@ -59,7 +59,7 @@ export function usePrompts(familyId: string, personId?: string) {
   const queryClient = useQueryClient()
   const isPeopleSpecificEnabled = flags['prompts.peopleSpecific']
 
-  // Optimized people query with caching
+  // Optimized people query with reduced re-fetching
   const { data: people = {} } = useQuery({
     queryKey: ['people-map', familyId],
     queryFn: async () => {
@@ -84,8 +84,10 @@ export function usePrompts(familyId: string, personId?: string) {
       return peopleMap
     },
     enabled: !!familyId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes for people data
+    gcTime: 20 * 60 * 1000, // 20 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   })
 
   // Optimized prompt instances query
@@ -159,11 +161,11 @@ export function usePrompts(familyId: string, personId?: string) {
 
   const error = queryError ? (queryError instanceof Error ? queryError.message : 'Failed to fetch prompts') : null
 
-  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string, category?: 'Birthdays' | 'Favorites') => {
+  const fetchPrompts = useCallback(async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string, category?: 'Birthdays' | 'Favorites') => {
     await queryClient.invalidateQueries({ 
       queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
     })
-  }
+  }, [queryClient, familyId, personId, isPeopleSpecificEnabled])
 
   const startPrompt = async (instanceId: string) => {
     try {
@@ -177,9 +179,10 @@ export function usePrompts(familyId: string, personId?: string) {
 
       if (error) throw error
 
-      // Refresh data
-      await queryClient.invalidateQueries({ 
-        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
+      // Refresh data efficiently
+      queryClient.refetchQueries({ 
+        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled],
+        type: 'active'
       })
     } catch (err) {
       console.error('Error starting prompt:', err)
@@ -234,9 +237,10 @@ export function usePrompts(familyId: string, personId?: string) {
           .eq('id', instanceId)
       }
 
-      // Refresh data
-      await queryClient.invalidateQueries({ 
-        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
+      // Refresh data efficiently
+      queryClient.refetchQueries({ 
+        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled],
+        type: 'active'
       })
     } catch (err) {
       console.error('Error creating response:', err)

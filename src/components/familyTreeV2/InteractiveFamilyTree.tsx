@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from "react";
 import { FamilyGraph, Person, Relationship } from "../../lib/familyTreeV2Types";
 import { buildGraph, layoutGraph } from "../../lib/familyTreeLayoutEngine";
 import { DraggablePersonCard } from "./DraggablePersonCard";
@@ -28,7 +28,7 @@ interface InteractiveFamilyTreeProps {
   familyId?: string; // Add family ID for saving positions
 }
 
-export default function InteractiveFamilyTree({
+const InteractiveFamilyTree = memo(function InteractiveFamilyTree({
   people, relationships, focusPersonId, showCaptions = false, onAddRequested, familyId,
 }: InteractiveFamilyTreeProps) {
   const graph: FamilyGraph = useMemo(() => buildGraph(people, relationships, focusPersonId), [people, relationships, focusPersonId]);
@@ -488,4 +488,6 @@ export default function InteractiveFamilyTree({
       </div>
     </div>
   );
-}
+});
+
+export default InteractiveFamilyTree;

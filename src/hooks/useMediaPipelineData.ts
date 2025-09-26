@@ -233,10 +233,13 @@ export const useRetryJob = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['media-pipeline-jobs'] });
-      queryClient.invalidateQueries({ queryKey: ['failed-media-jobs'] });
-      queryClient.invalidateQueries({ queryKey: ['pipeline-overview-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['pipeline-stage-stats'] });
+      // Batch invalidate related queries
+      Promise.all([
+        queryClient.refetchQueries({ queryKey: ['media-pipeline-jobs'], type: 'active' }),
+        queryClient.refetchQueries({ queryKey: ['failed-media-jobs'], type: 'active' }),
+        queryClient.refetchQueries({ queryKey: ['pipeline-overview-stats'], type: 'active' }),
+        queryClient.refetchQueries({ queryKey: ['pipeline-stage-stats'], type: 'active' })
+      ]);
       
       track('MEDIA_JOB_RETRIED', {
         job_id: variables.jobId,
