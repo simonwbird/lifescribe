@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '@/integrations/supabase/client'
 import { DigestSettings, DigestPreview, DigestSendLog, DEFAULT_DIGEST_SETTINGS, DigestContentSettings } from './digestTypes'
 
 // Legacy interface for backward compatibility
