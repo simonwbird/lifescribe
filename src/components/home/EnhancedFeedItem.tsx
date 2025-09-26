@@ -176,9 +176,14 @@ export function EnhancedFeedItem({
           </div>
 
           {/* Compact Content */}
-          {getContentPreview() && <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+          {getContentPreview() && (
+            <p className={cn(
+              "text-sm leading-relaxed text-muted-foreground",
+              !isExpanded && "line-clamp-2"
+            )} aria-expanded={isExpanded}>
               {getContentPreview()}
-            </p>}
+            </p>
+          )}
 
           {/* Compact Actions */}
           <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
