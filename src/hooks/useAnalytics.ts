@@ -211,52 +211,100 @@ export type AnalyticsEvent =
 import { supabase } from '@/integrations/supabase/client'
 import { useMode } from './useMode'
 import { useLabs } from './useLabs'
+import { useCallback, useRef } from 'react'
+
+// Batch analytics events to reduce API calls
+const analyticsQueue: Array<{
+  event: AnalyticsEvent
+  properties: Record<string, any>
+  timestamp: number
+}> = []
+
+let flushTimeout: NodeJS.Timeout | null = null
+const BATCH_SIZE = 10
+const BATCH_TIMEOUT = 2000 // 2 seconds
+
+const flushAnalytics = async () => {
+  if (analyticsQueue.length === 0) return
+
+  const batch = analyticsQueue.splice(0)
+  
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    // Get user's family context (cached for this session)
+    let familyId = null
+    const { data: membership } = await supabase
+      .from('members')
+      .select('family_id')
+      .eq('profile_id', user.id)
+      .limit(1)
+      .single()
+    
+    if (membership) {
+      familyId = membership.family_id
+    }
+
+    // Insert all events in batch
+    const eventsToInsert = batch.map(item => ({
+      event_name: item.event,
+      user_id: user.id,
+      family_id: familyId,
+      properties: {
+        ...item.properties,
+        userId: user.id,
+        familyId: familyId,
+        mode: 'studio', // Default fallback
+        labsEnabled: false, // Default fallback
+        timestamp: new Date(item.timestamp).toISOString()
+      }
+    }))
+
+    await supabase.from('analytics_events').insert(eventsToInsert)
+  } catch (error) {
+    console.error('Failed to flush analytics batch:', error)
+    // Re-add failed events back to queue for retry
+    analyticsQueue.unshift(...batch)
+  }
+}
 
 export const useAnalytics = () => {
   const { mode } = useMode()
   const { labsEnabled } = useLabs()
+  const familyIdCache = useRef<string | null>(null)
+  const lastFamilyFetch = useRef<number>(0)
 
-  const track = async (event: AnalyticsEvent, properties?: Record<string, any>) => {
+  const track = useCallback(async (event: AnalyticsEvent, properties?: Record<string, any>) => {
     // Log to console for debugging
     console.log(`Analytics: ${event}`, properties);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      // Add event to batch queue with current context
+      analyticsQueue.push({
+        event,
+        properties: {
+          ...properties,
+          mode,
+          labsEnabled
+        },
+        timestamp: Date.now()
+      })
 
-      // Get user's family context
-      let familyId = null
-      const { data: membership } = await supabase
-        .from('members')
-        .select('family_id')
-        .eq('profile_id', user.id)
-        .limit(1)
-        .single()
-      
-      if (membership) {
-        familyId = membership.family_id
+      // Clear existing timeout
+      if (flushTimeout) {
+        clearTimeout(flushTimeout)
       }
 
-      // Store analytics event
-      await supabase
-        .from('analytics_events')
-        .insert({
-          event_name: event,
-          user_id: user.id,
-          family_id: familyId,
-          properties: {
-            ...properties,
-            userId: user.id,
-            familyId: familyId,
-            mode: mode,
-            labsEnabled: labsEnabled,
-            timestamp: new Date().toISOString(),
-          }
-        })
+      // Flush immediately if batch is full, otherwise set timeout
+      if (analyticsQueue.length >= BATCH_SIZE) {
+        await flushAnalytics()
+      } else {
+        flushTimeout = setTimeout(flushAnalytics, BATCH_TIMEOUT)
+      }
     } catch (error) {
-      console.error('Analytics tracking error:', error)
+      console.error('Failed to track analytics event:', error)
     }
-  };
-
+  }, [mode, labsEnabled])
   return { track };
 };

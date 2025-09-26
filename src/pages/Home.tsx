@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react';
+// Add lazy loading for heavy components
+import { lazy } from 'react'
+
+const FamilyUpdatesFeed = lazy(() => import('@/components/home/FamilyUpdatesFeed'))
+const OnboardingProgress = lazy(() => import('@/components/onboarding/OnboardingProgress'))
+const WeeklyDigest = lazy(() => import('@/components/home/WeeklyDigest'))
+
+import React, { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import AuthGate from '@/components/AuthGate';
 import Header from '@/components/Header';
 import VoiceFirstHero from '@/components/home/VoiceFirstHero';
 import InviteBanner from '@/components/home/InviteBanner';
-import FamilyUpdatesFeed from '@/components/home/FamilyUpdatesFeed';
-import WeeklyDigest from '@/components/home/WeeklyDigest';
+// Lazy loaded components
 import WeeklyDigestPreview from '@/components/WeeklyDigestPreview';
 import Upcoming from '@/components/home/Upcoming';
 import DraftsRow from '@/components/home/DraftsRow';
-import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import FloatingCoachMark from '@/components/onboarding/FloatingCoachMark';
 import QuickStoryCreator from '@/components/stories/QuickStoryCreator';
 import { SimpleHeader } from '@/components/home/simple/SimpleHeader';
@@ -77,6 +82,11 @@ export default function Home() {
     loading: modeLoading
   } = useMode();
   const navigate = useNavigate();
+  
+  // Memoize expensive calculations
+  const memoizedFamilyMembers = useMemo(() => familyMembers, [familyMembers])
+  const memoizedActivities = useMemo(() => activities, [activities])
+  const memoizedDrafts = useMemo(() => drafts, [drafts])
 
   // Handle URL param for voice focus after invite flow
   const urlParams = new URLSearchParams(window.location.search);
@@ -103,7 +113,8 @@ export default function Home() {
       supabase.removeChannel(channel);
     };
   }, [spaceId]);
-  const loadHomeData = async () => {
+  // Debounced loading function
+  const loadHomeData = useCallback(async () => {
     try {
       const {
         data: {
@@ -132,7 +143,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []) // Empty dependency array - only load once
   const loadActivities = async (familyId: string) => {
     try {
       const activities: ActivityItem[] = [];
@@ -481,8 +492,14 @@ export default function Home() {
               {/* Family Updates Feed */}
               <div className="lg:col-span-2">
                 <div className="space-y-4 min-h-[600px]">
-                  
-                  <FamilyUpdatesFeed activities={activities} variant="simple" familyMembers={familyMembers} familyId={spaceId} />
+                  <Suspense fallback={<div className="h-32 w-full bg-muted animate-pulse rounded-lg" />}>
+                    <FamilyUpdatesFeed 
+                      activities={memoizedActivities} 
+                      variant="simple" 
+                      familyMembers={memoizedFamilyMembers} 
+                      familyId={spaceId} 
+                    />
+                  </Suspense>
                 </div>
               </div>
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useMemo } from 'react'
+import { useProfileSettings } from './useProfileSettings'
 
 export type UserMode = 'simple' | 'studio'
 
@@ -28,65 +28,27 @@ const STUDIO_MODE_FLAGS: ModeFlags = {
 }
 
 export function useMode() {
-  const [mode, setModeState] = useState<UserMode>('studio')
-  const [loading, setLoading] = useState(true)
+  const { settings, loading, updateSettings } = useProfileSettings()
+  
+  const mode = useMemo(() => {
+    return (settings?.mode as UserMode) || 'studio'
+  }, [settings])
+  
+  const flags = useMemo(() => {
+    return mode === 'simple' ? SIMPLE_MODE_FLAGS : STUDIO_MODE_FLAGS
+  }, [mode])
 
-  const flags = mode === 'simple' ? SIMPLE_MODE_FLAGS : STUDIO_MODE_FLAGS
-
+  // Apply mode to body when it changes
   useEffect(() => {
-    const loadMode = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('settings')
-            .eq('id', user.id)
-            .single()
-
-          if (profile?.settings) {
-            const settings = profile.settings as any
-            const userMode = settings.mode || 'studio'
-            setModeState(userMode)
-            applyModeToBody(userMode)
-          }
-        }
-      } catch (error) {
-        console.error('Error loading mode settings:', error)
-      } finally {
-        setLoading(false)
-      }
+    if (mode) {
+      applyModeToBody(mode)
     }
-
-    loadMode()
-  }, [])
+  }, [mode])
 
   const setMode = async (newMode: UserMode) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('settings')
-          .eq('id', user.id)
-          .single()
-
-        const currentSettings = (profile?.settings as any) || {}
-        const newSettings = {
-          ...currentSettings,
-          mode: newMode
-        }
-
-        await supabase
-          .from('profiles')
-          .update({ settings: newSettings })
-          .eq('id', user.id)
-
-        setModeState(newMode)
-        applyModeToBody(newMode)
-      }
-    } catch (error) {
-      console.error('Error updating mode:', error)
+    const success = await updateSettings({ mode: newMode })
+    if (success) {
+      applyModeToBody(newMode)
     }
   }
 
