@@ -18,14 +18,30 @@ export default {
         serif: ['"Source Serif 4"', 'Georgia', '"Times New Roman"', 'serif'],
       },
       fontSize: {
-        // Ancestry-like calm scale
-        'hero': ['2.5rem', { lineHeight: '1.15', letterSpacing: '-0.01em' }],   // 40px
-        'h1':   ['2rem',   { lineHeight: '1.2',  letterSpacing: '-0.006em' }],  // 32px
-        'h2':   ['1.5rem', { lineHeight: '1.25'}],                              // 24px
-        'h3':   ['1.25rem',{ lineHeight: '1.3' }],                              // 20px
-        'body': ['1rem',   { lineHeight: '1.6' }],                              // 16px
-        'fine': ['0.875rem',{lineHeight:'1.5'}],                                // 14px
-        'display': ['2.75rem', { lineHeight: '1.1', letterSpacing: '-0.015em' }], // Large display text
+        // Semantic Typography Scale - 4/8px baseline rhythm
+        'display': ['3rem', { lineHeight: '3.5rem' }],     // 48px/56px
+        'h1': ['2.5rem', { lineHeight: '3rem' }],          // 40px/48px  
+        'h2': ['2rem', { lineHeight: '2.5rem' }],          // 32px/40px
+        'h3': ['1.5rem', { lineHeight: '2rem' }],          // 24px/32px
+        'h4': ['1.25rem', { lineHeight: '1.75rem' }],      // 20px/28px
+        'h5': ['1.125rem', { lineHeight: '1.5rem' }],      // 18px/24px
+        'h6': ['1rem', { lineHeight: '1.5rem' }],          // 16px/24px
+        'body': ['1rem', { lineHeight: '1.5rem' }],        // 16px/24px
+        'body-sm': ['0.875rem', { lineHeight: '1.25rem' }], // 14px/20px
+        'meta': ['0.75rem', { lineHeight: '1rem' }],       // 12px/16px
+        'caption': ['0.625rem', { lineHeight: '0.75rem' }], // 10px/12px
+      },
+      spacing: {
+        '1': 'var(--space-1)',   // 4px
+        '2': 'var(--space-2)',   // 8px
+        '3': 'var(--space-3)',   // 12px
+        '4': 'var(--space-4)',   // 16px
+        '5': 'var(--space-5)',   // 20px
+        '6': 'var(--space-6)',   // 24px
+        '8': 'var(--space-8)',   // 32px
+        '10': 'var(--space-10)', // 40px
+        '12': 'var(--space-12)', // 48px
+        '16': 'var(--space-16)', // 64px
       },
       colors: {
         border: "hsl(var(--border))",
@@ -108,15 +124,32 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "0.9rem",
-        "2xl": "1.25rem",
+        'xs': 'var(--radius-xs)',     // 4px
+        'sm': 'var(--radius-sm)',     // 8px 
+        'md': 'var(--radius-md)',     // 12px
+        'lg': 'var(--radius-lg)',     // 16px
+        'xl': 'var(--radius-xl)',     // 24px
+        '2xl': 'var(--radius-2xl)',   // 32px
+        'full': 'var(--radius-full)', // 9999px
       },
       boxShadow: {
-        card: "0 8px 24px rgba(0,0,0,0.06)",
-        focus: "0 0 0 2px rgba(34,26,23,0.35)",
+        'xs': 'var(--shadow-xs)',
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
+        'xl': 'var(--shadow-xl)',
+      },
+      zIndex: {
+        '1': 'var(--z-1)',   // 10
+        '2': 'var(--z-2)',   // 20
+        '3': 'var(--z-3)',   // 30
+        '4': 'var(--z-4)',   // 40
+        '5': 'var(--z-5)',   // 50
+      },
+      transitionDuration: {
+        'fast': 'var(--transition-fast)',   // 150ms
+        'base': 'var(--transition-base)',   // 250ms
+        'slow': 'var(--transition-slow)',   // 350ms
       },
       keyframes: {
         "accordion-down": {

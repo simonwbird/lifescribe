@@ -22,8 +22,12 @@
   z-index: -1;
 }
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* 
+=========================================
+PHASE 1 DESIGN SYSTEM FOUNDATION
+=========================================
+Tokenized system: spacing, radii, shadows, z-index, transitions, color roles, typography
+All colors MUST be HSL for consistency
 */
 
 /* Typography System - Ancestry.com inspired */
@@ -82,35 +86,110 @@ small, .overline {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* ==================== CORE TOKENS ==================== */
+    
+    /* Spacing System - 4/8/12 base */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-12: 3rem;     /* 48px */
+    --space-16: 4rem;     /* 64px */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Border Radius System */
+    --radius-xs: 0.25rem;  /* 4px */
+    --radius-sm: 0.5rem;   /* 8px */
+    --radius-md: 0.75rem;  /* 12px */
+    --radius-lg: 1rem;     /* 16px */
+    --radius-xl: 1.5rem;   /* 24px */
+    --radius-2xl: 2rem;    /* 32px */
+    --radius-full: 9999px;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Shadow System */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Z-Index System */
+    --z-1: 10;
+    --z-2: 20;
+    --z-3: 30;
+    --z-4: 40;
+    --z-5: 50;
 
+    /* Transition System */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ==================== COLOR ROLES ==================== */
+    
+    /* Background System */
+    --bg-canvas: 0 0% 100%;           /* Main page background */
+    --bg-surface: 0 0% 100%;          /* Card/elevated surfaces */
+    --bg-surface-secondary: 210 40% 98%; /* Secondary surfaces */
+    --bg-overlay: 0 0% 0% / 0.5;      /* Modal overlays */
+
+    /* Primary Brand Colors */
+    --primary: 172 77% 36%;           /* Sea-glass primary */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 173 78% 31%;
+    --primary-active: 174 79% 26%;
+
+    /* Secondary Colors */
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary-hover: 210 40% 92%;
+    --secondary-active: 210 40% 88%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Accent Colors (Coral) */
+    --accent: 12 100% 68%;            /* Coral accent */
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 12 95% 63%;
+    --accent-active: 12 90% 58%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Semantic State Colors */
+    --success: 122 39% 49%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 91% 40%;
+    --warning-foreground: 0 0% 100%;
+    --error: 4 90% 58%;
+    --error-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Neutral Text Colors */
+    --neutral-50: 210 20% 98%;
+    --neutral-100: 210 20% 95%;
+    --neutral-200: 210 20% 90%;
+    --neutral-300: 210 20% 85%;
+    --neutral-400: 210 16% 65%;
+    --neutral-500: 210 14% 45%;
+    --neutral-600: 210 14% 35%;
+    --neutral-700: 210 14% 25%;
+    --neutral-800: 210 14% 15%;
+    --neutral-900: 210 14% 8%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    /* ==================== SEMANTIC MAPPINGS ==================== */
+    
+    --background: var(--bg-canvas);
+    --foreground: var(--neutral-900);
+    --card: var(--bg-surface);
+    --card-foreground: var(--neutral-900);
+    --popover: var(--bg-surface);
+    --popover-foreground: var(--neutral-900);
+    --muted: var(--bg-surface-secondary);
+    --muted-foreground: var(--neutral-600);
+    --destructive: var(--error);
+    --destructive-foreground: var(--error-foreground);
+    --border: var(--neutral-200);
+    --input: var(--neutral-200);
+    --ring: var(--primary);
+    --radius: var(--radius-md);
 
     /* Sea-Glass + Coral theme - fresh and celebratory */
     --brand-700: 172 77% 36%;          /* #16A39A - Primary (AA compliant) */
