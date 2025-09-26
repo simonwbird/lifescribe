@@ -8,9 +8,11 @@ interface PromptControlsProps {
   prompt: ElderPrompt
   onShuffle: () => void
   shuffling: boolean
+  showShuffleOnly?: boolean
+  compact?: boolean
 }
 
-export function PromptControls({ prompt, onShuffle, shuffling }: PromptControlsProps) {
+export function PromptControls({ prompt, onShuffle, shuffling, showShuffleOnly = false, compact = false }: PromptControlsProps) {
   const { speak, isSpeaking, stop, isSupported: ttsSupported } = useTextToSpeech()
   const { track } = useAnalytics()
 
@@ -33,58 +35,71 @@ export function PromptControls({ prompt, onShuffle, shuffling }: PromptControlsP
     }
   }
 
+  const buttonSize = compact ? 'sm' : 'sm'
+  const iconSize = compact ? 'w-3 h-3' : 'w-4 h-4'
+  const buttonHeight = compact ? 'h-8' : 'h-10'
+  const buttonPadding = compact ? 'px-2' : 'px-3'
+
   return (
     <div className="flex gap-2">
       {/* Hear It Button */}
-      {ttsSupported ? (
-        <Button
-          onClick={handleTTS}
-          variant="outline"
-          size="sm"
-          className={`h-10 px-3 text-sm font-medium min-w-0 transition-colors ${
-            isSpeaking 
-              ? 'bg-primary/10 border-primary/20 text-primary' 
-              : 'hover:bg-accent'
-          }`}
-          aria-label={isSpeaking ? "Stop reading prompt" : "Hear this prompt"}
-          aria-pressed={isSpeaking}
-        >
-          {isSpeaking ? (
-            <VolumeX className="w-4 h-4 mr-2" />
-          ) : (
-            <Volume2 className="w-4 h-4 mr-2" />
-          )}
-          <span className="hidden sm:inline">
-            {isSpeaking ? 'Stop' : 'Hear it'}
-          </span>
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-10 px-3 text-sm font-medium min-w-0 bg-muted/50 hover:bg-muted"
-          onClick={() => {
-            // Fallback: show alert with prompt text for screen readers or manual reading
-            alert(`Prompt: ${prompt.text}\n\nNote: Text-to-speech is not available in this browser. You can read this prompt aloud or have someone read it to you.`)
-          }}
-          title="Text-to-speech not available - click to see prompt text"
-        >
-          <Volume2 className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Read prompt</span>
-        </Button>
+      {!showShuffleOnly && (
+        ttsSupported ? (
+          <Button
+            onClick={handleTTS}
+            variant="outline"
+            size={buttonSize}
+            className={`${buttonHeight} ${buttonPadding} text-sm font-medium min-w-0 transition-colors ${
+              isSpeaking 
+                ? 'bg-primary/10 border-primary/20 text-primary' 
+                : 'hover:bg-accent'
+            }`}
+            aria-label={isSpeaking ? "Stop reading prompt" : "Hear this prompt"}
+            aria-pressed={isSpeaking}
+          >
+            {isSpeaking ? (
+              <VolumeX className={`${iconSize} ${compact ? '' : 'mr-2'}`} />
+            ) : (
+              <Volume2 className={`${iconSize} ${compact ? '' : 'mr-2'}`} />
+            )}
+            {!compact && (
+              <span className="hidden sm:inline">
+                {isSpeaking ? 'Stop' : 'Hear it'}
+              </span>
+            )}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size={buttonSize}
+            className={`${buttonHeight} ${buttonPadding} text-sm font-medium min-w-0 bg-muted/50 hover:bg-muted`}
+            onClick={() => {
+              // Fallback: show alert with prompt text for screen readers or manual reading
+              alert(`Prompt: ${prompt.text}\n\nNote: Text-to-speech is not available in this browser. You can read this prompt aloud or have someone read it to you.`)
+            }}
+            title="Text-to-speech not available - click to see prompt text"
+          >
+            <Volume2 className={`${iconSize} ${compact ? '' : 'mr-2'}`} />
+            {!compact && (
+              <span className="hidden sm:inline">Read prompt</span>
+            )}
+          </Button>
+        )
       )}
 
       {/* Shuffle Button */}
       <Button
         onClick={onShuffle}
         variant="outline"
-        size="sm"
+        size={buttonSize}
         disabled={shuffling}
-        className="h-10 px-3 text-sm font-medium min-w-0"
+        className={`${buttonHeight} ${buttonPadding} text-sm font-medium min-w-0`}
         aria-label="Shuffle prompts"
       >
-        <Shuffle className={`w-4 h-4 mr-2 ${shuffling ? 'animate-spin' : ''}`} />
-        <span className="hidden sm:inline">Shuffle</span>
+        <Shuffle className={`${iconSize} ${compact ? '' : 'mr-2'} ${shuffling ? 'animate-spin' : ''}`} />
+        {!compact && (
+          <span className="hidden sm:inline">Shuffle</span>
+        )}
       </Button>
     </div>
   )

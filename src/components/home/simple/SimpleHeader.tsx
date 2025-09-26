@@ -200,15 +200,25 @@ export function SimpleHeader({
                 Today's prompt
               </h2>
               
-              {/* Main Prompt Text */}
-              <div className="space-y-2 sm:space-y-3" aria-live="polite">
-                <p className="text-2xl sm:text-3xl font-medium leading-relaxed text-foreground">
-                  {truncatePrompt(primaryPrompt.text, 90)}
-                </p>
-                <p className="text-base text-muted-foreground">
-                  No need to be perfect—just talk.
-                </p>
+            {/* Main Prompt Text with Hear It Button */}
+            <div className="space-y-3 sm:space-y-4" aria-live="polite">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                <div className="flex-1">
+                  <p className="text-2xl sm:text-3xl font-medium leading-relaxed text-foreground">
+                    {truncatePrompt(primaryPrompt.text, 90)}
+                  </p>
+                </div>
+                <PromptControls
+                  prompt={primaryPrompt}
+                  onShuffle={handleShuffle}
+                  shuffling={shuffling}
+                  showShuffleOnly={false}
+                />
               </div>
+              <p className="text-base text-muted-foreground">
+                No need to be perfect—just talk.
+              </p>
+            </div>
             </div>
 
             {/* Primary Action */}
@@ -218,11 +228,11 @@ export function SimpleHeader({
                 <Button
                   onClick={() => handleRecordWithPrompt(primaryPrompt)}
                   size="lg"
-                  className="w-full max-w-sm h-20 text-2xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 border-4 border-primary/20"
+                  className="w-full max-w-sm h-24 text-xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 border-4 border-primary/30 focus:ring-4 focus:ring-primary/50 focus:border-primary focus:outline-none"
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <Mic className="w-8 h-8" />
-                    <span>Tap to Record Your Story</span>
+                    <Mic className="w-10 h-10" />
+                    <span>Tap to Record Your Story (Audio or Video)</span>
                   </div>
                 </Button>
                 
@@ -250,13 +260,13 @@ export function SimpleHeader({
               </div>
             </div>
 
-            {/* Controls Row */}
-            <div className="flex justify-between items-center pt-2 sm:pt-4">
-              <div className="flex-1" />
+            {/* Shuffle Button Only */}
+            <div className="flex justify-end pt-2 sm:pt-4">
               <PromptControls
                 prompt={primaryPrompt}
                 onShuffle={handleShuffle}
                 shuffling={shuffling}
+                showShuffleOnly={true}
               />
             </div>
           </div>
@@ -267,18 +277,35 @@ export function SimpleHeader({
       {alternatePrompts.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           {alternatePrompts.map((prompt) => (
-            <Button
-              key={prompt.id}
-              onClick={() => handleRecordWithPrompt(prompt)}
-              variant="outline"
-              size="lg"
-              className="flex-1 h-14 px-6 text-base font-medium text-left justify-start min-w-0 bg-background hover:bg-accent/50 border-2 gap-3"
-            >
-              <Mic className="w-5 h-5 flex-shrink-0 text-primary" />
-              <span className="truncate">
-                {truncatePrompt(prompt.text, 60)}
-              </span>
-            </Button>
+            <Card key={prompt.id} className="flex-1 border hover:border-primary/30 transition-colors">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <p className="text-base font-medium leading-relaxed">
+                        {truncatePrompt(prompt.text, 60)}
+                      </p>
+                    </div>
+                    <PromptControls
+                      prompt={prompt}
+                      onShuffle={handleShuffle}
+                      shuffling={shuffling}
+                      showShuffleOnly={false}
+                      compact={true}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => handleRecordWithPrompt(prompt)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-10 text-sm font-medium border-2 hover:bg-accent/50 gap-2"
+                  >
+                    <Mic className="w-4 h-4 text-primary" />
+                    Record with this prompt
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
