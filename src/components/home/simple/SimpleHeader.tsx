@@ -301,11 +301,11 @@ export function SimpleHeader({
                     handleRecordWithPrompt(primaryPrompt)
                   }}
                   size="lg"
-                  className="w-full max-w-sm h-24 text-xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 border-4 border-primary/30 focus:ring-4 focus:ring-primary/50 focus:border-primary focus:outline-none"
+                  className="w-full max-w-md h-24 text-lg font-bold px-8 bg-primary hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 border-4 border-primary/30 focus:ring-4 focus:ring-primary/50 focus:border-primary focus:outline-none"
                 >
                   <div className="flex flex-col items-center gap-2">
                     <Mic className="w-10 h-10" />
-                    <span>Tap to Record Your Story (Audio or Video)</span>
+                    <span className="text-center leading-tight">Tap to Record Your Story (Audio or Video)</span>
                   </div>
                 </Button>
                 
