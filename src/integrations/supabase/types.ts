@@ -5035,6 +5035,20 @@ export type Database = {
         Args: { p_family_id: string; p_person_id: string }
         Returns: string
       }
+      get_person_timeline_items: {
+        Args: { p_person_id: string }
+        Returns: {
+          excerpt: string
+          family_id: string
+          happened_on: string
+          is_approx: boolean
+          item_id: string
+          item_type: string
+          occurred_precision: Database["public"]["Enums"]["date_precision"]
+          person_id: string
+          title: string
+        }[]
+      }
       get_prompts_progress: {
         Args: { p_family_id: string }
         Returns: Json

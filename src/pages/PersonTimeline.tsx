@@ -57,12 +57,9 @@ export function PersonTimeline() {
 
       setPerson(personData)
 
-      // Load timeline items
+      // Load timeline items using secure function
       const { data: timelineData, error: timelineError } = await supabase
-        .from('person_timeline_items')
-        .select('*')
-        .eq('person_id', id)
-        .order('happened_on', { ascending: true })
+        .rpc('get_person_timeline_items', { p_person_id: id })
 
       if (timelineError) {
         throw new Error(timelineError.message)
