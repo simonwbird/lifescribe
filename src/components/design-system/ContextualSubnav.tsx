@@ -23,9 +23,10 @@ export function ContextualSubnav({ items, className = '' }: ContextualSubnavProp
   }
 
   const handleItemClick = (item: SubnavItem) => {
-    track('nav_click', { 
+    track('nav_click_home', { 
       item: item.label.toLowerCase(),
-      path: item.href
+      path: item.href,
+      source: 'subnav'
     })
   }
 

@@ -62,13 +62,7 @@ export default function DesignSystemDemo() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <AppHeader 
-        title="Design System Demo"
-        onSearch={handleSearch}
-        onNotifications={() => handleToast()}
-        onProfile={() => handleToast()}
-      />
+      {/* Header is rendered globally via App.tsx */}
 
       {/* Navigation */}
       <div className="border-b px-6 py-4">
