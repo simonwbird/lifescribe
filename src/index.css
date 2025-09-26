@@ -121,9 +121,9 @@ small, .overline {
     --ink: 210 14% 14%;                /* #1C2228 - Body text */
     --ink-muted: 210 10% 44%;          /* #66707B - Secondary text */
     
-    /* Layout neutrals - cool mint palette */
-    --neutral-canvas: 160 33% 97%;     /* #F7FBFA - Page background */
-    --neutral-section: 160 43% 95%;    /* #ECF7F5 - Section background */
+    /* Layout neutrals - clean white palette */
+    --neutral-canvas: 0 0% 100%;       /* #FFFFFF - Pure white page background */
+    --neutral-section: 210 40% 98%;    /* #FAFBFC - Very light section background */
     --neutral-card: 0 0% 100%;         /* #FFFFFF - Cards stay white */
     
     /* State colors */
