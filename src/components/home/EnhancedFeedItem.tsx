@@ -173,6 +173,19 @@ export function EnhancedFeedItem({
                 </p>
               </div>
             </div>
+            
+            <div className="flex items-center gap-1">
+              {showAdminActions && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AdminFeedActions 
+                    storyId={activity.id.replace('story-', '')} 
+                    onAction={(action, storyId) => {
+                      console.log('Admin action:', action, 'on story:', storyId);
+                    }} 
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Compact Content */}
