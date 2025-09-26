@@ -20,6 +20,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import type { UpcomingEvent } from '@/lib/eventsService'
+import { validateFile, generateAcceptAttribute, formatFileSize, getFileTypeDescription } from '@/utils/fileValidation'
 
 interface EventContributionModalProps {
   event: UpcomingEvent | null
@@ -46,6 +47,29 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
   const { toast } = useToast()
 
   const handleFileSelect = (file: File) => {
+    // Validate file using enhanced validation
+    const validation = validateFile(file)
+    
+    if (!validation.isValid) {
+      toast({
+        title: 'File not supported',
+        description: validation.error,
+        variant: 'destructive'
+      })
+      return
+    }
+    
+    // Show warnings if any
+    if (validation.warnings && validation.warnings.length > 0) {
+      validation.warnings.forEach(warning => {
+        toast({
+          title: 'File Warning',
+          description: warning,
+          variant: 'default'
+        })
+      })
+    }
+    
     setSelectedFile(file)
     
     if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
@@ -261,7 +285,7 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
                     </p>
                     <Input
                       type="file"
-                      accept="image/*"
+                      accept={generateAcceptAttribute(['images'])}
                       onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                       className="cursor-pointer"
                     />
@@ -284,7 +308,10 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
+                      {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {getFileTypeDescription(selectedFile.type)}
                     </p>
                   </div>
                 )}
@@ -320,11 +347,11 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
                       Click to select a video to share
                     </p>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Max file size: 50MB
+                      Supports: MP4, WebM, MOV, AVI and more
                     </p>
                     <Input
                       type="file"
-                      accept="video/*"
+                      accept={generateAcceptAttribute(['videos', 'audio'])}
                       onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                       className="cursor-pointer"
                     />
@@ -337,7 +364,7 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
                         <div className="flex-1">
                           <p className="text-sm font-medium">{selectedFile.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                            {formatFileSize(selectedFile.size)} • {getFileTypeDescription(selectedFile.type)}
                           </p>
                         </div>
                         <Button

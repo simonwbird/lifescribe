@@ -9,6 +9,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { weeklyDigestService } from '@/lib/weeklyDigestService'
+import EnhancedDigestContributions from '@/components/digest/EnhancedDigestContributions'
 import type { DigestSettings, DigestPreview } from '@/lib/digestTypes'
 
 export default function EnhancedSimpleWeeklyDigest() {
@@ -223,8 +224,8 @@ export default function EnhancedSimpleWeeklyDigest() {
                 </div>
               )}
               
-              {/* Status Info */}
-              <div className="space-y-2">
+              {/* Status Info with Contributions Preview */}
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Next digest: This weekend</span>
@@ -232,6 +233,17 @@ export default function EnhancedSimpleWeeklyDigest() {
                 <p className="text-xs text-muted-foreground">
                   Includes: New stories, photos, and comments from this week
                 </p>
+                
+                {/* Weekly Contributions Preview */}
+                {familyId && (
+                  <EnhancedDigestContributions
+                    familyId={familyId}
+                    startDate={new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}
+                    endDate={new Date().toISOString()}
+                    showPreview={true}
+                    maxItems={3}
+                  />
+                )}
               </div>
               
               {/* Admin Actions - Simple Style */}
