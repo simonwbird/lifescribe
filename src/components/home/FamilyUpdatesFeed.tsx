@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { FeedFilters, type FeedFilterOptions } from './FeedFilters'
 import { InlineStoryViewer } from './InlineStoryViewer'
 import { EnhancedFeedItem } from './EnhancedFeedItem'
+import { LiveFeedAnimations } from '../feed/LiveFeedAnimations'
 import { isAfter, isBefore, isWithinInterval } from 'date-fns'
 
 interface ActivityItem {
@@ -62,6 +63,7 @@ export default function FamilyUpdatesFeed({
   const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true) // Enable by default for Simple mode
   const [reactionStates, setReactionStates] = useState<Record<string, { liked: boolean; likeCount: number }>>({})
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [newFeedItems, setNewFeedItems] = useState<any[]>([])
   const tickerRef = useRef<HTMLDivElement | null>(null)
 
   // Load current user's profile (for avatar)
@@ -405,6 +407,17 @@ export default function FamilyUpdatesFeed({
             />
           </div>
         </div>
+
+        {/* Live Feed Updates */}
+        {newFeedItems.length > 0 && (
+          <LiveFeedAnimations
+            newItems={newFeedItems}
+            onItemClick={(item) => handleActivityClick(filteredActivities.find(a => a.id === item.id)!)}
+            onDismiss={(itemId) => setNewFeedItems(prev => prev.filter(item => item.id !== itemId))}
+            onViewAll={() => window.location.reload()}
+            isRealTimeEnabled={isRealTimeEnabled}
+          />
+        )}
 
         {/* Enhanced Feed Content */}
         <div className="space-y-4">
