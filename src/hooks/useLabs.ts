@@ -10,6 +10,7 @@ export interface LabsFlags {
   analytics: boolean
   notifications: boolean
   safeBox: boolean
+  'prompts.peopleSpecific': boolean
 }
 
 const DEFAULT_FLAGS: LabsFlags = {
@@ -21,6 +22,7 @@ const DEFAULT_FLAGS: LabsFlags = {
   analytics: false,
   notifications: false,
   safeBox: false,
+  'prompts.peopleSpecific': true,
 }
 
 export function useLabs() {

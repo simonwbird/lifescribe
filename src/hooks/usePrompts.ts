@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { useLabs } from './useLabs'
 
 export interface Prompt {
   id: string
@@ -52,10 +53,13 @@ export interface PromptCounts {
 }
 
 export function usePrompts(familyId: string, personId?: string) {
+  const { flags } = useLabs()
   const [instances, setInstances] = useState<PromptInstance[]>([])
   const [counts, setCounts] = useState<PromptCounts>({ open: 0, in_progress: 0, completed: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const isPeopleSpecificEnabled = flags['prompts.peopleSpecific']
 
   const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string) => {
     try {
@@ -85,13 +89,26 @@ export function usePrompts(familyId: string, personId?: string) {
 
       if (fetchError) throw fetchError
 
-      setInstances((data || []) as PromptInstance[])
+      // Filter instances based on feature flag
+      const filteredData = (data || []).filter(instance => {
+        // Always show general prompts
+        if (instance.prompt?.scope === 'general') return true
+        
+        // Only show person-specific prompts if feature flag is enabled
+        if (instance.prompt?.scope === 'person_specific') {
+          return isPeopleSpecificEnabled
+        }
+        
+        return true
+      })
 
-      // Calculate counts
+      setInstances(filteredData as PromptInstance[])
+
+      // Calculate counts from filtered data
       if (!status) {
-        const openCount = data?.filter(i => i.status === 'open').length || 0
-        const inProgressCount = data?.filter(i => i.status === 'in_progress').length || 0
-        const completedCount = data?.filter(i => i.status === 'completed').length || 0
+        const openCount = filteredData?.filter(i => i.status === 'open').length || 0
+        const inProgressCount = filteredData?.filter(i => i.status === 'in_progress').length || 0
+        const completedCount = filteredData?.filter(i => i.status === 'completed').length || 0
         
         setCounts({
           open: openCount,
@@ -229,7 +246,7 @@ export function usePrompts(familyId: string, personId?: string) {
     if (familyId) {
       fetchPrompts()
     }
-  }, [familyId, personId])
+  }, [familyId, personId, isPeopleSpecificEnabled])
 
   return {
     instances,
