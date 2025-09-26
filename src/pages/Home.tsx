@@ -17,6 +17,7 @@ import DraftsRow from '@/components/home/DraftsRow';
 import FloatingCoachMark from '@/components/onboarding/FloatingCoachMark';
 import QuickStoryCreator from '@/components/stories/QuickStoryCreator';
 import { SimpleHeader } from '@/components/home/simple/SimpleHeader';
+import { SimpleAdminPanel } from '@/components/home/simple/SimpleAdminPanel';
 import SimpleRecordingController from '@/components/home/simple/SimpleRecordingController';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
