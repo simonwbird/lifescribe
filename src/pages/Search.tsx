@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { SearchService, type SearchResult, type SearchFilters, type SmartAnswer } from '@/lib/searchService'
 import { supabase } from '@/lib/supabase'
@@ -184,8 +183,7 @@ export default function Search() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         
         <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -391,8 +389,7 @@ export default function Search() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
-    </AuthGate>
-  )
-}
+         </div>
+       </div>
+     )
+   }

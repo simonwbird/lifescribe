@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -91,52 +90,47 @@ export default function FamilyInvitations() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-muted rounded w-1/3"></div>
-                <div className="h-64 bg-muted rounded"></div>
-              </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-muted rounded w-1/3"></div>
+              <div className="h-64 bg-muted rounded"></div>
             </div>
           </div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   if (!family || !userRole) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
-              <Card>
-                <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    Unable to load family information
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/home')} 
-                    className="mt-4"
-                  >
-                    Go Home
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Unable to load family information
+                </p>
+                <Button 
+                  onClick={() => navigate('/home')} 
+                  className="mt-4"
+                >
+                  Go Home
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-6">
@@ -197,9 +191,8 @@ export default function FamilyInvitations() {
             familyName={family.name}
             onClose={() => setShowInviteModal(false)}
             onInviteSent={handleInviteSent}
-          />
-        )}
-      </div>
-    </AuthGate>
-  )
-}
+         />
+       )}
+     </div>
+   )
+ }

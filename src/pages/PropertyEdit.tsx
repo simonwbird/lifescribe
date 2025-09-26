@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -666,8 +665,7 @@ export default function PropertyEdit() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="flex items-center gap-4 mb-6">
@@ -752,8 +750,7 @@ export default function PropertyEdit() {
               </div>
             </>
           )}
-        </main>
-      </div>
-    </AuthGate>
-  )
-}
+         </main>
+       </div>
+     )
+   }

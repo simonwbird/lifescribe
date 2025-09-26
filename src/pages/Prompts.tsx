@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import MediaUploader from '@/components/MediaUploader'
 import { Button } from '@/components/ui/button'
@@ -455,8 +454,7 @@ export default function Prompts() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
@@ -673,6 +671,5 @@ export default function Prompts() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AuthGate>
-  )
-}
+   )
+ }

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
 
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import ArtifactWizard from '@/components/objects/ArtifactWizard'
 import CategoryChooser from '@/components/objects/CategoryChooser'
@@ -55,45 +54,39 @@ export default function ThingEdit() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-center">Loading...</div>
-          </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center">Loading...</div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   if (!categoryId) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center">
-              <p className="text-lg mb-4">Item not found</p>
-              <button onClick={() => navigate('/collections?tab=object')}>
-                Back to Objects
-              </button>
-            </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <p className="text-lg mb-4">Item not found</p>
+            <button onClick={() => navigate('/collections?tab=object')}>
+              Back to Objects
+            </button>
           </div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <ArtifactWizard
-          categoryId={categoryId}
-          onComplete={handleComplete}
-          onCancel={handleCancel}
-        />
-      </div>
-    </AuthGate>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <ArtifactWizard
+        categoryId={categoryId}
+        onComplete={handleComplete}
+        onCancel={handleCancel}
+      />
+    </div>
   )
 }

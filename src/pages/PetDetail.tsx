@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -198,50 +197,45 @@ export default function PetDetail() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto px-4 py-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-muted rounded w-48"></div>
-              <div className="h-32 bg-muted rounded"></div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="h-64 bg-muted rounded"></div>
-                <div className="h-64 bg-muted rounded"></div>
-              </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-48"></div>
+            <div className="h-32 bg-muted rounded"></div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="h-64 bg-muted rounded"></div>
+              <div className="h-64 bg-muted rounded"></div>
             </div>
-          </main>
-        </div>
-      </AuthGate>
+          </div>
+        </main>
+      </div>
     )
   }
 
   if (!pet) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto px-4 py-8">
-            <div className="text-center py-12">
-              <h1 className="text-2xl font-bold text-muted-foreground">Pet not found</h1>
-              <Link to="/collections?tab=pet">
-                <Button className="mt-4">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Pets
-                </Button>
-              </Link>
-            </div>
-          </main>
-        </div>
-      </AuthGate>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-muted-foreground">Pet not found</h1>
+            <Link to="/collections?tab=pet">
+              <Button className="mt-4">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Pets
+              </Button>
+            </Link>
+          </div>
+        </main>
+      </div>
     )
   }
 
   const SpeciesIcon = getSpeciesIcon(pet.species)
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         
         <main className="container mx-auto px-4 py-8">
@@ -545,6 +539,5 @@ export default function PetDetail() {
           imageAlt={currentImageAlt}
         />
       </div>
-    </AuthGate>
-  )
-}
+     )
+   }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
-import AuthGate from '@/components/AuthGate';
 import Header from '@/components/Header';
 import WelcomeHeader from '@/components/home/WelcomeHeader';
 import WhatsNew from '@/components/home/WhatsNew';
@@ -82,20 +81,17 @@ export default function Home() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage"></div>
-          </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage"></div>
         </div>
-      </AuthGate>
+      </div>
     );
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background pb-16 sm:pb-0">
+    <div className="min-h-screen bg-background pb-16 sm:pb-0">
         <Header />
         
         {/* Simple Mode Toggle */}
@@ -160,8 +156,7 @@ export default function Home() {
         <CreateModal 
           open={showCreateModal} 
           onClose={() => setShowCreateModal(false)} 
-        />
-      </div>
-    </AuthGate>
-  );
-}
+         />
+       </div>
+     );
+   }

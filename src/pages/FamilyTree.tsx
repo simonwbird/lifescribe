@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import ProfessionalFamilyTree from '@/components/family-tree/ProfessionalFamilyTree'
 import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas'
@@ -397,20 +396,17 @@ export default function FamilyTree() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen">
-          <Header />
-          <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         
         {/* Controls */}
@@ -498,8 +494,7 @@ export default function FamilyTree() {
             // Refresh the family tree data
             loadFamilyData()
           }}
-        />
-      </div>
-    </AuthGate>
-  )
-}
+         />
+       </div>
+     )
+   }
