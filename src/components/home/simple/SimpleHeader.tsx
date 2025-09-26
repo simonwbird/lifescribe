@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import TodaysPromptCard from '@/components/prompts/TodaysPromptCard'
 import ContinueSection from '@/components/prompts/ContinueSection'
-import { usePrompts } from '@/hooks/usePrompts'
+import { useTodaysPrompt, useInProgressPrompts } from '@/hooks/useTodaysPrompt'
 import { ElderPrompt } from '@/lib/prompts/getElderPrompts'
 
 interface SimpleHeaderProps {
@@ -16,11 +16,11 @@ export function SimpleHeader({
   spaceId, 
   onRecordPrompt 
 }: SimpleHeaderProps) {
-  const { getTodaysPrompt, getInProgressInstances, loading } = usePrompts(spaceId)
+  const { data: todaysPrompt, isLoading: todaysLoading } = useTodaysPrompt(spaceId)
+  const { data: inProgressPrompts = [], isLoading: inProgressLoading } = useInProgressPrompts(spaceId)
   const navigate = useNavigate()
 
-  const todaysPrompt = getTodaysPrompt()
-  const inProgressPrompts = getInProgressInstances()
+  const loading = todaysLoading || inProgressLoading
 
   const handleRespondToPrompt = (instanceId: string) => {
     const instance = todaysPrompt
@@ -29,14 +29,25 @@ export function SimpleHeader({
         type: 'text',
         promptTitle: instance.prompt.title,
         prompt_id: instance.id,
-        prompt_text: instance.prompt.body
+        family_id: spaceId
       })
-      navigate(`/stories/new?${searchParams.toString()}`)
+      navigate(`/capture/story-wizard?${searchParams.toString()}`)
+    }
+  }
+
+  const handleRecordPrompt = (instanceId: string) => {
+    const instance = todaysPrompt
+    if (instance?.prompt && onRecordPrompt) {
+      onRecordPrompt({
+        id: instance.prompt.id,
+        text: instance.prompt.body,
+        kind: 'general' as const
+      })
     }
   }
 
   const handleBrowseAll = () => {
-    navigate('/prompts/browse')
+    navigate('/prompts')
   }
 
   const handleContinuePrompt = (instanceId: string) => {
@@ -46,9 +57,9 @@ export function SimpleHeader({
         type: 'text',
         promptTitle: instance.prompt.title,
         prompt_id: instance.id,
-        prompt_text: instance.prompt.body
+        family_id: spaceId
       })
-      navigate(`/stories/new?${searchParams.toString()}`)
+      navigate(`/capture/story-wizard?${searchParams.toString()}`)
     }
   }
 

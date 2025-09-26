@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Play, BookOpen, Volume2, Shuffle, Sparkles, Mic, MessageCircle, PenTool } from 'lucide-react'
@@ -15,7 +15,7 @@ interface TodaysPromptCardProps {
   people?: Array<{ id: string; full_name: string }> // For person chips
 }
 
-export default function TodaysPromptCard({ 
+const TodaysPromptCard = memo(function TodaysPromptCard({ 
   promptInstance, 
   onRespond, 
   onBrowseAll,
@@ -245,5 +245,8 @@ export default function TodaysPromptCard({
         />
       )}
     </div>
-  )
-}
+    )
+  }
+)
+
+export default TodaysPromptCard
