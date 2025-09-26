@@ -4915,6 +4915,10 @@ export type Database = {
         Args: { p_family_id: string }
         Returns: boolean
       }
+      check_snoozed_prompts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_auth_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5030,6 +5034,10 @@ export type Database = {
       get_person_relationship_role: {
         Args: { p_family_id: string; p_person_id: string }
         Returns: string
+      }
+      get_prompts_progress: {
+        Args: { p_family_id: string }
+        Returns: Json
       }
       get_role_permissions: {
         Args: { user_role: Database["public"]["Enums"]["role_type"] }
@@ -5267,6 +5275,13 @@ export type Database = {
         | "family_setup"
         | "preferences"
         | "completed"
+      prompt_instance_status:
+        | "open"
+        | "in_progress"
+        | "completed"
+        | "skipped"
+        | "not_applicable"
+        | "snoozed"
       property_event_type:
         | "moved_in"
         | "moved_out"
@@ -5577,6 +5592,14 @@ export const Constants = {
         "family_setup",
         "preferences",
         "completed",
+      ],
+      prompt_instance_status: [
+        "open",
+        "in_progress",
+        "completed",
+        "skipped",
+        "not_applicable",
+        "snoozed",
       ],
       property_event_type: [
         "moved_in",
