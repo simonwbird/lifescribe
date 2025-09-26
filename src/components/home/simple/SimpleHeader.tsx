@@ -8,9 +8,12 @@ import { useNavigate } from 'react-router-dom'
 import { PromptControls } from './PromptControls'
 import { InputTypeModal } from './InputTypeModal'
 import { BlankCanvasModal } from './BlankCanvasModal'
-import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager'
-import { DraftProgressBanner } from '@/components/drafts/DraftProgressBanner'
-import { ResumeSessionModal } from '@/components/drafts/ResumeSessionModal'
+import VoiceFirstHero from '@/components/home/VoiceFirstHero';
+import InviteBanner from '@/components/home/InviteBanner';
+import EnhancedPromptResponseArea from '@/components/simple/EnhancedPromptResponseArea';
+import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager';
+import { DraftProgressBanner } from '@/components/drafts/DraftProgressBanner';
+import { ResumeSessionModal } from '@/components/drafts/ResumeSessionModal';
 
 interface SimpleHeaderProps {
   profileId: string
@@ -202,6 +205,11 @@ export function SimpleHeader({
     setShowResumeModal(false)
   }
 
+  const handleQuickRecord = () => {
+    track('activity_clicked', { action: 'quick_record' })
+    setShowBlankCanvasModal(true)
+  }
+
   const handleModalCancel = () => {
     setShowInputTypeModal(false)
     setShowBlankCanvasModal(false)
@@ -287,58 +295,44 @@ export function SimpleHeader({
             </div>
             </div>
 
-            {/* Primary Action */}
-            <div className="space-y-4 sm:space-y-6">
-              {/* Large, prominent "Record" button for elder accessibility */}
-              <div className="flex flex-col items-center gap-4">
-                <Button
-                  onClick={() => {
-                    // Start autosave when user begins recording
-                    draftManager.startAutosave(() => ({
-                      prompt: primaryPrompt.text,
-                      mode: 'audio'
-                    }), 'audio')
-                    handleRecordWithPrompt(primaryPrompt)
-                  }}
-                  size="lg"
-                  className="w-full max-w-md h-24 text-lg font-bold px-8 bg-primary hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 border-4 border-primary/30 focus:ring-4 focus:ring-primary/50 focus:border-primary focus:outline-none"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Mic className="w-10 h-10" />
-                    <span className="text-center leading-tight">Tap to Record Your Story (Audio or Video)</span>
-                  </div>
-                </Button>
-                
-                {/* Alternative: Start with prompt */}
-                <Button
-                  onClick={() => {
-                    // Start autosave for alternative prompt recording
-                    draftManager.startAutosave(() => ({
-                      prompt: primaryPrompt.text,
-                      mode: 'audio'
-                    }), 'audio')
-                    handleRecordWithPrompt(primaryPrompt)
-                  }}
-                  variant="outline"
-                  size="lg"
-                  className="w-full max-w-sm h-14 text-lg font-medium px-8 border-2 hover:bg-accent/50"
-                >
-                  <Mic className="w-5 h-5 mr-3" />
-                  Start with this prompt
-                </Button>
-              </div>
-
-              {/* Secondary Action */}
-              <div className="text-center">
-                <button
-                  onClick={handleRecordWithoutPrompt}
-                  className="text-primary hover:text-primary/80 underline underline-offset-4 text-base font-medium"
-                  title="Share any memory or thought that comes to mind — no prompt needed"
-                >
-                  Share whatever's on your mind
-                </button>
-              </div>
-            </div>
+            {/* Enhanced Prompt Response Area */}
+            <EnhancedPromptResponseArea
+              prompt={{
+                id: primaryPrompt.id,
+                text: primaryPrompt.text,
+                type: primaryPrompt.kind === 'personal' ? 'personal' : 'general'
+              }}
+              onRecord={(format) => {
+                // Start autosave for recording
+                const draftFormat = format === 'voice' ? 'audio' : format
+                draftManager.startAutosave(() => ({
+                  prompt: primaryPrompt.text,
+                  mode: draftFormat
+                }), draftFormat)
+                handleRecordWithPrompt(primaryPrompt)
+              }}
+              onBrowseFeed={() => {
+                track('activity_clicked', { action: 'browse_feed' })
+                navigate('/feed')
+              }}
+              onCreateFreeform={() => {
+                track('activity_clicked', { action: 'create_freeform' })
+                navigate('/create')
+              }}
+              onAddPhoto={() => {
+                track('activity_clicked', { action: 'add_photo' })
+                navigate('/create?mode=photo')
+              }}
+              onQuickVoice={() => {
+                track('activity_clicked', { action: 'quick_voice' })
+                draftManager.startAutosave(() => ({
+                  prompt: 'Quick voice recording',
+                  mode: 'audio'
+                }), 'audio')
+                handleQuickRecord()
+              }}
+              userAge="adult" // TODO: Get from user profile
+            />
 
             {/* Shuffle Button Only */}
             <div className="flex justify-end pt-2 sm:pt-4">
