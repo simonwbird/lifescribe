@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
+import { useLocale } from '@/hooks/useLocale'
 import { supabase } from '@/lib/supabase'
 import { getCurrentSpaceId } from '@/lib/spaceUtils'
 import { updatePersonBirthDate } from '@/lib/eventsService'
@@ -71,7 +72,7 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
   const handleSave = async () => {
     if (!createNewPerson && !selectedPersonId) {
       toast({
-        title: "Please select a person",
+        title: t('forms.pleaseSelect'),
         variant: "destructive"
       })
       return
@@ -79,7 +80,7 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
 
     if (createNewPerson && !newPersonName.trim()) {
       toast({
-        title: "Please enter a name",
+        title: t('forms.enterName'),
         variant: "destructive"
       })
       return
@@ -87,7 +88,7 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
 
     if (!unknownYear && !birthDate) {
       toast({
-        title: "Please enter a birth date",
+        title: t('forms.selectDate'),
         variant: "destructive"
       })
       return
@@ -95,7 +96,7 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
 
     if (unknownYear && (!birthMonth || !birthDay)) {
       toast({
-        title: "Please enter birth month and day",
+        title: t('forms.monthDay'),
         variant: "destructive"
       })
       return
@@ -142,43 +143,28 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
       
     } catch (error) {
       console.error('Error saving birthday:', error)
-      toast({
-        title: "Error saving birthday",
-        description: "Please try again",
-        variant: "destructive"
-      })
+        toast({
+          title: t('errors.saveFailed'),
+          description: t('errors.tryAgain'),
+          variant: "destructive"
+        })
     } finally {
       setLoading(false)
     }
   }
 
-  const months = [
-    { value: '1', label: 'January' },
-    { value: '2', label: 'February' },
-    { value: '3', label: 'March' },
-    { value: '4', label: 'April' },
-    { value: '5', label: 'May' },
-    { value: '6', label: 'June' },
-    { value: '7', label: 'July' },
-    { value: '8', label: 'August' },
-    { value: '9', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' }
-  ]
+  const { getMonthOptions, getDayOptions, t } = useLocale()
 
-  const days = Array.from({ length: 31 }, (_, i) => ({
-    value: (i + 1).toString(),
-    label: (i + 1).toString()
-  }))
+  const months = getMonthOptions()
+  const days = getDayOptions()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Birthday</DialogTitle>
+          <DialogTitle>{t('events.addBirthday')}</DialogTitle>
           <DialogDescription>
-            Add a birthday for a family member
+            {t('people.addPerson')}
           </DialogDescription>
         </DialogHeader>
 
@@ -235,7 +221,7 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
                 onCheckedChange={(checked) => setUnknownYear(checked === true)}
               />
               <Label htmlFor="unknown-year" className="text-sm">
-                Year unknown (only month & day)
+                {t('forms.unknownYear')}
               </Label>
             </div>
 
@@ -289,10 +275,10 @@ export default function AddBirthdayModal({ open, onOpenChange, onSuccess }: AddB
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : 'Save Birthday'}
+            {loading ? t('common.loading') : t('events.addBirthday')}
           </Button>
         </DialogFooter>
       </DialogContent>

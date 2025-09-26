@@ -7,7 +7,9 @@ import { Calendar, Plus, Camera, PenTool, Heart, Users, Info } from 'lucide-reac
 import { Link, useNavigate } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
+import { useLocale } from '@/hooks/useLocale'
 import { getUpcomingEvents, type UpcomingEvent } from '@/lib/eventsService'
+import { formatUpcomingDate, createTimezoneAwareRefresh } from '@/utils/dateHygiene'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import AddBirthdayModal from './AddBirthdayModal'
 import AddEventModal from './AddEventModal'
@@ -23,11 +25,17 @@ export default function Upcoming() {
   const [showEventDetails, setShowEventDetails] = useState(false)
   const { track } = useAnalytics()
   const { toast } = useToast()
+  const { t, timezone } = useLocale()
   const navigate = useNavigate()
 
   useEffect(() => {
     loadEvents()
-  }, [])
+    
+    // Set up timezone-aware refresh to handle timezone changes
+    const cleanup = createTimezoneAwareRefresh(loadEvents, 5)
+    
+    return cleanup
+  }, [timezone])
 
   const loadEvents = async () => {
     try {
@@ -37,8 +45,8 @@ export default function Upcoming() {
     } catch (error) {
       console.error('Error loading events:', error)
       toast({
-        title: "Error loading events",
-        description: "Failed to load upcoming events",
+        title: t('common.error'),
+        description: t('errors.loadFailed'),
         variant: "destructive"
       })
     } finally {
@@ -137,7 +145,7 @@ export default function Upcoming() {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-serif flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Upcoming
+            {t('date.upcoming')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -156,7 +164,7 @@ export default function Upcoming() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-serif flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Upcoming
+              {t('date.upcoming')}
             </CardTitle>
             
             <Dialog open={showAddMenu} onOpenChange={setShowAddMenu}>
@@ -212,7 +220,7 @@ export default function Upcoming() {
             <div className="text-center py-6">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground mb-3">
-                No upcoming events in the next 30 days
+                {t('events.noUpcoming')}
               </p>
               <Button 
                 variant="outline" 
