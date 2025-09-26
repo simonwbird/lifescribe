@@ -212,9 +212,7 @@ const App = () => (
         <Sonner />
         <PerformanceMonitor />
         <ImpersonationProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <AppContent />
           <BugReportWidget />
         </ImpersonationProvider>
       </ModeProvider>
