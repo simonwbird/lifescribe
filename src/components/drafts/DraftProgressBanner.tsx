@@ -15,22 +15,17 @@ export function DraftProgressBanner({ autosaveStatus, onDismiss, className }: Dr
   const [shouldAutoHide, setShouldAutoHide] = useState(false)
 
   useEffect(() => {
-    if (autosaveStatus.status === 'saved') {
-      setIsVisible(true)
-      setShouldAutoHide(true)
-      
-      // Auto-hide after 3 seconds
-      const timer = setTimeout(() => {
-        setIsVisible(false)
-        setShouldAutoHide(false)
-      }, 3000)
-      
-      return () => clearTimeout(timer)
-    } else if (autosaveStatus.status === 'saving') {
+    // Only show banner for errors and manual saves, not routine autosaves
+    if (autosaveStatus.status === 'error') {
       setIsVisible(true)
       setShouldAutoHide(false)
-    } else if (autosaveStatus.status === 'error') {
-      setIsVisible(true)
+    } else if (autosaveStatus.status === 'saving') {
+      // Don't show saving state for autosaves, it's too distracting
+      setIsVisible(false)
+      setShouldAutoHide(false)
+    } else if (autosaveStatus.status === 'saved') {
+      // Don't show saved notification for routine autosaves
+      setIsVisible(false) 
       setShouldAutoHide(false)
     } else {
       setIsVisible(false)
