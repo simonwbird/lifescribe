@@ -28,7 +28,13 @@ export function usePromptProgress(familyId: string) {
       });
 
       if (error) throw error;
-      return data as ProgressStats;
+      
+      // Type-safe conversion of the JSONB response
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+      
+      return data as unknown as ProgressStats;
     },
     enabled: !!familyId,
     staleTime: 5 * 60 * 1000, // 5 minutes

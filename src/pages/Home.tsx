@@ -28,6 +28,8 @@ import { useMode } from '@/hooks/useMode';
 import { useLabs } from '@/hooks/useLabs';
 import { useNavigate } from 'react-router-dom';
 import BirthdayRail from '@/components/prompts/BirthdayRail';
+import { ContinueWhereYouLeftOff } from '@/components/prompts/ContinueWhereYouLeftOff';
+import { ProgressHeader } from '@/components/prompts/ProgressHeader';
 import { ElderPrompt } from '@/lib/prompts/getElderPrompts';
 import { checkMicrophonePermission, isOnline, getPromptTitle } from '@/lib/recorder/startFromPrompt';
 import { CountdownModal } from '@/components/home/simple/CountdownModal';
@@ -440,6 +442,11 @@ export default function Home() {
         <div className="min-h-screen bg-background">
           <Header />
           <main className="container mx-auto px-4 py-6 space-y-6">
+            {/* Progress Header for Simple Mode */}
+            {flags['prompts.progressAndFilters'] && (
+              <ProgressHeader familyId={spaceId || ''} variant="compact" />
+            )}
+
             {/* Simple Mode: Unified Header */}
             <SimpleHeader profileId={profileId || 'default'} spaceId={spaceId || 'default'} onRecordPrompt={handlePromptSelected} />
 
@@ -463,7 +470,20 @@ export default function Home() {
             {/* Invite Banner */}
             {!hasOtherMembers && <InviteBanner />}
 
-            {/* Birthday Rail */}
+            {/* Continue Where You Left Off */}
+            {flags['prompts.progressAndFilters'] && (
+              <ContinueWhereYouLeftOff 
+                familyId={spaceId || ''} 
+                onContinue={(instanceId) => {
+                  // Navigate to story creation for in-progress prompt
+                  const searchParams = new URLSearchParams({
+                    instance_id: instanceId,
+                    type: 'text'
+                  });
+                  navigate(`/stories/new?${searchParams.toString()}`);
+                }} 
+              />
+            )}
             {flags['prompts.birthdays'] && (
               <BirthdayRail 
                 familyId={spaceId || ''} 
