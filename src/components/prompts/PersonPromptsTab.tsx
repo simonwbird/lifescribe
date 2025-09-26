@@ -2,9 +2,10 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Play, CheckCircle, Clock, Circle } from 'lucide-react'
+import { Play, CheckCircle, Clock, Circle, Eye, ArrowRight } from 'lucide-react'
 import { usePrompts, PromptInstance } from '@/hooks/usePrompts'
 import { Person } from '@/utils/personUtils'
+import LockedPromptCard from './LockedPromptCard'
 
 interface PersonPromptsTabProps {
   person: Person
@@ -17,11 +18,24 @@ export default function PersonPromptsTab({
   familyId, 
   onStartPrompt 
 }: PersonPromptsTabProps) {
-  const { instances, loading, getPersonProgress, getNextPromptForPerson } = usePrompts(familyId, person.id)
+  const { instances, loading, lockedPrompts, getPersonProgress, getNextPromptForPerson, generatePromptsForPerson } = usePrompts(familyId, person.id)
   
   const progress = getPersonProgress(person.id)
   const nextPrompt = getNextPromptForPerson(person.id)
   const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0
+
+  const handleAddPerson = async (relationship: string) => {
+    // Navigate to add person page with relationship pre-filled
+    console.log(`Navigate to add ${relationship} for family ${familyId}`)
+  }
+
+  const handleGeneratePrompts = async () => {
+    try {
+      await generatePromptsForPerson(person.id)
+    } catch (error) {
+      console.error('Error generating prompts:', error)
+    }
+  }
 
   const getStatusIcon = (instance: PromptInstance) => {
     switch (instance.status) {
@@ -102,9 +116,30 @@ export default function PersonPromptsTab({
         </div>
       )}
 
+      {/* Locked Prompts */}
+      {lockedPrompts && lockedPrompts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-semibold text-muted-foreground">
+            Locked Prompts ({lockedPrompts.length})
+          </h3>
+          {lockedPrompts.map((lockedPrompt, index) => (
+            <LockedPromptCard
+              key={index}
+              lockedPrompt={lockedPrompt}
+              onAddPerson={handleAddPerson}
+            />
+          ))}
+        </div>
+      )}
+
       {/* All Prompts List */}
       <div className="space-y-3">
-        <h3 className="font-semibold">All Prompts for {person.given_name}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">All Prompts for {person.given_name}</h3>
+          <Button variant="outline" size="sm" onClick={handleGeneratePrompts}>
+            Generate More
+          </Button>
+        </div>
         
         {progress.instances.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
@@ -143,14 +178,33 @@ export default function PersonPromptsTab({
                     </div>
                   </div>
                   
-                  {instance.status !== 'completed' && (
+                  {instance.status !== 'completed' ? (
                     <Button
                       onClick={() => onStartPrompt(instance.id)}
                       size="sm"
                       variant={instance.status === 'in_progress' ? 'default' : 'outline'}
                       className="ml-2"
                     >
-                      {instance.status === 'in_progress' ? 'Continue' : 'Start'}
+                      {instance.status === 'in_progress' ? (
+                        <>
+                          <ArrowRight className="h-3 w-3 mr-1" />
+                          Continue
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-3 w-3 mr-1" />
+                          Start
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-2"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
                     </Button>
                   )}
                 </div>

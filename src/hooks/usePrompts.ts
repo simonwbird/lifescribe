@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useLabs } from './useLabs'
+import { replacePlaceholders, getMissingPeopleForPrompts, generatePersonPromptInstances } from '@/services/promptService'
 
 export interface Prompt {
   id: string
@@ -58,6 +59,8 @@ export function usePrompts(familyId: string, personId?: string) {
   const [counts, setCounts] = useState<PromptCounts>({ open: 0, in_progress: 0, completed: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lockedPrompts, setLockedPrompts] = useState<any[]>([])
+  const [people, setPeople] = useState<Record<string, { name: string; relationship?: string }>>({})
 
   const isPeopleSpecificEnabled = flags['prompts.peopleSpecific']
 
@@ -65,6 +68,36 @@ export function usePrompts(familyId: string, personId?: string) {
     try {
       setLoading(true)
       setError(null)
+
+      // Fetch people for placeholder replacement
+      const { data: peopleData, error: peopleError } = await supabase
+        .from('people')
+        .select('id, full_name')
+        .eq('family_id', familyId)
+
+      if (peopleError) throw peopleError
+
+      // Fetch relationships separately to avoid complex joins
+      const { data: relationshipsData, error: relationshipsError } = await supabase
+        .from('relationships')
+        .select('from_person_id, to_person_id, relationship_type')
+
+      if (relationshipsError) throw relationshipsError
+
+      // Build people lookup for placeholder replacement
+      const peopleMap: Record<string, { name: string; relationship?: string }> = {}
+      peopleData?.forEach(person => {
+        // Find primary relationship for this person
+        const relationship = relationshipsData?.find(r => 
+          r.from_person_id === person.id || r.to_person_id === person.id
+        )
+        
+        peopleMap[person.id] = {
+          name: person.full_name,
+          relationship: relationship?.relationship_type
+        }
+      })
+      setPeople(peopleMap)
 
       let query = supabase
         .from('prompt_instances')
@@ -89,7 +122,7 @@ export function usePrompts(familyId: string, personId?: string) {
 
       if (fetchError) throw fetchError
 
-      // Filter instances based on feature flag
+      // Filter instances based on feature flag and apply placeholder replacement
       const filteredData = (data || []).filter(instance => {
         // Always show general prompts
         if (instance.prompt?.scope === 'general') return true
@@ -100,6 +133,26 @@ export function usePrompts(familyId: string, personId?: string) {
         }
         
         return true
+      }).map(instance => {
+        // Replace placeholders in prompt text
+        if (instance.prompt) {
+          const relevantPeople: Record<string, { name: string; relationship?: string }> = {}
+          instance.person_ids?.forEach((id: string) => {
+            if (peopleMap[id]) {
+              relevantPeople[id] = peopleMap[id]
+            }
+          })
+
+          return {
+            ...instance,
+            prompt: {
+              ...instance.prompt,
+              title: replacePlaceholders(instance.prompt.title, relevantPeople),
+              body: replacePlaceholders(instance.prompt.body, relevantPeople)
+            }
+          }
+        }
+        return instance
       })
 
       setInstances(filteredData as PromptInstance[])
@@ -115,6 +168,16 @@ export function usePrompts(familyId: string, personId?: string) {
           in_progress: inProgressCount,
           completed: completedCount
         })
+      }
+
+      // Fetch locked prompts if people-specific is enabled
+      if (isPeopleSpecificEnabled) {
+        try {
+          const missingRoles = await getMissingPeopleForPrompts(familyId)
+          setLockedPrompts(missingRoles)
+        } catch (lockedError) {
+          console.warn('Error fetching locked prompts:', lockedError)
+        }
       }
 
     } catch (err) {
@@ -248,17 +311,31 @@ export function usePrompts(familyId: string, personId?: string) {
     }
   }, [familyId, personId, isPeopleSpecificEnabled])
 
+  const generatePromptsForPerson = async (targetPersonId: string) => {
+    try {
+      await generatePersonPromptInstances(familyId, targetPersonId)
+      // Refresh prompts after generation
+      await fetchPrompts()
+    } catch (err) {
+      console.error('Error generating prompts for person:', err)
+      throw err
+    }
+  }
+
   return {
     instances,
     counts,
     loading,
     error,
+    lockedPrompts,
+    people,
     fetchPrompts,
     startPrompt,
     createResponse,
     getTodaysPrompt,
     getInProgressInstances,
     getPersonProgress,
-    getNextPromptForPerson
+    getNextPromptForPerson,
+    generatePromptsForPerson
   }
 }
