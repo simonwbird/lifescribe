@@ -22,7 +22,7 @@ import SimpleRecordingController from '@/components/home/simple/SimpleRecordingC
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import RegionConfirmationBanner from '@/components/RegionConfirmationBanner';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useMode } from '@/hooks/useMode';
 import { useLabs } from '@/hooks/useLabs';
