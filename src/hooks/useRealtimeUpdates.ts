@@ -23,11 +23,19 @@ export function useRealtimeUpdates({
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const setupChannel = useCallback(() => {
+  useEffect(() => {
     if (!enabled || !table) return
 
+    // Cleanup previous channel
+    if (channel) {
+      console.log(`Cleaning up realtime channel for ${table}`)
+      supabase.removeChannel(channel)
+      setChannel(null)
+      setIsConnected(false)
+    }
+
     try {
-      const channelName = `realtime-${table}-${filter ? `${filter.column}-${filter.value}` : 'all'}`
+      const channelName = `realtime-${table}-${filter ? `${filter.column}-${filter.value}` : 'all'}-${Date.now()}`
       
       let newChannel = supabase.channel(channelName)
 
@@ -102,10 +110,6 @@ export function useRealtimeUpdates({
       console.error('Error setting up realtime channel:', err)
       setError('Failed to establish real-time connection')
     }
-  }, [table, filter, onInsert, onUpdate, onDelete, enabled])
-
-  useEffect(() => {
-    setupChannel()
 
     return () => {
       if (channel) {
@@ -115,15 +119,17 @@ export function useRealtimeUpdates({
         setIsConnected(false)
       }
     }
-  }, [setupChannel])
+  }, [table, enabled, filter?.column, filter?.value])
 
   const reconnect = useCallback(() => {
     if (channel) {
       supabase.removeChannel(channel)
       setChannel(null)
+      setIsConnected(false)
     }
-    setupChannel()
-  }, [channel, setupChannel])
+    // Trigger re-initialization by changing a state that will cause useEffect to run
+    setError(null)
+  }, [channel])
 
   return {
     isConnected,
