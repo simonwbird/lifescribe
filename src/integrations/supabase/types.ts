@@ -4881,22 +4881,6 @@ export type Database = {
           },
         ]
       }
-      person_timeline_items: {
-        Row: {
-          excerpt: string | null
-          family_id: string | null
-          happened_on: string | null
-          is_approx: boolean | null
-          item_id: string | null
-          item_type: string | null
-          occurred_precision:
-            | Database["public"]["Enums"]["date_precision"]
-            | null
-          person_id: string | null
-          title: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       calculate_audit_hash: {
