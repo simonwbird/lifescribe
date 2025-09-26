@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import EnhancedReactionBar from './EnhancedReactionBar'
 import { InteractiveCommentField } from './InteractiveCommentField'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
+import AdminFeedActions from '@/components/admin/AdminFeedActions'
 
 interface ActivityItem {
   id: string
@@ -47,6 +48,7 @@ interface EnhancedFeedItemProps {
   onToggleExpand?: () => void
   onNavigate?: () => void
   compact?: boolean
+  showAdminActions?: boolean
 }
 
 export function EnhancedFeedItem({
@@ -56,7 +58,8 @@ export function EnhancedFeedItem({
   isExpanded = false,
   onToggleExpand,
   onNavigate,
-  compact = false
+  compact = false,
+  showAdminActions = false
 }: EnhancedFeedItemProps) {
   const [showComments, setShowComments] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
@@ -240,9 +243,19 @@ export function EnhancedFeedItem({
             </div>
           </div>
           
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {showAdminActions && (
+              <AdminFeedActions
+                storyId={activity.id.replace('story-', '')}
+                onAction={(action, storyId) => {
+                  console.log('Admin action:', action, 'on story:', storyId)
+                }}
+              />
+            )}
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Content */}

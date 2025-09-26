@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Users, FileText, Mail, TrendingUp, Database, Shield } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
+import AdminExportDashboard from '@/components/admin/AdminExportDashboard'
 
 interface DashboardStats {
   totalFamilies: number
@@ -140,6 +141,9 @@ export default function AdminDashboard() {
           )
         })}
       </div>
+
+      {/* Export Dashboard */}
+      <AdminExportDashboard />
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

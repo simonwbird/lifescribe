@@ -417,6 +417,7 @@ export default function FamilyUpdatesFeed({
               isExpanded={expandedStories.has(activity.id.replace('story-', ''))}
               onToggleExpand={() => handleActivityClick(activity)}
               onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
+              showAdminActions={true}
               compact={false}
             />
           ))}

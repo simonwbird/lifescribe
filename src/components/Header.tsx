@@ -240,12 +240,10 @@ export default function Header() {
               <Search className="h-4 w-4" />
             </Button>
 
-            {/* Create Button (Studio only) */}
-            {modeFlags.showCreateMenu && (
-              <div className="hidden sm:block">
-                <EnhancedCreateDropdown />
-              </div>
-            )}
+            {/* Create Button - Available in both modes */}
+            <div className="hidden sm:block">
+              <EnhancedCreateDropdown />
+            </div>
 
             {/* Notifications (Labs only) */}
             {labsEnabled && flags.notifications && (
