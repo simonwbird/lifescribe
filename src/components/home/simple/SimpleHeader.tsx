@@ -349,9 +349,9 @@ export function SimpleHeader({
                   console.log('Navigating to person profile:', `/people/${currentUserPersonId}`)
                   navigate(`/people/${currentUserPersonId}`)
                 } else {
-                  console.log('No person linked, navigating to feed as fallback')
-                  // Fallback to family feed if no person linked
-                  navigate('/feed')
+                  console.log('No person linked, navigating to people list as fallback')
+                  // Fallback to people list if no person linked
+                  navigate('/people')
                 }
               }}
               onCreateFreeform={() => {
