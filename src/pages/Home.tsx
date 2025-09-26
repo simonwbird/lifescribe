@@ -468,16 +468,12 @@ export default function Home() {
               <BirthdayRail 
                 familyId={spaceId || ''} 
                 onPromptClick={(instanceId) => {
-                  const instance = instances?.find(i => i.id === instanceId)
-                  if (instance?.prompt) {
-                    const searchParams = new URLSearchParams({
-                      type: 'text',
-                      promptTitle: instance.prompt.title,
-                      prompt_id: instance.id,
-                      prompt_text: instance.prompt.body
-                    })
-                    navigate(`/stories/new?${searchParams.toString()}`)
-                  }
+                  // Navigate to story creation for birthday prompt
+                  const searchParams = new URLSearchParams({
+                    type: 'text',
+                    prompt_id: instanceId
+                  })
+                  navigate(`/stories/new?${searchParams.toString()}`)
                 }} 
               />
             )}
