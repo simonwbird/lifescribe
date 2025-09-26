@@ -1,57 +1,47 @@
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Heart, 
-  MessageCircle, 
-  Share, 
-  Eye, 
-  MoreHorizontal,
-  Play,
-  Pause,
-  Volume2
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import { useToast } from '@/hooks/use-toast'
-import EnhancedReactionBar from './EnhancedReactionBar'
-import { InteractiveCommentField } from './InteractiveCommentField'
-import { formatForUser, getCurrentUserRegion } from '@/utils/date'
-import AdminFeedActions from '@/components/admin/AdminFeedActions'
-import StickerReactionBar from '@/components/teen/StickerReactionBar'
-
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Heart, MessageCircle, Share, Eye, MoreHorizontal, Play, Pause, Volume2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useToast } from '@/hooks/use-toast';
+import EnhancedReactionBar from './EnhancedReactionBar';
+import { InteractiveCommentField } from './InteractiveCommentField';
+import { formatForUser, getCurrentUserRegion } from '@/utils/date';
+import AdminFeedActions from '@/components/admin/AdminFeedActions';
 interface ActivityItem {
-  id: string
-  type: 'story' | 'comment' | 'invite' | 'photo'
-  actor: string
-  action: string
-  target: string
-  snippet?: string
-  time: string
-  unread: boolean
-  author_id?: string
-  content_type?: 'text' | 'photo' | 'audio' | 'video'
-  created_at?: string
-  full_content?: string
-  media_count?: number
-  has_audio?: boolean
-  reactions_count?: number
-  comments_count?: number
+  id: string;
+  type: 'story' | 'comment' | 'invite' | 'photo';
+  actor: string;
+  action: string;
+  target: string;
+  snippet?: string;
+  time: string;
+  unread: boolean;
+  author_id?: string;
+  content_type?: 'text' | 'photo' | 'audio' | 'video';
+  created_at?: string;
+  full_content?: string;
+  media_count?: number;
+  has_audio?: boolean;
+  reactions_count?: number;
+  comments_count?: number;
 }
-
 interface EnhancedFeedItemProps {
-  activity: ActivityItem
-  familyId: string
-  userProfile?: { avatar_url?: string; full_name?: string }
-  isExpanded?: boolean
-  onToggleExpand?: () => void
-  onNavigate?: () => void
-  compact?: boolean
-  showAdminActions?: boolean
+  activity: ActivityItem;
+  familyId: string;
+  userProfile?: {
+    avatar_url?: string;
+    full_name?: string;
+  };
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onNavigate?: () => void;
+  compact?: boolean;
+  showAdminActions?: boolean;
 }
-
 export function EnhancedFeedItem({
   activity,
   familyId,
@@ -62,113 +52,106 @@ export function EnhancedFeedItem({
   compact = false,
   showAdminActions = false
 }: EnhancedFeedItemProps) {
-  const [showComments, setShowComments] = useState(false)
-  const [isLiked, setIsLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(activity.reactions_count || 0)
-  const [commentCount, setCommentCount] = useState(activity.comments_count || 0)
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false)
-  
-  const { track } = useAnalytics()
-  const { toast } = useToast()
-
+  const [showComments, setShowComments] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(activity.reactions_count || 0);
+  const [commentCount, setCommentCount] = useState(activity.comments_count || 0);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const {
+    track
+  } = useAnalytics();
+  const {
+    toast
+  } = useToast();
   const handleLike = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    const newLiked = !isLiked
-    setIsLiked(newLiked)
-    setLikeCount(prev => newLiked ? prev + 1 : Math.max(0, prev - 1))
-
+    e.stopPropagation();
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+    setLikeCount(prev => newLiked ? prev + 1 : Math.max(0, prev - 1));
     track('activity_clicked', {
       story_id: activity.id,
       family_id: familyId,
       reaction: 'like',
       action: newLiked ? 'add' : 'remove'
-    })
-
+    });
     toast({
       title: newLiked ? "Story liked! ❤️" : "Like removed",
       description: newLiked ? "Thanks for the love!" : ""
-    })
-  }
-
+    });
+  };
   const handleComment = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setShowComments(!showComments)
-    
+    e.stopPropagation();
+    setShowComments(!showComments);
     track('activity_clicked', {
       story_id: activity.id,
       family_id: familyId,
       expanded: !showComments
-    })
-  }
-
+    });
+  };
   const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    const shareUrl = `${window.location.origin}/stories/${activity.id.replace('story-', '')}`
-    
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/stories/${activity.id.replace('story-', '')}`;
     try {
       if (navigator.share && /Mobile|Android|iPhone|iPad/.test(navigator.userAgent)) {
-        await navigator.share({ 
-          title: activity.target, 
+        await navigator.share({
+          title: activity.target,
           text: activity.snippet,
-          url: shareUrl 
-        })
-        toast({ title: "Story shared! 📤", description: "Thanks for spreading the love" })
+          url: shareUrl
+        });
+        toast({
+          title: "Story shared! 📤",
+          description: "Thanks for spreading the love"
+        });
       } else {
-        await navigator.clipboard.writeText(shareUrl)
-        toast({ title: "Link copied! 📋", description: "Story link copied to clipboard" })
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied! 📋",
+          description: "Story link copied to clipboard"
+        });
       }
-      
       track('activity_clicked', {
         story_id: activity.id,
         family_id: familyId,
         method: navigator.share ? 'native' : 'clipboard'
-      })
+      });
     } catch (error) {
-      toast({ 
-        title: "Share failed", 
+      toast({
+        title: "Share failed",
         description: "Unable to share right now.",
-        variant: "destructive" 
-      })
+        variant: "destructive"
+      });
     }
-  }
-
+  };
   const handleAudioToggle = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsPlayingAudio(!isPlayingAudio)
-    
+    e.stopPropagation();
+    setIsPlayingAudio(!isPlayingAudio);
+
     // Simulate audio playback
     if (!isPlayingAudio) {
-      setTimeout(() => setIsPlayingAudio(false), 3000)
+      setTimeout(() => setIsPlayingAudio(false), 3000);
     }
-    
     track('activity_clicked', {
       story_id: activity.id,
       action: isPlayingAudio ? 'pause' : 'play'
-    })
-  }
-
+    });
+  };
   const onCommentAdded = () => {
-    setCommentCount(prev => prev + 1)
+    setCommentCount(prev => prev + 1);
     toast({
       title: "Comment added! 💬",
       description: "Your comment has been shared with the family."
-    })
-  }
-
+    });
+  };
   const getContentPreview = () => {
     if (activity.full_content) {
-      const maxLength = isExpanded ? 500 : 150
-      if (activity.full_content.length <= maxLength) return activity.full_content
-      return activity.full_content.substring(0, maxLength) + '...'
+      const maxLength = isExpanded ? 500 : 150;
+      if (activity.full_content.length <= maxLength) return activity.full_content;
+      return activity.full_content.substring(0, maxLength) + '...';
     }
-    return activity.snippet
-  }
-
+    return activity.snippet;
+  };
   if (compact) {
-    return (
-      <div className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-muted/30 last:border-b-0">
+    return <div className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-muted/30 last:border-b-0">
         <Avatar className="h-8 w-8">
           <AvatarImage src={userProfile?.avatar_url} alt={activity.actor} />
           <AvatarFallback className="text-xs">
@@ -181,40 +164,25 @@ export function EnhancedFeedItem({
             <p className="text-sm font-medium truncate">
               <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
             </p>
-            {activity.unread && (
-              <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>
-            )}
+            {activity.unread && <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>}
           </div>
           <p className="text-xs text-muted-foreground">{activity.time}</p>
         </div>
 
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            className={cn("h-7 w-7 p-0", isLiked && "text-red-500")}
-          >
+          <Button variant="ghost" size="sm" onClick={handleLike} className={cn("h-7 w-7 p-0", isLiked && "text-red-500")}>
             <Heart className={cn("h-3 w-3", isLiked && "fill-current")} />
             {likeCount > 0 && <span className="text-xs ml-1">{likeCount}</span>}
           </Button>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleComment}
-            className="h-7 w-7 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={handleComment} className="h-7 w-7 p-0">
             <MessageCircle className="h-3 w-3" />
             {commentCount > 0 && <span className="text-xs ml-1">{commentCount}</span>}
           </Button>
         </div>
-      </div>
-    )
+      </div>;
   }
-
-  return (
-    <Card className="w-full hover:shadow-md transition-all duration-200">
+  return <Card className="w-full hover:shadow-md transition-all duration-200">
       <CardContent className="p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -229,14 +197,10 @@ export function EnhancedFeedItem({
             <div>
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-foreground">{activity.actor}</p>
-                {activity.unread && (
-                  <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>
-                )}
-                {activity.content_type && (
-                  <Badge variant="outline" className="text-xs capitalize">
+                {activity.unread && <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>}
+                {activity.content_type && <Badge variant="outline" className="text-xs capitalize">
                     {activity.content_type}
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
               <p className="text-sm text-muted-foreground">
                 {activity.action} {activity.target} • {formatForUser(activity.created_at || activity.time, 'relative', getCurrentUserRegion())}
@@ -245,41 +209,22 @@ export function EnhancedFeedItem({
           </div>
           
           <div className="flex items-center gap-2">
-            {showAdminActions && (
-              <AdminFeedActions
-                storyId={activity.id.replace('story-', '')}
-                onAction={(action, storyId) => {
-                  console.log('Admin action:', action, 'on story:', storyId)
-                }}
-              />
-            )}
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            {showAdminActions && <AdminFeedActions storyId={activity.id.replace('story-', '')} onAction={(action, storyId) => {
+            console.log('Admin action:', action, 'on story:', storyId);
+          }} />}
+            
           </div>
         </div>
 
         {/* Content */}
         <div className="space-y-3">
-          {getContentPreview() && (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          {getContentPreview() && <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {getContentPreview()}
-            </p>
-          )}
+            </p>}
           
-          {activity.content_type === 'audio' && activity.has_audio && (
-            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleAudioToggle}
-                className="h-10 w-10 p-0 rounded-full bg-primary/10 hover:bg-primary/20"
-              >
-                {isPlayingAudio ? (
-                  <Pause className="h-5 w-5 text-primary" />
-                ) : (
-                  <Play className="h-5 w-5 text-primary" />
-                )}
+          {activity.content_type === 'audio' && activity.has_audio && <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <Button variant="ghost" size="sm" onClick={handleAudioToggle} className="h-10 w-10 p-0 rounded-full bg-primary/10 hover:bg-primary/20">
+                {isPlayingAudio ? <Pause className="h-5 w-5 text-primary" /> : <Play className="h-5 w-5 text-primary" />}
               </Button>
               <div className="flex-1">
                 <div className="flex items-center justify-between text-sm">
@@ -287,116 +232,63 @@ export function EnhancedFeedItem({
                   <Volume2 className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="w-full bg-muted rounded-full h-2 mt-1">
-                  <div className={cn(
-                    "bg-primary rounded-full h-2 transition-all duration-300",
-                    isPlayingAudio ? "w-1/3" : "w-0"
-                  )} />
+                  <div className={cn("bg-primary rounded-full h-2 transition-all duration-300", isPlayingAudio ? "w-1/3" : "w-0")} />
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
           
-          {activity.media_count && activity.media_count > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: Math.min(activity.media_count, 3) }).map((_, i) => (
-                <div key={i} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+          {activity.media_count && activity.media_count > 0 && <div className="grid grid-cols-3 gap-2">
+              {Array.from({
+            length: Math.min(activity.media_count, 3)
+          }).map((_, i) => <div key={i} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
                   <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                     📸
                   </div>
-                </div>
-              ))}
-              {activity.media_count > 3 && (
-                <div className="aspect-square bg-muted rounded-lg flex items-center justify-center text-xs font-medium">
+                </div>)}
+              {activity.media_count > 3 && <div className="aspect-square bg-muted rounded-lg flex items-center justify-center text-xs font-medium">
                   +{activity.media_count - 3}
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
-          {activity.full_content && activity.full_content.length > 150 && !isExpanded && (
-            <Button
-              variant="link"
-              size="sm"
-              onClick={onToggleExpand}
-              className="h-auto p-0 text-primary"
-            >
+          {activity.full_content && activity.full_content.length > 150 && !isExpanded && <Button variant="link" size="sm" onClick={onToggleExpand} className="h-auto p-0 text-primary">
               Read more
-            </Button>
-          )}
+            </Button>}
         </div>
 
         {/* Enhanced Interaction Bar */}
         <div className="flex items-center justify-between pt-2 border-t">
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLike}
-              className={cn(
-                "flex items-center gap-2 hover:bg-red-50 hover:text-red-600 transition-colors",
-                isLiked && "text-red-500 bg-red-50"
-              )}
-            >
+            <Button variant="ghost" size="sm" onClick={handleLike} className={cn("flex items-center gap-2 hover:bg-red-50 hover:text-red-600 transition-colors", isLiked && "text-red-500 bg-red-50")}>
               <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
               <span className="text-sm font-medium">{likeCount > 0 ? likeCount : 'Like'}</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleComment}
-              className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-            >
+            <Button variant="ghost" size="sm" onClick={handleComment} className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 transition-colors">
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm font-medium">{commentCount > 0 ? commentCount : 'Comment'}</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleShare}
-              className="flex items-center gap-2 hover:bg-green-50 hover:text-green-600 transition-colors"
-            >
+            <Button variant="ghost" size="sm" onClick={handleShare} className="flex items-center gap-2 hover:bg-green-50 hover:text-green-600 transition-colors">
               <Share className="h-4 w-4" />
               <span className="text-sm font-medium">Share</span>
             </Button>
           </div>
           
-          {onToggleExpand && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleExpand}
-              className="flex items-center gap-2"
-            >
+          {onToggleExpand && <Button variant="ghost" size="sm" onClick={onToggleExpand} className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
               <span className="text-sm font-medium">
                 {isExpanded ? 'Collapse' : 'Expand'}
               </span>
-            </Button>
-          )}
+            </Button>}
         </div>
 
-        {/* Enhanced Reactions with Stickers */}
-        <StickerReactionBar
-          targetType="story"
-          targetId={activity.id.replace('story-', '')}
-          familyId={familyId}
-          compact={false}
-        />
+        {/* Enhanced Reactions */}
+        <EnhancedReactionBar targetType="story" targetId={activity.id.replace('story-', '')} familyId={familyId} compact={false} />
 
         {/* Comment Section */}
-        {showComments && (
-          <div className="space-y-4 pt-4 border-t">
-            <InteractiveCommentField
-              storyId={activity.id.replace('story-', '')}
-              familyId={familyId}
-              onCommentAdded={onCommentAdded}
-              compact={false}
-            />
-          </div>
-        )}
+        {showComments && <div className="space-y-4 pt-4 border-t">
+            <InteractiveCommentField storyId={activity.id.replace('story-', '')} familyId={familyId} onCommentAdded={onCommentAdded} compact={false} />
+          </div>}
       </CardContent>
-    </Card>
-  )
+    </Card>;
 }
