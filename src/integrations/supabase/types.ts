@@ -4830,57 +4830,7 @@ export type Database = {
       }
     }
     Views: {
-      invites_masked: {
-        Row: {
-          accepted_at: string | null
-          created_at: string | null
-          email: string | null
-          expires_at: string | null
-          family_id: string | null
-          id: string | null
-          invited_by: string | null
-          role: Database["public"]["Enums"]["role_type"] | null
-          status: string | null
-        }
-        Insert: {
-          accepted_at?: string | null
-          created_at?: string | null
-          email?: never
-          expires_at?: string | null
-          family_id?: string | null
-          id?: string | null
-          invited_by?: string | null
-          role?: Database["public"]["Enums"]["role_type"] | null
-          status?: string | null
-        }
-        Update: {
-          accepted_at?: string | null
-          created_at?: string | null
-          email?: never
-          expires_at?: string | null
-          family_id?: string | null
-          id?: string | null
-          invited_by?: string | null
-          role?: Database["public"]["Enums"]["role_type"] | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invites_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_audit_hash: {
@@ -4966,6 +4916,20 @@ export type Database = {
         Args: { p_family_id: string; p_person_id: string }
         Returns: number
       }
+      get_all_family_invites_masked: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          accepted_at: string
+          created_at: string
+          email: string
+          expires_at: string
+          family_id: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["role_type"]
+          status: string
+        }[]
+      }
       get_family_invites_masked: {
         Args: { p_family_id: string }
         Returns: {
@@ -4977,6 +4941,7 @@ export type Database = {
           id: string
           invited_by: string
           role: Database["public"]["Enums"]["role_type"]
+          status: string
         }[]
       }
       get_family_member_profiles: {
