@@ -8,9 +8,10 @@ interface PromptControlsProps {
   prompt: ElderPrompt
   onShuffle: () => void
   shuffling: boolean
+  enhanced?: boolean // For prominent elder-friendly display
 }
 
-export function PromptControls({ prompt, onShuffle, shuffling }: PromptControlsProps) {
+export function PromptControls({ prompt, onShuffle, shuffling, enhanced = false }: PromptControlsProps) {
   const { speak, isSpeaking, stop, isSupported: ttsSupported } = useTextToSpeech()
   const { track } = useAnalytics()
 
@@ -26,13 +27,62 @@ export function PromptControls({ prompt, onShuffle, shuffling }: PromptControlsP
     } else {
       // Use slightly slower rate and higher pitch for better clarity
       speak(prompt.text, {
-        rate: 0.8,
+        rate: 0.75, // Even slower for elders
         pitch: 1.0,
         volume: 0.9
       })
     }
   }
 
+  // Enhanced mode for prominent elder-friendly display
+  if (enhanced) {
+    return (
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        {/* Large "Hear It" Button */}
+        {ttsSupported ? (
+          <Button
+            onClick={handleTTS}
+            variant={isSpeaking ? "default" : "outline"}
+            size="lg"
+            className={`h-16 px-8 text-lg font-bold min-w-48 transition-all duration-200 ${
+              isSpeaking 
+                ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse' 
+                : 'border-2 hover:bg-accent hover:scale-105'
+            }`}
+            aria-label={isSpeaking ? "Stop reading prompt aloud" : "Hear this prompt read aloud"}
+            aria-pressed={isSpeaking}
+          >
+            {isSpeaking ? (
+              <>
+                <VolumeX className="w-6 h-6 mr-3" />
+                <span>Stop Reading</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-6 h-6 mr-3" />
+                <span>Hear It</span>
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-16 px-8 text-lg font-bold min-w-48 bg-muted/50 hover:bg-muted border-2"
+            onClick={() => {
+              alert(`Prompt: ${prompt.text}\n\nNote: Text-to-speech is not available in this browser. You can read this prompt aloud or have someone read it to you.`)
+            }}
+            title="Text-to-speech not available - click to see prompt text"
+          >
+            <Volume2 className="w-6 h-6 mr-3" />
+            <span>Read Prompt</span>
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  // Regular mode for smaller displays
   return (
     <div className="flex gap-2">
       {/* Hear It Button */}
@@ -64,7 +114,6 @@ export function PromptControls({ prompt, onShuffle, shuffling }: PromptControlsP
           size="sm"
           className="h-10 px-3 text-sm font-medium min-w-0 bg-muted/50 hover:bg-muted"
           onClick={() => {
-            // Fallback: show alert with prompt text for screen readers or manual reading
             alert(`Prompt: ${prompt.text}\n\nNote: Text-to-speech is not available in this browser. You can read this prompt aloud or have someone read it to you.`)
           }}
           title="Text-to-speech not available - click to see prompt text"
