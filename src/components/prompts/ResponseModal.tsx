@@ -58,7 +58,7 @@ export function ResponseModal({ isOpen, onClose, prompt, onSelectResponse }: Res
                 className="w-full h-auto p-4 justify-start text-left"
                 onClick={() => onSelectResponse('voice')}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   <div className="rounded-full bg-muted p-2 shrink-0">
                     <Mic className="h-5 w-5" />
                   </div>
@@ -77,8 +77,8 @@ export function ResponseModal({ isOpen, onClose, prompt, onSelectResponse }: Res
                 className="w-full h-auto p-4 justify-start text-left"
                 onClick={() => onSelectResponse('text')}
               >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-blue-100 text-blue-600 p-2 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-primary/20 text-primary p-2 shrink-0">
                     <Type className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
@@ -96,8 +96,8 @@ export function ResponseModal({ isOpen, onClose, prompt, onSelectResponse }: Res
                 className="w-full h-auto p-4 justify-start text-left"
                 onClick={() => onSelectResponse('video')}
               >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-purple-100 text-purple-600 p-2 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-accent/20 text-accent-foreground p-2 shrink-0">
                     <Video className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
