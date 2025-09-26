@@ -151,36 +151,71 @@ export function EnhancedFeedItem({
     return activity.snippet;
   };
   if (compact) {
-    return <div className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-muted/30 last:border-b-0">
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={userProfile?.avatar_url} alt={activity.actor} />
-          <AvatarFallback className="text-xs">
-            {activity.actor.charAt(0)}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="text-sm font-medium truncate">
-              <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
-            </p>
-            {activity.unread && <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>}
+    return <Card className="w-full hover:shadow-sm transition-all duration-200">
+        <CardContent className="p-3 space-y-3">
+          {/* Compact Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 ring-1 ring-primary/20">
+                <AvatarImage src={userProfile?.avatar_url} alt={activity.actor} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                  {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-foreground">{activity.actor}</p>
+                  {activity.unread && <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {activity.action} {activity.target} • {formatForUser(activity.created_at || activity.time, 'relative', getCurrentUserRegion())}
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">{activity.time}</p>
-        </div>
 
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={handleLike} className={cn("h-7 w-7 p-0", isLiked && "text-red-500")}>
-            <Heart className={cn("h-3 w-3", isLiked && "fill-current")} />
-            {likeCount > 0 && <span className="text-xs ml-1">{likeCount}</span>}
-          </Button>
-          
-          <Button variant="ghost" size="sm" onClick={handleComment} className="h-7 w-7 p-0">
-            <MessageCircle className="h-3 w-3" />
-            {commentCount > 0 && <span className="text-xs ml-1">{commentCount}</span>}
-          </Button>
-        </div>
-      </div>;
+          {/* Compact Content */}
+          {getContentPreview() && <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+              {getContentPreview()}
+            </p>}
+
+          {/* Compact Actions */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={handleLike} className={cn("flex items-center gap-1 h-7 px-2 hover:bg-red-50 hover:text-red-600", isLiked && "text-red-500 bg-red-50")}>
+                <Heart className={cn("h-3 w-3", isLiked && "fill-current")} />
+                <span className="text-xs">{likeCount > 0 ? likeCount : 'Like'}</span>
+              </Button>
+              
+              <Button variant="ghost" size="sm" onClick={handleComment} className="flex items-center gap-1 h-7 px-2 hover:bg-blue-50 hover:text-blue-600">
+                <MessageCircle className="h-3 w-3" />
+                <span className="text-xs">{commentCount > 0 ? commentCount : 'Comment'}</span>
+              </Button>
+              
+              <Button variant="ghost" size="sm" onClick={handleShare} className="flex items-center gap-1 h-7 px-2 hover:bg-green-50 hover:text-green-600">
+                <Share className="h-3 w-3" />
+                <span className="text-xs">Share</span>
+              </Button>
+            </div>
+            
+            {onToggleExpand && <Button variant="ghost" size="sm" onClick={onToggleExpand} className="flex items-center gap-1 h-7 px-2">
+                <Eye className="h-3 w-3" />
+                <span className="text-xs">
+                  {isExpanded ? 'Less' : 'More'}
+                </span>
+              </Button>}
+          </div>
+
+          {/* Enhanced Reactions in Compact Mode */}
+          <EnhancedReactionBar targetType="story" targetId={activity.id.replace('story-', '')} familyId={familyId} compact={true} />
+
+          {/* Comment Section in Compact Mode */}
+          {showComments && <div className="space-y-3 pt-2 border-t">
+              <InteractiveCommentField storyId={activity.id.replace('story-', '')} familyId={familyId} onCommentAdded={onCommentAdded} compact={true} />
+            </div>}
+        </CardContent>
+      </Card>;
   }
   return <Card className="w-full hover:shadow-md transition-all duration-200">
       <CardContent className="p-4 space-y-4">

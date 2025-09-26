@@ -422,40 +422,19 @@ export default function FamilyUpdatesFeed({
         )}
 
         {/* Enhanced Feed Content */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredActivities.map((activity, index) => (
-            <div key={`${activity.id}-${index}`} className="space-y-3">
-              <EnhancedFeedItem
-                activity={activity}
-                familyId={familyId}
-                userProfile={userProfile}
-                isExpanded={expandedStories.has(activity.id.replace('story-', ''))}
-                onToggleExpand={() => handleActivityClick(activity)}
-                onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
-                showAdminActions={true}
-                compact={false}
-              />
-              
-              {/* Enhanced reactions for Simple Mode */}
-              <div className="ml-4 -mt-2">
-                <SimpleModeReactionBar
-                  targetType="story"
-                  targetId={activity.id.replace('story-', '')}
-                  familyId={familyId}
-                  compact={true}
-                />
-              </div>
-              
-              {/* Enhanced comment field for Simple Mode */}
-              <div className="ml-4 mt-2">
-                <EnhancedMediaCommentField
-                  storyId={activity.id.replace('story-', '')}
-                  familyId={familyId}
-                  compact={true}
-                  placeholder="Add a comment with media, stickers, or GIFs..."
-                />
-              </div>
-            </div>
+            <EnhancedFeedItem
+              key={`${activity.id}-${index}`}
+              activity={activity}
+              familyId={familyId}
+              userProfile={userProfile}
+              isExpanded={expandedStories.has(activity.id.replace('story-', ''))}
+              onToggleExpand={() => handleActivityClick(activity)}
+              onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
+              showAdminActions={true}
+              compact={true}
+            />
           ))}
         </div>
 
