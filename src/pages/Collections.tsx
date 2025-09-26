@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import CollectionsHeader from '@/components/collections/CollectionsHeader'
 import CollectionsTabs from '@/components/collections/CollectionsTabs'
@@ -243,8 +242,7 @@ export default function Collections() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="space-y-8">
@@ -279,8 +277,7 @@ export default function Collections() {
               viewMode={viewMode}
             />
           </div>
-        </main>
-      </div>
-    </AuthGate>
-  )
-}
+         </main>
+       </div>
+     )
+   }

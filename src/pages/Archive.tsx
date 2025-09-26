@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import AuthGate from '@/components/AuthGate';
 import Header from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RecipesList } from '@/components/archive/RecipesList';
@@ -11,8 +10,7 @@ export default function Archive() {
   const [activeTab, setActiveTab] = useState('recipes');
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="mb-8">
@@ -50,8 +48,7 @@ export default function Archive() {
               <PropertiesList />
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
-    </AuthGate>
-  );
-}
+         </main>
+       </div>
+     );
+   }

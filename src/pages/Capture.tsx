@@ -1,6 +1,5 @@
 import React from 'react'
 import { useSearchParams } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { CaptureModeTiles } from '@/components/capture/CaptureModeTiles'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,8 +9,7 @@ export default function Capture() {
   const mode = searchParams.get('mode')
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
@@ -26,8 +24,7 @@ export default function Capture() {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
-    </AuthGate>
-  )
-}
+         </main>
+       </div>
+     )
+   }

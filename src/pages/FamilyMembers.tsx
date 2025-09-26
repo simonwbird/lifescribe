@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import EnhancedInviteModal from '@/components/invite/EnhancedInviteModal'
 import { Button } from '@/components/ui/button'
@@ -97,20 +96,17 @@ export default function FamilyMembers() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen">
-          <Header />
-          <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
@@ -187,9 +183,8 @@ export default function FamilyMembers() {
               // Reload family data to update member counts
               window.location.reload()
             }}
-          />
-        )}
-      </div>
-    </AuthGate>
-  )
-}
+         />
+       )}
+     </div>
+   )
+ }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { MediaTabs } from '@/components/media/MediaTabs'
 import { MediaFilters } from '@/components/media/MediaFilters'
@@ -308,8 +307,7 @@ export default function Media() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         
         <main className="container mx-auto px-4 py-6">
@@ -404,8 +402,7 @@ export default function Media() {
           onPrevious={() => handleLightboxNavigation('prev')}
           onNext={() => handleLightboxNavigation('next')}
           {...handleLightboxActions}
-        />
-      </div>
-    </AuthGate>
-  )
-}
+         />
+       </div>
+     )
+   }

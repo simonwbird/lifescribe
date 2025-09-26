@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
-import AuthGate from '@/components/AuthGate'
 import type { Recipe } from '@/lib/recipeTypes'
 
 export default function CookMode() {
@@ -211,32 +210,28 @@ export default function CookMode() {
 
   if (loading) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <ChefHat className="h-12 w-12 mx-auto text-muted-foreground animate-pulse" />
-            <p>Loading cook mode...</p>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <ChefHat className="h-12 w-12 mx-auto text-muted-foreground animate-pulse" />
+          <p>Loading cook mode...</p>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   if (!recipe) {
     return (
-      <AuthGate>
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <h1 className="text-2xl font-bold">Recipe Not Found</h1>
-            <p className="text-muted-foreground">
-              The recipe you're looking for doesn't exist.
-            </p>
-            <Button onClick={() => navigate('/collections?tab=recipe')}>
-              Back to Recipes
-            </Button>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Recipe Not Found</h1>
+          <p className="text-muted-foreground">
+            The recipe you're looking for doesn't exist.
+          </p>
+          <Button onClick={() => navigate('/collections?tab=recipe')}>
+            Back to Recipes
+          </Button>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
@@ -244,8 +239,7 @@ export default function CookMode() {
   const progress = ((currentStep + 1) / recipe.steps.length) * 100
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3">
@@ -491,8 +485,7 @@ export default function CookMode() {
               </Button>
             )}
           </div>
-        </div>
-      </div>
-    </AuthGate>
-  )
-}
+         </div>
+       </div>
+     )
+   }

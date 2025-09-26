@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import MVPMetricsDashboard from '@/components/analytics/MVPMetricsDashboard'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { 
   Beaker, 
@@ -94,20 +93,19 @@ export default function Labs() {
 
   if (loading) {
     return (
-      <AuthGate>
+      <div>
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </div>
-      </AuthGate>
+      </div>
     )
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto space-y-6">
@@ -261,8 +259,7 @@ export default function Labs() {
               </TabsContent>
             </Tabs>
           </div>
-        </div>
-      </div>
-    </AuthGate>
-  )
-}
+         </div>
+       </div>
+     )
+   }

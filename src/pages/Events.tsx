@@ -8,7 +8,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { getAllFamilyEvents, type UpcomingEvent } from '@/lib/eventsService'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import AddBirthdayModal from '@/components/home/AddBirthdayModal'
 import AddEventModal from '@/components/home/AddEventModal'
@@ -128,8 +127,7 @@ export default function Events() {
   const pastEvents = events.filter(e => e.days_until < 0)
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="mb-8">
@@ -374,21 +372,20 @@ export default function Events() {
             </TabsContent>
           </Tabs>
         </main>
+
+        {/* Add Birthday Modal */}
+        <AddBirthdayModal
+          open={showBirthdayModal}
+          onOpenChange={setShowBirthdayModal}
+          onSuccess={handleAddSuccess}
+        />
+
+        {/* Add Event Modal */}
+        <AddEventModal
+          open={showEventModal}
+          onOpenChange={setShowEventModal}
+          onSuccess={handleAddSuccess}
+        />
       </div>
-
-      {/* Add Birthday Modal */}
-      <AddBirthdayModal
-        open={showBirthdayModal}
-        onOpenChange={setShowBirthdayModal}
-        onSuccess={handleAddSuccess}
-      />
-
-      {/* Add Event Modal */}
-      <AddEventModal
-        open={showEventModal}
-        onOpenChange={setShowEventModal}
-        onSuccess={handleAddSuccess}
-      />
-    </AuthGate>
-  )
-}
+    )
+  }

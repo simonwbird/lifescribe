@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -260,8 +259,7 @@ export default function PetForm({ isEditing = false }: PetFormProps) {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         
         <main className="container mx-auto px-4 py-8">
@@ -577,8 +575,7 @@ export default function PetForm({ isEditing = false }: PetFormProps) {
               </Button>
             </div>
           </div>
-        </main>
-      </div>
-    </AuthGate>
-  )
-}
+         </main>
+       </div>
+     )
+   }

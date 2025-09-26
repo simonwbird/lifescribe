@@ -227,10 +227,9 @@ export default function Profile() {
               
               <ExportDataCard />
               <RTBFCard />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+             </div>
+           </div>
+         </div>
+       </div>
+     )
+   }
