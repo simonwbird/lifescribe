@@ -132,11 +132,11 @@ export default function InviteManageModal({
       if (error) throw error
 
       const inviteLink = `${window.location.origin}/invite/${token}`
-      navigator.clipboard.writeText(inviteLink)
+      await navigator.clipboard.writeText(inviteLink)
       
       toast({
-        title: "Success",
-        description: "Invitation sent and link copied to clipboard!"
+        title: "Invitation sent!",
+        description: "Link copied to clipboard!"
       })
 
       setEmail('')
@@ -154,13 +154,21 @@ export default function InviteManageModal({
     }
   }
 
-  const handleCopyInviteLink = (token: string) => {
-    const inviteLink = `${window.location.origin}/invite/${token}`
-    navigator.clipboard.writeText(inviteLink)
-    toast({
-      title: "Success",
-      description: "Invite link copied to clipboard"
-    })
+  const handleCopyInviteLink = async (token: string) => {
+    try {
+      const inviteLink = `${window.location.origin}/invite/${token}`
+      await navigator.clipboard.writeText(inviteLink)
+      toast({
+        title: "Link copied!",
+        description: "Invite link has been copied to clipboard"
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link to clipboard",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleResendInvite = async (inviteId: string) => {
@@ -198,16 +206,21 @@ export default function InviteManageModal({
     try {
       const { error } = await supabase
         .from('members')
-        .update({ role: newRole as 'admin' | 'member' | 'guest' })
+        .update({ 
+          role: newRole as 'admin' | 'member' | 'guest',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', memberInfo.id)
 
       if (error) throw error
 
       toast({
-        title: "Success",
-        description: "Role updated successfully"
+        title: "Role updated!",
+        description: `Member role changed to ${newRole}`
       })
 
+      // Update local state immediately for instant feedback
+      setMemberInfo({ ...memberInfo, role: newRole })
       fetchData()
       onSuccess()
     } catch (error) {

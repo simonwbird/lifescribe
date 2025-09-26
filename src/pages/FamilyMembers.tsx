@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
-import InviteModal from '@/components/InviteModal'
+import EnhancedInviteModal from '@/components/invite/EnhancedInviteModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -179,12 +179,13 @@ export default function FamilyMembers() {
         </div>
 
         {showInviteModal && family && (
-          <InviteModal
+          <EnhancedInviteModal
             familyId={family.id}
             onClose={() => setShowInviteModal(false)}
-            onInviteSent={() => {
+            onSuccess={() => {
               setShowInviteModal(false)
-              // Could refresh the page or show a success message
+              // Reload family data to update member counts
+              window.location.reload()
             }}
           />
         )}
