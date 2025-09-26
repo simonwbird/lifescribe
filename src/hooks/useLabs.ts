@@ -11,6 +11,8 @@ export interface LabsFlags {
   notifications: boolean
   safeBox: boolean
   'prompts.peopleSpecific': boolean
+  'prompts.birthdays': boolean
+  'prompts.favorites': boolean
 }
 
 const DEFAULT_FLAGS: LabsFlags = {
@@ -23,6 +25,8 @@ const DEFAULT_FLAGS: LabsFlags = {
   notifications: false,
   safeBox: false,
   'prompts.peopleSpecific': true,
+  'prompts.birthdays': true,
+  'prompts.favorites': true,
 }
 
 export function useLabs() {

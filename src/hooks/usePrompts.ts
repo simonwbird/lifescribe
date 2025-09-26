@@ -64,7 +64,7 @@ export function usePrompts(familyId: string, personId?: string) {
 
   const isPeopleSpecificEnabled = flags['prompts.peopleSpecific']
 
-  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string) => {
+  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string, category?: 'Birthdays' | 'Favorites') => {
     try {
       setLoading(true)
       setError(null)
@@ -110,6 +110,15 @@ export function usePrompts(familyId: string, personId?: string) {
 
       if (status) {
         query = query.eq('status', status)
+      }
+
+      // Filter by category if specified
+      if (category) {
+        if (category === 'Birthdays') {
+          query = query.eq('source', 'birthday')
+        } else if (category === 'Favorites') {
+          query = query.eq('source', 'favorites')
+        }
       }
 
       // Filter by person if specified
@@ -311,6 +320,57 @@ export function usePrompts(familyId: string, personId?: string) {
     }
   }, [familyId, personId, isPeopleSpecificEnabled])
 
+  const getBirthdayPrompts = () => {
+    return instances.filter(i => i.source === 'birthday' && i.status === 'open')
+      .sort((a, b) => {
+        const dateA = new Date(a.due_at || 0)
+        const dateB = new Date(b.due_at || 0)
+        return dateA.getTime() - dateB.getTime()
+      })
+  }
+
+  const getFavoritePrompts = () => {
+    return instances.filter(i => i.source === 'favorites')
+  }
+
+  const getUpcomingBirthdaysThisMonth = () => {
+    const today = new Date()
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    
+    return instances.filter(i => {
+      if (i.source !== 'birthday' || !i.due_at) return false
+      const dueDate = new Date(i.due_at)
+      return dueDate >= today && dueDate <= nextMonth
+    }).sort((a, b) => {
+      const dateA = new Date(a.due_at || 0)
+      const dateB = new Date(b.due_at || 0)
+      return dateA.getTime() - dateB.getTime()
+    })
+  }
+
+  const getDaysUntilBirthday = (instance: any) => {
+    if (!instance.due_at) return null
+    const today = new Date()
+    const dueDate = new Date(instance.due_at)
+    const diffTime = dueDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  const generateDynamicPrompts = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-dynamic-prompts')
+      if (error) throw error
+      
+      // Refresh prompts after generation
+      await fetchPrompts()
+      return data
+    } catch (err) {
+      console.error('Error generating dynamic prompts:', err)
+      throw err
+    }
+  }
+
   const generatePromptsForPerson = async (targetPersonId: string) => {
     try {
       await generatePersonPromptInstances(familyId, targetPersonId)
@@ -336,6 +396,11 @@ export function usePrompts(familyId: string, personId?: string) {
     getInProgressInstances,
     getPersonProgress,
     getNextPromptForPerson,
-    generatePromptsForPerson
+    generatePromptsForPerson,
+    getBirthdayPrompts,
+    getFavoritePrompts,
+    getUpcomingBirthdaysThisMonth,
+    getDaysUntilBirthday,
+    generateDynamicPrompts
   }
 }

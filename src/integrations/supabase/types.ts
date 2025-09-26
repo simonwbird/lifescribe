@@ -1354,6 +1354,45 @@ export type Database = {
         }
         Relationships: []
       }
+      favorites: {
+        Row: {
+          created_at: string
+          created_by: string
+          family_id: string
+          id: string
+          notes: string | null
+          person_id: string
+          type: string
+          updated_at: string
+          value: string
+          value_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          family_id: string
+          id?: string
+          notes?: string | null
+          person_id: string
+          type: string
+          updated_at?: string
+          value: string
+          value_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          family_id?: string
+          id?: string
+          notes?: string | null
+          person_id?: string
+          type?: string
+          updated_at?: string
+          value?: string
+          value_hash?: string
+        }
+        Relationships: []
+      }
       feature_flag_analytics: {
         Row: {
           created_at: string
@@ -3319,6 +3358,7 @@ export type Database = {
           assignee_user_id: string | null
           created_at: string | null
           due_at: string | null
+          dynamic_key: string | null
           expires_at: string | null
           family_id: string
           id: string
@@ -3333,6 +3373,7 @@ export type Database = {
           assignee_user_id?: string | null
           created_at?: string | null
           due_at?: string | null
+          dynamic_key?: string | null
           expires_at?: string | null
           family_id: string
           id?: string
@@ -3347,6 +3388,7 @@ export type Database = {
           assignee_user_id?: string | null
           created_at?: string | null
           due_at?: string | null
+          dynamic_key?: string | null
           expires_at?: string | null
           family_id?: string
           id?: string
@@ -4884,6 +4926,10 @@ export type Database = {
       compute_family_collision_signals: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      compute_value_hash: {
+        Args: { input_value: string }
+        Returns: string
       }
       create_bug_notification: {
         Args: {

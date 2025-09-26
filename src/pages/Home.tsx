@@ -25,7 +25,9 @@ import RegionConfirmationBanner from '@/components/RegionConfirmationBanner';
 import { supabase } from '@/lib/supabase';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useMode } from '@/hooks/useMode';
+import { useLabs } from '@/hooks/useLabs';
 import { useNavigate } from 'react-router-dom';
+import BirthdayRail from '@/components/prompts/BirthdayRail';
 import { ElderPrompt } from '@/lib/prompts/getElderPrompts';
 import { checkMicrophonePermission, isOnline, getPromptTitle } from '@/lib/recorder/startFromPrompt';
 import { CountdownModal } from '@/components/home/simple/CountdownModal';
@@ -460,6 +462,25 @@ export default function Home() {
 
             {/* Invite Banner */}
             {!hasOtherMembers && <InviteBanner />}
+
+            {/* Birthday Rail */}
+            {flags['prompts.birthdays'] && (
+              <BirthdayRail 
+                familyId={spaceId || ''} 
+                onPromptClick={(instanceId) => {
+                  const instance = instances?.find(i => i.id === instanceId)
+                  if (instance?.prompt) {
+                    const searchParams = new URLSearchParams({
+                      type: 'text',
+                      promptTitle: instance.prompt.title,
+                      prompt_id: instance.id,
+                      prompt_text: instance.prompt.body
+                    })
+                    navigate(`/stories/new?${searchParams.toString()}`)
+                  }
+                }} 
+              />
+            )}
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

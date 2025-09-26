@@ -4,20 +4,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CheckCircle, Circle, Clock, Play, Eye, ArrowRight } from 'lucide-react'
+import { CheckCircle, Circle, Clock, Play, Eye, ArrowRight, Cake, Heart } from 'lucide-react'
 import { usePrompts } from '@/hooks/usePrompts'
 import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import AuthGate from '@/components/AuthGate'
+import CategorySection from '@/components/prompts/CategorySection'
+import { useLabs } from '@/hooks/useLabs'
 
 export default function PromptsBrowse() {
   const [familyId, setFamilyId] = useState('')
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const defaultTab = searchParams.get('status') || 'open'
+  const { flags } = useLabs()
   
-  const { instances, counts, loading, error, fetchPrompts, startPrompt } = usePrompts(familyId)
+  const { 
+    instances, 
+    counts, 
+    loading, 
+    error, 
+    fetchPrompts, 
+    startPrompt,
+    getBirthdayPrompts,
+    getFavoritePrompts,
+    getDaysUntilBirthday
+  } = usePrompts(familyId)
 
   useEffect(() => {
     async function loadFamilyId() {
@@ -150,9 +163,12 @@ export default function PromptsBrowse() {
     )
   }
 
-  const openInstances = instances.filter(i => i.status === 'open')
+  const openInstances = instances.filter(i => i.status === 'open' && !['birthday', 'favorites'].includes(i.source || ''))
   const inProgressInstances = instances.filter(i => i.status === 'in_progress')
   const completedInstances = instances.filter(i => i.status === 'completed')
+
+  const birthdayPrompts = flags['prompts.birthdays'] ? getBirthdayPrompts() : []
+  const favoritePrompts = flags['prompts.favorites'] ? getFavoritePrompts() : []
 
   return (
     <AuthGate>
@@ -167,6 +183,24 @@ export default function PromptsBrowse() {
               </p>
             </div>
           </div>
+
+          {/* Birthday Prompts */}
+          <CategorySection
+            title="Birthday Celebrations"
+            icon={<Cake className="h-6 w-6 text-primary" />}
+            instances={birthdayPrompts}
+            onPromptClick={handleStartPrompt}
+            showDueBadges={true}
+            getDaysUntilBirthday={getDaysUntilBirthday}
+          />
+
+          {/* Favorite Prompts */}
+          <CategorySection
+            title="About Your Favorites"
+            icon={<Heart className="h-6 w-6 text-pink-500" />}
+            instances={favoritePrompts}
+            onPromptClick={handleStartPrompt}
+          />
 
           <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
