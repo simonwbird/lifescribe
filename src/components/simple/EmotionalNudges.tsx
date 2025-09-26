@@ -164,7 +164,7 @@ export default function EmotionalNudges({
   const IconComponent = getIcon();
 
   return (
-    <div className="text-center py-4">
+    <div className="text-center py-2">
       <div className={cn(
         "inline-flex items-center gap-2 px-4 py-2 rounded-full",
         "bg-muted/30 text-muted-foreground transition-all duration-500",

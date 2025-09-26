@@ -105,7 +105,7 @@ export default function EnhancedPromptResponseArea({
   const selectedFormatOption = formatOptions.find(f => f.id === selectedFormat) || formatOptions[0];
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-3 relative">
       {/* First-Time Guide Overlay */}
       {showGuide && (
         <FirstTimeGuide
@@ -116,7 +116,7 @@ export default function EnhancedPromptResponseArea({
 
       {/* Prompt Display */}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-primary/10 rounded-full">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -134,7 +134,7 @@ export default function EnhancedPromptResponseArea({
       </Card>
 
       {/* Primary Action Button */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Button
           onClick={handlePrimaryAction}
           size="lg"

@@ -115,16 +115,16 @@ export default function SecondaryActions({
   const currentRotatingAction = availableRotatingActions[currentRotatingIndex];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Primary Secondary Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {baseActions.map((action) => (
           <Button
             key={action.id}
             variant="ghost"
             onClick={() => handleActionClick(action.id, action.action)}
             className={cn(
-              "h-16 flex-col gap-1 text-muted-foreground hover:text-foreground",
+              "h-12 flex-col gap-1 text-muted-foreground hover:text-foreground",
               "hover:bg-muted/60 transition-all duration-200",
               "border border-muted/30 hover:border-muted/60"
             )}

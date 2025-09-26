@@ -333,16 +333,6 @@ export function SimpleHeader({
               }}
               userAge="adult" // TODO: Get from user profile
             />
-
-            {/* Shuffle Button Only */}
-            <div className="flex justify-end pt-2 sm:pt-4">
-              <PromptControls
-                prompt={primaryPrompt}
-                onShuffle={handleShuffle}
-                shuffling={shuffling}
-                showShuffleOnly={true}
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
