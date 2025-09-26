@@ -152,7 +152,7 @@ export function EnhancedFeedItem({
   };
   if (compact) {
     return <Card className="w-full hover:shadow-sm transition-all duration-200">
-        <CardContent className="p-3 space-y-3 cursor-pointer" onClick={onToggleExpand || (() => {})}>
+        <CardContent className="p-3 space-y-3 cursor-pointer" onClick={onNavigate || onToggleExpand || (() => {})}>
           {/* Compact Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
