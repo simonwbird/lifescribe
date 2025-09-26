@@ -14,6 +14,7 @@ import EnhancedPromptResponseArea from '@/components/simple/EnhancedPromptRespon
 import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager';
 import { DraftProgressBanner } from '@/components/drafts/DraftProgressBanner';
 import { ResumeSessionModal } from '@/components/drafts/ResumeSessionModal';
+import QuickVoiceRecordModal from '@/components/voice/QuickVoiceRecordModal';
 
 interface SimpleHeaderProps {
   profileId: string
@@ -33,6 +34,7 @@ export function SimpleHeader({
   const [showBlankCanvasModal, setShowBlankCanvasModal] = useState(false)
   const [selectedPrompt, setSelectedPrompt] = useState<ElderPrompt | null>(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
+  const [showQuickVoiceModal, setShowQuickVoiceModal] = useState(false)
   const { track } = useAnalytics()
   const navigate = useNavigate()
   
@@ -325,11 +327,7 @@ export function SimpleHeader({
               }}
               onQuickVoice={() => {
                 track('activity_clicked', { action: 'quick_voice' })
-                draftManager.startAutosave(() => ({
-                  prompt: 'Quick voice recording',
-                  mode: 'audio'
-                }), 'audio')
-                handleQuickRecord()
+                setShowQuickVoiceModal(true)
               }}
               userAge="adult" // TODO: Get from user profile
             />
@@ -389,6 +387,18 @@ export function SimpleHeader({
           onCancel={handleModalCancel}
         />
       )}
+
+      {/* Quick Voice Recording Modal */}
+      <QuickVoiceRecordModal
+        open={showQuickVoiceModal}
+        onClose={() => setShowQuickVoiceModal(false)}
+        onStoryCreated={(storyId) => {
+          track('activity_clicked', { 
+            action: 'story_created_quick_voice',
+            story_id: storyId 
+          })
+        }}
+      />
 
       {/* Blank Canvas Modal */}
       <BlankCanvasModal
