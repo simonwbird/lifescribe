@@ -356,7 +356,7 @@ export function SimpleHeader({
               }}
               onCreateFreeform={() => {
                 track('activity_clicked', { action: 'create_freeform' })
-                navigate('/create')
+                navigate('/stories/new')
               }}
               onAddPhoto={() => {
                 track('activity_clicked', { action: 'add_photo' })
