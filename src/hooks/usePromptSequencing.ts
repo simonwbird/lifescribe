@@ -142,11 +142,33 @@ export function usePromptSequencing() {
 
   const loadUserPromptData = async () => {
     try {
-      // For now, mock the data since tables don't exist yet
-      // TODO: Create user_prompt_history and user_streaks tables
-      const history: UserPromptHistory[] = []
-      const streak = 0
-      const totalCompleted = 0
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Load user's prompt history
+      const { data: historyData } = await supabase
+        .from('user_prompt_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('used_at', { ascending: false })
+
+      // Load user's streak data
+      const { data: streakData } = await supabase
+        .from('user_streaks')
+        .select('current_streak, longest_streak, total_completed')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      const history: UserPromptHistory[] = historyData?.map(item => ({
+        promptId: item.prompt_id,
+        usedAt: new Date(item.used_at),
+        completed: item.completed,
+        topics: item.response_topics || [],
+        responseLength: item.response_length
+      })) || []
+
+      const streak = streakData?.current_streak || 0
+      const totalCompleted = streakData?.total_completed || 0
       const progress = Math.min((totalCompleted % 7) * (100 / 7), 100)
       
       // Determine personalization level and preferred themes
@@ -291,8 +313,21 @@ export function usePromptSequencing() {
       currentPrompt: newPrompt
     }))
 
-    // TODO: Record the shuffle in database when tables are created
-    console.log('Shuffled to new prompt:', newPrompt?.id)
+    // Record the shuffle in database
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user && newPrompt) {
+        await supabase.from('user_prompt_history').insert({
+          user_id: user.id,
+          prompt_id: newPrompt.id,
+          used_at: new Date().toISOString(),
+          completed: false,
+          action: 'shuffled'
+        })
+      }
+    } catch (error) {
+      console.error('Error recording shuffle:', error)
+    }
   }, [state, track])
 
   const markPromptCompleted = useCallback(async (
@@ -307,23 +342,44 @@ export function usePromptSequencing() {
       personalizationLevel: state.personalizationLevel 
     })
 
-    // TODO: Update database when tables are created
-    console.log('Marked prompt completed:', promptId)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    // Mock streak increment for now
-    const newStreakCount = state.streak + 1
-    const newTotalCompleted = state.personalizationLevel + 1
+      // Update prompt history
+      await supabase.from('user_prompt_history').upsert({
+        user_id: user.id,
+        prompt_id: promptId,
+        used_at: new Date().toISOString(),
+        completed: true,
+        response_length: responseLength,
+        response_topics: topics
+      })
 
-    // Update local state
-    setState(prev => ({
-      ...prev,
-      streak: newStreakCount,
-      progress: Math.min((newTotalCompleted % 7) * (100 / 7), 100),
-      personalizationLevel: Math.min(Math.floor(newTotalCompleted / 3), 5)
-    }))
+      // Update streak using the database function
+      const { data: streakResult } = await supabase
+        .rpc('update_user_streak', {
+          p_user_id: user.id,
+          p_completed_today: true
+        })
+        .single()
 
-    // Reload prompt data to get fresh recommendations
-    setTimeout(loadUserPromptData, 1000)
+      if (streakResult) {
+        // Update local state
+        setState(prev => ({
+          ...prev,
+          streak: streakResult.current_streak,
+          progress: Math.min((streakResult.total_completed % 7) * (100 / 7), 100),
+          personalizationLevel: Math.min(Math.floor(streakResult.total_completed / 3), 5)
+        }))
+      }
+
+      // Reload prompt data to get fresh recommendations
+      setTimeout(loadUserPromptData, 1000)
+
+    } catch (error) {
+      console.error('Error marking prompt completed:', error)
+    }
   }, [state, track])
 
   return {

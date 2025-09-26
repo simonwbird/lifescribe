@@ -4707,6 +4707,81 @@ export type Database = {
           },
         ]
       }
+      user_prompt_history: {
+        Row: {
+          action: string | null
+          completed: boolean
+          created_at: string
+          id: string
+          prompt_id: string
+          response_length: number | null
+          response_topics: string[] | null
+          updated_at: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          completed?: boolean
+          created_at?: string
+          id?: string
+          prompt_id: string
+          response_length?: number | null
+          response_topics?: string[] | null
+          updated_at?: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          completed?: boolean
+          created_at?: string
+          id?: string
+          prompt_id?: string
+          response_length?: number | null
+          response_topics?: string[] | null
+          updated_at?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_completed_at: string | null
+          longest_streak: number
+          streak_started_at: string | null
+          total_completed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_completed_at?: string | null
+          longest_streak?: number
+          streak_started_at?: string | null
+          total_completed?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_completed_at?: string | null
+          longest_streak?: number
+          streak_started_at?: string | null
+          total_completed?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_digest_logs: {
         Row: {
           created_at: string
@@ -5140,6 +5215,14 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      update_user_streak: {
+        Args: { p_completed_today?: boolean; p_user_id: string }
+        Returns: {
+          current_streak: number
+          longest_streak: number
+          total_completed: number
+        }[]
       }
       validate_email: {
         Args: { email_address: string }
