@@ -212,18 +212,34 @@ export function SimpleHeader({
             </div>
 
             {/* Primary Action */}
-            <div className="space-y-3 sm:space-y-4">
-              <Button
-                onClick={() => handleRecordWithPrompt(primaryPrompt)}
-                size="lg"
-                className="w-full sm:w-auto h-14 text-lg font-medium px-8 bg-primary hover:bg-primary/90 min-w-44"
-              >
-                <Mic className="w-6 h-6 mr-3" />
-                Start with this
-              </Button>
+            <div className="space-y-4 sm:space-y-6">
+              {/* Large, prominent "Record" button for elder accessibility */}
+              <div className="flex flex-col items-center gap-4">
+                <Button
+                  onClick={() => handleRecordWithPrompt(primaryPrompt)}
+                  size="lg"
+                  className="w-full max-w-sm h-20 text-2xl font-bold px-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 border-4 border-primary/20"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Mic className="w-8 h-8" />
+                    <span>Tap to Record Your Story</span>
+                  </div>
+                </Button>
+                
+                {/* Alternative: Start with prompt */}
+                <Button
+                  onClick={() => handleRecordWithPrompt(primaryPrompt)}
+                  variant="outline"
+                  size="lg"
+                  className="w-full max-w-sm h-14 text-lg font-medium px-8 border-2 hover:bg-accent/50"
+                >
+                  <Mic className="w-5 h-5 mr-3" />
+                  Start with this prompt
+                </Button>
+              </div>
 
               {/* Secondary Action */}
-              <div className="text-center sm:text-left">
+              <div className="text-center">
                 <button
                   onClick={handleRecordWithoutPrompt}
                   className="text-primary hover:text-primary/80 underline underline-offset-4 text-base font-medium"

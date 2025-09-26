@@ -28,6 +28,10 @@ import StoryWizardStep6 from './steps/StoryWizardStep6'
 // Mock modals for AI assists
 import VoiceToTextModal from './modals/VoiceToTextModal'
 import PhoneImportModal from './modals/PhoneImportModal'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { useDraftManager } from '@/hooks/useDraftManager'
+import { DraftRecovery } from './DraftRecovery'
+import { AutosaveIndicator } from './AutosaveIndicator'
 
 const initialFormData: StoryFormData = {
   title: '',
@@ -60,6 +64,7 @@ export default function StoryWizard() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false)
   
   // Check workflow type
   const workflowType = searchParams.get('type')
@@ -68,6 +73,18 @@ export default function StoryWizard() {
   const isVideoFirst = workflowType === 'video'
   const isTextOnly = workflowType === 'text'
   
+  // Draft management
+  const draftKey = `story-${storyId || 'new'}-${workflowType || 'default'}`
+  const { 
+    autosaveStatus: draftAutosaveStatus, 
+    hasDraft, 
+    loadDraft, 
+    clearDraft, 
+    startAutosave, 
+    stopAutosave 
+  } = useDraftManager(draftKey)
+  
+  // Check workflow type - now moved above
   const currentStepOrder = isPhotoFirst ? PHOTO_FIRST_STEPS : 
                           isAudioFirst ? AUDIO_FIRST_STEPS :
                           isVideoFirst ? VIDEO_FIRST_STEPS :
@@ -80,8 +97,17 @@ export default function StoryWizard() {
     peopleSuggestions: []
   })
 
-  // Initialize form data from URL params
+  // Initialize form data from URL params and check for drafts
   useEffect(() => {
+    // Check for existing draft first if not editing
+    if (!storyId && !isEditing) {
+      const existingDraft = loadDraft()
+      if (existingDraft) {
+        setShowDraftRecovery(true)
+        return
+      }
+    }
+
     const personId = searchParams.get('person')
     const personName = searchParams.get('personName')
     const promptTitle = searchParams.get('prompt')
@@ -123,7 +149,7 @@ export default function StoryWizard() {
         tags: ['memory-prompt']
       }))
     }
-  }, [searchParams])
+  }, [searchParams, storyId, isEditing, loadDraft])
 
   // Load existing story when editing
   useEffect(() => {
@@ -207,84 +233,63 @@ export default function StoryWizard() {
     getFamilyId()
   }, [])
 
-  // Autosave logic
-  const autosave = useCallback(async () => {
-    if (!familyId || (!formData.title.trim() && !formData.content.trim())) {
-      return
-    }
-
-    setAutosaveStatus({ status: 'saving', message: 'Saving...' })
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Save as draft
-      const draftKey = `story_draft_${user.id}`
-      localStorage.setItem(draftKey, JSON.stringify({
-        ...formData,
-        lastSaved: new Date().toISOString(),
-        currentStep
-      }))
-
-      setAutosaveStatus({
-        status: 'saved',
-        lastSaved: new Date(),
-        message: 'Saved just now'
-      })
-    } catch (error) {
-      console.error('Autosave error:', error)
-      setAutosaveStatus({
-        status: 'error',
-        message: 'Save failed'
-      })
-    }
-  }, [formData, familyId, currentStep])
-
-  // Autosave on form changes
+  // Start autosave when form data changes
   useEffect(() => {
-    const timeoutId = setTimeout(autosave, 2000)
-    return () => clearTimeout(timeoutId)
-  }, [autosave])
+    const getFormData = () => ({
+      title: formData.title,
+      content: formData.content,
+      media: formData.media,
+      date: formData.date,
+      people: formData.people,
+      tags: formData.tags,
+      workflowType,
+      currentStep,
+      visibility: formData.visibility,
+      collection: formData.collection
+    })
 
-  // Load draft on mount
-  useEffect(() => {
-    if (storyId && isEditing) return // don't load drafts when editing existing story
-    const loadDraft = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const draftKey = `story_draft_${user.id}`
-      const saved = localStorage.getItem(draftKey)
-      
-      if (saved && !searchParams.get('person') && !searchParams.get('prompt') && !searchParams.get('type')) {
-        try {
-          const draft = JSON.parse(saved)
-          
-          // Convert legacy people format if needed
-          if (draft.people && Array.isArray(draft.people) && draft.people.length > 0) {
-            if (typeof draft.people[0] === 'string') {
-              draft.people = draft.people.map((name: string) => ({
-                name,
-                isExisting: false
-              }))
-            }
-          }
-          
-          setFormData(draft)
-          setCurrentStep(draft.currentStep || 1)
-          setAutosaveStatus({
-            status: 'saved',
-            lastSaved: new Date(draft.lastSaved),
-            message: `Restored from ${new Date(draft.lastSaved).toLocaleTimeString()}`
-          })
-        } catch (error) {
-          console.error('Error loading draft:', error)
-        }
-      }
+    // Only start autosave if there's meaningful content and we're not showing draft recovery
+    if ((formData.title || formData.content || formData.media.length > 0) && !showDraftRecovery) {
+      startAutosave(getFormData)
     }
-    loadDraft()
-  }, [searchParams])
+
+    return () => stopAutosave()
+  }, [formData, workflowType, currentStep, startAutosave, stopAutosave, showDraftRecovery])
+
+  const handleDraftRecovery = (draft: any) => {
+    setFormData(prev => ({
+      ...prev,
+      title: draft.content.title || '',
+      content: draft.content.content || '',
+      media: draft.content.media || [],
+      date: draft.content.date || prev.date,
+      people: draft.content.people || [],
+      tags: draft.content.tags || [],
+      visibility: draft.content.visibility || prev.visibility,
+      collection: draft.content.collection || prev.collection
+    }))
+    
+    if (draft.content.currentStep !== undefined) {
+      setCurrentStep(draft.content.currentStep)
+    }
+    
+    setShowDraftRecovery(false)
+    
+    toast({
+      title: "Draft Recovered",
+      description: "Your previous work has been restored.",
+    })
+  }
+
+  const handleDiscardDraft = () => {
+    clearDraft()
+    setShowDraftRecovery(false)
+    
+    toast({
+      title: "Draft Discarded",
+      description: "Starting with a fresh story.",
+    })
+  }
 
   const updateFormData = (updates: Partial<StoryFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
@@ -504,11 +509,35 @@ export default function StoryWizard() {
   }
 
   const handleSaveDraft = async () => {
-    await autosave()
-    toast({
-      title: "Draft saved",
-      description: "Your story has been saved as a draft.",
-    })
+    try {
+      const draftData = {
+        title: formData.title,
+        content: formData.content,
+        media: formData.media,
+        date: formData.date,
+        people: formData.people,
+        tags: formData.tags,
+        workflowType,
+        currentStep,
+        visibility: formData.visibility,
+        collection: formData.collection
+      }
+      
+      // Force save the draft
+      startAutosave(() => draftData)
+      
+      toast({
+        title: "Draft saved",
+        description: "Your story has been saved as a draft.",
+      })
+    } catch (error) {
+      console.error('Error saving draft:', error)
+      toast({
+        title: "Error",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handlePreview = () => {
@@ -634,7 +663,7 @@ export default function StoryWizard() {
         <StoryWizardProgress
           currentStep={currentStep}
           completedSteps={completedSteps}
-          autosaveStatus={autosaveStatus}
+          autosaveStatus={draftAutosaveStatus.status !== 'idle' ? draftAutosaveStatus : autosaveStatus}
           isPhotoFirst={isPhotoFirst}
           isAudioFirst={isAudioFirst}
           isVideoFirst={isVideoFirst}
@@ -645,6 +674,30 @@ export default function StoryWizard() {
           <div className="lg:col-span-3">
             <Card className="shadow-sm">
               <CardContent className="p-6 lg:p-8">
+                {/* Draft Recovery Modal */}
+                {showDraftRecovery && (
+                  <div className="mb-6">
+                    <DraftRecovery
+                      draft={loadDraft()!}
+                      onRecover={handleDraftRecovery}
+                      onDiscard={handleDiscardDraft}
+                      onCancel={() => setShowDraftRecovery(false)}
+                    />
+                  </div>
+                )}
+                
+                {/* Autosave Indicator */}
+                {!showDraftRecovery && draftAutosaveStatus.status !== 'idle' && (
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center">
+                      <AutosaveIndicator status={draftAutosaveStatus} />
+                      <div className="text-xs text-muted-foreground">
+                        Your progress is automatically saved
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {renderCurrentStep()}
               </CardContent>
             </Card>

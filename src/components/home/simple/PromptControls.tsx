@@ -62,12 +62,15 @@ export function PromptControls({ prompt, onShuffle, shuffling }: PromptControlsP
         <Button
           variant="outline"
           size="sm"
-          disabled
-          className="h-10 px-3 text-sm font-medium min-w-0 opacity-50"
-          title="Text-to-speech not supported in this browser"
+          className="h-10 px-3 text-sm font-medium min-w-0 bg-muted/50 hover:bg-muted"
+          onClick={() => {
+            // Fallback: show alert with prompt text for screen readers or manual reading
+            alert(`Prompt: ${prompt.text}\n\nNote: Text-to-speech is not available in this browser. You can read this prompt aloud or have someone read it to you.`)
+          }}
+          title="Text-to-speech not available - click to see prompt text"
         >
           <Volume2 className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Hear it</span>
+          <span className="hidden sm:inline">Read prompt</span>
         </Button>
       )}
 
