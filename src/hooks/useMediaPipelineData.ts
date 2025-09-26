@@ -111,7 +111,7 @@ export const usePipelineOverviewStats = () => {
         transcription_minutes_24h: 0 // Would need to calculate from actual job data
       } as PipelineOverviewStats;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 60000, // Refresh every minute (reduced from 30 seconds)
   });
 };
 
@@ -165,7 +165,7 @@ export const usePipelineStageStats = () => {
 
       return stages as PipelineStageStats[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 60000, // Refresh every minute (reduced from 30 seconds)
   });
 };
 
@@ -182,7 +182,7 @@ export const useVendorStatus = () => {
       if (error) throw error;
       return data as MediaVendorStatus[];
     },
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 2 * 60000, // Refresh every 2 minutes (reduced from 1 minute)
   });
 };
 

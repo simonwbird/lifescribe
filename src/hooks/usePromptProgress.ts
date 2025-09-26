@@ -66,5 +66,7 @@ export function useInProgressPrompts(familyId: string) {
       return data;
     },
     enabled: !!familyId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 }

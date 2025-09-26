@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useLabs } from './useLabs'
 import { replacePlaceholders, getMissingPeopleForPrompts, generatePersonPromptInstances } from '@/services/promptService'
@@ -55,207 +56,113 @@ export interface PromptCounts {
 
 export function usePrompts(familyId: string, personId?: string) {
   const { flags } = useLabs()
-  const [instances, setInstances] = useState<PromptInstance[]>([])
-  const [counts, setCounts] = useState<PromptCounts>({ open: 0, in_progress: 0, completed: 0 })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lockedPrompts, setLockedPrompts] = useState<any[]>([])
-  const [people, setPeople] = useState<Record<string, { name: string; relationship?: string }>>({})
-
+  const queryClient = useQueryClient()
   const isPeopleSpecificEnabled = flags['prompts.peopleSpecific']
 
-  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string, category?: 'Birthdays' | 'Favorites') => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Fetch people for placeholder replacement
-      const { data: peopleData, error: peopleError } = await supabase
-        .from('people')
-        .select('id, full_name')
-        .eq('family_id', familyId)
+  // Optimized people query with caching
+  const { data: people = {} } = useQuery({
+    queryKey: ['people-map', familyId],
+    queryFn: async () => {
+      const [{ data: peopleData, error: peopleError }, { data: relationshipsData, error: relationshipsError }] = await Promise.all([
+        supabase.from('people').select('id, full_name').eq('family_id', familyId),
+        supabase.from('relationships').select('from_person_id, to_person_id, relationship_type')
+      ])
 
       if (peopleError) throw peopleError
-
-      // Fetch relationships separately to avoid complex joins
-      const { data: relationshipsData, error: relationshipsError } = await supabase
-        .from('relationships')
-        .select('from_person_id, to_person_id, relationship_type')
-
       if (relationshipsError) throw relationshipsError
 
-      // Build people lookup for placeholder replacement
       const peopleMap: Record<string, { name: string; relationship?: string }> = {}
       peopleData?.forEach(person => {
-        // Find primary relationship for this person
         const relationship = relationshipsData?.find(r => 
           r.from_person_id === person.id || r.to_person_id === person.id
         )
-        
         peopleMap[person.id] = {
           name: person.full_name,
           relationship: relationship?.relationship_type
         }
       })
-      setPeople(peopleMap)
+      return peopleMap
+    },
+    enabled: !!familyId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  })
 
+  // Optimized prompt instances query
+  const { data: promptData, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled],
+    queryFn: async () => {
       let query = supabase
         .from('prompt_instances')
-        .select(`
-          *,
-          prompt:prompts(*)
-        `)
+        .select(`*, prompt:prompts(*)`)
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
 
-      if (status) {
-        query = query.eq('status', status)
+      if (personId) {
+        query = query.contains('person_ids', [personId])
       }
 
-      // Filter by category if specified
-      if (category) {
-        if (category === 'Birthdays') {
-          query = query.eq('source', 'birthday')
-        } else if (category === 'Favorites') {
-          query = query.eq('source', 'favorites')
-        }
-      }
+      const { data, error } = await query
+      if (error) throw error
 
-      // Filter by person if specified
-      const targetPersonId = filterPersonId || personId
-      if (targetPersonId) {
-        query = query.contains('person_ids', [targetPersonId])
-      }
-
-      const { data, error: fetchError } = await query
-
-      if (fetchError) throw fetchError
-
-      // If no instances exist for this family, initialize them
       if (!data || data.length === 0) {
-        console.log('No prompt instances found, initializing...')
-        try {
-          const { initializeFamilyPrompts } = await import('@/services/promptService')
-          await initializeFamilyPrompts(familyId)
-          
-          // Retry the query after initialization
-          const { data: retryData, error: retryError } = await query
-          if (retryError) throw retryError
-          
-          const initializedData = retryData || []
-          console.log(`Initialized ${initializedData.length} prompt instances`)
-          
-          const processedInstances = initializedData.filter(instance => {
-            if (instance.prompt?.scope === 'general') return true
-            if (instance.prompt?.scope === 'person_specific') return isPeopleSpecificEnabled
-            return true
-          }).map(instance => {
-            if (instance.prompt) {
-              const relevantPeople: Record<string, { name: string; relationship?: string }> = {}
-              instance.person_ids?.forEach((id: string) => {
-                if (peopleMap[id]) {
-                  relevantPeople[id] = peopleMap[id]
-                }
-              })
-              
-              return {
-                ...instance,
-                status: instance.status as PromptInstance['status'], // Type assertion
-                prompt: {
-                  ...instance.prompt,
-                  scope: instance.prompt.scope as 'general' | 'person_specific', // Type assertion
-                  title: replacePlaceholders(instance.prompt.title, relevantPeople),
-                  body: replacePlaceholders(instance.prompt.body, relevantPeople)
-                }
-              } as PromptInstance
-            }
-            return {
-              ...instance,
-              status: instance.status as PromptInstance['status'] // Type assertion
-            } as PromptInstance
-          })
-          
-          setInstances(processedInstances)
-          
-          // Update counts
-          const newCounts = {
-            open: processedInstances.filter(i => i.status === 'open').length,
-            in_progress: processedInstances.filter(i => i.status === 'in_progress').length,
-            completed: processedInstances.filter(i => i.status === 'completed').length
-          }
-          setCounts(newCounts)
-          
-          return // Exit early after initialization
-        } catch (initError) {
-          console.error('Failed to initialize prompt instances:', initError)
-          // Continue with empty state
-        }
+        const { initializeFamilyPrompts } = await import('@/services/promptService')
+        await initializeFamilyPrompts(familyId)
+        const { data: retryData, error: retryError } = await query
+        if (retryError) throw retryError
+        return retryData || []
       }
 
-      // Filter instances based on feature flag and apply placeholder replacement
-      const filteredData = (data || []).filter(instance => {
-        // Always show general prompts
-        if (instance.prompt?.scope === 'general') return true
-        
-        // Only show person-specific prompts if feature flag is enabled
-        if (instance.prompt?.scope === 'person_specific') {
-          return isPeopleSpecificEnabled
-        }
-        
-        return true
-      }).map(instance => {
-        // Replace placeholders in prompt text
-        if (instance.prompt) {
-          const relevantPeople: Record<string, { name: string; relationship?: string }> = {}
-          instance.person_ids?.forEach((id: string) => {
-            if (peopleMap[id]) {
-              relevantPeople[id] = peopleMap[id]
-            }
-          })
+      return data || []
+    },
+    enabled: !!familyId,
+    staleTime: 2 * 60 * 1000, // 2 minutes for prompts
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  })
 
-          return {
-            ...instance,
-            prompt: {
-              ...instance.prompt,
-              title: replacePlaceholders(instance.prompt.title, relevantPeople),
-              body: replacePlaceholders(instance.prompt.body, relevantPeople)
-            }
+  const [lockedPrompts, setLockedPrompts] = useState<any[]>([])
+
+  // Process instances with placeholders
+  const instances = (promptData || [])
+    .filter(instance => {
+      if (instance.prompt?.scope === 'general') return true
+      if (instance.prompt?.scope === 'person_specific') return isPeopleSpecificEnabled
+      return true
+    })
+    .map(instance => {
+      if (instance.prompt) {
+        const relevantPeople: Record<string, { name: string; relationship?: string }> = {}
+        instance.person_ids?.forEach((id: string) => {
+          if (people[id]) {
+            relevantPeople[id] = people[id]
           }
-        }
-        return instance
-      })
-
-      setInstances(filteredData as PromptInstance[])
-
-      // Calculate counts from filtered data
-      if (!status) {
-        const openCount = filteredData?.filter(i => i.status === 'open').length || 0
-        const inProgressCount = filteredData?.filter(i => i.status === 'in_progress').length || 0
-        const completedCount = filteredData?.filter(i => i.status === 'completed').length || 0
-        
-        setCounts({
-          open: openCount,
-          in_progress: inProgressCount,
-          completed: completedCount
         })
-      }
-
-      // Fetch locked prompts if people-specific is enabled
-      if (isPeopleSpecificEnabled) {
-        try {
-          const missingRoles = await getMissingPeopleForPrompts(familyId)
-          setLockedPrompts(missingRoles)
-        } catch (lockedError) {
-          console.warn('Error fetching locked prompts:', lockedError)
+        
+        return {
+          ...instance,
+          prompt: {
+            ...instance.prompt,
+            title: replacePlaceholders(instance.prompt.title, relevantPeople),
+            body: replacePlaceholders(instance.prompt.body, relevantPeople)
+          }
         }
       }
+      return instance
+    }) as PromptInstance[]
 
-    } catch (err) {
-      console.error('Error fetching prompts:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch prompts')
-    } finally {
-      setLoading(false)
-    }
+  // Calculate counts
+  const counts = {
+    open: instances.filter(i => i.status === 'open').length,
+    in_progress: instances.filter(i => i.status === 'in_progress').length,
+    completed: instances.filter(i => i.status === 'completed').length
+  }
+
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Failed to fetch prompts') : null
+
+  const fetchPrompts = async (status?: 'open' | 'completed' | 'in_progress', filterPersonId?: string, category?: 'Birthdays' | 'Favorites') => {
+    await queryClient.invalidateQueries({ 
+      queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
+    })
   }
 
   const startPrompt = async (instanceId: string) => {
@@ -271,7 +178,9 @@ export function usePrompts(familyId: string, personId?: string) {
       if (error) throw error
 
       // Refresh data
-      await fetchPrompts()
+      await queryClient.invalidateQueries({ 
+        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
+      })
     } catch (err) {
       console.error('Error starting prompt:', err)
       throw err
@@ -326,7 +235,9 @@ export function usePrompts(familyId: string, personId?: string) {
       }
 
       // Refresh data
-      await fetchPrompts()
+      await queryClient.invalidateQueries({ 
+        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
+      })
     } catch (err) {
       console.error('Error creating response:', err)
       throw err
@@ -375,11 +286,14 @@ export function usePrompts(familyId: string, personId?: string) {
     })[0]
   }
 
+  // Fetch locked prompts when people-specific is enabled
   useEffect(() => {
-    if (familyId) {
-      fetchPrompts()
+    if (isPeopleSpecificEnabled && familyId) {
+      getMissingPeopleForPrompts(familyId)
+        .then(setLockedPrompts)
+        .catch(err => console.warn('Error fetching locked prompts:', err))
     }
-  }, [familyId, personId, isPeopleSpecificEnabled])
+  }, [isPeopleSpecificEnabled, familyId])
 
   const getBirthdayPrompts = () => {
     return instances.filter(i => i.source === 'birthday' && i.status === 'open')
@@ -436,7 +350,9 @@ export function usePrompts(familyId: string, personId?: string) {
     try {
       await generatePersonPromptInstances(familyId, targetPersonId)
       // Refresh prompts after generation
-      await fetchPrompts()
+      await queryClient.invalidateQueries({ 
+        queryKey: ['prompt-instances', familyId, personId, isPeopleSpecificEnabled] 
+      })
     } catch (err) {
       console.error('Error generating prompts for person:', err)
       throw err
