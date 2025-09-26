@@ -13,6 +13,7 @@ export interface LabsFlags {
   'prompts.peopleSpecific': boolean
   'prompts.birthdays': boolean
   'prompts.favorites': boolean
+  'prompts.progressAndFilters': boolean
 }
 
 const DEFAULT_FLAGS: LabsFlags = {
@@ -27,6 +28,7 @@ const DEFAULT_FLAGS: LabsFlags = {
   'prompts.peopleSpecific': true,
   'prompts.birthdays': true,
   'prompts.favorites': true,
+  'prompts.progressAndFilters': true,
 }
 
 export function useLabs() {
