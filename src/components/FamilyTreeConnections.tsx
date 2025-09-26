@@ -25,40 +25,76 @@ export default function FamilyTreeConnections({
     return null
   }
 
-  const renderConnectionLine = (fromId: string, toId: string, relationship: 'parent' | 'spouse' | 'divorced' | 'unmarried') => {
+  const renderConnectionLine = (fromId: string, toId: string, relationship: 'parent' | 'spouse' | 'divorced' | 'unmarried' | 'child' | 'sibling' | 'brother' | 'sister' | 'grandparent' | 'grandmother' | 'grandfather' | 'grandchild' | 'grandson' | 'granddaughter' | 'aunt' | 'uncle' | 'niece' | 'nephew' | 'cousin') => {
     const fromPos = getNodePosition(fromId)
     const toPos = getNodePosition(toId)
     
     if (!fromPos || !toPos) return null
 
-    const strokeColor = relationship === 'spouse' 
+    // Map extended relationship types to visual connection types
+    const getVisualType = (relType: typeof relationship): 'parent' | 'spouse' | 'divorced' | 'unmarried' => {
+      switch (relType) {
+        case 'spouse':
+          return 'spouse'
+        case 'divorced':
+          return 'divorced'
+        case 'unmarried':
+          return 'unmarried'
+        case 'parent':
+        case 'child':
+        case 'grandparent':
+        case 'grandmother':
+        case 'grandfather':
+        case 'grandchild':
+        case 'grandson':
+        case 'granddaughter':
+          return 'parent'  // All hierarchical relationships use parent-style lines
+        case 'sibling':
+        case 'brother':
+        case 'sister':
+        case 'aunt':
+        case 'uncle':
+        case 'niece':
+        case 'nephew':
+        case 'cousin':
+          return 'unmarried'  // Lateral relationships use unmarried-style lines
+        default:
+          return 'unmarried'
+      }
+    }
+
+    const visualType = getVisualType(relationship)
+    const strokeColor = visualType === 'spouse' 
       ? 'stroke-pink-400' 
-      : relationship === 'divorced'
+      : visualType === 'divorced'
       ? 'stroke-gray-400'
-      : relationship === 'unmarried'
+      : visualType === 'unmarried'
       ? 'stroke-pink-200'
       : 'stroke-blue-400'
-    const strokeWidth = relationship === 'spouse' || relationship === 'divorced' || relationship === 'unmarried' ? '3' : '2'
     
-    if (relationship === 'spouse' || relationship === 'divorced' || relationship === 'unmarried') {
-      // Straight line for spouses
+    const strokeWidth = visualType === 'spouse' || visualType === 'divorced' || visualType === 'unmarried' ? '3' : '2'
+    const key = `${fromId}-${toId}-${relationship}`
+
+    // Different line styles based on visual relationship type
+    if (visualType === 'spouse' || visualType === 'divorced' || visualType === 'unmarried') {
+      // Straight line for spouses and lateral relationships
       return (
         <line
-          key={`${fromId}-${toId}-${relationship}`}
+          key={key}
           x1={fromPos.x}
           y1={fromPos.y}
           x2={toPos.x}
           y2={toPos.y}
           className={`${strokeColor} stroke-2`}
-          strokeDasharray={relationship === 'spouse' ? '5,5' : relationship === 'divorced' ? '10,5,2,5' : relationship === 'unmarried' ? '2,2' : 'none'}
+          strokeDasharray={visualType === 'spouse' ? '5,5' : visualType === 'divorced' ? '10,5,2,5' : visualType === 'unmarried' ? '2,2' : 'none'}
         />
       )
-    } else {
+    } else if (visualType === 'parent') {
       // L-shaped line for parent-child relationships
       const midY = fromPos.y + (toPos.y - fromPos.y) / 2
       
       return (
-        <g key={`${fromId}-${toId}-${relationship}`}>
+        <g key={key}>
           {/* Vertical line from parent down */}
           <line
             x1={fromPos.x}
