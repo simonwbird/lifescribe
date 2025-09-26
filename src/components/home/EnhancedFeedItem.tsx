@@ -199,12 +199,12 @@ export function EnhancedFeedItem({
               </Button>
             </div>
             
-            {onToggleExpand && <Button variant="ghost" size="sm" onClick={onToggleExpand} className="flex items-center gap-1 h-7 px-2">
-                <Eye className="h-3 w-3" />
-                <span className="text-xs">
-                  {isExpanded ? 'Less' : 'More'}
-                </span>
-              </Button>}
+            <Button variant="ghost" size="sm" onClick={onToggleExpand || (() => {})} className="flex items-center gap-1 h-7 px-2">
+              <Eye className="h-3 w-3" />
+              <span className="text-xs">
+                {isExpanded ? 'Less' : 'More'}
+              </span>
+            </Button>
           </div>
 
           {/* Enhanced Reactions in Compact Mode */}
