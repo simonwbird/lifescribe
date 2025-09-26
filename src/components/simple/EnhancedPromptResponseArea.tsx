@@ -171,9 +171,9 @@ export default function EnhancedPromptResponseArea({
                   <Button
                     key={option.id}
                     variant={selectedFormat === option.id ? "default" : "outline"}
-                    onClick={() => setSelectedFormat(option.id)}
+                    onClick={() => handleFormatSelected(option.id)}
                     className={cn(
-                      "h-20 flex-col gap-2 transition-all duration-200",
+                      "h-20 flex-col gap-2 transition-all duration-200 cursor-pointer",
                       selectedFormat === option.id && option.color,
                       option.isDefault && selectedFormat !== option.id && "border-primary/50"
                     )}
