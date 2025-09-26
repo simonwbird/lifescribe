@@ -506,8 +506,8 @@ export default function Home() {
 
               {/* Right Rail */}
               <div className="space-y-6">
-                <WeeklyDigest />
                 <Upcoming />
+                <WeeklyDigest />
               </div>
             </div>
           </main>
@@ -553,8 +553,8 @@ export default function Home() {
 
             {/* Right Rail */}
             <div className="space-y-6">
-              <WeeklyDigestPreview familyId={spaceId} />
               <Upcoming />
+              <WeeklyDigestPreview familyId={spaceId} />
             </div>
           </div>
         </main>
