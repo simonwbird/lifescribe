@@ -19,6 +19,7 @@ import Landing from "./pages/Landing";
 
 // Lazy load heavy pages for better initial load performance
 const Home = () => <LazyRoute factory={() => import("./pages/Home")} />
+const FeedPage = () => <LazyRoute factory={() => import("./pages/FeedPage")} />
 const NewStory = () => <LazyRoute factory={() => import("./pages/NewStory")} />
 const StoryDetail = () => <LazyRoute factory={() => import("./pages/StoryDetail")} />
 const Prompts = () => <LazyRoute factory={() => import("./pages/Prompts")} />

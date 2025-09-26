@@ -16,7 +16,13 @@ import DirectInviteModal from '@/components/people/DirectInviteModal'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import type { Person } from '@/lib/familyTreeTypes'
+import type { Person as BasePerson } from '@/lib/familyTreeTypes'
+import { CondensedPeopleTable } from '@/components/people/CondensedPeopleTable'
+
+interface Person extends BasePerson {
+  stories_count: number
+  media_count: number
+}
 
 interface MemberRole {
   role: 'admin' | 'member' | 'guest'
@@ -462,6 +468,19 @@ export default function People() {
             </div>
 
             {/* Content */}
+            <CondensedPeopleTable 
+              people={filteredPeople}
+              currentUserRole={currentUserRole}
+              onInvite={(person) => {
+                // Handle invite logic
+                console.log('Invite person:', person)
+              }}
+              onCall={(person) => {
+                // Handle call logic
+                console.log('Call person:', person)
+              }}
+            />
+            
             {(currentUserRole === 'admin' || currentUserRole === 'member') ? (
               <PeopleTable 
                 people={filteredPeople}
