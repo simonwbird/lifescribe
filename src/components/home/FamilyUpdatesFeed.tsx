@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MessageCircle, Heart, Share, Eye, MoreHorizontal, Filter, Zap, ZapOff } from 'lucide-react'
+import { MessageCircle, Heart, Share, Eye, MoreHorizontal, Filter, Zap, ZapOff, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { FeedFilters, type FeedFilterOptions } from './FeedFilters'
 import { InlineStoryViewer } from './InlineStoryViewer'
+import { EnhancedFeedItem } from './EnhancedFeedItem'
 import { isAfter, isBefore, isWithinInterval } from 'date-fns'
 
 interface ActivityItem {
@@ -25,6 +26,11 @@ interface ActivityItem {
   author_id?: string
   content_type?: 'text' | 'photo' | 'audio' | 'video'
   created_at?: string
+  full_content?: string
+  media_count?: number
+  has_audio?: boolean
+  reactions_count?: number
+  comments_count?: number
 }
 
 interface FamilyMember {
@@ -52,9 +58,10 @@ export default function FamilyUpdatesFeed({
   const { toast } = useToast()
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string; full_name?: string } | null>(null)
   const [filters, setFilters] = useState<FeedFilterOptions>({})
-  const [expandedStory, setExpandedStory] = useState<string | null>(null)
-  const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(false)
+  const [expandedStories, setExpandedStories] = useState<Set<string>>(new Set())
+  const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true) // Enable by default for Simple mode
   const [reactionStates, setReactionStates] = useState<Record<string, { liked: boolean; likeCount: number }>>({})
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const tickerRef = useRef<HTMLDivElement | null>(null)
 
   // Load current user's profile (for avatar)
@@ -108,12 +115,12 @@ export default function FamilyUpdatesFeed({
     return true
   })
 
-  // Real-time updates subscription
+  // Real-time updates subscription with better error handling
   useEffect(() => {
     if (!isRealTimeEnabled || !familyId) return
 
     const channel = supabase
-      .channel('family-updates-live')
+      .channel(`family-updates-${familyId}`)
       .on(
         'postgres_changes',
         {
@@ -129,13 +136,19 @@ export default function FamilyUpdatesFeed({
           })
           
           toast({
-            title: "New story shared!",
+            title: "✨ New story shared!",
             description: `${payload.new.title || 'A family member'} just shared something new.`,
+            duration: 5000,
           })
+          
+          // Auto-refresh activities after short delay
+          setTimeout(() => {
+            window.location.reload() // Simple refresh for demo
+          }, 1000)
         }
       )
       .on(
-        'postgres_changes',
+        'postgres_changes', 
         {
           event: 'INSERT',
           schema: 'public',
@@ -147,9 +160,41 @@ export default function FamilyUpdatesFeed({
             type: 'comment',
             commentId: payload.new.id 
           })
+          
+          toast({
+            title: "💬 New comment",
+            description: "Someone just added a comment!",
+            duration: 3000,
+          })
         }
       )
-      .subscribe()
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', 
+          schema: 'public',
+          table: 'reactions',
+          filter: `family_id=eq.${familyId}`
+        },
+        (payload) => {
+          track('realtime_update_received', { 
+            type: 'reaction',
+            reactionId: payload.new.id 
+          })
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Real-time feed updates active')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Real-time connection failed')
+          toast({
+            title: "Connection issue",
+            description: "Real-time updates may not work properly.",
+            variant: "destructive"
+          })
+        }
+      })
 
     return () => {
       supabase.removeChannel(channel)
@@ -162,14 +207,36 @@ export default function FamilyUpdatesFeed({
     if (activity.id.startsWith('story-') || activity.type === 'story' || activity.type === 'comment') {
       const storyId = activity.id.replace('story-', '')
       
-      // Show inline expansion for simple variant, navigate for studio
-      if (variant === 'simple' && expandedStory !== storyId) {
-        setExpandedStory(storyId)
-        track('story_expanded_inline', { storyId })
+      // Toggle expansion for simple variant
+      if (variant === 'simple') {
+        const newExpanded = new Set(expandedStories)
+        if (expandedStories.has(storyId)) {
+          newExpanded.delete(storyId)
+        } else {
+          newExpanded.add(storyId)
+        }
+        setExpandedStories(newExpanded)
+        track('story_expanded_inline', { storyId, expanded: !expandedStories.has(storyId) })
       } else {
         navigate(`/stories/${storyId}`)
       }
     }
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    track('activity_clicked')
+    
+    toast({
+      title: "🔄 Refreshing feed...",
+      description: "Getting the latest family updates"
+    })
+    
+    // Simple refresh for demo - in real app would refetch data
+    setTimeout(() => {
+      setIsRefreshing(false)
+      window.location.reload()
+    }, 1500)
   }
 
   const handleLikeToggle = async (activityId: string, event: React.MouseEvent) => {
@@ -204,10 +271,10 @@ export default function FamilyUpdatesFeed({
     track('realtime_toggled', { enabled: newState })
     
     toast({
-      title: newState ? 'Real-time updates enabled' : 'Real-time updates disabled',
+      title: newState ? '🟢 Live updates enabled' : '⚪ Live updates disabled',
       description: newState 
-        ? 'You\'ll see new stories and comments as they happen' 
-        : 'Updates will only refresh when you reload the page',
+        ? 'You\'ll see new stories and comments as they happen!' 
+        : 'Feed will only update when you refresh manually',
     })
   }
 
@@ -285,26 +352,52 @@ export default function FamilyUpdatesFeed({
   if (variant === 'simple') {
     return (
       <div className={cn('space-y-4', className)}>
-        {/* Controls */}
+        {/* Enhanced Controls */}
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold">Family Updates</h3>
-            <Badge variant={isRealTimeEnabled ? "default" : "secondary"} className="flex items-center gap-1">
+            <Badge 
+              variant={isRealTimeEnabled ? "default" : "secondary"} 
+              className={cn(
+                "flex items-center gap-1 transition-all",
+                isRealTimeEnabled && "bg-green-600 text-white animate-pulse"
+              )}
+            >
               {isRealTimeEnabled ? <Zap className="w-3 h-3" /> : <ZapOff className="w-3 h-3" />}
               {isRealTimeEnabled ? 'LIVE' : 'Static'}
             </Badge>
+            {filteredActivities.length > 0 && (
+              <Badge variant="outline" className="text-xs">
+                {filteredActivities.length} updates
+              </Badge>
+            )}
           </div>
           
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleRealTime}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
               className="flex items-center gap-2"
+            >
+              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleRealTime}
+              className={cn(
+                "flex items-center gap-2",
+                isRealTimeEnabled && "bg-green-50 border-green-200 text-green-700"
+              )}
             >
               {isRealTimeEnabled ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
               {isRealTimeEnabled ? 'Disable Live' : 'Enable Live'}
             </Button>
+            
             <FeedFilters 
               filters={filters}
               onFiltersChange={setFilters}
@@ -313,146 +406,51 @@ export default function FamilyUpdatesFeed({
           </div>
         </div>
 
-        {/* Expanded Story Viewer */}
-        {expandedStory && (
-          <InlineStoryViewer
-            storyId={expandedStory}
-            familyId={familyId}
-            onClose={() => setExpandedStory(null)}
-            onOpenFull={() => setExpandedStory(null)}
-          />
-        )}
+        {/* Enhanced Feed Content */}
+        <div className="space-y-4">
+          {filteredActivities.map((activity, index) => (
+            <EnhancedFeedItem
+              key={`${activity.id}-${index}`}
+              activity={activity}
+              familyId={familyId}
+              userProfile={userProfile}
+              isExpanded={expandedStories.has(activity.id.replace('story-', ''))}
+              onToggleExpand={() => handleActivityClick(activity)}
+              onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
+              compact={false}
+            />
+          ))}
+        </div>
 
-        {/* Feed Content */}
-        <div className="relative h-full min-h-[400px]">
-          {/* Scrollable content area */}
-          <div className="bg-card border rounded-lg overflow-hidden">
-            <div className="h-full max-h-[600px] overflow-y-auto scrollbar-thin">
-              <div className="space-y-1">
-                {filteredActivities.map((activity, index) => {
-                  const activityReactions = reactionStates[activity.id] || { liked: false, likeCount: 0 }
-                  
-                  return (
-                    <div
-                      key={`${activity.id}-${index}`}
-                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors border-b border-muted/30 last:border-b-0"
-                      onClick={() => handleActivityClick(activity)}
-                    >
-                      <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
-                        <AvatarImage 
-                          src={userProfile?.avatar_url ?? undefined} 
-                          alt={userProfile?.full_name || activity.actor} 
-                          className="object-cover" 
-                          referrerPolicy="no-referrer" 
-                        />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                          {activity.actor.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            <span className="text-primary font-semibold">{activity.actor}</span> {activity.action} {activity.target}
-                          </p>
-                          {activity.unread && (
-                            <Badge variant="destructive" className="text-xs animate-pulse">NEW</Badge>
-                          )}
-                          {activity.content_type && (
-                            <Badge variant="outline" className="text-xs capitalize">{activity.content_type}</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono">{activity.time}</p>
-                        {activity.snippet && (
-                          <p className="text-xs text-foreground mt-1 truncate">{activity.snippet}</p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1 opacity-60 flex-shrink-0">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className={cn(
-                            "h-8 w-8 p-0 hover:bg-primary/20",
-                            activityReactions.liked && "text-red-500"
-                          )} 
-                          onClick={(e) => handleLikeToggle(activity.id, e)}
-                        >
-                          <Heart className={cn("h-4 w-4", activityReactions.liked && "fill-current")} />
-                          {activityReactions.likeCount > 0 && (
-                            <span className="text-xs ml-1">{activityReactions.likeCount}</span>
-                          )}
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-primary/20" 
-                          onClick={(e) => { 
-                            e.stopPropagation()
-                            navigate(`/stories/${activity.id.replace('story-', '')}#comments`) 
-                          }}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-primary/20" 
-                          onClick={(e) => { 
-                            e.stopPropagation()
-                            handleReaction(activity.id, 'share') 
-                          }}
-                        >
-                          <Share className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-primary/20" 
-                          onClick={(e) => { 
-                            e.stopPropagation()
-                            setExpandedStory(activity.id.replace('story-', ''))
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Status bar */}
-          <div className={cn(
-            "mt-2 px-4 py-2 text-xs font-semibold rounded-lg text-center",
-            isRealTimeEnabled 
-              ? "bg-green-600 text-white animate-pulse" 
-              : "bg-muted text-muted-foreground"
-          )}>
-            <div className="flex items-center justify-center gap-2">
-              {isRealTimeEnabled ? (
-                <>
-                  <span>🟢</span>
-                  <span>LIVE UPDATES ACTIVE</span>
-                  <span>•</span>
-                  <span>{filteredActivities.length} STORIES</span>
-                  <span>🟢</span>
-                </>
-              ) : (
-                <>
-                  <span>⚪</span>
-                  <span>STATIC VIEW</span>
-                  <span>•</span>
-                  <span>{filteredActivities.length} STORIES</span>
-                  <span>⚪</span>
-                </>
-              )}
-            </div>
+        {/* Enhanced Status bar */}
+        <div className={cn(
+          "px-4 py-3 text-sm font-semibold rounded-lg text-center border-2 transition-all",
+          isRealTimeEnabled 
+            ? "bg-green-50 border-green-200 text-green-800" 
+            : "bg-muted border-muted-foreground/20 text-muted-foreground"
+        )}>
+          <div className="flex items-center justify-center gap-3">
+            {isRealTimeEnabled ? (
+              <>
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>LIVE UPDATES ACTIVE</span>
+                <span>•</span>
+                <span>{filteredActivities.length} STORIES</span>
+                <span>•</span>
+                <span>REAL-TIME SYNC</span>
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 bg-gray-400 rounded-full" />
+                <span>STATIC VIEW</span>
+                <span>•</span>
+                <span>{filteredActivities.length} STORIES</span>
+                <span>•</span>
+                <span>MANUAL REFRESH ONLY</span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full" />
+              </>
+            )}
           </div>
         </div>
       </div>
