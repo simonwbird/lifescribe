@@ -230,13 +230,18 @@ export default function DigestMetricsSummary({ familyId, className }: DigestMetr
   return (
     <Card className={className}>
       <CardContent className="p-4 space-y-4">
-        {/* Header */}
+        {/* Enhanced Header with Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            <span className="font-medium text-sm">Weekly Activity</span>
+            <span className="font-medium text-sm">Content for Next Digest</span>
           </div>
-          {getTrendIcon()}
+          <div className="flex items-center gap-2">
+            {getTrendIcon()}
+            <Badge variant="secondary" className="text-xs">
+              Ready
+            </Badge>
+          </div>
         </div>
 
         {/* Metrics Grid */}

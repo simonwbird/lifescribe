@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Mail, Settings, Eye, Send, Users } from 'lucide-react'
+import { Calendar, Mail, Settings, Eye, Send, Users, Lock } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
-import { DigestPreviewModal } from '@/components/admin/DigestPreviewModal'
+import { SimpleDigestPreview } from '@/components/home/simple/SimpleDigestPreview'
 import DigestQuickActions from './DigestQuickActions'
 import { EnhancedDigestRecipientManager } from './EnhancedDigestRecipientManager'
 import DigestMetricsSummary from './DigestMetricsSummary'
+import SimpleRecipientDisplay from './simple/SimpleRecipientDisplay'
 import { weeklyDigestService } from '@/lib/weeklyDigestService'
 import { supabase } from '@/integrations/supabase/client'
 import type { DigestSettings, DigestPreview } from '@/lib/digestTypes'
@@ -274,10 +276,20 @@ export default function WeeklyDigest() {
     if (Array.isArray(digestSettings.recipients)) {
       return digestSettings.recipients.length
     } else if (digestSettings.recipients.all) {
-      // This would need actual family member count - simplified for now
-      return 'all family members'
+      return 'All family'
     }
     return 0
+  }
+
+  const getUnlockExplanation = () => {
+    if (!digestSettings || digestSettings.is_unlocked) return null
+    
+    const threshold = digestSettings.unlock_threshold || 2
+    return {
+      threshold,
+      message: `Weekly Digest unlocks when ${threshold}+ family members join. This ensures meaningful family stories to share!`,
+      action: 'Invite more family members to unlock weekly updates'
+    }
   }
 
   if (!digestSettings) {
@@ -308,9 +320,35 @@ export default function WeeklyDigest() {
       <CardContent className="space-y-4">
         {digestSettings.enabled ? (
           <>
-            {/* Metrics Summary */}
+            {/* Lock Status Warning */}
+            {!digestSettings.is_unlocked && (
+              <div className="p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded-r-lg">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm font-medium text-yellow-800">Digest Currently Locked</span>
+                  </div>
+                  {getUnlockExplanation() && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-yellow-700">{getUnlockExplanation()!.message}</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.location.href = '/people'}
+                        className="h-7 text-xs bg-white hover:bg-yellow-100 border-yellow-300"
+                      >
+                        <Users className="h-3 w-3 mr-1" />
+                        Invite Family
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Enhanced Metrics Summary */}
             {familyId && (
-              <DigestMetricsSummary familyId={familyId} className="bg-muted/30" />
+              <DigestMetricsSummary familyId={familyId} className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" />
             )}
             
             <div className="space-y-3">
@@ -339,24 +377,12 @@ export default function WeeklyDigest() {
               </div>
             </div>
 
-            {/* Recipients */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Recipients</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowRecipientManager(true)}
-                  className="h-6 px-2 text-xs"
-                >
-                  <Users className="h-3 w-3 mr-1" />
-                  Manage
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Sending to {getRecipientCount()} recipients
-              </p>
-            </div>
+            {/* Recipients Section - Enhanced with Visual Display */}
+            <SimpleRecipientDisplay
+              recipients={digestSettings.recipients || []}
+              onManage={() => setShowRecipientManager(true)}
+              className="border-primary/20 bg-gradient-to-r from-green-50 to-emerald-50"
+            />
 
             <div className="pt-3 border-t">
               <div className="space-y-2">
@@ -372,19 +398,48 @@ export default function WeeklyDigest() {
               </div>
             </div>
             
-            {/* Enhanced Quick Actions */}
-            <DigestQuickActions
-              onPreviewDigest={handlePreviewDigest}
-              onSendTest={handleSendTestCopy}
-              onCustomizeContent={handleCustomizeClick}
-              onManageRecipients={() => setShowRecipientManager(true)}
-              sendingTest={sendingTest}
-              recipientCount={getRecipientCount()}
-              nextDigestDate={digestSettings.last_sent_at ? 
-                new Date(new Date(digestSettings.last_sent_at).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
-                : 'This weekend'
-              }
-            />
+            {/* Enhanced Quick Actions - Simple Mode */}
+            <div className="space-y-3 p-4 border-2 border-dashed border-primary/20 rounded-lg bg-primary/5">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-primary mb-1">Admin Actions</h4>
+                <p className="text-xs text-muted-foreground">Test and manage your family digest</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handlePreviewDigest}
+                  className="gap-2 text-xs h-9 font-medium border-primary/20 hover:border-primary/40"
+                  disabled={!familyId}
+                >
+                  <Eye className="h-4 w-4" />
+                  Preview Email
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSendTestCopy}
+                  disabled={sendingTest || !userEmail}
+                  className="gap-2 text-xs h-9 font-medium border-primary/20 hover:border-primary/40"
+                >
+                  <Send className="h-4 w-4" />
+                  {sendingTest ? 'Sending...' : 'Test Email'}
+                </Button>
+              </div>
+              
+              <div className="text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleCustomizeClick}
+                  className="text-xs h-7 text-primary hover:text-primary/80"
+                >
+                  <Settings className="h-3 w-3 mr-1" />
+                  Customize Content Types
+                </Button>
+              </div>
+            </div>
           </>
         ) : (
           <div className="text-center py-4">
@@ -496,9 +551,9 @@ export default function WeeklyDigest() {
         </DialogContent>
       </Dialog>
 
-      {/* Preview Modal */}
+      {/* Enhanced Preview Modal - Simple Mode */}
       {digestPreview && (
-        <DigestPreviewModal
+        <SimpleDigestPreview
           preview={digestPreview}
           isOpen={showPreviewModal}
           onClose={() => setShowPreviewModal(false)}
