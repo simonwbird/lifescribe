@@ -10,8 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
-import ModeToggle from '@/components/navigation/ModeToggle'
-import { useMode } from '@/contexts/ModeContext'
+import { useMode } from '@/hooks/useMode'
 import { useLabs } from '@/hooks/useLabs'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
@@ -214,8 +213,6 @@ export default function Settings() {
             </TabsList>
 
             <TabsContent value="general" className="space-y-6">
-              {/* Interface Mode */}
-              <ModeToggle />
 
               {/* Simple Mode for Accessibility */}
               <Card>

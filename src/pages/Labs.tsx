@@ -89,7 +89,7 @@ const FEATURES = [
 export default function Labs() {
   const navigate = useNavigate()
   const { labsEnabled, flags, loading, updateLabsEnabled, updateFlag } = useLabs()
-  const { mode } = useMode()
+  const { mode, setMode } = useMode()
   const isSimpleMode = mode === 'simple'
 
   if (loading) {
@@ -153,6 +153,28 @@ export default function Labs() {
                         checked={labsEnabled}
                         onCheckedChange={updateLabsEnabled}
                         disabled={isSimpleMode}
+                      />
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                {/* Studio Mode Toggle - Experimental */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          Studio Mode (Legacy)
+                          <Badge variant="secondary">Experimental</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Enable the full Studio interface with advanced features and compact layout. 
+                          This mode is being deprecated in favor of Simple Mode.
+                        </CardDescription>
+                      </div>
+                      <Switch
+                        checked={mode === 'studio'}
+                        onCheckedChange={(checked) => setMode(checked ? 'studio' : 'simple')}
                       />
                     </div>
                   </CardHeader>

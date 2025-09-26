@@ -9,6 +9,10 @@ interface ModeSelectionProps {
 }
 
 export default function ModeSelection({ onModeSelected, familyName }: ModeSelectionProps) {
+  // Default to Simple mode now
+  const handleSimpleMode = () => onModeSelected('simple')
+  const handleStudioMode = () => onModeSelected('studio')
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
       <Card className="w-full max-w-2xl">
@@ -18,7 +22,7 @@ export default function ModeSelection({ onModeSelected, familyName }: ModeSelect
           </div>
           <CardTitle className="text-2xl">Welcome to {familyName}!</CardTitle>
           <CardDescription className="text-lg">
-            Choose your preferred interface to get started
+            We recommend <strong>Simple Mode</strong> for the best experience. Studio Mode is available but being phased out.
           </CardDescription>
         </CardHeader>
 
@@ -31,7 +35,7 @@ export default function ModeSelection({ onModeSelected, familyName }: ModeSelect
                   <Eye className="w-8 h-8 text-green-600" />
                 </div>
                 <CardTitle className="text-xl">Simple Mode</CardTitle>
-                <Badge variant="secondary" className="mx-auto">Recommended for elders</Badge>
+                <Badge variant="secondary" className="mx-auto bg-green-100 text-green-800 border-green-200">Recommended</Badge>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm">
@@ -71,7 +75,7 @@ export default function ModeSelection({ onModeSelected, familyName }: ModeSelect
                   <Settings className="w-8 h-8 text-blue-600" />
                 </div>
                 <CardTitle className="text-xl">Studio Mode</CardTitle>
-                <Badge variant="outline" className="mx-auto">Full features</Badge>
+                <Badge variant="outline" className="mx-auto border-orange-200 text-orange-700">Legacy</Badge>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm">
@@ -107,7 +111,7 @@ export default function ModeSelection({ onModeSelected, familyName }: ModeSelect
           </div>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>You can change this setting anytime in your profile</p>
+            <p>You can change this setting anytime in Labs (Studio Mode is experimental)</p>
           </div>
         </CardContent>
       </Card>

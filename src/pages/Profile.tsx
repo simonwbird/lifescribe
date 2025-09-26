@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase'
 import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
-import ModeToggle from '@/components/navigation/ModeToggle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -215,8 +214,6 @@ export default function Profile() {
               onUpdate={setUserRegion}
             />
 
-            {/* Mode Settings */}
-            <ModeToggle />
 
             {/* Privacy & Data Management */}
             <div className="space-y-6">

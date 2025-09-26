@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Palette, Zap, Eye, Type, Gauge } from 'lucide-react'
-import { useMode } from '@/contexts/ModeContext'
+import { useMode } from '@/hooks/useMode'
 
 export default function ModeToggle() {
   const { mode, setMode, flags, loading } = useMode()

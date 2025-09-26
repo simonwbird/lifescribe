@@ -183,7 +183,7 @@ export async function getOnboardingState(
 
     const hasProfile = !!(profile && profile.full_name)
     const hasDefaultFamily = !!(profile?.default_space_id && memberships?.length > 0)
-    const needsModeSelection = profile?.simple_mode === null
+    const needsModeSelection = false // Simple mode is now default, no selection needed
     const isComplete = hasProfile && hasDefaultFamily && !needsModeSelection
 
     return {

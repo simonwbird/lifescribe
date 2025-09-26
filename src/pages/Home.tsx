@@ -141,7 +141,7 @@ export default function Home() {
       // Get user's profile and family
       const [profileResult, memberResult] = await Promise.all([supabase.from('profiles').select('simple_mode').eq('id', user.id).single(), supabase.from('members').select('family_id').eq('profile_id', user.id).single()]);
       if (profileResult.data) {
-        setIsSimpleMode(profileResult.data.simple_mode || false);
+        setIsSimpleMode(profileResult.data.simple_mode ?? true);
       }
       if (!memberResult.data) return;
       setSpaceId(memberResult.data.family_id);

@@ -31,7 +31,7 @@ export function useMode() {
   const { settings, loading, updateSettings } = useProfileSettings()
   
   const mode = useMemo(() => {
-    return (settings?.mode as UserMode) || 'studio'
+    return (settings?.mode as UserMode) || 'simple'
   }, [settings])
   
   const flags = useMemo(() => {
