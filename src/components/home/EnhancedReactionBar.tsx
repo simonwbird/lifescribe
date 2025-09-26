@@ -200,8 +200,8 @@ export default function EnhancedReactionBar({
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Basic quick reactions */}
-      {basicReactions.map(({ type, emoji, label }) => {
+      {/* Basic quick reactions - only show if not already shown in compact mode */}
+      {!(compact && topReactions.length === 0) && basicReactions.map(({ type, emoji, label }) => {
         const count = getReactionCount(type)
         const isActive = userReaction === type
         
