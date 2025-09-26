@@ -11,6 +11,7 @@ interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
   onRespond: (instanceId: string) => void
   onBrowseAll: () => void
+  loading?: boolean
   people?: Array<{ id: string; full_name: string }> // For person chips
 }
 
@@ -18,6 +19,7 @@ export default function TodaysPromptCard({
   promptInstance, 
   onRespond, 
   onBrowseAll,
+  loading = false,
   people = []
 }: TodaysPromptCardProps) {
   const [showResponseModal, setShowResponseModal] = useState(false)
@@ -37,6 +39,47 @@ export default function TodaysPromptCard({
     
     navigate(`/stories/new?${searchParams.toString()}`)
   }
+  // Show loading skeleton while data is being fetched
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {/* Header Loading */}
+        <div className="space-y-4">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+          
+          <div className="flex items-start justify-between gap-4">
+            <div className="h-8 w-3/4 bg-muted animate-pulse rounded flex-1" />
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-8 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-8 w-20 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+          
+          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        </div>
+
+        {/* Prompt Card Loading */}
+        <Card className="bg-muted/30">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0">
+                <div className="h-5 w-5 bg-muted animate-pulse rounded" />
+              </div>
+              <div className="space-y-2 flex-1">
+                <div className="h-5 w-32 bg-muted animate-pulse rounded" />
+                <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                <div className="h-4 w-2/3 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Button Loading */}
+        <div className="h-14 w-full bg-muted animate-pulse rounded" />
+      </div>
+    )
+  }
+
   if (!promptInstance?.prompt) {
     return (
       <Card>

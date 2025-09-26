@@ -16,7 +16,7 @@ export function SimpleHeader({
   spaceId, 
   onRecordPrompt 
 }: SimpleHeaderProps) {
-  const { getTodaysPrompt, getInProgressInstances } = usePrompts(spaceId)
+  const { getTodaysPrompt, getInProgressInstances, loading } = usePrompts(spaceId)
   const navigate = useNavigate()
 
   const todaysPrompt = getTodaysPrompt()
@@ -58,6 +58,7 @@ export function SimpleHeader({
         promptInstance={todaysPrompt}
         onRespond={handleRespondToPrompt}
         onBrowseAll={handleBrowseAll}
+        loading={loading}
       />
       
       <ContinueSection 
