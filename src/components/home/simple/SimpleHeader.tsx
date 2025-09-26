@@ -266,8 +266,8 @@ export function SimpleHeader({
 
       {/* Main Hero Card */}
       <Card className="w-full border-2 hover:border-primary/20 transition-colors">
-        <CardContent className="p-4 sm:p-6 lg:p-8 xl:p-10">
-          <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+        <CardContent className="p-4 sm:p-5 lg:p-6">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-5">
             {/* Card Title */}
             <div className="space-y-3 sm:space-y-4">
               <h2 className="text-lg font-medium text-muted-foreground">
