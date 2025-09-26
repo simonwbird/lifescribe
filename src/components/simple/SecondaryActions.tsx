@@ -12,15 +12,21 @@ interface SecondaryActionsProps {
   userAge: 'child' | 'teen' | 'adult' | 'elder';
 }
 
-const secondaryActions = [
-  {
-    id: 'browse_feed',
-    label: 'Browse Family Feed',
-    icon: Eye,
-    description: 'See what others are sharing',
-    action: 'onBrowseFeed' as const,
-    emoji: '👀'
-  },
+const getLifePageAction = (userAge: 'child' | 'teen' | 'adult' | 'elder') => {
+  // TODO: Add proper context detection based on current profile being viewed
+  // For now, defaulting to "Build Your Life Page" until profile context is available
+  return {
+    id: 'life_page',
+    label: 'Build Your Life Page',
+    icon: PenTool, // Using PenTool as placeholder for 📖
+    description: 'Collect stories, photos, and memories in one place',
+    action: 'onBrowseFeed' as const, // Keeping same handler for now
+    emoji: '📖'
+  }
+}
+
+const getSecondaryActions = (userAge: 'child' | 'teen' | 'adult' | 'elder') => [
+  getLifePageAction(userAge),
   {
     id: 'quick_voice',
     label: 'Try Quick Voice',
@@ -64,6 +70,8 @@ export default function SecondaryActions({
 
     actionHandlers[handlerKey]();
   };
+
+  const secondaryActions = getSecondaryActions(userAge);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
