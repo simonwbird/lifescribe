@@ -20,6 +20,7 @@ import EnhancedReactionBar from './EnhancedReactionBar'
 import { InteractiveCommentField } from './InteractiveCommentField'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import AdminFeedActions from '@/components/admin/AdminFeedActions'
+import StickerReactionBar from '@/components/teen/StickerReactionBar'
 
 interface ActivityItem {
   id: string
@@ -376,8 +377,8 @@ export function EnhancedFeedItem({
           )}
         </div>
 
-        {/* Enhanced Reactions */}
-        <EnhancedReactionBar
+        {/* Enhanced Reactions with Stickers */}
+        <StickerReactionBar
           targetType="story"
           targetId={activity.id.replace('story-', '')}
           familyId={familyId}

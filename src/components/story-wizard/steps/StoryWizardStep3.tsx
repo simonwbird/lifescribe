@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Camera, Upload } from 'lucide-react'
 import { type StoryFormData } from '../StoryWizardTypes'
-import EnhancedMediaUploader from '../EnhancedMediaUploader'
+import TeenMediaUploader from '@/components/teen/TeenMediaUploader'
 
 interface StoryWizardStep3Props {
   formData: StoryFormData
@@ -31,9 +31,9 @@ export default function StoryWizardStep3({
       </div>
 
       <div className="space-y-4">
-        <EnhancedMediaUploader
+        <TeenMediaUploader
           media={formData.media}
-          onChange={(media) => onChange({ media })}
+          onMediaChange={(media) => onChange({ media })}
           maxFiles={10}
         />
 
