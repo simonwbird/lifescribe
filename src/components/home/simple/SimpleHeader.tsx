@@ -44,40 +44,45 @@ export function SimpleHeader({
 
   useEffect(() => {
     loadPrompts()
-    
+  }, [profileId, spaceId])
+
+  useEffect(() => {
     // Check for existing drafts on load
     const existingDrafts = draftManager.loadAllDrafts()
     if (existingDrafts.length > 0) {
       setShowResumeModal(true)
     }
+  }, [])
 
-    // Get current user's person ID for MyLifePage navigation
+  useEffect(() => {
+    // Get current user's person ID for MyLifePage navigation (only once)
+    let isMounted = true
+    
     const getCurrentUserPerson = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        console.log('Current user:', user?.id)
-        if (user) {
+        if (user && isMounted) {
           const { data: personLink, error } = await supabase
             .from('person_user_links')
             .select('person_id')
             .eq('user_id', user.id)
             .maybeSingle()
           
-          console.log('Person link query result:', { personLink, error })
-          
-          if (personLink) {
-            console.log('Setting currentUserPersonId to:', personLink.person_id)
+          if (personLink && isMounted) {
             setCurrentUserPersonId(personLink.person_id)
-          } else {
-            console.log('No person link found for user')
           }
         }
       } catch (error) {
         console.error('Error getting current user person:', error)
       }
     }
+    
     getCurrentUserPerson()
-  }, [profileId, spaceId])
+    
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const loadPrompts = async () => {
     try {
