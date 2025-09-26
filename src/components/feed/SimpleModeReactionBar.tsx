@@ -15,6 +15,16 @@ interface SimpleModeReactionBarProps {
   compact?: boolean
 }
 
+interface ReactionData {
+  id: string
+  profile_id: string
+  reaction_type: string
+  family_id: string
+  story_id?: string
+  answer_id?: string
+  comment_id?: string
+}
+
 // Elder-friendly reactions
 const elderReactions = [
   { type: 'heart', emoji: '❤️', label: 'Love', color: 'text-red-500' },
@@ -37,7 +47,7 @@ export function SimpleModeReactionBar({
   familyId, 
   compact = false 
 }: SimpleModeReactionBarProps) {
-  const [reactions, setReactions] = useState<any[]>([])
+  const [reactions, setReactions] = useState<ReactionData[]>([])
   const [userReaction, setUserReaction] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showStickers, setShowStickers] = useState(false)
@@ -46,22 +56,33 @@ export function SimpleModeReactionBar({
 
   useEffect(() => {
     const getReactions = async () => {
-      const column = `${targetType}_id`
-      const { data } = await supabase
-        .from('reactions')
-        .select('*')
-        .eq(column, targetId)
-        .eq('family_id', familyId)
-
-      if (data) {
-        setReactions(data)
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const userReact = data.find((r: any) => r.profile_id === user.id)
-          setUserReaction(userReact?.reaction_type || null)
+      try {
+        let query = supabase.from('reactions').select('*').eq('family_id', familyId)
+        
+        if (targetType === 'story') {
+          query = query.eq('story_id', targetId)
+        } else if (targetType === 'answer') {
+          query = query.eq('answer_id', targetId)
+        } else if (targetType === 'comment') {
+          query = query.eq('comment_id', targetId)
         }
+
+        const { data, error } = await query
+
+        if (!error && data) {
+          setReactions(data as ReactionData[])
+          
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const userReact = data.find((r: any) => r.profile_id === user.id)
+            setUserReaction(userReact?.reaction_type || null)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching reactions:', error)
       }
     }
+    
     getReactions()
   }, [targetType, targetId, familyId])
 
@@ -71,47 +92,109 @@ export function SimpleModeReactionBar({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const column = `${targetType}_id`
-      
       if (userReaction === reactionType) {
-        await supabase.from('reactions').delete().eq(column, targetId).eq('profile_id', user.id)
-        setUserReaction(null)
-        setReactions(prev => prev.filter((r: any) => r.profile_id !== user.id))
+        // Remove reaction
+        let deleteQuery = supabase.from('reactions').delete().eq('profile_id', user.id)
+        
+        if (targetType === 'story') {
+          deleteQuery = deleteQuery.eq('story_id', targetId)
+        } else if (targetType === 'answer') {
+          deleteQuery = deleteQuery.eq('answer_id', targetId)
+        } else if (targetType === 'comment') {
+          deleteQuery = deleteQuery.eq('comment_id', targetId)
+        }
+
+        const { error } = await deleteQuery
+        
+        if (!error) {
+          setUserReaction(null)
+          setReactions(prev => prev.filter(r => r.profile_id !== user.id))
+          toast({
+            title: "Reaction removed",
+            duration: 1500,
+          })
+        }
       } else {
         if (userReaction) {
-          await supabase.from('reactions').update({ reaction_type: reactionType }).eq(column, targetId).eq('profile_id', user.id)
+          // Update existing reaction
+          let updateQuery = supabase.from('reactions')
+            .update({ reaction_type: reactionType })
+            .eq('profile_id', user.id)
+            
+          if (targetType === 'story') {
+            updateQuery = updateQuery.eq('story_id', targetId)
+          } else if (targetType === 'answer') {
+            updateQuery = updateQuery.eq('answer_id', targetId)
+          } else if (targetType === 'comment') {
+            updateQuery = updateQuery.eq('comment_id', targetId)
+          }
+
+          const { error } = await updateQuery
+            
+          if (!error) {
+            setReactions(prev => prev.map(r => 
+              r.profile_id === user.id 
+                ? { ...r, reaction_type: reactionType }
+                : r
+            ))
+            setUserReaction(reactionType)
+          }
         } else {
-          const { data } = await supabase.from('reactions').insert({
-            [column]: targetId,
+          // Create new reaction
+          const reactionData: any = {
             profile_id: user.id,
             family_id: familyId,
             reaction_type: reactionType,
-          }).select().single()
+          }
           
-          if (data) setReactions(prev => [...prev, data])
+          if (targetType === 'story') {
+            reactionData.story_id = targetId
+          } else if (targetType === 'answer') {
+            reactionData.answer_id = targetId
+          } else if (targetType === 'comment') {
+            reactionData.comment_id = targetId
+          }
+          
+          const { data, error } = await supabase
+            .from('reactions')
+            .insert(reactionData)
+            .select()
+            .single()
+          
+          if (!error && data) {
+            setReactions(prev => [...prev, data as ReactionData])
+            setUserReaction(reactionType)
+          }
         }
-        setUserReaction(reactionType)
         
-        const allReactions = [...elderReactions, ...stickerReactions]
-        const reactionData = allReactions.find(r => r.type === reactionType)
-        
-        toast({
-          title: `${reactionData?.emoji} ${reactionData?.label}!`,
-          description: "Your reaction has been shared with the family.",
-          duration: 2000,
-        })
+        if (!userReaction || userReaction !== reactionType) {
+          const allReactions = [...elderReactions, ...stickerReactions]
+          const reactionInfo = allReactions.find(r => r.type === reactionType)
+          
+          toast({
+            title: `${reactionInfo?.emoji} ${reactionInfo?.label}!`,
+            description: "Your reaction has been shared with the family.",
+            duration: 2000,
+          })
 
-        track('activity_reaction', { targetType, targetId, reactionType, familyId })
+          track('activity_reaction', { targetType, targetId, reactionType, familyId })
+        }
       }
       setShowStickers(false)
     } catch (error) {
       console.error('Error handling reaction:', error)
+      toast({
+        title: "Failed to react",
+        description: "Please try again",
+        variant: "destructive",
+        duration: 2000,
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const getReactionCount = (type: string) => {
+  const getReactionCount = (type: string): number => {
     return reactions.filter(r => r.reaction_type === type).length
   }
 

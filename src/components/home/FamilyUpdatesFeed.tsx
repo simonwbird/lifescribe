@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client'
 import { FeedFilters, type FeedFilterOptions } from './FeedFilters'
 import { InlineStoryViewer } from './InlineStoryViewer'
 import { EnhancedFeedItem } from './EnhancedFeedItem'
+import { SimpleModeReactionBar } from '../feed/SimpleModeReactionBar'
+import { EnhancedMediaCommentField } from '../feed/EnhancedMediaCommentField'
 import { LiveFeedAnimations } from '../feed/LiveFeedAnimations'
 import { isAfter, isBefore, isWithinInterval } from 'date-fns'
 
@@ -422,17 +424,38 @@ export default function FamilyUpdatesFeed({
         {/* Enhanced Feed Content */}
         <div className="space-y-4">
           {filteredActivities.map((activity, index) => (
-            <EnhancedFeedItem
-              key={`${activity.id}-${index}`}
-              activity={activity}
-              familyId={familyId}
-              userProfile={userProfile}
-              isExpanded={expandedStories.has(activity.id.replace('story-', ''))}
-              onToggleExpand={() => handleActivityClick(activity)}
-              onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
-              showAdminActions={true}
-              compact={false}
-            />
+            <div key={`${activity.id}-${index}`} className="space-y-3">
+              <EnhancedFeedItem
+                activity={activity}
+                familyId={familyId}
+                userProfile={userProfile}
+                isExpanded={expandedStories.has(activity.id.replace('story-', ''))}
+                onToggleExpand={() => handleActivityClick(activity)}
+                onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
+                showAdminActions={true}
+                compact={false}
+              />
+              
+              {/* Enhanced reactions for Simple Mode */}
+              <div className="ml-4 -mt-2">
+                <SimpleModeReactionBar
+                  targetType="story"
+                  targetId={activity.id.replace('story-', '')}
+                  familyId={familyId}
+                  compact={true}
+                />
+              </div>
+              
+              {/* Enhanced comment field for Simple Mode */}
+              <div className="ml-4 mt-2">
+                <EnhancedMediaCommentField
+                  storyId={activity.id.replace('story-', '')}
+                  familyId={familyId}
+                  compact={true}
+                  placeholder="Add a comment with media, stickers, or GIFs..."
+                />
+              </div>
+            </div>
           ))}
         </div>
 
