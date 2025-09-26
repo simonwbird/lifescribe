@@ -12,6 +12,7 @@ import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import AddBirthdayModal from '@/components/home/AddBirthdayModal'
 import AddEventModal from '@/components/home/AddEventModal'
+import CalendarExportButton from '@/components/events/CalendarExportButton'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
 export default function Events() {
@@ -152,24 +153,36 @@ export default function Events() {
                 </p>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBirthdayModal(true)}
-                  className="gap-2"
-                >
-                  <Heart className="h-4 w-4" />
-                  Add Birthday
-                </Button>
-                
-                <Button
-                  onClick={() => setShowEventModal(true)}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Event
-                </Button>
-              </div>
+            <div className="flex items-center gap-2">
+              <CalendarExportButton
+                events={upcomingEvents.map(event => ({
+                  id: event.id,
+                  title: `${event.person_name} - ${getEventLabel(event)}`,
+                  date: event.date,
+                  type: event.type as 'birthday' | 'anniversary' | 'memorial' | 'custom',
+                  person_name: event.person_name,
+                  notes: event.notes
+                }))}
+                className="mr-2"
+              />
+              
+              <Button
+                variant="outline"
+                onClick={() => setShowBirthdayModal(true)}
+                className="gap-2"
+              >
+                <Heart className="h-4 w-4" />
+                Add Birthday
+              </Button>
+              
+              <Button
+                onClick={() => setShowEventModal(true)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Event
+              </Button>
+            </div>
             </div>
           </div>
 
@@ -259,7 +272,7 @@ export default function Events() {
                               className="gap-2"
                             >
                               <PenTool className="h-4 w-4" />
-                              Write note
+                              Contribute
                             </Button>
                             
                             <Button
