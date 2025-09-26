@@ -6,7 +6,7 @@ const OnboardingProgress = lazy(() => import('@/components/onboarding/Onboarding
 const WeeklyDigest = lazy(() => import('@/components/home/WeeklyDigest'))
 
 import React, { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
-import AuthGate from '@/components/AuthGate';
+import AuthGate from '@/components/auth/AuthGate';
 import Header from '@/components/Header';
 import VoiceFirstHero from '@/components/home/VoiceFirstHero';
 import InviteBanner from '@/components/home/InviteBanner';

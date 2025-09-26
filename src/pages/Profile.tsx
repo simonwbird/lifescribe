@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
 import { Button } from '@/components/ui/button'
@@ -127,10 +126,9 @@ export default function Profile() {
 
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
           
           {/* Timezone Mismatch Banner */}
           <div className="mb-6">
@@ -233,6 +231,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-    </AuthGate>
+    </div>
   )
 }

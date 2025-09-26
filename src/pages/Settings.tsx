@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import AuthGate from '@/components/AuthGate'
+
 import Header from '@/components/Header'
 import { useMode } from '@/hooks/useMode'
 import { useLabs } from '@/hooks/useLabs'
@@ -190,10 +190,9 @@ export default function Settings() {
   }
 
   return (
-    <AuthGate>
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold flex items-center gap-3">
               <SettingsIcon className="h-8 w-8" />
@@ -631,9 +630,8 @@ export default function Settings() {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-    </AuthGate>
+        </Tabs>
+      </main>
+    </div>
   )
 }
