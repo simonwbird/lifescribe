@@ -1,5 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/integrations/supabase/client'
 import TodaysPromptCard from '@/components/prompts/TodaysPromptCard'
 import ContinueSection from '@/components/prompts/ContinueSection'
 import { useTodaysPrompt, useInProgressPrompts } from '@/hooks/useTodaysPrompt'
@@ -19,6 +21,7 @@ export function SimpleHeader({
   const { data: todaysPrompt, isLoading: todaysLoading, refetch } = useTodaysPrompt(spaceId)
   const { data: inProgressPrompts = [], isLoading: inProgressLoading } = useInProgressPrompts(spaceId)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const loading = todaysLoading || inProgressLoading
 
@@ -63,9 +66,45 @@ export function SimpleHeader({
     }
   }
 
-  const handleShuffle = () => {
-    // Trigger a refetch of today's prompt to get a different one
-    refetch()
+  const handleShuffle = async () => {
+    try {
+      // Get all open prompts for shuffling
+      const { data: openPrompts, error } = await supabase
+        .from('prompt_instances')
+        .select(`
+          id,
+          status,
+          person_ids,
+          due_at,
+          created_at,
+          updated_at,
+          prompt:prompts(
+            id,
+            title,
+            body,
+            category
+          )
+        `)
+        .eq('family_id', spaceId)
+        .eq('status', 'open')
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      
+      if (openPrompts && openPrompts.length > 1) {
+        // Get a random prompt that's different from the current one
+        const availablePrompts = openPrompts.filter(p => p.id !== todaysPrompt?.id)
+        if (availablePrompts.length > 0) {
+          const randomIndex = Math.floor(Math.random() * availablePrompts.length)
+          const selectedPrompt = availablePrompts[randomIndex]
+          
+          // Update the query cache to show the new prompt
+          queryClient.setQueryData(['todays-prompt', spaceId], selectedPrompt)
+        }
+      }
+    } catch (error) {
+      console.error('Error shuffling prompt:', error)
+    }
   }
 
   return (
