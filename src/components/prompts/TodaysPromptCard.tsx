@@ -11,6 +11,7 @@ interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
   onRespond: (instanceId: string) => void
   onBrowseAll: () => void
+  onShuffle?: () => void
   loading?: boolean
   people?: Array<{ id: string; full_name: string }> // For person chips
 }
@@ -19,6 +20,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   promptInstance, 
   onRespond, 
   onBrowseAll,
+  onShuffle,
   loading = false,
   people = []
 }: TodaysPromptCardProps) {
@@ -111,7 +113,13 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               <Volume2 className="h-4 w-4" />
               Hear it
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2"
+              onClick={onShuffle}
+              disabled={!onShuffle}
+            >
               <Shuffle className="h-4 w-4" />
               Shuffle
             </Button>
