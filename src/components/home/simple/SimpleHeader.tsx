@@ -16,7 +16,7 @@ export function SimpleHeader({
   spaceId, 
   onRecordPrompt 
 }: SimpleHeaderProps) {
-  const { data: todaysPrompt, isLoading: todaysLoading } = useTodaysPrompt(spaceId)
+  const { data: todaysPrompt, isLoading: todaysLoading, refetch } = useTodaysPrompt(spaceId)
   const { data: inProgressPrompts = [], isLoading: inProgressLoading } = useInProgressPrompts(spaceId)
   const navigate = useNavigate()
 
@@ -63,12 +63,18 @@ export function SimpleHeader({
     }
   }
 
+  const handleShuffle = () => {
+    // Trigger a refetch of today's prompt to get a different one
+    refetch()
+  }
+
   return (
     <div className="w-full mb-8 space-y-4">
       <TodaysPromptCard 
         promptInstance={todaysPrompt}
         onRespond={handleRespondToPrompt}
         onBrowseAll={handleBrowseAll}
+        onShuffle={handleShuffle}
         loading={loading}
       />
       
