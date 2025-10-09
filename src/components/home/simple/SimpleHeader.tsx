@@ -62,7 +62,7 @@ export function SimpleHeader({
   }
 
   const handleBrowseAll = () => {
-    navigate('/prompts')
+    navigate('/prompts/hub')
   }
 
   const handleContinuePrompt = (instanceId: string) => {

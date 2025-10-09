@@ -30,6 +30,7 @@ const Media = () => <LazyRoute factory={() => import("./pages/Media")} />
 const SearchPage = () => <LazyRoute factory={() => import("./pages/Search")} />
 const Profile = () => <LazyRoute factory={() => import("./pages/Profile")} />
 const Settings = () => <LazyRoute factory={() => import("./pages/Settings")} />
+const PromptHub = () => <LazyRoute factory={() => import("./pages/PromptHub")} />
 
 // Keep smaller/lighter pages as regular imports
 import TestAdminBootstrap from "./pages/admin/TestAdminBootstrap";
@@ -143,6 +144,7 @@ function AppContent() {
       <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />
       <Route path="/stories/:id/edit" element={<AuthGate><StoryEdit /></AuthGate>} />
       <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />
+      <Route path="/prompts/hub" element={<AuthGate><PromptHub /></AuthGate>} />
       <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
       <Route path="/sharing" element={<AuthGate><SharingPermissions /></AuthGate>} />
       <Route path="/family/tree" element={<AuthGate><FamilyTree /></AuthGate>} />

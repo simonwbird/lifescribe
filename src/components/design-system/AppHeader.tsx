@@ -67,7 +67,7 @@ export function AppHeader() {
               size="sm"
               className={activeSection === 'stories' ? 'bg-accent text-accent-foreground' : ''}
             >
-              <Link to="/prompts">Stories</Link>
+              <Link to="/prompts/hub">Stories</Link>
             </Button>
             <Button
               variant="ghost"

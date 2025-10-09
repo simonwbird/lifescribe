@@ -211,7 +211,7 @@ export default function EngagementPrompts() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => navigate('/prompts')}
+            onClick={() => navigate('/prompts/hub')}
             className="w-full"
           >
             <Calendar className="w-4 h-4 mr-2" />

@@ -72,6 +72,8 @@ export default function StoryWizard() {
   const isAudioFirst = workflowType === 'audio'
   const isVideoFirst = workflowType === 'video'
   const isTextOnly = workflowType === 'text'
+  const promptInstanceId = searchParams.get('prompt_id')
+  const isStarterPrompt = searchParams.get('is_starter') === 'true'
   
   // Draft management
   const draftKey = `story-${storyId || 'new'}-${workflowType || 'default'}`
@@ -489,6 +491,17 @@ export default function StoryWizard() {
       // Clear draft
       const draftKey = `story_draft_${user.id}`
       localStorage.removeItem(draftKey)
+
+      // Mark prompt instance as completed if from starter pack
+      if (promptInstanceId && isStarterPrompt) {
+        await supabase
+          .from('prompt_instances')
+          .update({ 
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', promptInstanceId)
+      }
 
       toast({
         title: "Story published!",
