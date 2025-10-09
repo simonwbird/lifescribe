@@ -207,6 +207,7 @@ function AppContent() {
              <Route path="date-localization" element={<DateLocalizationTest />} />
              <Route path="bugs" element={<BugInbox />} />
              <Route path="bugs/:id" element={<BugDetail />} />
+             <Route path="labs" element={<LazyRoute factory={() => import('./pages/admin/AdminLabs')} />} />
            <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="config" element={<AdminConfig />} />
            <Route path="analytics" element={<AdminAnalytics />} />

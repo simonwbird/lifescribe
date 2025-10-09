@@ -1,0 +1,167 @@
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Beaker, Database, Trash2, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/hooks/use-toast'
+
+export default function AdminLabs() {
+  const { toast } = useToast()
+  const [isSeeding, setIsSeeding] = useState(false)
+  const [isPurging, setIsPurging] = useState(false)
+  const [lastSeedResult, setLastSeedResult] = useState<any>(null)
+
+  const handleSeedData = async () => {
+    setIsSeeding(true)
+    setLastSeedResult(null)
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-qa-data', {
+        body: { action: 'seed' }
+      })
+
+      if (error) throw error
+
+      setLastSeedResult(data)
+      toast({
+        title: 'QA Data Seeded Successfully',
+        description: `Created ${data.summary.total_created} entities for qa-tester account`,
+      })
+    } catch (error: any) {
+      console.error('Seed error:', error)
+      toast({
+        title: 'Seed Failed',
+        description: error.message || 'Failed to seed QA data',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  const handlePurgeData = async () => {
+    if (!confirm('Are you sure you want to purge all seeded QA data? This cannot be undone.')) {
+      return
+    }
+
+    setIsPurging(true)
+    setLastSeedResult(null)
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-qa-data', {
+        body: { action: 'purge' }
+      })
+
+      if (error) throw error
+
+      toast({
+        title: 'QA Data Purged Successfully',
+        description: `Deleted ${data.summary.total_deleted} seeded entities`,
+      })
+    } catch (error: any) {
+      console.error('Purge error:', error)
+      toast({
+        title: 'Purge Failed',
+        description: error.message || 'Failed to purge QA data',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsPurging(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Beaker className="h-8 w-8" />
+          Admin Labs
+        </h1>
+        <p className="text-muted-foreground">
+          Admin-only tools for testing and QA
+        </p>
+      </div>
+
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          These tools are for admin use only. They modify the qa-tester@lifescribe.family account.
+        </AlertDescription>
+      </Alert>
+
+      {/* QA Data Seeder */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            QA Data Seeder
+            <Badge variant="secondary">Admin Only</Badge>
+          </CardTitle>
+          <CardDescription>
+            Seed realistic demo data for the qa-tester account to test Simple Mode workflows
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="font-semibold">What gets seeded:</h4>
+            <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+              <li>5 family members (Lucy, Jamie, Grandpa Joe, Aunt Sarah, Uncle Mike)</li>
+              <li>8 stories (various types: text, photo, audio, video)</li>
+              <li>3 recipes (Grandma's Apple Pie, Sunday Roast, Summer BBQ)</li>
+              <li>2 heirlooms (Wedding Ring, Grandfather Clock)</li>
+              <li>1 property (Family Cottage)</li>
+              <li>1 event with invites (Family Reunion)</li>
+              <li>1 tribute for Grandpa Joe</li>
+              <li>Weekly digest enabled with follow preferences</li>
+            </ul>
+          </div>
+
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSeedData} 
+              disabled={isSeeding || isPurging}
+              className="gap-2"
+            >
+              {isSeeding && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Database className="h-4 w-4" />
+              Seed QA Data
+            </Button>
+
+            <Button 
+              onClick={handlePurgeData} 
+              disabled={isSeeding || isPurging}
+              variant="destructive"
+              className="gap-2"
+            >
+              {isPurging && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Trash2 className="h-4 w-4" />
+              Purge QA Data
+            </Button>
+          </div>
+
+          {lastSeedResult && (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-semibold">Last seed results:</p>
+                  <ul className="text-sm space-y-0.5 ml-4 list-disc">
+                    <li>People: {lastSeedResult.summary.people}</li>
+                    <li>Stories: {lastSeedResult.summary.stories}</li>
+                    <li>Recipes: {lastSeedResult.summary.recipes}</li>
+                    <li>Objects: {lastSeedResult.summary.objects}</li>
+                    <li>Properties: {lastSeedResult.summary.properties}</li>
+                    <li>Events: {lastSeedResult.summary.events}</li>
+                    <li>Tributes: {lastSeedResult.summary.tributes}</li>
+                  </ul>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

@@ -9,7 +9,8 @@ import {
   Shield,
   Flag,
   Clock,
-  Bug
+  Bug,
+  Beaker
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -56,6 +57,13 @@ const adminNavItems: AdminNavItem[] = [
     label: 'Bug Management',
     href: '/admin/bugs',
     icon: Bug,
+    roles: ['SUPER_ADMIN']
+  },
+  {
+    id: 'admin-labs',
+    label: 'Admin Labs',
+    href: '/admin/labs',
+    icon: Beaker,
     roles: ['SUPER_ADMIN']
   },
   {
