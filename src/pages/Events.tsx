@@ -7,10 +7,12 @@ import { Calendar, Plus, Camera, PenTool, Heart, ArrowLeft } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/integrations/supabase/client'
 import { getAllFamilyEvents, type UpcomingEvent } from '@/lib/eventsService'
 import Header from '@/components/Header'
 import AddBirthdayModal from '@/components/home/AddBirthdayModal'
 import AddEventModal from '@/components/home/AddEventModal'
+import { CreateTributeModal } from '@/components/tribute/CreateTributeModal'
 import CalendarExportButton from '@/components/events/CalendarExportButton'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 
@@ -19,6 +21,8 @@ export default function Events() {
   const [loading, setLoading] = useState(true)
   const [showBirthdayModal, setShowBirthdayModal] = useState(false)
   const [showEventModal, setShowEventModal] = useState(false)
+  const [showTributeModal, setShowTributeModal] = useState(false)
+  const [familyId, setFamilyId] = useState<string | null>(null)
   const [searchParams] = useSearchParams()
   const { track } = useAnalytics()
   const { toast } = useToast()
@@ -29,7 +33,28 @@ export default function Events() {
 
   useEffect(() => {
     loadEvents()
+    loadFamilyId()
   }, []) // Force refresh after our date fix
+
+  const loadFamilyId = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      
+      const { data: membership } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .limit(1)
+        .single()
+      
+      if (membership) {
+        setFamilyId(membership.family_id)
+      }
+    } catch (error) {
+      console.error('Error loading family ID:', error)
+    }
+  }
 
   const loadEvents = async () => {
     try {
@@ -171,6 +196,15 @@ export default function Events() {
               >
                 <Heart className="h-4 w-4" />
                 Add Birthday
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setShowTributeModal(true)}
+                className="gap-2"
+              >
+                <Heart className="h-4 w-4 fill-current" />
+                Create Tribute
               </Button>
               
               <Button
@@ -386,6 +420,15 @@ export default function Events() {
           onOpenChange={setShowEventModal}
           onSuccess={handleAddSuccess}
         />
+
+        {/* Create Tribute Modal */}
+        {familyId && (
+          <CreateTributeModal
+            isOpen={showTributeModal}
+            onClose={() => setShowTributeModal(false)}
+            familyId={familyId}
+          />
+        )}
       </div>
     )
   }

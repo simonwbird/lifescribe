@@ -163,6 +163,11 @@ export type AnalyticsEvent =
   | 'event_qr_downloaded'
   | 'event_join_code_validated'
   | 'event_guest_joined'
+  | 'tribute_created'
+  | 'tribute_viewed'
+  | 'tribute_candle_lit'
+  | 'tribute_candle_removed'
+  | 'tribute_comment_added'
   | 'upcoming_write_note_clicked'
   | 'upcoming_add_photo_clicked'
   // Admin impersonation events

@@ -31,6 +31,7 @@ const SearchPage = () => <LazyRoute factory={() => import("./pages/Search")} />
 const Profile = () => <LazyRoute factory={() => import("./pages/Profile")} />
 const Settings = () => <LazyRoute factory={() => import("./pages/Settings")} />
 const PromptHub = () => <LazyRoute factory={() => import("./pages/PromptHub")} />
+const TributeDetail = () => <LazyRoute factory={() => import("./pages/TributeDetail")} />
 
 // Keep smaller/lighter pages as regular imports
 import TestAdminBootstrap from "./pages/admin/TestAdminBootstrap";
@@ -158,6 +159,7 @@ function AppContent() {
       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
       <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
        <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
+       <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
        <Route path="/labs/spaces" element={<AuthGate><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthGate>} />
       <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
