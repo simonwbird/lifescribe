@@ -160,6 +160,9 @@ export type AnalyticsEvent =
   | 'event_contribution_submitted'
   | 'event_contribution_link_copied'
   | 'event_invites_sent'
+  | 'event_qr_downloaded'
+  | 'event_join_code_validated'
+  | 'event_guest_joined'
   | 'upcoming_write_note_clicked'
   | 'upcoming_add_photo_clicked'
   // Admin impersonation events

@@ -1073,6 +1073,84 @@ export type Database = {
         }
         Relationships: []
       }
+      event_acl: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          family_id: string
+          granted_by: string
+          guest_session_id: string | null
+          id: string
+          role: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          family_id: string
+          granted_by: string
+          guest_session_id?: string | null
+          id?: string
+          role: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          family_id?: string
+          granted_by?: string
+          guest_session_id?: string | null
+          id?: string
+          role?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      event_join_codes: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          current_uses: number | null
+          event_id: string
+          expires_at: string
+          family_id: string
+          id: string
+          is_active: boolean | null
+          join_code: string
+          max_uses: number | null
+          qr_data: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          current_uses?: number | null
+          event_id: string
+          expires_at?: string
+          family_id: string
+          id?: string
+          is_active?: boolean | null
+          join_code: string
+          max_uses?: number | null
+          qr_data: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          current_uses?: number | null
+          event_id?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          is_active?: boolean | null
+          join_code?: string
+          max_uses?: number | null
+          qr_data?: string
+        }
+        Relationships: []
+      }
       face_tags: {
         Row: {
           created_at: string
@@ -1727,6 +1805,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      guest_sessions: {
+        Row: {
+          created_at: string | null
+          created_via_code: string | null
+          event_id: string
+          expires_at: string
+          family_id: string
+          guest_email: string | null
+          guest_name: string | null
+          id: string
+          last_activity_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_via_code?: string | null
+          event_id: string
+          expires_at?: string
+          family_id: string
+          guest_email?: string | null
+          guest_name?: string | null
+          id: string
+          last_activity_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_via_code?: string | null
+          event_id?: string
+          expires_at?: string
+          family_id?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          last_activity_at?: string | null
+        }
+        Relationships: []
       }
       guestbook: {
         Row: {
@@ -4987,6 +5101,10 @@ export type Database = {
         Args: { p_family_id: string; p_preview_date?: string }
         Returns: Json
       }
+      generate_event_join_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_person_prompt_instances: {
         Args: { p_family_id: string; p_person_id: string }
         Returns: number
@@ -5223,6 +5341,10 @@ export type Database = {
           longest_streak: number
           total_completed: number
         }[]
+      }
+      use_event_join_code: {
+        Args: { p_code: string; p_guest_session_id?: string }
+        Returns: Json
       }
       validate_email: {
         Args: { email_address: string }

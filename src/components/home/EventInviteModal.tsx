@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { QRCodeSVG } from 'qrcode.react'
 import { 
   Users, 
   Mail, 
@@ -14,7 +16,9 @@ import {
   Copy,
   Check,
   Heart,
-  UserPlus
+  UserPlus,
+  QrCode,
+  Download
 } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
@@ -43,6 +47,9 @@ export const EventInviteModal = ({ event, isOpen, onClose }: EventInviteModalPro
   const [isSending, setIsSending] = useState(false)
   const [includeContributionLink, setIncludeContributionLink] = useState(true)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [joinCode, setJoinCode] = useState<string>('')
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
+  const [loadingCode, setLoadingCode] = useState(false)
   const { track } = useAnalytics()
   const { toast } = useToast()
 
@@ -50,6 +57,7 @@ export const EventInviteModal = ({ event, isOpen, onClose }: EventInviteModalPro
     if (isOpen && event) {
       loadFamilyMembers()
       generateDefaultMessage()
+      generateJoinCode()
     }
   }, [isOpen, event])
 
@@ -110,6 +118,100 @@ I'd love for you to contribute a message, photo, or video to make it extra speci
 Looking forward to celebrating together! ❤️`
 
     setCustomMessage(message)
+  }
+
+  const generateJoinCode = async () => {
+    if (!event) return
+    
+    setLoadingCode(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get family_id from current space
+      const { data: memberData } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (!memberData) return
+
+      // Check if code already exists for this event
+      const { data: existingCode } = await supabase
+        .from('event_join_codes')
+        .select('join_code, qr_data')
+        .eq('event_id', event.id)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (existingCode) {
+        setJoinCode(existingCode.join_code)
+        setQrCodeUrl(existingCode.qr_data)
+      } else {
+        // Generate new code
+        const { data: newCode, error: codeError } = await supabase.rpc('generate_event_join_code')
+        
+        if (codeError) throw codeError
+
+        const joinUrl = `${window.location.origin}/join/${newCode}`
+
+        // Store the code
+        const { error: insertError } = await supabase
+          .from('event_join_codes')
+          .insert({
+            event_id: event.id,
+            family_id: memberData.family_id,
+            join_code: newCode,
+            qr_data: joinUrl,
+            created_by: user.id
+          })
+
+        if (insertError) throw insertError
+
+        setJoinCode(newCode)
+        setQrCodeUrl(joinUrl)
+      }
+    } catch (error) {
+      console.error('Error generating join code:', error)
+    } finally {
+      setLoadingCode(false)
+    }
+  }
+
+  const handleCopyCode = async () => {
+    await navigator.clipboard.writeText(joinCode)
+    toast({
+      title: 'Code copied!',
+      description: 'Join code copied to clipboard'
+    })
+  }
+
+  const downloadQRCode = () => {
+    const svg = document.querySelector('#event-qr-code')
+    if (!svg) return
+
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx?.drawImage(img, 0, 0)
+      
+      const pngFile = canvas.toDataURL('image/png')
+      const downloadLink = document.createElement('a')
+      downloadLink.download = `event-${event?.id}-qr.png`
+      downloadLink.href = pngFile
+      downloadLink.click()
+    }
+
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
+    
+    track('event_qr_downloaded', { eventId: event?.id })
   }
 
   const generateContributionLink = () => {
@@ -235,171 +337,273 @@ Looking forward to celebrating together! ❤️`
     }
   }
 
-  if (!event) return null
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Invite Family to Contribute
+            Invite to Contribute
           </DialogTitle>
           <DialogDescription>
-            Invite family members to add messages, photos, or videos for {event.person_name}'s {event.type === 'birthday' ? 'birthday' : 'event'}
+            Share via email or QR code for {event.person_name}'s {event.type === 'birthday' ? 'birthday' : 'event'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Family Members */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Family Members</Label>
-              {familyMembers.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="text-xs"
-                >
-                  {selectedMembers.length === familyMembers.length ? 'Deselect All' : 'Select All'}
-                </Button>
+        <Tabs defaultValue="email" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="email">
+              <Mail className="h-4 w-4 mr-2" />
+              Email Invites
+            </TabsTrigger>
+            <TabsTrigger value="qr">
+              <QrCode className="h-4 w-4 mr-2" />
+              QR Code & Link
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="email" className="space-y-6 mt-4">
+            {/* Family Members */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Family Members</Label>
+                {familyMembers.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="text-xs"
+                  >
+                    {selectedMembers.length === familyMembers.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                )}
+              </div>
+
+              {isLoading ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              ) : familyMembers.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No other family members found
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {familyMembers.map(member => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleMemberToggle(member.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-xs">
+                            {member.full_name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{member.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{member.email}</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={selectedMembers.includes(member.id)}
+                        onChange={() => {}} // Controlled by parent click
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            {isLoading ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-              </div>
-            ) : familyMembers.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No other family members found
+            {/* External Emails */}
+            <div className="space-y-2">
+              <Label htmlFor="external-emails">Additional Email Addresses</Label>
+              <Textarea
+                id="external-emails"
+                placeholder="Enter email addresses (one per line or comma-separated)&#10;example@email.com, another@email.com"
+                value={externalEmails}
+                onChange={(e) => setExternalEmails(e.target.value)}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Add external email addresses for friends or extended family
               </p>
-            ) : (
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {familyMembers.map(member => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleMemberToggle(member.id)}
+            </div>
+
+            {/* Message Customization */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="custom-message">Invitation Message</Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={includeContributionLink}
+                    onCheckedChange={setIncludeContributionLink}
+                  />
+                  <Label className="text-xs">Include contribution link</Label>
+                </div>
+              </div>
+              <Textarea
+                id="custom-message"
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                rows={6}
+                placeholder="Write a personal message to include with the invitation..."
+              />
+            </div>
+
+            {/* Contribution Link */}
+            {includeContributionLink && (
+              <div className="space-y-2">
+                <Label>Contribution Link</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={generateContributionLink()}
+                    readOnly
+                    className="text-xs"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyLink}
+                    className="shrink-0"
                   >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {member.full_name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{member.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{member.email}</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={selectedMembers.includes(member.id)}
-                      onChange={() => {}} // Controlled by parent click
+                    {copiedLink ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This link will allow recipients to add their contributions directly
+                </p>
+              </div>
+            )}
+
+            {/* Summary */}
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <h4 className="text-sm font-medium mb-2">Invitation Summary</h4>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>• {selectedMembers.length} family members selected</p>
+                {externalEmails.trim() && (
+                  <p>• {externalEmails.split(/[,\n]/).filter(email => email.trim()).length} external emails</p>
+                )}
+                <p>• Message includes {includeContributionLink ? 'contribution link' : 'custom message only'}</p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose} disabled={isSending}>
+                Cancel
+              </Button>
+              <Button onClick={handleSendInvites} disabled={isSending}>
+                {isSending ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Invitations
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+
+          <TabsContent value="qr" className="space-y-6 mt-4">
+            {loadingCode ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                {/* QR Code Display */}
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="bg-white p-6 rounded-lg shadow-sm">
+                    <QRCodeSVG 
+                      id="event-qr-code"
+                      value={qrCodeUrl} 
+                      size={200}
+                      level="H"
+                      includeMargin={true}
                     />
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  
+                  <div className="text-center space-y-2">
+                    <p className="text-sm font-medium">Scan to join event</p>
+                    <div className="flex items-center gap-2 justify-center">
+                      <Badge variant="secondary" className="text-lg font-mono px-4 py-2">
+                        {joinCode}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopyCode}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      6-digit join code (valid for 30 days)
+                    </p>
+                  </div>
 
-          {/* External Emails */}
-          <div className="space-y-2">
-            <Label htmlFor="external-emails">Additional Email Addresses</Label>
-            <Textarea
-              id="external-emails"
-              placeholder="Enter email addresses (one per line or comma-separated)&#10;example@email.com, another@email.com"
-              value={externalEmails}
-              onChange={(e) => setExternalEmails(e.target.value)}
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">
-              Add external email addresses for friends or extended family
-            </p>
-          </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={downloadQRCode}
+                    className="w-full max-w-xs"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download QR Code
+                  </Button>
+                </div>
 
-          {/* Message Customization */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="custom-message">Invitation Message</Label>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={includeContributionLink}
-                  onCheckedChange={setIncludeContributionLink}
-                />
-                <Label className="text-xs">Include contribution link</Label>
-              </div>
-            </div>
-            <Textarea
-              id="custom-message"
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
-              rows={6}
-              placeholder="Write a personal message to include with the invitation..."
-            />
-          </div>
+                {/* Join URL */}
+                <div className="space-y-2">
+                  <Label>Direct Join Link</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={qrCodeUrl}
+                      readOnly
+                      className="text-xs"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(qrCodeUrl)
+                        toast({
+                          title: 'Link copied!',
+                          description: 'Join link copied to clipboard'
+                        })
+                      }}
+                      className="shrink-0"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Share this link or code with anyone - no signup required for guests
+                  </p>
+                </div>
 
-          {/* Contribution Link */}
-          {includeContributionLink && (
-            <div className="space-y-2">
-              <Label>Contribution Link</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={generateContributionLink()}
-                  readOnly
-                  className="text-xs"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyLink}
-                  className="shrink-0"
-                >
-                  {copiedLink ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                This link will allow recipients to add their contributions directly
-              </p>
-            </div>
-          )}
-
-          {/* Summary */}
-          <div className="bg-muted/50 p-3 rounded-lg">
-            <h4 className="text-sm font-medium mb-2">Invitation Summary</h4>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>• {selectedMembers.length} family members selected</p>
-              {externalEmails.trim() && (
-                <p>• {externalEmails.split(/[,\n]/).filter(email => email.trim()).length} external emails</p>
-              )}
-              <p>• Message includes {includeContributionLink ? 'contribution link' : 'custom message only'}</p>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSending}>
-            Cancel
-          </Button>
-          <Button onClick={handleSendInvites} disabled={isSending}>
-            {isSending ? (
-              <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground mr-2" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Send Invitations
+                {/* How it works */}
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  <h4 className="text-sm font-medium">How it works:</h4>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• Guests can scan the QR code or enter the 6-digit code</li>
+                    <li>• No account required - guests get temporary access</li>
+                    <li>• Guests can view event details and contribute messages/media</li>
+                    <li>• Code expires in 30 days</li>
+                  </ul>
+                </div>
               </>
             )}
-          </Button>
-        </DialogFooter>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   )

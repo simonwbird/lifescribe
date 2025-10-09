@@ -16,6 +16,7 @@ export interface UpcomingEvent {
   event_type?: 'anniversary' | 'memorial' | 'custom'
   notes?: string
   recurrence?: string
+  family_id?: string // Added for join code functionality
 }
 
 /**
