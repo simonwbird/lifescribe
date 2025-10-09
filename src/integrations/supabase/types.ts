@@ -1083,6 +1083,50 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          family_id: string
+          id: string
+          link_strength: number | null
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          family_id: string
+          id?: string
+          link_strength?: number | null
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entity_id?: string
+          entity_type?: string
+          family_id?: string
+          id?: string
+          link_strength?: number | null
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_links_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_acl: {
         Row: {
           created_at: string | null
@@ -5461,6 +5505,16 @@ export type Database = {
       revoke_invite: {
         Args: { p_invite_id: string; p_reason?: string; p_revoked_by: string }
         Returns: Json
+      }
+      suggest_entity_links: {
+        Args: { p_content: string; p_family_id: string; p_limit?: number }
+        Returns: {
+          entity_id: string
+          entity_name: string
+          entity_type: string
+          match_reason: string
+          match_score: number
+        }[]
       }
       track_admin_access: {
         Args: {
