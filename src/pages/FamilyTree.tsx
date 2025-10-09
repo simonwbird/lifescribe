@@ -35,6 +35,10 @@ import {
 } from 'lucide-react'
 import type { Person, Relationship } from '@/lib/familyTreeTypes'
 import { useToast } from '@/hooks/use-toast'
+import { DiscoveryModeBanner } from '@/components/discovery/DiscoveryModeBanner';
+import { DiscoveryModeToggle } from '@/components/discovery/DiscoveryModeToggle';
+import { useIsUnder13 } from '@/hooks/useUserAge';
+import { useDiscoveryMode } from '@/hooks/useDiscoveryMode';
 
 export default function FamilyTree() {
   const [people, setPeople] = useState<Person[]>([])
@@ -61,6 +65,8 @@ export default function FamilyTree() {
   
   const navigate = useNavigate()
   const { toast } = useToast()
+  const isUnder13 = useIsUnder13()
+  const { isDiscoveryMode } = useDiscoveryMode()
 
   useEffect(() => {
     loadFamilyData()
@@ -406,7 +412,7 @@ export default function FamilyTree() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-discovery-mode={isDiscoveryMode}>
         <Header />
         
         {/* Controls */}
@@ -427,7 +433,16 @@ export default function FamilyTree() {
                 onPersonsUpdated={loadFamilyData}
               />
             </div>
+            
+            <DiscoveryModeToggle />
           </div>
+          
+          {/* Discovery Mode Banner */}
+          {isUnder13 && (
+            <div className="mt-4">
+              <DiscoveryModeBanner isUnder13={isUnder13} />
+            </div>
+          )}
         </div>
 
         {/* Main Content */}

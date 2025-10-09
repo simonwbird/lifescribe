@@ -171,6 +171,10 @@ export type AnalyticsEvent =
   | 'entity_link_suggested'
   | 'entity_link_created'
   | 'entity_link_removed'
+  | 'discovery_mode_enabled'
+  | 'discovery_mode_disabled'
+  | 'discovery_mode_banner_shown'
+  | 'discovery_mode_banner_clicked'
   | 'upcoming_write_note_clicked'
   | 'upcoming_add_photo_clicked'
   // Admin impersonation events

@@ -38,6 +38,10 @@ import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard';
 import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal';
 import { formatForUser, getCurrentUserRegion } from '@/utils/date';
 import ImpersonationBoundary from '@/components/ImpersonationBoundary';
+import { DiscoveryModeBanner } from '@/components/discovery/DiscoveryModeBanner';
+import { DiscoveryModeToggle } from '@/components/discovery/DiscoveryModeToggle';
+import { useIsUnder13 } from '@/hooks/useUserAge';
+import { useDiscoveryMode } from '@/hooks/useDiscoveryMode';
 
 // Types
 interface ActivityItem {
@@ -87,6 +91,8 @@ export default function Home() {
     loading: modeLoading
   } = useMode();
   const navigate = useNavigate();
+  const isUnder13 = useIsUnder13();
+  const { isDiscoveryMode } = useDiscoveryMode();
   
   // Memoize expensive calculations
   const memoizedFamilyMembers = useMemo(() => familyMembers, [familyMembers])
@@ -530,8 +536,11 @@ export default function Home() {
 
   // Studio Mode
   return <AuthGate>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background" data-discovery-mode={isDiscoveryMode}>
         <Header />
+        <div className="container mx-auto px-4 py-2 flex justify-end">
+          <DiscoveryModeToggle />
+        </div>
         <main className="container mx-auto px-4 py-6 space-y-6">
           {/* Recording Controller */}
           {isSimpleMode && <SimpleRecordingController profileId={profileId || 'default'} spaceId={spaceId || 'default'} />}
@@ -541,6 +550,9 @@ export default function Home() {
 
           {/* Invite Banner */}
           <InviteBanner />
+
+          {/* Discovery Mode Banner */}
+          {isUnder13 && <DiscoveryModeBanner isUnder13={isUnder13} />}
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

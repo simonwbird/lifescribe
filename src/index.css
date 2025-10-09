@@ -836,3 +836,43 @@ body[data-mode="studio"] .studio-only {
     transform: translateX(-100%);
   }
 }
+
+/* Discovery Mode Styles */
+[data-discovery-mode="true"] {
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+[data-discovery-mode="true"] h1 {
+  font-size: 2.5rem !important;
+  line-height: 1.2 !important;
+}
+
+[data-discovery-mode="true"] h2 {
+  font-size: 2rem !important;
+  line-height: 1.3 !important;
+}
+
+[data-discovery-mode="true"] h3 {
+  font-size: 1.75rem !important;
+  line-height: 1.4 !important;
+}
+
+[data-discovery-mode="true"] p,
+[data-discovery-mode="true"] span,
+[data-discovery-mode="true"] button {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+}
+
+[data-discovery-mode="true"] button,
+[data-discovery-mode="true"] a {
+  min-height: 3rem !important;
+  padding: 0.75rem 1.5rem !important;
+}
+
+/* Hide private content in discovery mode */
+[data-discovery-mode="true"] [data-privacy="private"],
+[data-discovery-mode="true"] [data-privacy="invite_only"] {
+  display: none !important;
+}
