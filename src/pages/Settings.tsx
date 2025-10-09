@@ -402,26 +402,32 @@ export default function Settings() {
                     Weekly Digest
                   </CardTitle>
                   <CardDescription>
-                    Get a weekly summary of family activity
+                    Get a weekly summary of family activity (3 stories + 3 comments)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="digest-toggle">Enable Weekly Digest</Label>
+                      <Label htmlFor="digest-toggle">
+                        {notifications.weeklyDigest ? 'Pause Weekly Digest' : 'Resume Weekly Digest'}
+                      </Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive a weekly email with family updates
+                        {notifications.weeklyDigest 
+                          ? 'Temporarily pause your weekly digest emails'
+                          : 'Resume receiving weekly family updates'
+                        }
                       </p>
                     </div>
                     <Switch
                       id="digest-toggle"
-                      checked={notifications.weeklyDigest}
+                      checked={!notifications.weeklyDigest}
                       onCheckedChange={(checked) => 
-                        handleNotificationChange('weeklyDigest', checked)
+                        handleNotificationChange('weeklyDigest', !checked)
                       }
+                      disabled={loading}
                     />
                   </div>
-                  {notifications.weeklyDigest && (
+                  {!notifications.weeklyDigest && (
                     <div className="space-y-4 pt-4 border-t">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -431,6 +437,7 @@ export default function Settings() {
                             onValueChange={(value) => 
                               handleNotificationChange('digestDay', parseInt(value))
                             }
+                            disabled={loading}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -451,6 +458,7 @@ export default function Settings() {
                             onValueChange={(value) => 
                               handleNotificationChange('digestHour', parseInt(value))
                             }
+                            disabled={loading}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -464,6 +472,14 @@ export default function Settings() {
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                        <p className="font-medium mb-1">What's included:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Up to 3 newest family stories</li>
+                          <li>Up to 3 recent comments</li>
+                          <li>Weekly activity summary</li>
+                        </ul>
                       </div>
                     </div>
                   )}
