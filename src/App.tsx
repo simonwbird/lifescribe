@@ -143,6 +143,9 @@ function AppContent() {
         
         {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />
+      
+      {/* Story routes with legacy redirect */}
+      <Route path="/simple/story/new" element={<Navigate to="/stories/new" replace />} />
       <Route path="/stories/new" element={<AuthGate><NewStory /></AuthGate>} />
       <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />
       <Route path="/stories/:id/edit" element={<AuthGate><StoryEdit /></AuthGate>} />
