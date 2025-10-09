@@ -168,6 +168,9 @@ export type AnalyticsEvent =
   | 'tribute_candle_lit'
   | 'tribute_candle_removed'
   | 'tribute_comment_added'
+  | 'entity_link_suggested'
+  | 'entity_link_created'
+  | 'entity_link_removed'
   | 'upcoming_write_note_clicked'
   | 'upcoming_add_photo_clicked'
   // Admin impersonation events
