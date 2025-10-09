@@ -444,7 +444,7 @@ export default function Home() {
     return <AuthGate>
         <div className="min-h-screen bg-background">
           <Header />
-          <main id="main-content" className="container mx-auto px-4 py-6 space-y-6" tabIndex={-1}>
+          <main id="main-content" className="simple-mode container mx-auto px-4 py-6 space-y-6" tabIndex={-1}>
             {/* Progress Header for Simple Mode */}
             {flags['prompts.progressAndFilters'] && (
               <ProgressHeader familyId={spaceId || ''} variant="compact" />

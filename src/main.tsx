@@ -6,6 +6,7 @@ import App from "./App.tsx";
 import { AuthProvider } from './contexts/AuthProvider'
 import { Toaster } from "@/components/ui/toaster"
 import "./index.css";
+import "./styles/simpleMode.css";
 
 // Initialize Sentry
 if (import.meta.env.VITE_SENTRY_DSN) {
