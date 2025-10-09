@@ -5,13 +5,16 @@ import { FeedGrid } from '@/components/feed/FeedGrid'
 import { getCurrentSpaceId } from '@/lib/spaceUtils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { PrivacyBadge } from '@/components/ui/privacy-badge'
-import { MissingContentBanner } from '@/components/audit/MissingContentBanner';
+import { MissingContentBanner } from '@/components/audit/MissingContentBanner'
+import { DiscoveryModeBanner } from '@/components/discovery/DiscoveryModeBanner'
+import { useIsUnder13 } from '@/hooks/useUserAge'
 
 export default function FeedPage() {
   const [familyId, setFamilyId] = useState<string>('')
   const [currentUserId, setCurrentUserId] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const { track } = useAnalytics()
+  const isUnder13 = useIsUnder13()
 
   useEffect(() => {
     initializePage()
@@ -66,6 +69,8 @@ export default function FeedPage() {
             <PrivacyBadge size="sm" />
           </div>
         </div>
+
+        <DiscoveryModeBanner isUnder13={isUnder13} />
 
         <MissingContentBanner familyId={familyId} />
 
