@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import type { UpcomingEvent } from '@/lib/eventsService'
 import { validateFile, generateAcceptAttribute, formatFileSize, getFileTypeDescription } from '@/utils/fileValidation'
+import { checkEventPermissions } from '@/lib/eventAclService'
+import { EventPermissionBanner } from '@/components/events/EventPermissionBanner'
 
 interface EventContributionModalProps {
   event: UpcomingEvent | null
@@ -43,8 +45,30 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<any>(null)
+  const [loadingPermissions, setLoadingPermissions] = useState(true)
   const { track } = useAnalytics()
   const { toast } = useToast()
+
+  // Check permissions when modal opens
+  React.useEffect(() => {
+    if (isOpen && event) {
+      checkPermissions()
+    }
+  }, [isOpen, event])
+
+  const checkPermissions = async () => {
+    setLoadingPermissions(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const perms = await checkEventPermissions(event?.id || '', user?.id)
+      setPermissions(perms)
+    } catch (error) {
+      console.error('Error checking permissions:', error)
+    } finally {
+      setLoadingPermissions(false)
+    }
+  }
 
   const handleFileSelect = (file: File) => {
     // Validate file using enhanced validation
@@ -88,6 +112,16 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
 
   const handleSubmit = async () => {
     if (!event) return
+
+    // Check permissions before submitting
+    if (!permissions?.canContribute) {
+      toast({
+        title: 'Permission denied',
+        description: 'You need contributor approval to add content',
+        variant: 'destructive'
+      })
+      return
+    }
 
     let content = ''
     let message = ''
@@ -237,6 +271,11 @@ export const EventContributionModal = ({ event, isOpen, onClose }: EventContribu
             </Badge>
           </div>
         </DialogHeader>
+
+        {/* Permission Banner */}
+        {!loadingPermissions && permissions && (
+          <EventPermissionBanner role={permissions.role} action="contribute" />
+        )}
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
           <TabsList className="grid w-full grid-cols-3">

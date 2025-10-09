@@ -9,6 +9,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { QRCodeSVG } from 'qrcode.react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { 
   Users, 
   Mail, 
@@ -18,7 +25,8 @@ import {
   Heart,
   UserPlus,
   QrCode,
-  Download
+  Download,
+  Shield
 } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
@@ -50,6 +58,7 @@ export const EventInviteModal = ({ event, isOpen, onClose }: EventInviteModalPro
   const [joinCode, setJoinCode] = useState<string>('')
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
   const [loadingCode, setLoadingCode] = useState(false)
+  const [selectedRole, setSelectedRole] = useState<'contributor' | 'viewer' | 'guest'>('contributor')
   const { track } = useAnalytics()
   const { toast } = useToast()
 
@@ -559,6 +568,42 @@ Looking forward to celebrating together! ❤️`
                     <Download className="h-4 w-4 mr-2" />
                     Download QR Code
                   </Button>
+                </div>
+
+                {/* Role Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Event Role
+                  </Label>
+                  <Select value={selectedRole} onValueChange={(value: any) => setSelectedRole(value)}>
+                    <SelectTrigger id="invite-role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contributor">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Contributor</span>
+                          <span className="text-xs text-muted-foreground">Can add notes, photos, and videos</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="viewer">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Viewer</span>
+                          <span className="text-xs text-muted-foreground">Can view and comment only</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="guest">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Guest</span>
+                          <span className="text-xs text-muted-foreground">View-only, needs approval to contribute</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Set default permissions for new invitees
+                  </p>
                 </div>
 
                 {/* Join URL */}

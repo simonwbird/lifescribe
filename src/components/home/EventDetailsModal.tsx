@@ -22,6 +22,8 @@ import type { UpcomingEvent } from '@/lib/eventsService'
 import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import { EventContributionModal } from './EventContributionModal'
 import { EventInviteModal } from './EventInviteModal'
+import { EventRolesSection } from '@/components/events/EventRolesSection'
+import { supabase } from '@/integrations/supabase/client'
 
 interface EventDetailsModalProps {
   event: UpcomingEvent | null
@@ -34,8 +36,36 @@ export const EventDetailsModal = ({ event, isOpen, onClose }: EventDetailsModalP
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showCalendarOptions, setShowCalendarOptions] = useState(false)
+  const [familyId, setFamilyId] = useState<string | null>(null)
   const { track } = useAnalytics()
   const { toast } = useToast()
+
+  // Load family ID when modal opens
+  useEffect(() => {
+    if (isOpen && event) {
+      loadFamilyId()
+    }
+  }, [isOpen, event])
+
+  const loadFamilyId = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: membership } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (membership) {
+        setFamilyId(membership.family_id)
+      }
+    } catch (error) {
+      console.error('Error loading family ID:', error)
+    }
+  }
 
   useEffect(() => {
     if (!event || event.days_until < 0) return
@@ -270,6 +300,14 @@ export const EventDetailsModal = ({ event, isOpen, onClose }: EventDetailsModalP
                 )}
               </div>
             </div>
+
+            {/* Roles & Permissions Section */}
+            {familyId && event?.id && (
+              <>
+                <Separator />
+                <EventRolesSection eventId={event.id} familyId={familyId} />
+              </>
+            )}
 
             <Separator />
 

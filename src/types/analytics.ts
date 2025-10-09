@@ -135,6 +135,33 @@ export interface DigestFollowAllEvent extends BaseAnalyticsEvent {
   }
 }
 
+// Event role/permission events
+export interface EventRoleChangedEvent extends BaseAnalyticsEvent {
+  event_name: 'event_role_changed'
+  properties: {
+    event_id: string
+    new_role: 'contributor' | 'viewer' | 'guest'
+    user_id: string
+  }
+}
+
+export interface EventAccessRevokedEvent extends BaseAnalyticsEvent {
+  event_name: 'event_access_revoked'
+  properties: {
+    event_id: string
+    user_id: string
+  }
+}
+
+export interface EventAccessGrantedEvent extends BaseAnalyticsEvent {
+  event_name: 'event_access_granted'
+  properties: {
+    event_id: string
+    user_id: string
+    role: 'contributor' | 'viewer' | 'guest'
+  }
+}
+
 // Union type for all events
 export type AnalyticsEvent = 
   | PromptViewEvent
@@ -151,6 +178,9 @@ export type AnalyticsEvent =
   | DigestPauseFailedEvent
   | DigestFollowToggledEvent
   | DigestFollowAllEvent
+  | EventRoleChangedEvent
+  | EventAccessRevokedEvent
+  | EventAccessGrantedEvent
 
 // Funnel metrics
 export interface FunnelMetrics {
