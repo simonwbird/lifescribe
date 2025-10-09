@@ -394,95 +394,37 @@ export default function Settings() {
                 </CardContent>
               </Card>
 
-              {/* Weekly Digest */}
+              {/* Weekly Digest - Now using actual digest settings */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    Weekly Digest
+                    Weekly Highlights
                   </CardTitle>
                   <CardDescription>
-                    Get a weekly summary of family activity (3 stories + 3 comments)
+                    Receive a weekly email summary of family stories, photos, and activity
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="digest-toggle">
-                        {notifications.weeklyDigest ? 'Pause Weekly Digest' : 'Resume Weekly Digest'}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {notifications.weeklyDigest 
-                          ? 'Temporarily pause your weekly digest emails'
-                          : 'Resume receiving weekly family updates'
-                        }
-                      </p>
-                    </div>
-                    <Switch
-                      id="digest-toggle"
-                      checked={!notifications.weeklyDigest}
-                      onCheckedChange={(checked) => 
-                        handleNotificationChange('weeklyDigest', !checked)
-                      }
-                      disabled={loading}
-                    />
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Weekly Highlights settings are managed in your Family Dashboard. 
+                      Visit the <span className="font-medium">Weekly Digest</span> card to:
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc list-inside">
+                      <li>Enable or disable your weekly digest</li>
+                      <li>Choose which family members to follow</li>
+                      <li>Pause for 30 days when needed</li>
+                      <li>Preview upcoming digest content</li>
+                    </ul>
                   </div>
-                  {!notifications.weeklyDigest && (
-                    <div className="space-y-4 pt-4 border-t">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="digest-day">Delivery Day</Label>
-                          <Select
-                            value={notifications.digestDay.toString()}
-                            onValueChange={(value) => 
-                              handleNotificationChange('digestDay', parseInt(value))
-                            }
-                            disabled={loading}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {dayNames.map((day, index) => (
-                                <SelectItem key={index} value={index.toString()}>
-                                  {day}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="digest-hour">Delivery Time</Label>
-                          <Select
-                            value={notifications.digestHour.toString()}
-                            onValueChange={(value) => 
-                              handleNotificationChange('digestHour', parseInt(value))
-                            }
-                            disabled={loading}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {hourNames.map((time, index) => (
-                                <SelectItem key={index} value={index.toString()}>
-                                  {time}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                        <p className="font-medium mb-1">What's included:</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>Up to 3 newest family stories</li>
-                          <li>Up to 3 recent comments</li>
-                          <li>Weekly activity summary</li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
+                  <Button 
+                    onClick={() => window.location.href = '/home'} 
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Go to Family Dashboard
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

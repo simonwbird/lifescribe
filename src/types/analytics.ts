@@ -81,6 +81,19 @@ export interface InviteAcceptEvent extends BaseAnalyticsEvent {
   }
 }
 
+export interface DigestEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_toggled' | 'digest_paused' | 'digest_resumed' | 'digest_sent' | 'digest_pause_failed' | 'digest_follow_toggled' | 'digest_follow_all'
+  properties: {
+    enabled?: boolean
+    family_id?: string
+    duration_days?: number
+    recipient_count?: number
+    error?: string
+    member_id?: string
+    followed?: boolean
+  }
+}
+
 // Union type for all events
 export type AnalyticsEvent = 
   | PromptViewEvent
@@ -90,6 +103,7 @@ export type AnalyticsEvent =
   | StreakContinueEvent
   | InviteSendEvent
   | InviteAcceptEvent
+  | DigestEvent
 
 // Funnel metrics
 export interface FunnelMetrics {

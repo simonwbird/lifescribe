@@ -174,13 +174,25 @@ export class WeeklyDigestService {
   }
 
   async resumeDigest(userId: string, familyId: string): Promise<void> {
-    await this.updateSettings(userId, {
-      family_id: familyId,
-      is_paused: false,
-      pause_reason: null,
-      paused_at: null,
-      paused_by: null
+    const { error } = await supabase.rpc('resume_digest', {
+      p_family_id: familyId,
+      p_user_id: userId
     })
+
+    if (error) {
+      throw error
+    }
+  }
+
+  async pauseDigestFor30Days(userId: string, familyId: string): Promise<void> {
+    const { error } = await supabase.rpc('pause_digest_30_days', {
+      p_family_id: familyId,
+      p_user_id: userId
+    })
+
+    if (error) {
+      throw error
+    }
   }
 
   async forceSendDigest(userId: string, familyId: string): Promise<void> {

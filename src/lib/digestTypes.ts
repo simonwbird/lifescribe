@@ -11,6 +11,7 @@ export interface DigestSettings {
   pause_reason?: string
   paused_at?: string
   paused_by?: string
+  pause_expires_at?: string
   last_forced_send_at?: string
   forced_send_by?: string
   content_settings: DigestContentSettings

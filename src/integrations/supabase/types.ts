@@ -5184,6 +5184,7 @@ export type Database = {
           is_unlocked: boolean | null
           last_forced_send_at: string | null
           last_sent_at: string | null
+          pause_expires_at: string | null
           pause_reason: string | null
           paused_at: string | null
           paused_by: string | null
@@ -5206,6 +5207,7 @@ export type Database = {
           is_unlocked?: boolean | null
           last_forced_send_at?: string | null
           last_sent_at?: string | null
+          pause_expires_at?: string | null
           pause_reason?: string | null
           paused_at?: string | null
           paused_by?: string | null
@@ -5228,6 +5230,7 @@ export type Database = {
           is_unlocked?: boolean | null
           last_forced_send_at?: string | null
           last_sent_at?: string | null
+          pause_expires_at?: string | null
           pause_reason?: string | null
           paused_at?: string | null
           paused_by?: string | null
@@ -5525,12 +5528,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      pause_digest_30_days: {
+        Args: { p_family_id: string; p_user_id: string }
+        Returns: Json
+      }
       process_admin_claim: {
         Args: { p_claim_id: string }
         Returns: Json
       }
       resend_invite: {
         Args: { p_invite_id: string }
+        Returns: Json
+      }
+      resume_digest: {
+        Args: { p_family_id: string; p_user_id: string }
         Returns: Json
       }
       revoke_admin_access: {

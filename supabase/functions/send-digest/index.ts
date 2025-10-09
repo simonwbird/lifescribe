@@ -81,7 +81,8 @@ serve(async (req) => {
       .filter(m => m.profiles?.email)
       .map(m => ({
         email: m.profiles.email,
-        name: m.profiles.full_name || 'Family Member'
+        name: m.profiles.full_name || 'Family Member',
+        profile_id: m.profile_id
       }));
 
     if (recipients.length === 0) {
@@ -99,38 +100,61 @@ serve(async (req) => {
       throw new Error(`Failed to generate digest content: ${contentError.message}`);
     }
 
-    // Get recent content for the digest
+    // Get recent content for the digest (filtered by follow preferences per recipient)
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    const { data: stories, error: storiesError } = await supabase
-      .from('stories')
-      .select('id, title, excerpt, created_at')
-      .eq('family_id', family_id)
-      .gte('created_at', weekAgo.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    const { data: photos, error: photosError } = await supabase
-      .from('media')
-      .select('id, file_name, created_at')
-      .eq('family_id', family_id)
-      .like('mime_type', 'image/%')
-      .gte('created_at', weekAgo.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(6);
-
-    // Generate HTML email content
-    const emailContent = generateDigestHTML({
-      familyName: family.name,
-      digestContent,
-      stories: stories || [],
-      photos: photos || [],
-      weekStartDate: weekAgo.toLocaleDateString()
-    });
-
-    // Send emails using Resend (simplified - in production you'd use React Email)
+    // Send individualized emails based on follow preferences
     const emailPromises = recipients.map(async (recipient) => {
+      // Get followed members for this recipient
+      const { data: followedMembers } = await supabase.rpc('get_digest_followed_members', {
+        p_family_id: family_id,
+        p_user_id: recipient.profile_id
+      });
+
+      const followedIds = followedMembers?.map((m: any) => m.member_id) || [];
+
+      // Get stories from followed members only
+      const { data: stories } = await supabase
+        .from('stories')
+        .select('id, title, excerpt, created_at, profile_id')
+        .eq('family_id', family_id)
+        .in('profile_id', followedIds)
+        .gte('created_at', weekAgo.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Get photos from followed members only
+      const { data: photos } = await supabase
+        .from('media')
+        .select('id, file_name, created_at, created_by')
+        .eq('family_id', family_id)
+        .in('created_by', followedIds)
+        .like('mime_type', 'image/%')
+        .gte('created_at', weekAgo.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      // Generate personalized digest content
+      const personalizedContent = {
+        ...digestContent,
+        stories: stories?.length || 0,
+        photos: photos?.length || 0
+      };
+
+      // Generate personalized HTML email
+      const emailContent = generateDigestHTML({
+        familyName: family.name,
+        digestContent: personalizedContent,
+        stories: stories || [],
+        photos: photos || [],
+        weekStartDate: weekAgo.toLocaleDateString(),
+        pauseUrl: `${supabaseUrl}/rest/v1/rpc/pause_digest_30_days`,
+        familyId: family_id,
+        userId: recipient.profile_id
+      });
+
+      // Send email using Resend
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -210,7 +234,7 @@ serve(async (req) => {
   }
 });
 
-function generateDigestHTML({ familyName, digestContent, stories, photos, weekStartDate }: any) {
+function generateDigestHTML({ familyName, digestContent, stories, photos, weekStartDate, pauseUrl, familyId, userId }: any) {
   return `
     <!DOCTYPE html>
     <html>
@@ -278,10 +302,14 @@ function generateDigestHTML({ familyName, digestContent, stories, photos, weekSt
 
       <div class="footer">
         <p>You're receiving this because you're part of the ${familyName} family.</p>
+        <p>
+          <a href="https://lifescribe.lovable.app/digest/pause?family=${familyId}&user=${userId}">
+            Pause digest for 30 days
+          </a>
+        </p>
         <p>Family Stories • Bringing families together through shared memories</p>
         <p>
-          <a href="https://lifescribe.lovable.app/settings/notifications">Update preferences</a> • 
-          <a href="https://lifescribe.lovable.app/unsubscribe">Unsubscribe</a> • 
+          <a href="https://lifescribe.lovable.app/settings">Update preferences</a> • 
           <a href="https://lifescribe.lovable.app/digest/preview">View online</a>
         </p>
       </div>

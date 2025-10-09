@@ -183,9 +183,9 @@ function AppContent() {
        <Route path="/media" element={<AuthGate><Media /></AuthGate>} />
        <Route path="/media/albums" element={<AuthGate><Media /></AuthGate>} />
         <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
-        <Route path="/date-formatting-example" element={<DateFormattingExamplePage />} />
-        
-         {/* Admin Routes - Role-protected */}
+      <Route path="/digest/pause" element={<LazyRoute factory={() => import('./pages/DigestPause')} />} />
+      
+      {/* Admin Routes - Role-protected */}
        <Route path="/admin" element={<AuthGate><RoleGate role="admin"><AdminShell /></RoleGate></AuthGate>}>
           <Route index element={<AdminDashboard />} />
           <Route path="people" element={<AdminPeople />} />
