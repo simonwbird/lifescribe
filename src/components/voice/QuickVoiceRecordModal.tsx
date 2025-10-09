@@ -6,6 +6,8 @@ import { Mic, Square, Play, Pause, Send, Trash2, Zap } from 'lucide-react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { useDraftManager } from '@/hooks/useDraftManager'
+import { AutosaveIndicator } from '../story-wizard/AutosaveIndicator'
 
 interface QuickVoiceRecordModalProps {
   open: boolean
@@ -23,14 +25,38 @@ export default function QuickVoiceRecordModal({
   const [isPlaying, setIsPlaying] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false)
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const blobUrlRef = useRef<string | null>(null)
   
   const { track } = useAnalytics()
   const { toast } = useToast()
 
+  // Draft management
+  const { 
+    autosaveStatus,
+    hasDraft, 
+    loadDraft, 
+    clearDraft, 
+    saveDraft,
+    startAutosave, 
+    stopAutosave 
+  } = useDraftManager('quick-voice-recording', 3000) // Autosave every 3 seconds
+
+  // Check for existing draft on mount
+  useEffect(() => {
+    if (open && !isRecording && !recordedBlob) {
+      const existingDraft = loadDraft()
+      if (existingDraft && existingDraft.content.audioBase64) {
+        setShowDraftRecovery(true)
+      }
+    }
+  }, [open, loadDraft])
+
+  // Timer for recording
   useEffect(() => {
     if (isRecording && timerRef.current === null) {
       timerRef.current = setInterval(() => {
@@ -47,6 +73,33 @@ export default function QuickVoiceRecordModal({
       }
     }
   }, [isRecording])
+
+  // Autosave recorded audio
+  useEffect(() => {
+    if (recordedBlob && !isUploading) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64Audio = reader.result as string
+        saveDraft({
+          id: 'quick-voice-recording',
+          content: {
+            audioBase64: base64Audio,
+            recordingTime
+          }
+        })
+      }
+      reader.readAsDataURL(recordedBlob)
+    }
+  }, [recordedBlob, recordingTime, isUploading, saveDraft])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current)
+      }
+    }
+  }, [])
 
   const startRecording = async () => {
     try {
@@ -169,6 +222,9 @@ export default function QuickVoiceRecordModal({
 
       track('voice_story_published')
 
+      // Clear draft on successful publish
+      clearDraft()
+
       toast({
         title: 'Voice Story Created!',
         description: 'Your quick recording has been saved as a story.',
@@ -195,14 +251,49 @@ export default function QuickVoiceRecordModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const handleRecoverDraft = () => {
+    const draft = loadDraft()
+    if (draft && draft.content.audioBase64) {
+      // Convert base64 back to Blob
+      const base64Data = draft.content.audioBase64.split(',')[1]
+      const byteCharacters = atob(base64Data)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'audio/webm' })
+      
+      setRecordedBlob(blob)
+      setRecordingTime(draft.content.recordingTime || 0)
+      setShowDraftRecovery(false)
+      
+      toast({
+        title: "Draft Recovered",
+        description: "Your previous recording has been restored.",
+      })
+    }
+  }
+
+  const handleDiscardDraft = () => {
+    clearDraft()
+    setShowDraftRecovery(false)
+    toast({
+      title: "Draft Discarded",
+      description: "Starting fresh.",
+    })
+  }
+
   const handleClose = () => {
     if (isRecording) stopRecording()
     if (isPlaying && audioRef.current) {
       audioRef.current.pause()
       setIsPlaying(false)
     }
+    // Don't clear draft on close - it should persist
     setRecordedBlob(null)
     setRecordingTime(0)
+    setShowDraftRecovery(false)
     onClose()
   }
 
@@ -210,14 +301,33 @@ export default function QuickVoiceRecordModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="relative">
-              <Mic className="h-5 w-5" />
-              <Zap className="h-3 w-3 absolute -top-1 -right-1 text-yellow-500" />
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Mic className="h-5 w-5" />
+                <Zap className="h-3 w-3 absolute -top-1 -right-1 text-yellow-500" />
+              </div>
+              Quick Voice Recording
             </div>
-            Quick Voice Recording
+            {recordedBlob && <AutosaveIndicator status={autosaveStatus} />}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Draft Recovery Banner */}
+        {showDraftRecovery && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="font-semibold text-sm mb-1">Resume your draft?</h4>
+                <p className="text-xs text-muted-foreground">You have an unsaved voice recording.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleRecoverDraft}>Resume</Button>
+                <Button size="sm" variant="outline" onClick={handleDiscardDraft}>Discard</Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* Recording Status */}

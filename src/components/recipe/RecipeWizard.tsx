@@ -12,6 +12,8 @@ import RecipeWizardStep3 from './steps/RecipeWizardStep3'
 import RecipeWizardStep4 from './steps/RecipeWizardStep4'
 import RecipeWizardStep5 from './steps/RecipeWizardStep5'
 import type { RecipeFormData, RecipeWizardStep, AutosaveStatus, IngredientRow, StepRow } from '@/lib/recipeTypes'
+import { useDraftManager } from '@/hooks/useDraftManager'
+import { AutosaveIndicator } from '../story-wizard/AutosaveIndicator'
 
 export default function RecipeWizard() {
   const { id: recipeId } = useParams()
@@ -21,10 +23,18 @@ export default function RecipeWizard() {
   
   const [currentStep, setCurrentStep] = useState<RecipeWizardStep>(1)
   const [completedSteps, setCompletedSteps] = useState<RecipeWizardStep[]>([])
-  const [autosave, setAutosave] = useState<AutosaveStatus>({
-    status: 'idle',
-    message: ''
-  })
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false)
+  
+  // Draft management
+  const draftKey = `recipe-${recipeId || 'new'}`
+  const { 
+    autosaveStatus, 
+    hasDraft, 
+    loadDraft, 
+    clearDraft, 
+    startAutosave, 
+    stopAutosave 
+  } = useDraftManager(draftKey, 5000) // Autosave every 5 seconds
   
   const [formData, setFormData] = useState<RecipeFormData>({
     title: '',
@@ -57,6 +67,16 @@ export default function RecipeWizard() {
 
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+
+  // Check for existing draft on mount
+  useEffect(() => {
+    if (!recipeId && !isEditing) {
+      const existingDraft = loadDraft()
+      if (existingDraft && existingDraft.content) {
+        setShowDraftRecovery(true)
+      }
+    }
+  }, [recipeId, isEditing, loadDraft])
 
   // Load existing recipe when editing
   useEffect(() => {
@@ -137,6 +157,58 @@ export default function RecipeWizard() {
     getUser()
   }, [navigate, toast])
 
+  // Start autosave when form data changes
+  useEffect(() => {
+    const getFormData = () => ({
+      ...formData,
+      currentStep
+    })
+
+    if ((formData.title || formData.ingredients.length > 0 || formData.steps.length > 0) && !showDraftRecovery) {
+      startAutosave(getFormData)
+    }
+
+    return () => stopAutosave()
+  }, [formData, currentStep, startAutosave, stopAutosave, showDraftRecovery])
+
+  const handleDraftRecovery = () => {
+    const draft = loadDraft()
+    if (draft && draft.content) {
+      setFormData(prev => ({
+        ...prev,
+        ...draft.content,
+        // Preserve arrays properly
+        ingredients: Array.isArray(draft.content.ingredients) ? draft.content.ingredients : prev.ingredients,
+        steps: Array.isArray(draft.content.steps) ? draft.content.steps : prev.steps,
+        gallery: Array.isArray(draft.content.gallery) ? draft.content.gallery : prev.gallery,
+        peopleIds: Array.isArray(draft.content.peopleIds) ? draft.content.peopleIds : prev.peopleIds,
+        occasion: Array.isArray(draft.content.occasion) ? draft.content.occasion : prev.occasion,
+        tags: Array.isArray(draft.content.tags) ? draft.content.tags : prev.tags,
+      }))
+      
+      if (draft.content.currentStep) {
+        setCurrentStep(draft.content.currentStep)
+      }
+      
+      setShowDraftRecovery(false)
+      
+      toast({
+        title: "Draft Recovered",
+        description: "Your previous recipe work has been restored.",
+      })
+    }
+  }
+
+  const handleDiscardDraft = () => {
+    clearDraft()
+    setShowDraftRecovery(false)
+    
+    toast({
+      title: "Draft Discarded",
+      description: "Starting with a fresh recipe.",
+    })
+  }
+
   const updateFormData = (updates: Partial<RecipeFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
     
@@ -178,8 +250,6 @@ export default function RecipeWizard() {
   const saveDraft = async () => {
     if (!familyId || !userId) return
 
-    setAutosave({ status: 'saving', message: 'Saving draft...' })
-
     try {
       const recipeData = {
         title: formData.title,
@@ -208,12 +278,6 @@ export default function RecipeWizard() {
 
       if (error) throw error
 
-      setAutosave({ 
-        status: 'saved', 
-        message: 'Draft saved',
-        lastSaved: new Date()
-      })
-
       toast({
         title: "Recipe saved",
         description: "Your recipe has been saved as a draft."
@@ -221,7 +285,6 @@ export default function RecipeWizard() {
 
     } catch (error) {
       console.error('Error saving draft:', error)
-      setAutosave({ status: 'error', message: 'Error saving' })
       toast({
         title: "Error saving recipe",
         description: "There was an issue saving your recipe draft.",
@@ -262,6 +325,9 @@ export default function RecipeWizard() {
         .single()
 
       if (error) throw error
+
+      // Clear draft on successful publish
+      clearDraft()
 
       toast({
         title: "Recipe published!",
@@ -329,21 +395,7 @@ export default function RecipeWizard() {
 
             <div className="flex items-center gap-3">
               {/* Autosave status */}
-              {autosave.status !== 'idle' && (
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant={autosave.status === 'error' ? 'destructive' : 'outline'}
-                    className="text-xs"
-                  >
-                    {autosave.message}
-                  </Badge>
-                  {autosave.lastSaved && (
-                    <span className="text-xs text-muted-foreground">
-                      {autosave.lastSaved.toLocaleTimeString()}
-                    </span>
-                  )}
-                </div>
-              )}
+              <AutosaveIndicator status={autosaveStatus} />
 
               <Button 
                 variant="outline"
@@ -357,6 +409,24 @@ export default function RecipeWizard() {
             </div>
           </div>
         </div>
+
+        {/* Draft Recovery Banner */}
+        {showDraftRecovery && (
+          <div className="container mx-auto px-4 mt-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-sm mb-1">Resume your draft?</h4>
+                  <p className="text-xs text-muted-foreground">You have an unsaved recipe in progress.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleDraftRecovery}>Resume</Button>
+                  <Button size="sm" variant="outline" onClick={handleDiscardDraft}>Discard</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Progress */}
