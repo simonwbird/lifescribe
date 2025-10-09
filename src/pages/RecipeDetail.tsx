@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ImageViewer } from '@/components/ui/image-viewer';
-import { Clock, Users, ChefHat, ArrowLeft, Edit2, Image as ImageIcon, Play } from 'lucide-react';
+import { Clock, Users, ChefHat, ArrowLeft, Edit2, Image as ImageIcon, Play, Link as LinkIcon } from 'lucide-react';
+import { AttachToEntityModal } from '@/components/entity/AttachToEntityModal';
 
 interface Recipe {
   id: string;
@@ -42,6 +43,7 @@ export default function RecipeDetail() {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState('');
   const [currentImageAlt, setCurrentImageAlt] = useState('');
+  const [attachModalOpen, setAttachModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -159,10 +161,16 @@ export default function RecipeDetail() {
                 </div>
               </div>
               
-              <Button variant="outline" onClick={() => navigate(`/collections?tab=recipe&edit=${recipe.id}`)}>
-                <Edit2 className="h-4 w-4 mr-2" />
-                Edit Recipe
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setAttachModalOpen(true)}>
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Add to Person
+                </Button>
+                <Button variant="outline" onClick={() => navigate(`/collections?tab=recipe&edit=${recipe.id}`)}>
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit Recipe
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-6 mb-4">
@@ -289,7 +297,17 @@ export default function RecipeDetail() {
           onClose={() => setImageViewerOpen(false)}
           imageUrl={currentImageUrl}
           imageAlt={currentImageAlt}
-         />
-       </div>
-     );
-   }
+        />
+
+        {recipe && (
+          <AttachToEntityModal
+            open={attachModalOpen}
+            onOpenChange={setAttachModalOpen}
+            contentType="recipe"
+            contentId={recipe.id}
+            familyId={recipe.family_id}
+          />
+        )}
+      </div>
+    );
+  }

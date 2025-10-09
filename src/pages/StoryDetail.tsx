@@ -4,14 +4,16 @@ import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import StoryCard from '@/components/StoryCard'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Link as LinkIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Story, Profile } from '@/lib/types'
+import { AttachToEntityModal } from '@/components/entity/AttachToEntityModal'
 
 export default function StoryDetail() {
   const { id } = useParams<{ id: string }>()
   const [story, setStory] = useState<(Story & { profiles: Profile }) | null>(null)
   const [loading, setLoading] = useState(true)
+  const [attachModalOpen, setAttachModalOpen] = useState(false)
 
   useEffect(() => {
     const getStory = async () => {
@@ -78,18 +80,36 @@ export default function StoryDetail() {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <Button variant="ghost" asChild>
               <Link to="/feed">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Feed
               </Link>
             </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => setAttachModalOpen(true)}
+            >
+              <LinkIcon className="h-4 w-4 mr-2" />
+              Add to Person
+            </Button>
           </div>
           
           <StoryCard story={story} />
         </div>
       </div>
+
+      {story && (
+        <AttachToEntityModal
+          open={attachModalOpen}
+          onOpenChange={setAttachModalOpen}
+          contentType="story"
+          contentId={story.id}
+          familyId={story.family_id}
+        />
+      )}
     </div>
   )
 }
