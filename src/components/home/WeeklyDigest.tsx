@@ -14,6 +14,7 @@ import DigestQuickActions from './DigestQuickActions'
 import { EnhancedDigestRecipientManager } from './EnhancedDigestRecipientManager'
 import DigestMetricsSummary from './DigestMetricsSummary'
 import SimpleRecipientDisplay from './simple/SimpleRecipientDisplay'
+import { DigestFollowPreferences } from './DigestFollowPreferences'
 import { weeklyDigestService } from '@/lib/weeklyDigestService'
 import { supabase } from '@/integrations/supabase/client'
 import type { DigestSettings, DigestPreview } from '@/lib/digestTypes'
@@ -479,15 +480,23 @@ export default function WeeklyDigest() {
 
       {/* Customize Content Dialog */}
       <Dialog open={showCustomizeDialog} onOpenChange={setShowCustomizeDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Customize Weekly Digest</DialogTitle>
             <DialogDescription>
-              Choose what content to include in your weekly family digest
+              Choose what content to include and who to follow in your weekly family digest
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">
+            {/* Follow Preferences Section */}
+            {familyId && (
+              <>
+                <DigestFollowPreferences familyId={familyId} />
+                <Separator />
+              </>
+            )}
+
             {/* Content Types */}
             <div className="space-y-4">
               <Label className="text-sm font-medium">Content Types</Label>

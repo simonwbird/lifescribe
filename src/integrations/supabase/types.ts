@@ -1050,6 +1050,41 @@ export type Database = {
         }
         Relationships: []
       }
+      digest_follow_preferences: {
+        Row: {
+          created_at: string
+          family_id: string
+          followed_member_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          followed_member_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          followed_member_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digest_follow_preferences_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digest_send_log: {
         Row: {
           content_summary: Json | null
@@ -5314,6 +5349,12 @@ export type Database = {
           invited_by: string
           role: Database["public"]["Enums"]["role_type"]
           status: string
+        }[]
+      }
+      get_digest_followed_members: {
+        Args: { p_family_id: string; p_user_id: string }
+        Returns: {
+          member_id: string
         }[]
       }
       get_family_invites_masked: {

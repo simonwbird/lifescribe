@@ -182,6 +182,8 @@ export type AnalyticsEvent =
   | 'missing_content_banner_dismissed'
   | 'upcoming_write_note_clicked'
   | 'upcoming_add_photo_clicked'
+  | 'digest_follow_toggled'
+  | 'digest_follow_everyone'
   // Admin impersonation events
   | 'ADMIN_IMPERSONATE_STARTED'
   | 'ADMIN_IMPERSONATE_ENDED'
