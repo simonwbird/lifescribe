@@ -12,6 +12,7 @@ import { StarterPack } from '@/components/prompts/StarterPack'
 import { PromptFilters, type PromptFilter } from '@/components/prompts/PromptFilters'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ListenButton } from '@/components/prompts/ListenButton'
 import { cn } from '@/lib/utils'
 
 export default function PromptHub() {
@@ -196,12 +197,21 @@ export default function PromptHub() {
               {prompt.prompt?.title}
             </CardTitle>
           </div>
-          {prompt.status === 'completed' && (
-            <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-          )}
-          {prompt.status === 'in_progress' && (
-            <Clock className="h-5 w-5 text-orange-600 shrink-0" />
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            <ListenButton
+              text={`${prompt.prompt?.title}. ${prompt.prompt?.body || ''}`}
+              promptId={prompt.id}
+              size="icon"
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            {prompt.status === 'completed' && (
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            )}
+            {prompt.status === 'in_progress' && (
+              <Clock className="h-5 w-5 text-orange-600" />
+            )}
+          </div>
         </div>
       </CardHeader>
       {prompt.prompt?.body && (

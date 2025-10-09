@@ -162,6 +162,23 @@ export interface EventAccessGrantedEvent extends BaseAnalyticsEvent {
   }
 }
 
+// TTS events
+export interface TTSPlayStartEvent extends BaseAnalyticsEvent {
+  event_name: 'tts_play_start'
+  properties: {
+    prompt_id?: string
+    text_length: number
+  }
+}
+
+export interface TTSPlayEndEvent extends BaseAnalyticsEvent {
+  event_name: 'tts_play_end'
+  properties: {
+    prompt_id?: string
+    text_length: number
+  }
+}
+
 // Union type for all events
 export type AnalyticsEvent = 
   | PromptViewEvent
@@ -181,6 +198,8 @@ export type AnalyticsEvent =
   | EventRoleChangedEvent
   | EventAccessRevokedEvent
   | EventAccessGrantedEvent
+  | TTSPlayStartEvent
+  | TTSPlayEndEvent
 
 // Funnel metrics
 export interface FunnelMetrics {

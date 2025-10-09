@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Volume2, Shuffle, Mic } from 'lucide-react'
-import { useTextToSpeech } from '@/hooks/useTextToSpeech'
-import { getElderPrompts, ElderPrompt, truncatePrompt } from '@/lib/prompts/getElderPrompts'
+import { Shuffle } from 'lucide-react'
+import { getElderPrompts, ElderPrompt } from '@/lib/prompts/getElderPrompts'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { PromptCard } from './PromptCard'
 import { PromptChip } from './PromptChip'
@@ -22,7 +20,6 @@ export function SimpleInspirationBar({
   const [prompts, setPrompts] = useState<ElderPrompt[]>([])
   const [loading, setLoading] = useState(true)
   const [shuffling, setShuffling] = useState(false)
-  const { speak, isSpeaking, stop, isSupported: ttsSupported } = useTextToSpeech()
   const { track } = useAnalytics()
 
   useEffect(() => {
@@ -76,19 +73,6 @@ export function SimpleInspirationBar({
     setTimeout(() => setShuffling(false), 3000)
   }
 
-  const handleTTS = (prompt: ElderPrompt) => {
-    track('prompt.tts_play', {
-      prompt_id: prompt.id,
-      kind: prompt.kind
-    })
-
-    if (isSpeaking) {
-      stop()
-    } else {
-      speak(prompt.text)
-    }
-  }
-
   const handleRecordPrompt = (prompt: ElderPrompt) => {
     track('prompt.record_start', {
       prompt_id: prompt.id,
@@ -101,18 +85,14 @@ export function SimpleInspirationBar({
 
   if (loading) {
     return (
-      <Card className="w-full mb-6">
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-muted rounded w-3/4" />
-            <div className="h-4 bg-muted rounded w-1/2" />
-            <div className="flex gap-3">
-              <div className="h-11 bg-muted rounded flex-1" />
-              <div className="h-11 bg-muted rounded w-11" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="w-full mb-6 space-y-4 animate-pulse">
+        <div className="h-40 bg-muted rounded-lg" />
+        <div className="flex gap-2">
+          <div className="h-11 bg-muted rounded flex-1" />
+          <div className="h-11 bg-muted rounded flex-1" />
+          <div className="h-11 bg-muted rounded w-11" />
+        </div>
+      </div>
     )
   }
 
@@ -129,8 +109,6 @@ export function SimpleInspirationBar({
       <PromptCard
         prompt={primaryPrompt}
         onRecord={handleRecordPrompt}
-        onTTS={ttsSupported ? handleTTS : undefined}
-        isSpeaking={isSpeaking}
       />
 
       {/* Alternate Prompts */}

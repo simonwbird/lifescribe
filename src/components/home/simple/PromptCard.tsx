@@ -1,20 +1,17 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mic, Volume2, VolumeX } from 'lucide-react'
+import { Mic } from 'lucide-react'
 import { ElderPrompt, truncatePrompt } from '@/lib/prompts/getElderPrompts'
+import { ListenButton } from '@/components/prompts/ListenButton'
 
 interface PromptCardProps {
   prompt: ElderPrompt
   onRecord: (prompt: ElderPrompt) => void
-  onTTS?: (prompt: ElderPrompt) => void
-  isSpeaking?: boolean
 }
 
 export function PromptCard({ 
   prompt, 
-  onRecord, 
-  onTTS, 
-  isSpeaking 
+  onRecord
 }: PromptCardProps) {
   return (
     <Card className="w-full border-2 hover:border-primary/20 transition-colors">
@@ -41,22 +38,12 @@ export function PromptCard({
               Start with this
             </Button>
 
-            {onTTS && (
-              <Button
-                onClick={() => onTTS(prompt)}
-                variant="outline"
-                size="lg"
-                className="h-12 w-12 p-0 shrink-0"
-                aria-label={isSpeaking ? "Stop reading prompt" : "Hear this prompt"}
-                aria-pressed={isSpeaking}
-              >
-                {isSpeaking ? (
-                  <VolumeX className="w-5 h-5" />
-                ) : (
-                  <Volume2 className="w-5 h-5" />
-                )}
-              </Button>
-            )}
+            <ListenButton
+              text={prompt.text}
+              promptId={prompt.id}
+              size="lg"
+              className="h-12 w-12 p-0 shrink-0"
+            />
           </div>
         </div>
       </CardContent>

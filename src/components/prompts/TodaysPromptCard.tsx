@@ -1,12 +1,12 @@
 import React, { useState, memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, BookOpen, Volume2, Shuffle, Sparkles, Mic, MessageCircle, PenTool, VolumeX } from 'lucide-react'
+import { Play, BookOpen, Shuffle, Sparkles, Mic, MessageCircle, PenTool } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
 import PersonChip from './PersonChip'
 import { ResponseModal } from './ResponseModal'
 import { useNavigate } from 'react-router-dom'
-import { useSpeechPlayback } from '@/hooks/useSpeechPlayback'
+import { ListenButton } from '@/components/prompts/ListenButton'
 import { cn } from '@/lib/utils'
 
 interface TodaysPromptCardProps {
@@ -28,10 +28,6 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
 }: TodaysPromptCardProps) {
   const [showResponseModal, setShowResponseModal] = useState(false)
   const navigate = useNavigate()
-  const { isPlaying, toggle } = useSpeechPlayback({
-    rate: 0.85, // Slower for better comprehension
-    volume: 1.0
-  })
 
   const handleResponseSelect = (type: 'voice' | 'text' | 'video') => {
     setShowResponseModal(false)
@@ -46,13 +42,6 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     })
     
     navigate(`/stories/new?${searchParams.toString()}`)
-  }
-
-  const handleListen = () => {
-    if (!promptInstance?.prompt) return
-    
-    const textToSpeak = `${promptInstance.prompt.title}. ${promptInstance.prompt.body}`
-    toggle(textToSpeak)
   }
   // Show loading skeleton while data is being fetched
   if (loading) {
@@ -122,27 +111,13 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
             {promptInstance.prompt.title}
           </h1>
           <div className="flex items-center gap-2 shrink-0">
-            <Button 
-              variant={isPlaying ? "default" : "ghost"}
+            <ListenButton
+              text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
+              promptId={promptInstance.id}
               size="lg"
-              className={cn(
-                "gap-2 h-12 px-6 text-base font-medium min-w-[140px]",
-                isPlaying && "bg-primary text-primary-foreground"
-              )}
-              onClick={handleListen}
-            >
-              {isPlaying ? (
-                <>
-                  <VolumeX className="h-5 w-5" />
-                  Stop
-                </>
-              ) : (
-                <>
-                  <Volume2 className="h-5 w-5" />
-                  Listen
-                </>
-              )}
-            </Button>
+              showLabel
+              className="h-12 px-6 text-base font-medium min-w-[140px]"
+            />
             <Button 
               variant="ghost" 
               size="lg" 
