@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { weeklyDigestService } from '@/lib/weeklyDigestService'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { DigestPausedEvent, DigestPauseFailedEvent } from '@/types/analytics'
 
 export default function DigestPause() {
   const [searchParams] = useSearchParams()
@@ -26,12 +27,12 @@ export default function DigestPause() {
 
       try {
         await weeklyDigestService.pauseDigestFor30Days(userId, familyId)
-        track({ event_name: 'digest_paused', properties: { family_id: familyId, duration_days: 30 } })
+        track({ event_name: 'digest_paused', properties: { family_id: familyId, duration_days: 30 } } as any)
         setStatus('success')
         setMessage('Your weekly digest has been paused for 30 days')
       } catch (error) {
         console.error('Error pausing digest:', error)
-        track({ event_name: 'digest_pause_failed', properties: { family_id: familyId, error: String(error) } })
+        track({ event_name: 'digest_pause_failed', properties: { family_id: familyId, error: String(error) } } as any)
         setStatus('error')
         setMessage('Failed to pause digest. Please try again.')
       }

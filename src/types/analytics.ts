@@ -81,16 +81,57 @@ export interface InviteAcceptEvent extends BaseAnalyticsEvent {
   }
 }
 
-export interface DigestEvent extends BaseAnalyticsEvent {
-  event_name: 'digest_toggled' | 'digest_paused' | 'digest_resumed' | 'digest_sent' | 'digest_pause_failed' | 'digest_follow_toggled' | 'digest_follow_all'
+export interface DigestToggledEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_toggled'
   properties: {
-    enabled?: boolean
+    enabled: boolean
+    family_id?: string
+  }
+}
+
+export interface DigestPausedEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_paused'
+  properties: {
     family_id?: string
     duration_days?: number
+  }
+}
+
+export interface DigestResumedEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_resumed'
+  properties: {
+    family_id?: string
+  }
+}
+
+export interface DigestSentEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_sent'
+  properties: {
+    family_id?: string
     recipient_count?: number
+  }
+}
+
+export interface DigestPauseFailedEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_pause_failed'
+  properties: {
+    family_id?: string
     error?: string
+  }
+}
+
+export interface DigestFollowToggledEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_follow_toggled'
+  properties: {
     member_id?: string
     followed?: boolean
+  }
+}
+
+export interface DigestFollowAllEvent extends BaseAnalyticsEvent {
+  event_name: 'digest_follow_all'
+  properties: {
+    family_id?: string
   }
 }
 
@@ -103,7 +144,13 @@ export type AnalyticsEvent =
   | StreakContinueEvent
   | InviteSendEvent
   | InviteAcceptEvent
-  | DigestEvent
+  | DigestToggledEvent
+  | DigestPausedEvent
+  | DigestResumedEvent
+  | DigestSentEvent
+  | DigestPauseFailedEvent
+  | DigestFollowToggledEvent
+  | DigestFollowAllEvent
 
 // Funnel metrics
 export interface FunnelMetrics {
