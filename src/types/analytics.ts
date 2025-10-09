@@ -179,6 +179,33 @@ export interface TTSPlayEndEvent extends BaseAnalyticsEvent {
   }
 }
 
+// Audit banner events
+export interface AuditBannerShownEvent extends BaseAnalyticsEvent {
+  event_name: 'audit_banner_shown'
+  properties: {
+    family_id: string
+    people_count: number
+    page: string
+  }
+}
+
+export interface AuditBannerClickedEvent extends BaseAnalyticsEvent {
+  event_name: 'audit_banner_clicked'
+  properties: {
+    family_id: string
+    people_count: number
+    first_person_id: string
+  }
+}
+
+export interface AuditBannerDismissedEvent extends BaseAnalyticsEvent {
+  event_name: 'audit_banner_dismissed'
+  properties: {
+    family_id: string
+    people_count: number
+  }
+}
+
 // Union type for all events
 export type AnalyticsEvent = 
   | PromptViewEvent
@@ -200,6 +227,9 @@ export type AnalyticsEvent =
   | EventAccessGrantedEvent
   | TTSPlayStartEvent
   | TTSPlayEndEvent
+  | AuditBannerShownEvent
+  | AuditBannerClickedEvent
+  | AuditBannerDismissedEvent
 
 // Funnel metrics
 export interface FunnelMetrics {

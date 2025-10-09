@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import type { Person } from '@/lib/familyTreeTypes'
 import { CondensedPeopleTable } from '@/components/people/CondensedPeopleTable'
 import { PrivacyBadge } from '@/components/ui/privacy-badge'
+import { MissingContentBanner } from '@/components/audit/MissingContentBanner'
 
 interface PersonWithCounts extends Person {
   stories_count: number
@@ -444,6 +445,9 @@ export default function People() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Missing Content Banner */}
+            <MissingContentBanner familyId={currentSpaceId} />
 
             {/* Search and Filters */}
             <div className="space-y-4 mb-6">
