@@ -1056,6 +1056,8 @@ export type Database = {
           family_id: string
           followed_member_id: string
           id: string
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           updated_at: string
           user_id: string
         }
@@ -1064,6 +1066,8 @@ export type Database = {
           family_id: string
           followed_member_id: string
           id?: string
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1072,6 +1076,8 @@ export type Database = {
           family_id?: string
           followed_member_id?: string
           id?: string
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -3020,6 +3026,9 @@ export type Database = {
           notes: string | null
           person_type: string
           pinned_story_ids: string[] | null
+          qa_seed: boolean | null
+          qa_seed_version: string | null
+          slug: string | null
           surname: string | null
           updated_at: string | null
         }
@@ -3047,6 +3056,9 @@ export type Database = {
           notes?: string | null
           person_type?: string
           pinned_story_ids?: string[] | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
+          slug?: string | null
           surname?: string | null
           updated_at?: string | null
         }
@@ -3074,6 +3086,9 @@ export type Database = {
           notes?: string | null
           person_type?: string
           pinned_story_ids?: string[] | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
+          slug?: string | null
           surname?: string | null
           updated_at?: string | null
         }
@@ -3790,6 +3805,8 @@ export type Database = {
           map_visibility: boolean | null
           name: string
           property_types: Database["public"]["Enums"]["property_type"][] | null
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           sold_year: number | null
           status: Database["public"]["Enums"]["property_status"] | null
           tags: string[] | null
@@ -3821,6 +3838,8 @@ export type Database = {
           map_visibility?: boolean | null
           name: string
           property_types?: Database["public"]["Enums"]["property_type"][] | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           sold_year?: number | null
           status?: Database["public"]["Enums"]["property_status"] | null
           tags?: string[] | null
@@ -3852,6 +3871,8 @@ export type Database = {
           map_visibility?: boolean | null
           name?: string
           property_types?: Database["public"]["Enums"]["property_type"][] | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           sold_year?: number | null
           status?: Database["public"]["Enums"]["property_status"] | null
           tags?: string[] | null
@@ -4087,6 +4108,36 @@ export type Database = {
           },
         ]
       }
+      qa_seed_log: {
+        Row: {
+          action: string
+          counts: Json
+          created_at: string | null
+          id: string
+          notes: string | null
+          ran_by: string
+          seed_version: string | null
+        }
+        Insert: {
+          action: string
+          counts?: Json
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          ran_by: string
+          seed_version?: string | null
+        }
+        Update: {
+          action?: string
+          counts?: Json
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          ran_by?: string
+          seed_version?: string | null
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           category: string
@@ -4237,6 +4288,8 @@ export type Database = {
           id: string
           ingredients: Json | null
           notes: string | null
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           serves: string | null
           source: string | null
           steps: Json | null
@@ -4253,6 +4306,8 @@ export type Database = {
           id?: string
           ingredients?: Json | null
           notes?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           serves?: string | null
           source?: string | null
           steps?: Json | null
@@ -4269,6 +4324,8 @@ export type Database = {
           id?: string
           ingredients?: Json | null
           notes?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           serves?: string | null
           source?: string | null
           steps?: Json | null
@@ -4430,6 +4487,8 @@ export type Database = {
           profile_id: string
           prompt_id: string | null
           prompt_text: string | null
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -4448,6 +4507,8 @@ export type Database = {
           profile_id: string
           prompt_id?: string | null
           prompt_text?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -4466,6 +4527,8 @@ export type Database = {
           profile_id?: string
           prompt_id?: string | null
           prompt_text?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
@@ -4596,6 +4659,8 @@ export type Database = {
           maker: string | null
           object_type: string | null
           provenance: string | null
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           room_hint: string | null
           room_id: string | null
           tags: string[] | null
@@ -4616,6 +4681,8 @@ export type Database = {
           maker?: string | null
           object_type?: string | null
           provenance?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           room_hint?: string | null
           room_id?: string | null
           tags?: string[] | null
@@ -4636,6 +4703,8 @@ export type Database = {
           maker?: string | null
           object_type?: string | null
           provenance?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           room_hint?: string | null
           room_id?: string | null
           tags?: string[] | null
@@ -5034,6 +5103,8 @@ export type Database = {
           metadata: Json | null
           person_id: string | null
           privacy: string
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           theme: string
           title: string
           updated_at: string
@@ -5051,6 +5122,8 @@ export type Database = {
           metadata?: Json | null
           person_id?: string | null
           privacy?: string
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           theme?: string
           title: string
           updated_at?: string
@@ -5068,6 +5141,8 @@ export type Database = {
           metadata?: Json | null
           person_id?: string | null
           privacy?: string
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           theme?: string
           title?: string
           updated_at?: string
@@ -5229,6 +5304,8 @@ export type Database = {
           pause_reason: string | null
           paused_at: string | null
           paused_by: string | null
+          qa_seed: boolean | null
+          qa_seed_version: string | null
           recipients: Json
           unlock_threshold: number | null
           updated_at: string
@@ -5252,6 +5329,8 @@ export type Database = {
           pause_reason?: string | null
           paused_at?: string | null
           paused_by?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           recipients?: Json
           unlock_threshold?: number | null
           updated_at?: string
@@ -5275,6 +5354,8 @@ export type Database = {
           pause_reason?: string | null
           paused_at?: string | null
           paused_by?: string | null
+          qa_seed?: boolean | null
+          qa_seed_version?: string | null
           recipients?: Json
           unlock_threshold?: number | null
           updated_at?: string

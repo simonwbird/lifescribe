@@ -6,15 +6,52 @@ const corsHeaders = {
 }
 
 const QA_TESTER_EMAIL = 'qa-tester@lifescribe.family'
+const QA_SEED_VERSION = 'v1'
 const SEED_TAG = '__qa_seeded__'
 
-// Demo data fixtures
+// Demo data fixtures with stable slugs and QA seed markers
 const PEOPLE_FIXTURES = [
-  { full_name: 'Lucy Morrison', birth_date: '1985-03-15', relationship: 'daughter' },
-  { full_name: 'Jamie Morrison', birth_date: '1987-07-22', relationship: 'son' },
-  { full_name: 'Grandpa Joe', birth_date: '1935-11-10', relationship: 'grandfather', is_deceased: true },
-  { full_name: 'Aunt Sarah', birth_date: '1960-05-18', relationship: 'aunt' },
-  { full_name: 'Uncle Mike', birth_date: '1958-09-25', relationship: 'uncle' },
+  { 
+    slug: 'lucy-morrison',
+    full_name: 'Lucy Morrison', 
+    birth_date: '1985-03-15', 
+    relationship: 'daughter',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
+  },
+  { 
+    slug: 'jamie-morrison',
+    full_name: 'Jamie Morrison', 
+    birth_date: '1987-07-22', 
+    relationship: 'son',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
+  },
+  { 
+    slug: 'grandpa-joe',
+    full_name: 'Grandpa Joe', 
+    birth_date: '1935-11-10', 
+    relationship: 'grandfather', 
+    is_deceased: true,
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
+  },
+  { 
+    slug: 'aunt-sarah',
+    full_name: 'Aunt Sarah', 
+    birth_date: '1960-05-18', 
+    relationship: 'aunt',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
+  },
+  { 
+    slug: 'uncle-mike',
+    full_name: 'Uncle Mike', 
+    birth_date: '1958-09-25', 
+    relationship: 'uncle',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
+  },
 ]
 
 const STORIES_FIXTURES = [
@@ -23,48 +60,64 @@ const STORIES_FIXTURES = [
     content: 'We spent two weeks at the family lake house. The kids learned to water ski and we had bonfires every night.',
     tags: ['vacation', 'summer', SEED_TAG],
     occurred_on: '2024-07-15',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Lucys Graduation Day',
     content: 'So proud of Lucy graduating with honors! The whole family came to celebrate.',
     tags: ['milestone', 'graduation', SEED_TAG],
     occurred_on: '2024-05-20',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Thanksgiving Traditions',
     content: 'Our annual Thanksgiving gathering. Grandpa Joe told his famous stories and we all laughed until we cried.',
     tags: ['holiday', 'thanksgiving', SEED_TAG],
     occurred_on: '2023-11-23',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'First Day of School',
     content: 'Jamie started high school today. Time flies so fast! He was nervous but excited.',
     tags: ['school', 'milestone', SEED_TAG],
     occurred_on: '2024-09-05',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Road Trip to Yellowstone',
     content: 'Epic road trip with the kids. We saw Old Faithful, hiked trails, and made memories that will last forever.',
     tags: ['travel', 'adventure', SEED_TAG],
     occurred_on: '2024-08-10',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Birthday Celebration',
     content: 'Surprise birthday party for Sarah. She turned 64 and we had the whole family there!',
     tags: ['birthday', 'celebration', SEED_TAG],
     occurred_on: '2024-05-18',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Weekend at Grandpas',
     content: 'The kids loved spending the weekend with Grandpa Joe. He taught them how to fish and told war stories.',
     tags: ['family', 'memories', SEED_TAG],
     occurred_on: '2023-06-15',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Christmas Morning Magic',
     content: 'The look on the kids faces on Christmas morning never gets old. Hot cocoa, presents, and joy all around.',
     tags: ['christmas', 'holiday', SEED_TAG],
     occurred_on: '2023-12-25',
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
 ]
 
@@ -78,6 +131,8 @@ const RECIPES_FIXTURES = [
     cook_time: 45,
     servings: 8,
     tags: [SEED_TAG],
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Sunday Roast Dinner',
@@ -88,6 +143,8 @@ const RECIPES_FIXTURES = [
     cook_time: 180,
     servings: 6,
     tags: [SEED_TAG],
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Summer BBQ Ribs',
@@ -98,6 +155,8 @@ const RECIPES_FIXTURES = [
     cook_time: 240,
     servings: 4,
     tags: [SEED_TAG],
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
 ]
 
@@ -110,6 +169,8 @@ const OBJECTS_FIXTURES = [
     current_location: 'Safe deposit box',
     estimated_value: 5000,
     tags: [SEED_TAG],
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Grandfather Clock',
@@ -119,6 +180,8 @@ const OBJECTS_FIXTURES = [
     current_location: 'Living room',
     estimated_value: 8000,
     tags: [SEED_TAG],
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
 ]
 
@@ -131,6 +194,8 @@ const PROPERTIES_FIXTURES = [
     acquisition_date: '1974-06-01',
     current_value: 450000,
     tags: [SEED_TAG],
+    qa_seed: true,
+    qa_seed_version: QA_SEED_VERSION
   },
 ]
 
@@ -188,16 +253,18 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     properties: 0,
     events: 0,
     tributes: 0,
+    digest_settings: 0,
+    follow_prefs: 0,
     total_created: 0,
   }
 
-  // Seed People (idempotent - upsert)
+  // Seed People (idempotent - upsert by slug)
   for (const person of PEOPLE_FIXTURES) {
     const { data: existing } = await supabase
       .from('people')
       .select('id')
       .eq('family_id', familyId)
-      .eq('full_name', person.full_name)
+      .eq('slug', person.slug)
       .maybeSingle()
 
     if (!existing) {
@@ -210,12 +277,12 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     }
   }
 
-  // Get people IDs for linking
+  // Get people IDs for linking (by slug)
   const { data: peopleData } = await supabase
     .from('people')
-    .select('id, full_name')
+    .select('id, full_name, slug')
     .eq('family_id', familyId)
-    .in('full_name', PEOPLE_FIXTURES.map(p => p.full_name))
+    .in('slug', PEOPLE_FIXTURES.map(p => p.slug))
 
   const peopleMap = new Map(peopleData?.map((p: any) => [p.full_name, p.id]) || [])
 
@@ -225,6 +292,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .from('stories')
       .select('id')
       .eq('family_id', familyId)
+      .eq('qa_seed', true)
       .eq('title', story.title)
       .maybeSingle()
 
@@ -265,6 +333,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .from('recipes')
       .select('id')
       .eq('family_id', familyId)
+      .eq('qa_seed', true)
       .eq('title', recipe.title)
       .maybeSingle()
 
@@ -284,6 +353,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .from('things')
       .select('id')
       .eq('family_id', familyId)
+      .eq('qa_seed', true)
       .eq('title', obj.title)
       .maybeSingle()
 
@@ -303,6 +373,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .from('properties')
       .select('id')
       .eq('family_id', familyId)
+      .eq('qa_seed', true)
       .eq('title', property.title)
       .maybeSingle()
 
@@ -316,37 +387,50 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     }
   }
 
-  // Seed Event (Family Reunion)
-  const { data: existingEvent } = await supabase
-    .from('events')
+  // Enable Weekly Digest
+  const { data: existingDigest } = await supabase
+    .from('weekly_digest_settings')
     .select('id')
     .eq('family_id', familyId)
-    .eq('title', 'Annual Family Reunion')
+    .eq('qa_seed', true)
     .maybeSingle()
 
-  if (!existingEvent) {
-    const { data: newEvent, error: eventError } = await supabase.from('events').insert({
+  if (!existingDigest) {
+    await supabase.from('weekly_digest_settings').insert({
       family_id: familyId,
-      profile_id: userId,
-      title: 'Annual Family Reunion',
-      description: 'Join us for our annual family reunion at the lake cottage!',
-      event_date: '2025-07-15',
-      location: 'Family Cottage at Lake Michigan',
-      tags: [SEED_TAG],
-    }).select().single()
+      is_enabled: true,
+      digest_day: 'sunday',
+      digest_time: '09:00',
+      qa_seed: true,
+      qa_seed_version: QA_SEED_VERSION
+    })
+    summary.digest_settings++
+  }
 
-    if (!eventError && newEvent) {
-      summary.events++
-      
-      // Create event invite
-      const { data: invite } = await supabase.from('event_join_codes').insert({
-        event_id: newEvent.id,
-        family_id: familyId,
-        created_by: userId,
-        join_code: 'REUNION2025',
-        qr_data: `https://lifescribe.family/join/REUNION2025`,
-        expires_at: '2025-07-20',
-      }).select().single()
+  // Set follow preferences for Lucy & Jamie
+  if (peopleMap.has('Lucy Morrison') && peopleMap.has('Jamie Morrison')) {
+    const lucyId = peopleMap.get('Lucy Morrison')
+    const jamieId = peopleMap.get('Jamie Morrison')
+
+    for (const personId of [lucyId, jamieId]) {
+      const { data: existing } = await supabase
+        .from('digest_follow_preferences')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('followed_member_id', personId)
+        .eq('qa_seed', true)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabase.from('digest_follow_preferences').insert({
+          user_id: userId,
+          family_id: familyId,
+          followed_member_id: personId,
+          qa_seed: true,
+          qa_seed_version: QA_SEED_VERSION
+        })
+        summary.follow_prefs++
+      }
     }
   }
 
@@ -358,6 +442,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .select('id')
       .eq('family_id', familyId)
       .eq('person_id', grandpaId)
+      .eq('qa_seed', true)
       .maybeSingle()
 
     if (!existingTribute) {
@@ -369,39 +454,25 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         description: 'A celebration of Grandpa Joes life and the wonderful memories he left us.',
         privacy_level: 'family',
         tags: [SEED_TAG],
+        qa_seed: true,
+        qa_seed_version: QA_SEED_VERSION
       })
       if (!error) summary.tributes++
     }
   }
 
-  // Enable Weekly Digest
-  await supabase.from('weekly_digest_settings').upsert({
-    family_id: familyId,
-    is_enabled: true,
-    digest_day: 'sunday',
-    digest_time: '09:00',
-  }, { onConflict: 'family_id' })
+  summary.total_created = Object.values(summary).reduce((a, b) => typeof b === 'number' ? a + b : a, 0) - summary.total_created
 
-  // Set follow preferences for Lucy & Jamie
-  if (peopleMap.has('Lucy Morrison') && peopleMap.has('Jamie Morrison')) {
-    const lucyId = peopleMap.get('Lucy Morrison')
-    const jamieId = peopleMap.get('Jamie Morrison')
+  // Log the seed operation
+  await supabase.from('qa_seed_log').insert({
+    ran_by: userId,
+    action: 'seed',
+    seed_version: QA_SEED_VERSION,
+    counts: summary,
+    notes: 'QA data seeded successfully'
+  })
 
-    await supabase.from('digest_follow_preferences').upsert([
-      {
-        user_id: userId,
-        family_id: familyId,
-        followed_member_id: lucyId,
-      },
-      {
-        user_id: userId,
-        family_id: familyId,
-        followed_member_id: jamieId,
-      },
-    ], { onConflict: 'user_id,followed_member_id' })
-  }
-
-  summary.total_created = Object.values(summary).reduce((a, b) => typeof b === 'number' ? a + b : a, 0)
+  console.log('Seed complete:', summary)
 
   return new Response(
     JSON.stringify({ success: true, summary }),
@@ -418,17 +489,19 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     properties: 0,
     events: 0,
     tributes: 0,
+    digest_settings: 0,
+    follow_prefs: 0,
     total_deleted: 0,
   }
 
-  // Delete stories with SEED_TAG
+  // Delete stories with qa_seed=true
   const { data: stories } = await supabase
     .from('stories')
     .select('id')
     .eq('family_id', familyId)
-    .contains('tags', [SEED_TAG])
+    .eq('qa_seed', true)
 
-  if (stories) {
+  if (stories && stories.length > 0) {
     const { error } = await supabase
       .from('stories')
       .delete()
@@ -436,14 +509,14 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     if (!error) summary.stories = stories.length
   }
 
-  // Delete recipes with SEED_TAG
+  // Delete recipes with qa_seed=true
   const { data: recipes } = await supabase
     .from('recipes')
     .select('id')
     .eq('family_id', familyId)
-    .contains('tags', [SEED_TAG])
+    .eq('qa_seed', true)
 
-  if (recipes) {
+  if (recipes && recipes.length > 0) {
     const { error } = await supabase
       .from('recipes')
       .delete()
@@ -451,14 +524,14 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     if (!error) summary.recipes = recipes.length
   }
 
-  // Delete objects with SEED_TAG
+  // Delete objects with qa_seed=true
   const { data: objects } = await supabase
     .from('things')
     .select('id')
     .eq('family_id', familyId)
-    .contains('tags', [SEED_TAG])
+    .eq('qa_seed', true)
 
-  if (objects) {
+  if (objects && objects.length > 0) {
     const { error } = await supabase
       .from('things')
       .delete()
@@ -466,14 +539,14 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     if (!error) summary.objects = objects.length
   }
 
-  // Delete properties with SEED_TAG
+  // Delete properties with qa_seed=true
   const { data: properties } = await supabase
     .from('properties')
     .select('id')
     .eq('family_id', familyId)
-    .contains('tags', [SEED_TAG])
+    .eq('qa_seed', true)
 
-  if (properties) {
+  if (properties && properties.length > 0) {
     const { error } = await supabase
       .from('properties')
       .delete()
@@ -481,29 +554,14 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     if (!error) summary.properties = properties.length
   }
 
-  // Delete events with SEED_TAG
-  const { data: events } = await supabase
-    .from('events')
-    .select('id')
-    .eq('family_id', familyId)
-    .contains('tags', [SEED_TAG])
-
-  if (events) {
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .in('id', events.map((e: any) => e.id))
-    if (!error) summary.events = events.length
-  }
-
-  // Delete tributes with SEED_TAG
+  // Delete tributes with qa_seed=true
   const { data: tributes } = await supabase
     .from('tributes')
     .select('id')
     .eq('family_id', familyId)
-    .contains('tags', [SEED_TAG])
+    .eq('qa_seed', true)
 
-  if (tributes) {
+  if (tributes && tributes.length > 0) {
     const { error } = await supabase
       .from('tributes')
       .delete()
@@ -511,32 +569,63 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     if (!error) summary.tributes = tributes.length
   }
 
-  // Delete seeded people (be careful - only delete if they have no non-seeded stories)
-  const peopleNames = PEOPLE_FIXTURES.map(p => p.full_name)
-  const { data: peopleToDelete } = await supabase
-    .from('people')
-    .select('id, full_name')
+  // Delete digest settings with qa_seed=true
+  const { data: digestSettings } = await supabase
+    .from('weekly_digest_settings')
+    .select('id')
     .eq('family_id', familyId)
-    .in('full_name', peopleNames)
+    .eq('qa_seed', true)
 
-  if (peopleToDelete) {
-    for (const person of peopleToDelete) {
-      // Check if person has any non-seeded stories
-      const { data: links } = await supabase
-        .from('person_story_links')
-        .select('story_id')
-        .eq('person_id', person.id)
-
-      const hasNonSeededStories = links && links.length > 0
-
-      if (!hasNonSeededStories) {
-        await supabase.from('people').delete().eq('id', person.id)
-        summary.people++
-      }
-    }
+  if (digestSettings && digestSettings.length > 0) {
+    const { error } = await supabase
+      .from('weekly_digest_settings')
+      .delete()
+      .in('id', digestSettings.map((d: any) => d.id))
+    if (!error) summary.digest_settings = digestSettings.length
   }
 
-  summary.total_deleted = Object.values(summary).reduce((a, b) => typeof b === 'number' ? a + b : a, 0)
+  // Delete follow preferences with qa_seed=true
+  const { data: followPrefs } = await supabase
+    .from('digest_follow_preferences')
+    .select('id')
+    .eq('family_id', familyId)
+    .eq('qa_seed', true)
+
+  if (followPrefs && followPrefs.length > 0) {
+    const { error } = await supabase
+      .from('digest_follow_preferences')
+      .delete()
+      .in('id', followPrefs.map((f: any) => f.id))
+    if (!error) summary.follow_prefs = followPrefs.length
+  }
+
+  // Delete seeded people (only those with qa_seed=true)
+  const { data: peopleToDelete } = await supabase
+    .from('people')
+    .select('id')
+    .eq('family_id', familyId)
+    .eq('qa_seed', true)
+
+  if (peopleToDelete && peopleToDelete.length > 0) {
+    const { error } = await supabase
+      .from('people')
+      .delete()
+      .in('id', peopleToDelete.map((p: any) => p.id))
+    if (!error) summary.people = peopleToDelete.length
+  }
+
+  summary.total_deleted = Object.values(summary).reduce((a, b) => typeof b === 'number' ? a + b : a, 0) - summary.total_deleted
+
+  // Log the purge operation
+  await supabase.from('qa_seed_log').insert({
+    ran_by: userId,
+    action: 'purge',
+    seed_version: QA_SEED_VERSION,
+    counts: summary,
+    notes: 'QA data purged successfully'
+  })
+
+  console.log('Purge complete:', summary)
 
   return new Response(
     JSON.stringify({ success: true, summary }),

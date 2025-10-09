@@ -56,6 +56,7 @@ export default function AdminLabs() {
 
       if (error) throw error
 
+      setLastSeedResult(data)
       toast({
         title: 'QA Data Purged Successfully',
         description: `Deleted ${data.summary.total_deleted} seeded entities`,
@@ -146,15 +147,17 @@ export default function AdminLabs() {
               <CheckCircle2 className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-1">
-                  <p className="font-semibold">Last seed results:</p>
+                  <p className="font-semibold">Last operation results:</p>
                   <ul className="text-sm space-y-0.5 ml-4 list-disc">
-                    <li>People: {lastSeedResult.summary.people}</li>
-                    <li>Stories: {lastSeedResult.summary.stories}</li>
-                    <li>Recipes: {lastSeedResult.summary.recipes}</li>
-                    <li>Objects: {lastSeedResult.summary.objects}</li>
-                    <li>Properties: {lastSeedResult.summary.properties}</li>
-                    <li>Events: {lastSeedResult.summary.events}</li>
-                    <li>Tributes: {lastSeedResult.summary.tributes}</li>
+                    <li>People: {lastSeedResult.summary.people || 0}</li>
+                    <li>Stories: {lastSeedResult.summary.stories || 0}</li>
+                    <li>Recipes: {lastSeedResult.summary.recipes || 0}</li>
+                    <li>Objects: {lastSeedResult.summary.objects || 0}</li>
+                    <li>Properties: {lastSeedResult.summary.properties || 0}</li>
+                    <li>Tributes: {lastSeedResult.summary.tributes || 0}</li>
+                    <li>Digest settings: {lastSeedResult.summary.digest_settings || 0}</li>
+                    <li>Follow prefs: {lastSeedResult.summary.follow_prefs || 0}</li>
+                    <li className="font-semibold pt-1">Total: {lastSeedResult.summary.total_created || lastSeedResult.summary.total_deleted || 0}</li>
                   </ul>
                 </div>
               </AlertDescription>
