@@ -1162,6 +1162,47 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string
+          error: string
+          error_stack: string | null
+          family_id: string | null
+          id: string
+          route: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error: string
+          error_stack?: string | null
+          family_id?: string | null
+          id?: string
+          route: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string
+          error_stack?: string | null
+          family_id?: string | null
+          id?: string
+          route?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_acl: {
         Row: {
           created_at: string | null

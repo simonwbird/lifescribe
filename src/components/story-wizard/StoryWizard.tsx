@@ -32,6 +32,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { useDraftManager } from '@/hooks/useDraftManager'
 import { DraftRecovery } from './DraftRecovery'
 import { AutosaveIndicator } from './AutosaveIndicator'
+import { QABadge } from '@/components/qa/QABadge'
 
 const initialFormData: StoryFormData = {
   title: '',
@@ -51,6 +52,7 @@ export default function StoryWizard() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { toast } = useToast()
+  const { track } = useAnalytics()
   const isEditing = location.pathname.includes('/edit')
   
   const [currentStep, setCurrentStep] = useState<WizardStep>(0)
@@ -65,6 +67,11 @@ export default function StoryWizard() {
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
   const [showDraftRecovery, setShowDraftRecovery] = useState(false)
+  
+  // TTFS tracking
+  const [ttfsStartTime, setTtfsStartTime] = useState<number | null>(null)
+  const [ttfsSeconds, setTtfsSeconds] = useState<number | null>(null)
+  const isQAMode = searchParams.get('qa') === '1'
   
   // Check workflow type
   const workflowType = searchParams.get('type')
@@ -234,6 +241,13 @@ export default function StoryWizard() {
     }
     getFamilyId()
   }, [])
+
+  // Start TTFS timer on mount
+  useEffect(() => {
+    if (!isEditing && !ttfsStartTime) {
+      setTtfsStartTime(Date.now())
+    }
+  }, [isEditing, ttfsStartTime])
 
   // Start autosave when form data changes
   useEffect(() => {
@@ -491,6 +505,18 @@ export default function StoryWizard() {
       // Clear draft
       const draftKey = `story_draft_${user.id}`
       localStorage.removeItem(draftKey)
+
+      // Track TTFS if this is the first save
+      if (ttfsStartTime && !ttfsSeconds) {
+        const ttfs = (Date.now() - ttfsStartTime) / 1000
+        setTtfsSeconds(ttfs)
+        // Note: Using properties-based tracking since event name isn't in the enum yet
+        track('publish_success', {
+          ttfs_seconds: ttfs,
+          workflow_type: workflowType || 'default',
+          is_first_save: true
+        })
+      }
 
       // Mark prompt instance as completed if from starter pack
       if (promptInstanceId && isStarterPrompt) {
@@ -782,6 +808,11 @@ export default function StoryWizard() {
         open={phoneModalOpen}
         onClose={() => setPhoneModalOpen(false)}
       />
+
+      {/* QA Badge - only show in QA mode */}
+      {isQAMode && ttfsSeconds !== null && (
+        <QABadge ttfsSeconds={ttfsSeconds} />
+      )}
     </div>
   )
 }

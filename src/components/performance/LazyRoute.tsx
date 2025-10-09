@@ -1,8 +1,10 @@
-import { lazy, Suspense, ComponentType, Component, ErrorInfo, ReactNode } from 'react'
+import { lazy, Suspense, ComponentType, Component, ErrorInfo, ReactNode, useEffect } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, Home, RefreshCw } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { logError } from '@/lib/errorLogger'
+import { supabase } from '@/lib/supabase'
 
 interface LazyRouteProps {
   factory: () => Promise<{ default: ComponentType<any> }>
@@ -14,8 +16,8 @@ interface ErrorBoundaryState {
   error?: Error
 }
 
-class LazyRouteErrorBoundary extends Component<{ children: ReactNode; onReset: () => void }, ErrorBoundaryState> {
-  constructor(props: { children: ReactNode; onReset: () => void }) {
+class LazyRouteErrorBoundary extends Component<{ children: ReactNode; onReset: () => void; route: string }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode; onReset: () => void; route: string }) {
     super(props)
     this.state = { hasError: false }
   }
@@ -24,8 +26,27 @@ class LazyRouteErrorBoundary extends Component<{ children: ReactNode; onReset: (
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  async componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('LazyRoute Error:', error, errorInfo)
+    
+    // Log error with user context
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: member } = user ? await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single() : { data: null }
+      
+      await logError({
+        route: this.props.route,
+        error,
+        userId: user?.id,
+        familyId: member?.family_id,
+      })
+    } catch (logErr) {
+      console.error('Failed to log error:', logErr)
+    }
   }
 
   render() {
@@ -73,6 +94,7 @@ function LazyRouteErrorUI({ onReset }: { onReset: () => void }) {
 
 export function LazyRoute({ factory, fallback }: LazyRouteProps) {
   const Component = lazy(factory)
+  const location = useLocation()
 
   const defaultFallback = (
     <div className="min-h-screen bg-background">
@@ -97,7 +119,7 @@ export function LazyRoute({ factory, fallback }: LazyRouteProps) {
   }
 
   return (
-    <LazyRouteErrorBoundary onReset={handleReset}>
+    <LazyRouteErrorBoundary onReset={handleReset} route={location.pathname}>
       <Suspense fallback={fallback || defaultFallback}>
         <Component />
       </Suspense>

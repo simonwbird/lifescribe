@@ -179,6 +179,15 @@ export interface TTSPlayEndEvent extends BaseAnalyticsEvent {
   }
 }
 
+// TTFS (Time to First Save) event
+export interface TTFSEvent extends BaseAnalyticsEvent {
+  event_name: 'ttfs_simple_mode_seconds'
+  properties: {
+    ttfs_seconds: number
+    workflow_type?: string
+  }
+}
+
 // Audit banner events
 export interface AuditBannerShownEvent extends BaseAnalyticsEvent {
   event_name: 'audit_banner_shown'
@@ -227,6 +236,7 @@ export type AnalyticsEvent =
   | EventAccessGrantedEvent
   | TTSPlayStartEvent
   | TTSPlayEndEvent
+  | TTFSEvent
   | AuditBannerShownEvent
   | AuditBannerClickedEvent
   | AuditBannerDismissedEvent
