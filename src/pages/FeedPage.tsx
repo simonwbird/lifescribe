@@ -5,6 +5,7 @@ import { FeedGrid } from '@/components/feed/FeedGrid'
 import { getCurrentSpaceId } from '@/lib/spaceUtils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { PrivacyBadge } from '@/components/ui/privacy-badge'
+import { MissingContentBanner } from '@/components/audit/MissingContentBanner';
 
 export default function FeedPage() {
   const [familyId, setFamilyId] = useState<string>('')
@@ -66,7 +67,9 @@ export default function FeedPage() {
           </div>
         </div>
 
-        <FeedGrid 
+        <MissingContentBanner familyId={familyId} />
+
+        <FeedGrid
           familyId={familyId} 
           currentUserId={currentUserId} 
         />

@@ -39,6 +39,7 @@ import { DiscoveryModeBanner } from '@/components/discovery/DiscoveryModeBanner'
 import { DiscoveryModeToggle } from '@/components/discovery/DiscoveryModeToggle';
 import { useIsUnder13 } from '@/hooks/useUserAge';
 import { useDiscoveryMode } from '@/hooks/useDiscoveryMode';
+import { MissingContentBanner } from '@/components/audit/MissingContentBanner';
 
 export default function FamilyTree() {
   const [people, setPeople] = useState<Person[]>([])
@@ -443,6 +444,11 @@ export default function FamilyTree() {
               <DiscoveryModeBanner isUnder13={isUnder13} />
             </div>
           )}
+          
+          {/* Missing Content Banner */}
+          <div className="mt-4">
+            <MissingContentBanner familyId={familyId} />
+          </div>
         </div>
 
         {/* Main Content */}
