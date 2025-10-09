@@ -5608,6 +5608,10 @@ export type Database = {
         | "PET_CREATE"
         | "PET_UPDATE"
         | "PET_DELETE"
+        | "PERSON_CREATED"
+        | "PERSON_UPDATED"
+        | "PERSON_MERGED"
+        | "PERSON_DELETED"
       date_precision: "day" | "month" | "year"
       feature_flag_status: "draft" | "active" | "inactive" | "archived"
       invite_status: "pending" | "accepted" | "expired"
@@ -5919,6 +5923,10 @@ export const Constants = {
         "PET_CREATE",
         "PET_UPDATE",
         "PET_DELETE",
+        "PERSON_CREATED",
+        "PERSON_UPDATED",
+        "PERSON_MERGED",
+        "PERSON_DELETED",
       ],
       date_precision: ["day", "month", "year"],
       feature_flag_status: ["draft", "active", "inactive", "archived"],

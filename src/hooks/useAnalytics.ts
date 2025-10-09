@@ -175,6 +175,9 @@ export type AnalyticsEvent =
   | 'discovery_mode_disabled'
   | 'discovery_mode_banner_shown'
   | 'discovery_mode_banner_clicked'
+  | 'people_merged'
+  | 'person_changelog_viewed'
+  | 'merge_modal_opened'
   | 'upcoming_write_note_clicked'
   | 'upcoming_add_photo_clicked'
   // Admin impersonation events
