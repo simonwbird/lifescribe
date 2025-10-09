@@ -816,6 +816,7 @@ export type Database = {
           id: string
           profile_id: string
           story_id: string | null
+          tribute_id: string | null
           updated_at: string
         }
         Insert: {
@@ -826,6 +827,7 @@ export type Database = {
           id?: string
           profile_id: string
           story_id?: string | null
+          tribute_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -836,6 +838,7 @@ export type Database = {
           id?: string
           profile_id?: string
           story_id?: string | null
+          tribute_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -865,6 +868,13 @@ export type Database = {
             columns: ["story_id"]
             isOneToOne: false
             referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_tribute_id_fkey"
+            columns: ["tribute_id"]
+            isOneToOne: false
+            referencedRelation: "tributes"
             referencedColumns: ["id"]
           },
         ]
@@ -4815,6 +4825,145 @@ export type Database = {
           {
             foreignKeyName: "tree_preferences_root_person_id_fkey"
             columns: ["root_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tribute_anniversary_reminders: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_id: string
+          reminder_date: string
+          sent_at: string | null
+          tribute_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_id: string
+          reminder_date: string
+          sent_at?: string | null
+          tribute_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          reminder_date?: string
+          sent_at?: string | null
+          tribute_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tribute_anniversary_reminders_tribute_id_fkey"
+            columns: ["tribute_id"]
+            isOneToOne: false
+            referencedRelation: "tributes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tribute_reactions: {
+        Row: {
+          created_at: string
+          guest_session_id: string | null
+          id: string
+          reaction_type: string
+          tribute_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          guest_session_id?: string | null
+          id?: string
+          reaction_type?: string
+          tribute_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          guest_session_id?: string | null
+          id?: string
+          reaction_type?: string
+          tribute_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tribute_reactions_tribute_id_fkey"
+            columns: ["tribute_id"]
+            isOneToOne: false
+            referencedRelation: "tributes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tributes: {
+        Row: {
+          anniversary_date: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          family_id: string
+          favorite_memory: string | null
+          how_we_met: string | null
+          id: string
+          metadata: Json | null
+          person_id: string | null
+          privacy: string
+          theme: string
+          title: string
+          updated_at: string
+          what_they_taught_us: string | null
+        }
+        Insert: {
+          anniversary_date?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          family_id: string
+          favorite_memory?: string | null
+          how_we_met?: string | null
+          id?: string
+          metadata?: Json | null
+          person_id?: string | null
+          privacy?: string
+          theme?: string
+          title: string
+          updated_at?: string
+          what_they_taught_us?: string | null
+        }
+        Update: {
+          anniversary_date?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          family_id?: string
+          favorite_memory?: string | null
+          how_we_met?: string | null
+          id?: string
+          metadata?: Json | null
+          person_id?: string | null
+          privacy?: string
+          theme?: string
+          title?: string
+          updated_at?: string
+          what_they_taught_us?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tributes_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tributes_person_id_fkey"
+            columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["id"]
