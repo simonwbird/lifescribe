@@ -100,6 +100,7 @@ import { BugReportWidget } from './components/BugReportWidget';
 import PromptsWow from './pages/PromptsWow';
 import { ABTestProvider } from './components/analytics/ABTestProvider';
 import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
+import EventJoin from './pages/EventJoin';
 
 const queryClient = new QueryClient();
 
@@ -120,7 +121,8 @@ function AppContent() {
       <Route path="/landing" element={<Landing />} />
       <Route path="/request-access" element={<RequestAccess />} />
         <Route path="/family/invitations" element={<FamilyInvitations />} />
-        <Route path="/invite/:token" element={<InviteLanding />} />
+      <Route path="/invite/:token" element={<InviteLanding />} />
+      <Route path="/join/:code" element={<EventJoin />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       
