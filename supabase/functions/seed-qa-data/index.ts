@@ -268,6 +268,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .select('id')
       .eq('family_id', familyId)
       .eq('slug', person.slug)
+      .limit(1)
       .maybeSingle()
 
     if (!existing) {
@@ -297,6 +298,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .eq('family_id', familyId)
       .eq('qa_seed', true)
       .eq('title', story.title)
+      .limit(1)
       .maybeSingle()
 
     if (!existing) {
@@ -338,6 +340,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .eq('family_id', familyId)
       .eq('qa_seed', true)
       .eq('title', recipe.title)
+      .limit(1)
       .maybeSingle()
 
     if (!existing) {
@@ -358,6 +361,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .eq('family_id', familyId)
       .eq('qa_seed', true)
       .eq('title', obj.title)
+      .limit(1)
       .maybeSingle()
 
     if (!existing) {
@@ -378,6 +382,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .eq('family_id', familyId)
       .eq('qa_seed', true)
       .eq('title', property.title)
+      .limit(1)
       .maybeSingle()
 
     if (!existing) {
@@ -396,6 +401,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     .select('id')
     .eq('family_id', familyId)
     .eq('qa_seed', true)
+    .limit(1)
     .maybeSingle()
 
   if (!existingDigest) {
@@ -420,8 +426,10 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         .from('digest_follow_preferences')
         .select('id')
         .eq('user_id', userId)
+        .eq('family_id', familyId)
         .eq('followed_member_id', personId)
         .eq('qa_seed', true)
+        .limit(1)
         .maybeSingle()
 
       if (!existing) {
@@ -446,6 +454,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .eq('family_id', familyId)
       .eq('person_id', grandpaId)
       .eq('qa_seed', true)
+      .limit(1)
       .maybeSingle()
 
     if (!existingTribute) {
