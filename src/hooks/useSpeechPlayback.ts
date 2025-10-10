@@ -26,7 +26,7 @@ export interface UseSpeechPlaybackReturn {
  */
 export const useSpeechPlayback = (options: UseSpeechPlaybackOptions = {}): UseSpeechPlaybackReturn => {
   const {
-    voice = 'Aria',
+    voice = 'Brian',
     onEnd,
     onError
   } = options

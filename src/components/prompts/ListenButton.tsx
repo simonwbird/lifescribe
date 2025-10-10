@@ -24,14 +24,14 @@ export function ListenButton({
 }: ListenButtonProps) {
   const { track } = useAnalytics()
   const { isPlaying, isLoading, speak, stop, currentText } = useSpeechPlayback({
-    voice: 'Aria', // Premium ElevenLabs voice
+    voice: 'Brian', // Premium ElevenLabs voice
     onEnd: () => {
       track({
         event_name: 'tts_play_end',
         properties: {
           prompt_id: promptId,
           text_length: text.length,
-          voice: 'elevenlabs_aria'
+          voice: 'elevenlabs_brian'
         }
       } as any)
     },
@@ -51,7 +51,7 @@ export function ListenButton({
         properties: {
           prompt_id: promptId,
           text_length: text.length,
-          voice: 'elevenlabs_aria'
+          voice: 'elevenlabs_brian'
         }
       } as any)
       await speak(text)
