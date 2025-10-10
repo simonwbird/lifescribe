@@ -67,27 +67,30 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
     setPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent, asDraft = false) {
     e.preventDefault()
     
-    // Validation
-    if (!title.trim() || !content.trim()) {
+    // Validation - Title always required
+    if (!title.trim()) {
       toast({
-        title: 'Required fields',
-        description: 'Please fill in title and content.',
+        title: 'Title required',
+        description: 'Please provide a title for your story.',
         variant: 'destructive'
       })
       return
     }
 
-    if (files.length === 0) {
+    // For non-draft submissions, require at least one photo
+    if (!asDraft && files.length === 0) {
       toast({
         title: 'No photos',
-        description: 'Please add at least one photo.',
+        description: 'Please add at least one photo or save as draft.',
         variant: 'destructive'
       })
       return
     }
+
+    // Content is optional for photo-only stories
 
     setIsSubmitting(true)
 
@@ -95,7 +98,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Create story
+      // Step 1: Insert story (get id)
       const occurredDate = dateValue.date ? dateValue.date.toISOString().split('T')[0] : null
       
       const { data: story, error: storyError } = await supabase
@@ -104,53 +107,105 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
           family_id: familyId,
           profile_id: user.id,
           title: title.trim(),
-          content: content.trim(),
+          content: content.trim() || null,
           occurred_on: occurredDate,
-          is_approx: dateValue.yearOnly
+          is_approx: dateValue.yearOnly,
+          status: asDraft ? 'draft' : 'published'
         })
         .select()
         .single()
 
       if (storyError) throw storyError
 
-      // Upload each image and create media record
+      // Step 2: Upload images and insert media records
+      let successCount = 0
+      let failCount = 0
+      const errors: string[] = []
+
       for (const file of files) {
-        const { path, error: uploadError } = await uploadMediaFile(file, familyId, user.id)
-        
-        if (uploadError || !path) {
-          console.error('Upload error:', uploadError)
-          continue // Skip this file, but don't fail the whole upload
-        }
+        try {
+          // Upload file to storage
+          const { path, error: uploadError } = await uploadMediaFile(file, familyId, user.id)
+          
+          if (uploadError || !path) {
+            failCount++
+            errors.push(`${file.name}: ${uploadError || 'Upload failed'}`)
+            continue
+          }
 
-        // Insert media record - story_id is the only parent reference
-        const { error: mediaError } = await supabase
-          .from('media')
-          .insert({
-            story_id: story.id,
-            profile_id: user.id,
-            family_id: familyId,
-            file_path: path,
-            file_name: file.name,
-            file_size: file.size,
-            mime_type: file.type
-          })
+          // Insert media record - respect media_single_parent (only story_id set)
+          const { error: mediaError } = await supabase
+            .from('media')
+            .insert({
+              story_id: story.id,         // Only parent reference
+              profile_id: user.id,
+              family_id: familyId,
+              file_path: path,
+              file_name: file.name,
+              file_size: file.size,
+              mime_type: file.type
+              // No answer_id, recipe_id, etc - respects single parent constraint
+            })
 
-        if (mediaError) {
-          console.error('Media record error:', mediaError)
+          if (mediaError) {
+            failCount++
+            errors.push(`${file.name}: ${mediaError.message}`)
+          } else {
+            successCount++
+          }
+        } catch (fileError: any) {
+          failCount++
+          errors.push(`${file.name}: ${fileError.message}`)
         }
       }
 
-      toast({
-        title: 'Story created!',
-        description: 'Your photo story has been published.'
-      })
+      // Show appropriate feedback based on results
+      if (failCount > 0 && successCount === 0) {
+        // All uploads failed - keep as draft
+        await supabase
+          .from('stories')
+          .update({ status: 'draft' })
+          .eq('id', story.id)
+
+        toast({
+          title: 'Media upload failed',
+          description: `Story saved as draft. ${failCount} photo(s) failed to upload. Please try uploading again.`,
+          variant: 'destructive'
+        })
+      } else if (failCount > 0) {
+        // Partial success
+        toast({
+          title: asDraft ? 'Draft saved with warnings' : 'Story created with warnings',
+          description: `${successCount} photo(s) uploaded successfully, but ${failCount} failed. Check console for details.`,
+        })
+        console.error('Upload errors:', errors)
+      } else {
+        // Complete success
+        toast({
+          title: asDraft ? 'Draft saved!' : 'Story created!',
+          description: asDraft 
+            ? `Your draft has been saved with ${successCount} photo(s).` 
+            : `Your photo story has been published with ${successCount} photo(s).`
+        })
+      }
 
       navigate('/feed')
     } catch (error: any) {
       console.error('Error creating photo story:', error)
+      
+      // Actionable error message
+      let errorMessage = 'Failed to create story. '
+      if (error.message.includes('family_id')) {
+        errorMessage += 'Please make sure you have selected a family.'
+      } else if (error.message.includes('profile_id')) {
+        errorMessage += 'Please make sure you are logged in.'
+      } else {
+        errorMessage += error.message || 'Please try again.'
+      }
+      
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create story. Please try again.',
+        description: errorMessage,
         variant: 'destructive'
       })
     } finally {
@@ -210,7 +265,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
 
           <div>
             <label htmlFor="content" className="block text-sm font-medium mb-2">
-              Story <span className="text-destructive">*</span>
+              Story <span className="text-muted-foreground">(Optional for photo-only)</span>
             </label>
             <Textarea
               id="content"
@@ -219,7 +274,6 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
               onChange={(e) => setContent(e.target.value)}
               rows={8}
               className="resize-none"
-              required
             />
           </div>
 
@@ -239,6 +293,16 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             >
               Cancel
             </Button>
+            {(files.length === 0 || !content.trim()) && (
+              <Button 
+                type="button"
+                variant="secondary"
+                onClick={(e) => handleSubmit(e, true)}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save as Draft'}
+              </Button>
+            )}
             <Button 
               type="submit" 
               disabled={isSubmitting}
