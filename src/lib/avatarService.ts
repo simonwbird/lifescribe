@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 
 /**
  * Utility to handle avatar URLs and regenerate expired signed URLs
