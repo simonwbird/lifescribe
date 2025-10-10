@@ -49,19 +49,27 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
           continue
         }
 
-        // Refresh signed Supabase URLs
+        // Case 1: Already a Supabase signed URL -> try refresh; if fails, try media-proxy
         if (avatarUrl.includes('supabase.co/storage/v1/object/sign')) {
-          resolved[rel.person_id] = await AvatarService.refreshSignedUrl(avatarUrl)
+          let refreshed = await AvatarService.refreshSignedUrl(avatarUrl)
+          if (!refreshed && effectiveFamilyId) {
+            // Fallback: extract path and sign via proxy
+            const path = AvatarService.extractFilePath(avatarUrl)
+            if (path) {
+              refreshed = await getSignedMediaUrl(path, effectiveFamilyId)
+            }
+          }
+          resolved[rel.person_id] = refreshed ?? avatarUrl
           continue
         }
 
-        // Full non-signed URL
+        // Case 2: Full non-signed URL -> use as-is
         if (avatarUrl.startsWith('http')) {
           resolved[rel.person_id] = avatarUrl
           continue
         }
 
-        // Storage path -> sign via media-proxy
+        // Case 3: Storage path -> sign via media-proxy
         if (effectiveFamilyId) {
           resolved[rel.person_id] = await getSignedMediaUrl(avatarUrl, effectiveFamilyId)
         } else {
