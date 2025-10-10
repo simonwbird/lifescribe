@@ -220,15 +220,18 @@ Deno.serve(async (req) => {
       throw new Error('QA tester account not found')
     }
 
-    // Get family ID for QA tester
-    const { data: memberData, error: memberError } = await supabase
-      .from('members')
-      .select('family_id')
-      .eq('profile_id', qaUser.id)
+    // Get family ID for QA tester (use their default space)
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('default_space_id')
+      .eq('id', qaUser.id)
       .single()
 
-    if (memberError) throw memberError
-    const familyId = memberData.family_id
+    if (profileError) throw profileError
+    if (!profileData?.default_space_id) {
+      throw new Error('QA tester has no default family set')
+    }
+    const familyId = profileData.default_space_id
 
     if (action === 'purge') {
       return await purgeQAData(supabase, familyId, qaUser.id)
