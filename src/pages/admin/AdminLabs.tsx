@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Beaker, Database, Trash2, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { Beaker, Database, Trash2, AlertCircle, CheckCircle2, Loader2, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 
@@ -12,6 +12,71 @@ export default function AdminLabs() {
   const [isSeeding, setIsSeeding] = useState(false)
   const [isPurging, setIsPurging] = useState(false)
   const [lastSeedResult, setLastSeedResult] = useState<any>(null)
+  const [currentStatus, setCurrentStatus] = useState<any>(null)
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true)
+
+  const fetchCurrentStatus = async () => {
+    setIsLoadingStatus(true)
+    try {
+      // Get qa-tester profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', 'qa-tester@lifescribe.family')
+        .single()
+
+      if (!profile) {
+        setCurrentStatus(null)
+        return
+      }
+
+      // Get their family
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', profile.id)
+        .single()
+
+      if (!member) {
+        setCurrentStatus(null)
+        return
+      }
+
+      // Count entities
+      const [people, stories, recipes, properties, tributes, prompts, digestSettings, followPrefs] = await Promise.all([
+        supabase.from('people').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('stories').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('recipes').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('properties').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('tributes').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('prompt_instances').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('weekly_digest_settings').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+      ])
+
+      setCurrentStatus({
+        people: people.count || 0,
+        stories: stories.count || 0,
+        recipes: recipes.count || 0,
+        properties: properties.count || 0,
+        tributes: tributes.count || 0,
+        prompts: prompts.count || 0,
+        digest_settings: digestSettings.count || 0,
+        follow_prefs: followPrefs.count || 0,
+        total: (people.count || 0) + (stories.count || 0) + (recipes.count || 0) + 
+               (properties.count || 0) + (tributes.count || 0) + (prompts.count || 0) +
+               (digestSettings.count || 0) + (followPrefs.count || 0)
+      })
+    } catch (error: any) {
+      console.error('Status fetch error:', error)
+    } finally {
+      setIsLoadingStatus(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCurrentStatus()
+  }, [])
 
   const handleSeedData = async () => {
     setIsSeeding(true)
@@ -29,6 +94,9 @@ export default function AdminLabs() {
         title: 'QA Data Seeded Successfully',
         description: `Created ${data.summary.total_created} entities for qa-tester account`,
       })
+      
+      // Refresh status after seeding
+      fetchCurrentStatus()
     } catch (error: any) {
       console.error('Seed error:', error)
       toast({
@@ -61,6 +129,9 @@ export default function AdminLabs() {
         title: 'QA Data Purged Successfully',
         description: `Deleted ${data.summary.total_deleted} seeded entities`,
       })
+      
+      // Refresh status after purging
+      fetchCurrentStatus()
     } catch (error: any) {
       console.error('Purge error:', error)
       toast({
@@ -119,6 +190,41 @@ export default function AdminLabs() {
               <li>Weekly digest enabled with follow preferences</li>
             </ul>
           </div>
+
+          {/* Current Status */}
+          {isLoadingStatus ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Loading current status...</span>
+            </div>
+          ) : currentStatus ? (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-semibold">Current QA Account Status:</p>
+                  <ul className="text-sm space-y-0.5 ml-4 list-disc">
+                    <li>People: {currentStatus.people}</li>
+                    <li>Stories: {currentStatus.stories}</li>
+                    <li>Recipes: {currentStatus.recipes}</li>
+                    <li>Properties: {currentStatus.properties}</li>
+                    <li>Tributes: {currentStatus.tributes}</li>
+                    <li>Prompts: {currentStatus.prompts}</li>
+                    <li>Digest settings: {currentStatus.digest_settings}</li>
+                    <li>Follow prefs: {currentStatus.follow_prefs}</li>
+                    <li className="font-semibold pt-1">Total entities: {currentStatus.total}</li>
+                  </ul>
+                </div>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                QA tester account not found. Please ensure qa-tester@lifescribe.family exists.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="flex gap-2">
             <Button 
