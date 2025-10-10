@@ -67,6 +67,13 @@ const adminNavItems: AdminNavItem[] = [
     roles: ['SUPER_ADMIN']
   },
   {
+    id: 'admin-debug',
+    label: 'Role Diagnostics',
+    href: '/admin/debug-roles',
+    icon: Shield,
+    roles: ['SUPER_ADMIN']
+  },
+  {
     id: 'date-localization',
     label: 'Date Localization',
     href: '/admin/date-localization',

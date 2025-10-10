@@ -102,6 +102,9 @@ import PromptsWow from './pages/PromptsWow';
 import { ABTestProvider } from './components/analytics/ABTestProvider';
 import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
 import EventJoin from './pages/EventJoin';
+import AdminLabs from './pages/admin/AdminLabs';
+import AdminDebugRoles from './pages/admin/AdminDebugRoles';
+import ProfileDebug from './pages/ProfileDebug';
 
 const queryClient = new QueryClient();
 
@@ -159,8 +162,9 @@ function AppContent() {
       <Route path="/people" element={<AuthGate><People /></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
-      <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
-      <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
+       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
+       <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
+       <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
        <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
        <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
@@ -198,6 +202,8 @@ function AppContent() {
             <Route path="digest" element={<AdminDigest />} />
             <Route path="content" element={<AdminContent />} />
             <Route path="activation" element={<ActivationDashboard />} />
+            <Route path="labs" element={<AdminLabs />} />
+            <Route path="debug-roles" element={<AdminDebugRoles />} />
             <Route path="nudges" element={<NudgeOrchestrator />} />
           <Route path="content-moderation" element={<ContentModerationPanel />} />
           <Route path="user-management" element={<UserPermissionsDashboard />} />
@@ -207,7 +213,8 @@ function AppContent() {
              <Route path="date-localization" element={<DateLocalizationTest />} />
              <Route path="bugs" element={<BugInbox />} />
              <Route path="bugs/:id" element={<BugDetail />} />
-             <Route path="labs" element={<LazyRoute factory={() => import('./pages/admin/AdminLabs')} />} />
+             <Route path="labs" element={<AdminLabs />} />
+             <Route path="debug-roles" element={<AdminDebugRoles />} />
            <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="config" element={<AdminConfig />} />
            <Route path="analytics" element={<AdminAnalytics />} />
