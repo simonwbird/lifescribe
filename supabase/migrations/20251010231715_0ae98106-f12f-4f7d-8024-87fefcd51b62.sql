@@ -1,0 +1,11 @@
+-- Add bio_overview block type support
+-- The content_json for bio_overview blocks will store:
+-- {
+--   "short_bio": "string (max 140 chars)",
+--   "long_bio": "markdown string",
+--   "tone": "classic" | "warm" | "vivid",
+--   "sources": [{"type": "story"|"photo", "id": "uuid", "title": "string"}]
+-- }
+
+-- No schema changes needed as person_page_blocks.content_json is already jsonb
+-- Just documenting the expected structure for bio_overview blocks

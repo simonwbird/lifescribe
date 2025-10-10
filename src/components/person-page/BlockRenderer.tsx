@@ -3,6 +3,7 @@ import { PersonPageBlock } from '@/types/personPage'
 import PeopleWebBlock from './blocks/PeopleWebBlock'
 import HeroLifeBlock from './blocks/HeroLifeBlock'
 import HeroMemorialBlock from './blocks/HeroMemorialBlock'
+import BioOverviewBlock from './blocks/BioOverviewBlock'
 import TimelineBlock from './blocks/TimelineBlock'
 import { ObjectsPlacesBlock } from './blocks/ObjectsPlacesBlock'
 
@@ -40,6 +41,17 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       return (
         <HeroMemorialBlock
           person={person}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
+      )
+
+    case 'bio_overview':
+      return (
+        <BioOverviewBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
           blockContent={block.content_json}
           canEdit={canEdit}
           onUpdate={onUpdate}

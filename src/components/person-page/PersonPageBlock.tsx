@@ -31,6 +31,7 @@ const visibilityConfig = {
 const blockTitles: Record<string, string> = {
   hero: 'Hero',
   hero_memorial: 'Memorial',
+  bio_overview: 'Biography',
   timeline: 'Timeline',
   life_arc_timeline: 'Life Timeline',
   story_roll: 'Stories',

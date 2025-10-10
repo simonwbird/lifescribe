@@ -47,6 +47,7 @@ export type BlockType =
   | 'guestbook_live'
   // Tribute preset blocks
   | 'hero_memorial'
+  | 'bio_overview'
   | 'life_arc_timeline'
   | 'story_collage'
   | 'audio_remembrances'
@@ -163,6 +164,14 @@ export const BLOCK_LIBRARY: Array<{
     description: 'Memorial introduction with dates',
     icon: 'Heart',
     defaultContent: { layout: 'memorial' },
+    presets: ['tribute']
+  },
+  {
+    type: 'bio_overview',
+    label: 'Biography',
+    description: 'Short and long bio with AI generation',
+    icon: 'FileText',
+    defaultContent: { short_bio: '', long_bio: '', tone: 'warm', sources: [] },
     presets: ['tribute']
   },
   {
