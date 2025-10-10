@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Lock, ExternalLink, Heart } from 'lucide-react'
+import { Lock, ExternalLink, Heart, TreePine } from 'lucide-react'
 import { usePersonRelationships } from '@/hooks/usePersonRelationships'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -153,7 +152,7 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
                   }
                 }}
               >
-                <Avatar className="h-12 w-12">
+                <Avatar className="h-12 w-12 shrink-0">
                   <AvatarImage src={resolvedAvatars[rel.person_id] ?? (rel.person_avatar?.startsWith('http') ? rel.person_avatar : '')} alt={rel.person_name} />
                   <AvatarFallback>
                     {rel.person_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -161,40 +160,52 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium truncate">{rel.person_name}</p>
-                    {rel.person_status === 'passed' && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Heart className="h-3 w-3 mr-1" />
-                        In Tribute
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{rel.relation_label}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {rel.has_page_access ? (
-                    <>
+                    {rel.has_page_access && (
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="h-6 px-2 text-xs shrink-0"
                         onClick={(e) => {
                           e.stopPropagation()
                           navigate(`/family/tree?focus=${rel.person_id}`)
                         }}
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View in Tree
+                        <TreePine className="h-3 w-3 mr-1" />
+                        Tree
                       </Button>
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Lock className="h-4 w-4" />
-                      <span className="text-xs">Private</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <span>{rel.relation_label}</span>
+                    {rel.person_status === 'passed' && (
+                      <>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          In Tribute
+                        </span>
+                      </>
+                    )}
+                  </p>
                 </div>
+
+                {!rel.has_page_access && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // TODO: Implement access request
+                      alert('Request access feature coming soon')
+                    }}
+                  >
+                    <Lock className="h-3 w-3 mr-1.5" />
+                    Request Access
+                  </Button>
+                )}
               </div>
             ))}
           </div>
