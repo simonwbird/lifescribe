@@ -1,0 +1,61 @@
+{
+  "preset": "tribute",
+  "name": "Tribute Page",
+  "description": "Honor and remember those who have passed - preserve their legacy",
+  "defaultBlocks": [
+    {
+      "type": "hero_memorial",
+      "order": 0,
+      "visibility": "public",
+      "label": "Memorial Hero"
+    },
+    {
+      "type": "life_arc_timeline",
+      "order": 1,
+      "visibility": "public",
+      "label": "Life Arc"
+    },
+    {
+      "type": "story_collage",
+      "order": 2,
+      "visibility": "family",
+      "label": "Memory Collage"
+    },
+    {
+      "type": "audio_remembrances",
+      "order": 3,
+      "visibility": "family",
+      "label": "Audio Remembrances"
+    },
+    {
+      "type": "gallery",
+      "order": 4,
+      "visibility": "public",
+      "label": "Photo Gallery"
+    },
+    {
+      "type": "relationships",
+      "order": 5,
+      "visibility": "public",
+      "label": "Family Relationships"
+    },
+    {
+      "type": "guestbook_tribute",
+      "order": 6,
+      "visibility": "public",
+      "label": "Tribute Messages"
+    },
+    {
+      "type": "service_events",
+      "order": 7,
+      "visibility": "public",
+      "label": "Service & Events"
+    }
+  ],
+  "theme": {
+    "primary": "#7c3aed",
+    "secondary": "#64748b",
+    "accent": "#f59e0b",
+    "mood": "reverent"
+  }
+}

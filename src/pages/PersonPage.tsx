@@ -7,11 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { AlertTriangle, Settings, Plus, ArrowLeft } from 'lucide-react'
+import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw } from 'lucide-react'
 import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
+import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { toast } from '@/components/ui/use-toast'
 
@@ -41,6 +42,26 @@ export default function PersonPage() {
 
   const canEdit = data?.permission?.role && 
     ['owner', 'co_curator', 'steward'].includes(data.permission.role)
+
+  // Initialize presets
+  const {
+    currentPreset,
+    presetConfig,
+    initializePreset,
+    switchPreset,
+    isInitialized
+  } = usePersonPagePresets(
+    id!,
+    data?.person.status || 'living',
+    data?.blocks || []
+  )
+
+  // Auto-initialize preset on first load
+  useEffect(() => {
+    if (data && !isInitialized && data.blocks.length === 0) {
+      initializePreset()
+    }
+  }, [data, isInitialized])
 
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination || !data) return
@@ -173,6 +194,30 @@ export default function PersonPage() {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={async () => {
+                  try {
+                    const newPreset = currentPreset === 'life' ? 'tribute' : 'life'
+                    await switchPreset(newPreset)
+                    toast({
+                      title: 'Preset switched',
+                      description: `Switched to ${newPreset === 'life' ? 'Life' : 'Tribute'} preset`
+                    })
+                    window.location.reload() // Reload to show new blocks
+                  } catch (err) {
+                    toast({
+                      title: 'Error',
+                      description: 'Failed to switch preset',
+                      variant: 'destructive'
+                    })
+                  }
+                }}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Switch to {currentPreset === 'life' ? 'Tribute' : 'Life'}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
               >
                 <Settings className="h-4 w-4 mr-2" />
                 Customize
@@ -276,6 +321,7 @@ export default function PersonPage() {
           onOpenChange={setShowBlockLibrary}
           onAddBlock={handleAddBlock}
           existingBlocks={blocks.map(b => b.type)}
+          currentPreset={currentPreset}
         />
       </div>
     </div>

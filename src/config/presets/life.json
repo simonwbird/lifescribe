@@ -1,0 +1,55 @@
+{
+  "preset": "life",
+  "name": "Life Page",
+  "description": "For living family members - celebrate their ongoing journey",
+  "defaultBlocks": [
+    {
+      "type": "hero",
+      "order": 0,
+      "visibility": "family",
+      "label": "Hero Section"
+    },
+    {
+      "type": "timeline",
+      "order": 1,
+      "visibility": "family",
+      "label": "Life Timeline"
+    },
+    {
+      "type": "story_roll",
+      "order": 2,
+      "visibility": "family",
+      "label": "Story Roll"
+    },
+    {
+      "type": "people_web",
+      "order": 3,
+      "visibility": "family",
+      "label": "Family Connections"
+    },
+    {
+      "type": "objects_places",
+      "order": 4,
+      "visibility": "family",
+      "label": "Favorite Places & Things"
+    },
+    {
+      "type": "now_next",
+      "order": 5,
+      "visibility": "family",
+      "label": "Now & Next"
+    },
+    {
+      "type": "guestbook_live",
+      "order": 6,
+      "visibility": "family",
+      "label": "Guestbook"
+    }
+  ],
+  "theme": {
+    "primary": "#2563eb",
+    "secondary": "#64748b",
+    "accent": "#10b981",
+    "mood": "vibrant"
+  }
+}
