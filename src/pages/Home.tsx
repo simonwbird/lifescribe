@@ -74,6 +74,7 @@ export default function Home() {
   const [spaceId, setSpaceId] = useState<string>('');
   const [isSimpleMode, setIsSimpleMode] = useState<boolean>(false);
   const [hasOtherMembers, setHasOtherMembers] = useState<boolean>(false);
+  const [userPersona, setUserPersona] = useState<string>('general');
 
   // Recording controller state for Simple Mode
   const [currentPrompt, setCurrentPrompt] = useState<ElderPrompt | null>(null);
@@ -151,6 +152,8 @@ export default function Home() {
       ])
       if (profileResult.data) {
         setIsSimpleMode(profileResult.data.simple_mode ?? true)
+        // Default persona - could be fetched from a persona column if it exists
+        setUserPersona('elder')
       }
       const firstMembership = Array.isArray(memberResult.data) ? memberResult.data[0] : null
       if (!firstMembership) return
@@ -486,7 +489,12 @@ export default function Home() {
             )}
 
             {/* Simple Mode: Unified Header */}
-            <SimpleHeader profileId={profileId || 'default'} spaceId={spaceId || 'default'} onRecordPrompt={handlePromptSelected} />
+            <SimpleHeader 
+              profileId={profileId || 'default'} 
+              spaceId={spaceId || 'default'} 
+              onRecordPrompt={handlePromptSelected}
+              persona={userPersona}
+            />
 
             {/* Recording Controller Modals */}
             {currentPrompt && <CountdownModal isOpen={showCountdown} prompt={currentPrompt} onComplete={handleCountdownComplete} onCancel={handleCancel} />}

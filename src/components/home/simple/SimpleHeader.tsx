@@ -16,12 +16,14 @@ interface SimpleHeaderProps {
   profileId: string
   spaceId: string
   onRecordPrompt: (prompt: ElderPrompt) => void
+  persona?: string
 }
 
 export function SimpleHeader({ 
   profileId, 
   spaceId, 
-  onRecordPrompt 
+  onRecordPrompt,
+  persona = 'general'
 }: SimpleHeaderProps) {
   const { data: todaysPrompt, isLoading: todaysLoading, refetch } = useTodaysPrompt(spaceId)
   const { data: inProgressPrompts = [], isLoading: inProgressLoading } = useInProgressPrompts(spaceId)
@@ -210,6 +212,7 @@ export function SimpleHeader({
           onBrowseAll={handleBrowseAll}
           onShuffle={handleShuffle}
           loading={loading}
+          persona={persona}
         />
         
         <ContinueSection 

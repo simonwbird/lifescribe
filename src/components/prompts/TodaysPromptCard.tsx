@@ -18,6 +18,7 @@ interface TodaysPromptCardProps {
   onShuffle?: () => void
   loading?: boolean
   people?: Array<{ id: string; full_name: string }> // For person chips
+  persona?: string // User persona for analytics
 }
 
 type RecordingState = 'idle' | 'preflight' | 'countdown' | 'recording' | 'saving' | 'saved' | 'mic-denied'
@@ -28,17 +29,38 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   onBrowseAll,
   onShuffle,
   loading = false,
-  people = []
+  people = [],
+  persona = 'general'
 }: TodaysPromptCardProps) {
   const [showResponseModal, setShowResponseModal] = useState(false)
   const [recordingState, setRecordingState] = useState<RecordingState>('idle')
   const [countdown, setCountdown] = useState(3)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [lastAutoSave, setLastAutoSave] = useState<number>(0)
+  const [recordingPauses, setRecordingPauses] = useState<number>(0)
+  const [listenStartTime, setListenStartTime] = useState<number>(0)
   const navigate = useNavigate()
   const { track } = useAnalytics()
   const { toast } = useToast()
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const hasTrackedImpressionRef = useRef(false)
+
+  // Track prompt impression on mount
+  useEffect(() => {
+    if (promptInstance?.id && !hasTrackedImpressionRef.current) {
+      track({
+        event_name: 'prompt_impression',
+        properties: {
+          prompt_id: promptInstance.id,
+          prompt_title: promptInstance.prompt?.title,
+          prompt_category: promptInstance.prompt?.category,
+          persona,
+          has_person_ids: promptInstance.person_ids?.length > 0
+        }
+      } as any)
+      hasTrackedImpressionRef.current = true
+    }
+  }, [promptInstance?.id, persona])
 
   // Countdown timer effect
   useEffect(() => {
@@ -48,8 +70,11 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     } else if (recordingState === 'countdown' && countdown === 0) {
       setRecordingState('recording')
       track({
-        event_name: 'prompt_record_start',
-        properties: { prompt_id: promptInstance?.id }
+        event_name: 'record_start',
+        properties: {
+          prompt_id: promptInstance?.id,
+          persona
+        }
       } as any)
     }
   }, [recordingState, countdown])
@@ -80,6 +105,42 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     }
   }, [recordingState])
 
+  // Track dropoff when user leaves recording state
+  useEffect(() => {
+    return () => {
+      if (recordingState !== 'idle' && recordingState !== 'saved') {
+        let dropoffStep: string
+        if (recordingState === 'preflight') {
+          dropoffStep = 'preflight'
+        } else if (recordingState === 'countdown') {
+          dropoffStep = 'countdown'
+        } else if (recordingState === 'recording') {
+          if (recordingDuration <= 15) {
+            dropoffStep = 'recording_0_15'
+          } else if (recordingDuration <= 60) {
+            dropoffStep = 'recording_15_60'
+          } else {
+            dropoffStep = 'recording_60_plus'
+          }
+        } else if (recordingState === 'mic-denied') {
+          dropoffStep = 'preflight'
+        } else {
+          return
+        }
+
+        track({
+          event_name: 'dropoff_step',
+          properties: {
+            prompt_id: promptInstance?.id,
+            persona,
+            step: dropoffStep,
+            duration: recordingDuration
+          }
+        } as any)
+      }
+    }
+  }, [])
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -90,7 +151,10 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     setRecordingState('preflight')
     track({
       event_name: 'prompt_record_attempt',
-      properties: { prompt_id: promptInstance?.id }
+      properties: {
+        prompt_id: promptInstance?.id,
+        persona
+      }
     } as any)
     
     try {
@@ -103,7 +167,19 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       setRecordingState('mic-denied')
       track({
         event_name: 'prompt_mic_denied',
-        properties: { prompt_id: promptInstance?.id }
+        properties: {
+          prompt_id: promptInstance?.id,
+          persona
+        }
+      } as any)
+      track({
+        event_name: 'dropoff_step',
+        properties: {
+          prompt_id: promptInstance?.id,
+          persona,
+          step: 'preflight',
+          duration: 0
+        }
       } as any)
       
       toast({
@@ -117,16 +193,22 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   const handleStopRecording = () => {
     setRecordingState('saving')
     
+    // Track record completion
+    track({
+      event_name: 'record_complete',
+      properties: {
+        prompt_id: promptInstance?.id,
+        persona,
+        duration: recordingDuration,
+        pauses: recordingPauses,
+        duration_bucket: recordingDuration <= 15 ? '0_15' : 
+                        recordingDuration <= 60 ? '15_60' : 
+                        '60_plus'
+      }
+    } as any)
+    
     // Navigate to new story page with recording data
     setTimeout(() => {
-      track({
-        event_name: 'prompt_record_complete',
-        properties: {
-          prompt_id: promptInstance?.id,
-          duration: recordingDuration
-        }
-      } as any)
-      
       if (promptInstance) {
         const searchParams = new URLSearchParams({
           type: 'voice',
@@ -141,8 +223,12 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
 
   const handleWriteInstead = () => {
     track({
-      event_name: 'prompt_write_instead',
-      properties: { prompt_id: promptInstance?.id }
+      event_name: 'write_instead',
+      properties: {
+        prompt_id: promptInstance?.id,
+        persona,
+        from_state: recordingState
+      }
     } as any)
     
     if (promptInstance) {
@@ -161,10 +247,34 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   const handleShuffle = () => {
     if (onShuffle) {
       track({
-        event_name: 'prompt_shuffle',
-        properties: { prompt_id: promptInstance?.id }
+        event_name: 'shuffle',
+        properties: {
+          prompt_id: promptInstance?.id,
+          persona,
+          previous_prompt_id: promptInstance?.id
+        }
       } as any)
       onShuffle()
+    }
+  }
+
+  const handleListenStart = () => {
+    setListenStartTime(Date.now())
+  }
+
+  const handleListenEnd = () => {
+    if (listenStartTime > 0) {
+      const duration = Math.floor((Date.now() - listenStartTime) / 1000)
+      track({
+        event_name: 'listen_play',
+        properties: {
+          prompt_id: promptInstance?.id,
+          persona,
+          duration_listened: duration,
+          prompt_text_length: promptInstance?.prompt?.body?.length || 0
+        }
+      } as any)
+      setListenStartTime(0)
     }
   }
 
@@ -172,6 +282,15 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     setShowResponseModal(false)
     
     if (!promptInstance) return
+    
+    track({
+      event_name: 'response_type_selected',
+      properties: {
+        prompt_id: promptInstance.id,
+        persona,
+        response_type: type
+      }
+    } as any)
     
     const searchParams = new URLSearchParams({
       type,
@@ -256,8 +375,11 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               size="lg"
               showLabel
               className="h-12 px-6 text-base font-medium min-w-[140px]"
+              onPlayStart={handleListenStart}
+              onPlayEnd={handleListenEnd}
+              persona={persona}
             />
-            <Button 
+            <Button
               variant="ghost" 
               size="lg" 
               className={cn(

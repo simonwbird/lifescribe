@@ -18,6 +18,9 @@ interface ListenButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon'
   className?: string
   showLabel?: boolean
+  onPlayStart?: () => void
+  onPlayEnd?: () => void
+  persona?: string
 }
 
 export function ListenButton({
@@ -26,7 +29,10 @@ export function ListenButton({
   variant = 'outline',
   size = 'default',
   className,
-  showLabel = false
+  showLabel = false,
+  onPlayStart,
+  onPlayEnd,
+  persona
 }: ListenButtonProps) {
   const { track } = useAnalytics()
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1)
@@ -39,9 +45,11 @@ export function ListenButton({
           prompt_id: promptId,
           text_length: text.length,
           voice: 'elevenlabs_brian',
-          speed: playbackSpeed
+          speed: playbackSpeed,
+          persona
         }
       } as any)
+      onPlayEnd?.()
     },
     onError: (error) => {
       console.error('TTS error:', error)
@@ -54,13 +62,15 @@ export function ListenButton({
     if (isThisPlaying) {
       stop()
     } else {
+      onPlayStart?.()
       track({
         event_name: 'tts_play_start',
         properties: {
           prompt_id: promptId,
           text_length: text.length,
           voice: 'elevenlabs_brian',
-          speed: playbackSpeed
+          speed: playbackSpeed,
+          persona
         }
       } as any)
       await speak(text)
