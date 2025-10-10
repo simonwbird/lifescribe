@@ -424,6 +424,83 @@ export type Database = {
           },
         ]
       }
+      audio_recordings: {
+        Row: {
+          audio_url: string
+          created_at: string
+          created_by: string
+          draft_data: Json | null
+          duration_seconds: number
+          family_id: string
+          id: string
+          is_draft: boolean | null
+          status: string
+          story_id: string | null
+          transcript: string | null
+          tribute_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          created_by: string
+          draft_data?: Json | null
+          duration_seconds: number
+          family_id: string
+          id?: string
+          is_draft?: boolean | null
+          status?: string
+          story_id?: string | null
+          transcript?: string | null
+          tribute_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          created_by?: string
+          draft_data?: Json | null
+          duration_seconds?: number
+          family_id?: string
+          id?: string
+          is_draft?: boolean | null
+          status?: string
+          story_id?: string | null
+          transcript?: string | null
+          tribute_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_recordings_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_recordings_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "audio_recordings_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_recordings_tribute_id_fkey"
+            columns: ["tribute_id"]
+            isOneToOne: false
+            referencedRelation: "tributes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_hash_chain: {
         Row: {
           chain_hash: string
@@ -5656,6 +5733,44 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "property_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcript_versions: {
+        Row: {
+          audio_recording_id: string
+          created_at: string
+          edit_reason: string | null
+          edited_by: string
+          id: string
+          transcript: string
+          version_number: number
+        }
+        Insert: {
+          audio_recording_id: string
+          created_at?: string
+          edit_reason?: string | null
+          edited_by: string
+          id?: string
+          transcript: string
+          version_number: number
+        }
+        Update: {
+          audio_recording_id?: string
+          created_at?: string
+          edit_reason?: string | null
+          edited_by?: string
+          id?: string
+          transcript?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_versions_audio_recording_id_fkey"
+            columns: ["audio_recording_id"]
+            isOneToOne: false
+            referencedRelation: "audio_recordings"
             referencedColumns: ["id"]
           },
         ]
