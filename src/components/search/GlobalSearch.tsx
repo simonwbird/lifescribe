@@ -118,7 +118,7 @@ export default function GlobalSearch() {
         } finally {
           setIsLoading(false)
         }
-      }, 300)
+      }, 250) // Updated to 250ms debounce
     } else {
       setSuggestions([])
       setShowSuggestions(false)

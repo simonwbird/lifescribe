@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Search as SearchIcon, X, Filter, User, MapPin, Calendar, Tag, FileText, Image, ChefHat, Heart, Home } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -36,8 +37,15 @@ const typeIcons = {
   comment: FileText
 }
 
+type TabValue = 'all' | 'people' | 'stories' | 'objects' | 'places'
+
+// Simple cache with 60s TTL
+const searchCache = new Map<string, { results: SearchResult[]; timestamp: number; total: number; smartAnswer?: SmartAnswer }>()
+const CACHE_TTL = 60000 // 60 seconds
+
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [results, setResults] = useState<SearchResult[]>([])
   const [smartAnswer, setSmartAnswer] = useState<SmartAnswer | undefined>()
@@ -46,6 +54,7 @@ export default function Search() {
   const [total, setTotal] = useState(0)
   const [filters, setFilters] = useState<SearchFilters>({})
   const [showFilters, setShowFilters] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabValue>((searchParams.get('tab') as TabValue) || 'all')
 
   const { track } = useAnalytics()
 
@@ -87,8 +96,18 @@ export default function Search() {
     }
   }, [searchParams])
 
-  const performSearch = async () => {
+  const performSearch = useCallback(async () => {
     if (!query.trim() || !familyId) return
+
+    // Check cache first
+    const cacheKey = `${query.trim()}-${JSON.stringify(filters)}-${familyId}`
+    const cached = searchCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setResults(cached.results)
+      setSmartAnswer(cached.smartAnswer)
+      setTotal(cached.total)
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -103,25 +122,51 @@ export default function Search() {
       setSmartAnswer(searchResults.smartAnswer)
       setTotal(searchResults.total)
 
+      // Cache results
+      searchCache.set(cacheKey, {
+        results: searchResults.results,
+        total: searchResults.total,
+        smartAnswer: searchResults.smartAnswer,
+        timestamp: Date.now()
+      })
+
       track('search_performed', {
         query: query.trim(),
         results_count: searchResults.total,
         has_smart_answer: !!searchResults.smartAnswer,
-        filters_count: Object.keys(filters).length
+        filters_count: Object.keys(filters).length,
+        active_tab: activeTab,
+        has_results: searchResults.total > 0
       })
     } catch (error) {
       console.error('Search failed:', error)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [query, filters, familyId, track, activeTab])
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (query.trim()) {
-      setSearchParams({ q: query.trim() })
+      const params = new URLSearchParams()
+      params.set('q', query.trim())
+      if (activeTab !== 'all') params.set('tab', activeTab)
+      setSearchParams(params)
+      track('search_performed', { query: query.trim(), tab: activeTab })
       performSearch()
     }
-  }
+  }, [query, activeTab, setSearchParams, track, performSearch])
+
+  const handleTabChange = useCallback((tab: TabValue) => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams)
+    if (tab === 'all') {
+      params.delete('tab')
+    } else {
+      params.set('tab', tab)
+    }
+    setSearchParams(params)
+    track('search_filter_add', { filter_type: 'tab', filter_value: tab })
+  }, [activeTab, searchParams, setSearchParams, track])
 
   const addFilter = (key: keyof SearchFilters, value: string) => {
     setFilters(prev => {
@@ -155,8 +200,44 @@ export default function Search() {
     track('search_filter_remove', { filter_type: key, filter_value: value })
   }
 
-  // Group results by type
-  const groupedResults = results.reduce((acc, result) => {
+  // Group results by category for tabs
+  const categorizedResults = useMemo(() => {
+    const people = results.filter(r => r.type === 'person')
+    const stories = results.filter(r => r.type === 'story' || r.type === 'photo' || r.type === 'voice' || r.type === 'video' || r.type === 'document')
+    const objects = results.filter(r => r.type === 'recipe' || r.type === 'pet' || r.type === 'object')
+    const places = results.filter(r => r.type === 'property')
+    
+    return { people, stories, objects, places }
+  }, [results])
+
+  // Determine which tab has most results for default
+  const defaultTab = useMemo(() => {
+    if (activeTab !== 'all' || results.length === 0) return activeTab
+    
+    const counts = {
+      people: categorizedResults.people.length,
+      stories: categorizedResults.stories.length,
+      objects: categorizedResults.objects.length,
+      places: categorizedResults.places.length
+    }
+    
+    const maxCount = Math.max(...Object.values(counts))
+    const defaultTab = Object.entries(counts).find(([_, count]) => count === maxCount)?.[0] as TabValue
+    return defaultTab || 'all'
+  }, [results, categorizedResults, activeTab])
+
+  // Get filtered results based on active tab
+  const filteredResults = useMemo(() => {
+    if (activeTab === 'all') return results
+    if (activeTab === 'people') return categorizedResults.people
+    if (activeTab === 'stories') return categorizedResults.stories
+    if (activeTab === 'objects') return categorizedResults.objects
+    if (activeTab === 'places') return categorizedResults.places
+    return results
+  }, [activeTab, results, categorizedResults])
+
+  // Group filtered results by type for display
+  const groupedResults = filteredResults.reduce((acc, result) => {
     if (!acc[result.type]) {
       acc[result.type] = []
     }
@@ -182,8 +263,11 @@ export default function Search() {
     return labels[type as keyof typeof labels] || type
   }
 
+  // Recent searches for zero-state
+  const recentSearches = useMemo(() => ['family vacation', 'grandma', 'recipes'], [])
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-test="global-search">
         <Header />
         
         <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -197,11 +281,18 @@ export default function Search() {
                   placeholder="Search people, stories, places…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch()
+                    } else if (e.key === 'Tab' && !e.shiftKey) {
+                      // Allow Tab to move to next element
+                    }
+                  }}
                   className="pl-10 text-base"
+                  data-test="search-input"
                 />
               </div>
-              <Button onClick={handleSearch} disabled={!query.trim()}>
+              <Button onClick={handleSearch} disabled={!query.trim()} data-test="search-button">
                 Search
               </Button>
               <Button
@@ -209,6 +300,7 @@ export default function Search() {
                 size="icon"
                 onClick={() => setShowFilters(!showFilters)}
                 className={cn(showFilters && "bg-accent")}
+                aria-label="Toggle filters"
               >
                 <Filter className="h-4 w-4" />
               </Button>
@@ -321,6 +413,71 @@ export default function Search() {
             </div>
           )}
 
+          {/* Tabbed Results */}
+          {query && !isLoading && results.length > 0 && (
+            <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as TabValue)} className="space-y-6">
+              <TabsList className="w-full justify-start" data-test="search-tabs">
+                <TabsTrigger value="all" data-test="tab-all">
+                  All
+                  <Badge variant="secondary" className="ml-2">{total}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="people" data-test="tab-people">
+                  <User className="h-3 w-3 mr-1" />
+                  People
+                  <Badge variant="secondary" className="ml-2">{categorizedResults.people.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="stories" data-test="tab-stories">
+                  <FileText className="h-3 w-3 mr-1" />
+                  Stories
+                  <Badge variant="secondary" className="ml-2">{categorizedResults.stories.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="objects" data-test="tab-objects">
+                  <Home className="h-3 w-3 mr-1" />
+                  Objects
+                  <Badge variant="secondary" className="ml-2">{categorizedResults.objects.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="places" data-test="tab-places">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Places
+                  <Badge variant="secondary" className="ml-2">{categorizedResults.places.length}</Badge>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value={activeTab} className="space-y-8">
+                {Object.entries(groupedResults).map(([type, typeResults]) => {
+                  const Icon = typeIcons[type as keyof typeof typeIcons] || FileText
+                  
+                  return (
+                    <div key={type}>
+                      <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+                        <Icon className="h-4 w-4" />
+                        <h2 className="text-lg font-semibold">{getTypeLabel(type)}</h2>
+                        <Badge variant="secondary">{typeResults.length}</Badge>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {typeResults.map((result, index) => (
+                          <SearchResultItem
+                            key={result.id}
+                            result={result}
+                            onResultClick={() => {
+                              track('search_result_click', {
+                                entity_type: result.type,
+                                entity_id: result.id,
+                                position: index,
+                                tab: activeTab
+                              })
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </TabsContent>
+            </Tabs>
+          )}
+
           {/* Loading State */}
           {isLoading && (
             <div className="space-y-4">
@@ -335,57 +492,41 @@ export default function Search() {
             </div>
           )}
 
-          {/* Results */}
-          {!isLoading && (
-            <div className="space-y-8">
-              {Object.entries(groupedResults).map(([type, typeResults]) => {
-                const Icon = typeIcons[type as keyof typeof typeIcons] || FileText
-                
-                return (
-                  <div key={type}>
-                    <div className="flex items-center gap-2 mb-4 pb-2 border-b sticky top-0 bg-background z-10">
-                      <Icon className="h-4 w-4" />
-                      <h2 className="text-lg font-semibold">{getTypeLabel(type)}</h2>
-                      <Badge variant="secondary">{typeResults.length}</Badge>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {typeResults.map((result) => (
-                        <SearchResultItem
-                          key={result.id}
-                          result={result}
-                          onResultClick={() => {
-                            track('search_result_click', {
-                              entity_type: result.type,
-                              entity_id: result.id,
-                              position: typeResults.indexOf(result)
-                            })
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Empty State */}
+          {/* Empty State with Suggestions */}
           {!isLoading && query && results.length === 0 && (
-            <Card>
+            <Card data-test="zero-results">
               <CardContent className="p-8 text-center">
                 <SearchIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No matches yet</h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-6">
                   Try a name, place, or year—or create something new.
                 </p>
-                <Button onClick={() => {
-                  const createUrl = `/stories/new?title=${encodeURIComponent(query)}`
-                  window.location.href = createUrl
-                  track('search_create_from_empty', { query, type: 'story' })
-                }}>
-                  Create story: "{query}"
-                </Button>
+                
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground mb-2">Try searching for:</div>
+                  <div className="flex flex-wrap gap-2 justify-center mb-6">
+                    {recentSearches.map(search => (
+                      <Badge 
+                        key={search}
+                        variant="outline" 
+                        className="cursor-pointer hover:bg-accent"
+                        onClick={() => {
+                          setQuery(search)
+                          track('search_suggestion_click', { suggestion: search, source: 'zero_state' })
+                        }}
+                      >
+                        {search}
+                      </Badge>
+                    ))}
+                  </div>
+                  
+                  <Button onClick={() => {
+                    navigate(`/stories/new?title=${encodeURIComponent(query)}`)
+                    track('search_create_from_empty', { query, type: 'story' })
+                  }}>
+                    Create story: "{query}"
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
