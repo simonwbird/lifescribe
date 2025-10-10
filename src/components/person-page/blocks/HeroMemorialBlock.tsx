@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,8 @@ import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
+import { AvatarService } from '@/lib/avatarService'
+import { getSignedMediaUrl } from '@/lib/media'
 
 interface HeroMemorialBlockProps {
   person: {
@@ -27,6 +29,7 @@ interface HeroMemorialBlockProps {
     avatar_url?: string
     birth_date?: string
     death_date?: string
+    family_id?: string
   }
   blockContent: {
     epitaph?: string
@@ -45,6 +48,41 @@ export default function HeroMemorialBlock({ person, blockContent, canEdit, onUpd
   })
 
   const displayName = person.preferred_name || person.full_name
+
+  // Resolve portrait URL (handles signed URLs and raw storage paths)
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | undefined>(person.avatar_url)
+  useEffect(() => {
+    let cancelled = false
+    async function resolve() {
+      try {
+        let url = person.avatar_url || undefined
+        if (!url) { setResolvedAvatarUrl(undefined); return }
+        if (url.startsWith('http')) {
+          // If it's a Supabase signed URL, refresh; otherwise try media-proxy using extracted path
+          const refreshed = await AvatarService.refreshSignedUrl(url)
+          if (!cancelled && refreshed && refreshed !== url) { setResolvedAvatarUrl(refreshed); return }
+          const filePath = AvatarService.extractFilePath(url)
+          if (filePath && person.family_id) {
+            const proxied = await getSignedMediaUrl(filePath, person.family_id)
+            if (!cancelled && proxied) { setResolvedAvatarUrl(proxied); return }
+          }
+          if (!cancelled) setResolvedAvatarUrl(url)
+          return
+        }
+        // Raw storage path -> sign via media-proxy
+        if (person.family_id) {
+          const proxied = await getSignedMediaUrl(url, person.family_id)
+          if (!cancelled) setResolvedAvatarUrl(proxied || undefined)
+        } else {
+          setResolvedAvatarUrl(undefined)
+        }
+      } catch {
+        if (!cancelled) setResolvedAvatarUrl(person.avatar_url || undefined)
+      }
+    }
+    resolve()
+    return () => { cancelled = true }
+  }, [person.avatar_url, person.family_id])
 
   const formatLifeDates = () => {
     if (!person.birth_date && !person.death_date) return null
@@ -214,7 +252,7 @@ export default function HeroMemorialBlock({ person, blockContent, canEdit, onUpd
         {/* Portrait */}
         <div className="relative group">
           <Avatar className="h-40 w-40 border-4 border-white shadow-2xl">
-            <AvatarImage src={person.avatar_url || ''} alt={displayName} />
+            <AvatarImage src={(resolvedAvatarUrl || person.avatar_url || '')} alt={displayName} />
             <AvatarFallback className="text-4xl bg-white text-gray-700">
               {displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </AvatarFallback>
