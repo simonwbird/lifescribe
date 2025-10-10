@@ -20,6 +20,7 @@ import { ExportDialog, ImportDialog } from '@/components/import-export'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
+import { usePrivacyAnalytics } from '@/hooks/usePrivacyAnalytics'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { toast } from '@/components/ui/use-toast'
 
@@ -59,6 +60,19 @@ export default function PersonPage() {
   const canImport = data?.permission?.role &&
     ['owner', 'steward', 'co_curator'].includes(data.permission.role)
 
+  // Analytics
+  const { trackPageView, trackBlockAdd, trackBlockReorder } = usePrivacyAnalytics({
+    userId: currentUserId || undefined,
+    familyId: data?.person.family_id
+  })
+
+  // Track page view
+  useEffect(() => {
+    if (data?.person) {
+      trackPageView(data.person.id, data.person.status === 'living' ? 'life' : 'tribute')
+    }
+  }, [data?.person, trackPageView])
+
   // Get theme from data
   const themeId = data?.person.theme_id
   const { currentTheme } = useThemeCustomizer(id!, themeId)
@@ -92,6 +106,7 @@ export default function PersonPage() {
 
     try {
       await updateBlockOrder(blocks)
+      trackBlockReorder(id!, data.person.status === 'living' ? 'life' : 'tribute')
       toast({
         title: 'Order updated',
         description: 'Block order has been saved'
@@ -108,10 +123,11 @@ export default function PersonPage() {
   const handleAddBlock = async (type: BlockData['type']) => {
     try {
       await addBlock(type)
+      trackBlockAdd(id!, type, data?.person.status === 'living' ? 'life' : 'tribute')
       setShowBlockLibrary(false)
       toast({
         title: 'Block added',
-        description: `${type} block has been added`
+        description: 'New block has been added to the page'
       })
     } catch (err) {
       toast({

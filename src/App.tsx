@@ -28,6 +28,7 @@ const PromptsSimple = () => <LazyRoute factory={() => import("./pages/PromptsSim
 const FamilyTree = () => <LazyRoute factory={() => import("./pages/FamilyTree")} />
 const PersonProfile = () => <LazyRoute factory={() => import("./pages/PersonProfile")} />
 const PersonPage = () => <LazyRoute factory={() => import("./pages/PersonPage")} />
+const AnalyticsPage = () => <LazyRoute factory={() => import("./pages/AnalyticsPage")} />
 const Collections = () => <LazyRoute factory={() => import("./pages/Collections")} />
 const Media = () => <LazyRoute factory={() => import("./pages/Media")} />
 const SearchPage = () => <LazyRoute factory={() => import("./pages/Search")} />
@@ -180,6 +181,7 @@ function AppContent() {
       <Route path="/people/:id/page" element={<AuthGate><PersonPage /></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
+      <Route path="/analytics" element={<AuthGate><AnalyticsPage /></AuthGate>} />
        <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
        <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
        <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
