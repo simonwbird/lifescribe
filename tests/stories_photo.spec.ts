@@ -47,12 +47,14 @@ test.describe('Photo Story Creation', () => {
   test('should allow multiple image uploads', async ({ page }) => {
     await page.goto('/stories/new?type=photo')
     
-    // Upload multiple test images
-    const testImagePath = path.join(__dirname, 'fixtures', 'test-image.png')
-    await page.getByTestId('photo-input').setInputFiles([testImagePath, testImagePath])
+    // Upload multiple test images using new fixtures
+    const fixture1 = path.join(__dirname, 'fixtures', '1.jpg')
+    const fixture2 = path.join(__dirname, 'fixtures', '2.jpg')
+    const fixture3 = path.join(__dirname, 'fixtures', '3.jpg')
+    await page.getByTestId('photo-input').setInputFiles([fixture1, fixture2, fixture3])
     
-    // Should show 2 preview thumbnails
-    await expect(page.locator('[data-photo-preview]')).toHaveCount(2)
+    // Should show 3 preview thumbnails
+    await expect(page.locator('[data-test="image-thumb"]')).toHaveCount(3)
   })
 
   test('should save as draft when no photos uploaded', async ({ page }) => {

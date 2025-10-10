@@ -93,7 +93,7 @@ export function MagicLinkManager({ familyId, refreshTrigger }: MagicLinkManagerP
   }
 
   return (
-    <Card data-test="magic-link-manager">
+    <Card data-test="magic-link-manager" data-testid="magic-link-manager">
       <CardHeader>
         <CardTitle>Active Magic Links</CardTitle>
         <CardDescription>
@@ -111,6 +111,9 @@ export function MagicLinkManager({ familyId, refreshTrigger }: MagicLinkManagerP
               key={link.id}
               className="border rounded-lg p-4 space-y-2"
               data-test={`magic-link-${link.id}`}
+              data-testid="magic-link-item"
+              data-expired={isExpired}
+              data-revoked={link.revoked}
             >
               <div className="flex items-start justify-between">
                 <div className="space-y-1 flex-1">
@@ -137,6 +140,7 @@ export function MagicLinkManager({ familyId, refreshTrigger }: MagicLinkManagerP
                     size="icon"
                     onClick={() => handleRevoke(link.id)}
                     data-test={`revoke-link-${link.id}`}
+                    data-testid="revoke-magic-link-btn"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>

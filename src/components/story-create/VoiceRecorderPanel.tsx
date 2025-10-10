@@ -229,7 +229,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
   }
 
   return (
-    <Card className={cn('p-6', className)}>
+    <Card className={cn('p-6', className)} data-testid="voice-recorder-panel">
       {/* State indicator */}
       <div className="flex items-center gap-2 mb-6">
         <div className="flex items-center gap-3">
@@ -254,7 +254,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
 
       {/* Permission denied guidance */}
       {micDenied && (
-        <Alert className="mb-4">
+        <Alert className="mb-4" data-testid="mic-permission-denied">
           <Settings className="h-4 w-4" />
           <AlertDescription className="space-y-2">
             <p className="font-semibold">Enable microphone access:</p>
@@ -296,6 +296,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
                 onClick={startRecording}
                 className="w-full h-20"
                 data-test="voice-start"
+                data-testid="start-recording-btn"
               >
                 <Mic className="h-6 w-6 mr-2" />
                 Start Recording
@@ -315,6 +316,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
           <label 
             className="flex items-center justify-center w-full h-32 px-4 transition border-2 border-dashed rounded-md appearance-none cursor-pointer hover:border-primary focus:outline-none"
             data-test="voice-upload"
+            data-testid="audio-upload-label"
           >
             <div className="flex flex-col items-center space-y-2">
               <Upload className="h-8 w-8 text-muted-foreground" />
@@ -330,6 +332,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
               accept="audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/x-m4a"
               onChange={handleFileUpload}
               className="hidden"
+              data-testid="audio-upload-input"
             />
           </label>
         </div>
@@ -341,7 +344,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" data-testid="recording-indicator" />
                 <span className="text-2xl font-mono">{formatTime(recordingTime)}</span>
               </div>
               <p className="text-sm text-muted-foreground">Recording in progress...</p>
@@ -395,7 +398,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
             </div>
           </div>
 
-          <audio controls src={audioUrl} className="w-full" />
+          <audio controls src={audioUrl} className="w-full" data-testid="audio-player" />
           
           <div className="flex gap-2">
             <Button
@@ -403,6 +406,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
               variant="outline"
               onClick={reset}
               className="flex-1"
+              data-testid="re-record-btn"
             >
               Re-record
             </Button>
@@ -411,6 +415,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
                 type="button"
                 onClick={onPublish}
                 className="flex-1"
+                data-testid="publish-now-btn"
               >
                 Publish Now
               </Button>

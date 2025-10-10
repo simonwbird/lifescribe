@@ -95,6 +95,7 @@ export function MagicLinkCreator({ familyId, onLinkCreated }: MagicLinkCreatorPr
               readOnly
               value={generatedLink}
               className="font-mono text-sm"
+              data-testid="generated-magic-link"
             />
             <Button
               onClick={handleCopyLink}
@@ -119,7 +120,7 @@ export function MagicLinkCreator({ familyId, onLinkCreated }: MagicLinkCreatorPr
   }
 
   return (
-    <Card data-test="magic-link-creator">
+    <Card data-test="magic-link-creator" data-testid="magic-link-creator">
       <CardHeader>
         <CardTitle>Create Magic Link</CardTitle>
         <CardDescription>
@@ -130,7 +131,7 @@ export function MagicLinkCreator({ familyId, onLinkCreated }: MagicLinkCreatorPr
         <div className="space-y-2">
           <Label htmlFor="role-scope">Access Level</Label>
           <Select value={roleScope} onValueChange={(value: any) => setRoleScope(value)}>
-            <SelectTrigger id="role-scope" data-test="role-scope-select">
+            <SelectTrigger id="role-scope" data-test="role-scope-select" data-testid="role-scope-select">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -151,6 +152,7 @@ export function MagicLinkCreator({ familyId, onLinkCreated }: MagicLinkCreatorPr
             value={maxUses}
             onChange={(e) => setMaxUses(parseInt(e.target.value) || 1)}
             data-test="max-uses-input"
+            data-testid="max-uses-input"
           />
           <p className="text-xs text-muted-foreground">
             How many times this link can be used (1-10)
@@ -167,6 +169,7 @@ export function MagicLinkCreator({ familyId, onLinkCreated }: MagicLinkCreatorPr
             value={expiresInDays}
             onChange={(e) => setExpiresInDays(parseInt(e.target.value) || 7)}
             data-test="expires-input"
+            data-testid="expiration-select"
           />
           <p className="text-xs text-muted-foreground">
             Link will expire after this many days
@@ -179,7 +182,7 @@ export function MagicLinkCreator({ familyId, onLinkCreated }: MagicLinkCreatorPr
           className="w-full"
           data-test="create-magic-link"
         >
-          {isCreating ? "Creating..." : "Create Magic Link"}
+          {isCreating ? "Creating..." : "Generate Magic Link"}
         </Button>
       </CardContent>
     </Card>

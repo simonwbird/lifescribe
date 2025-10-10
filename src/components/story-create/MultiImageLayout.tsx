@@ -94,8 +94,18 @@ export function MultiImageLayout({
 
   if (images.length === 0) return null;
 
+  const layoutType = images.length === 2 ? '2-grid' 
+    : images.length === 3 ? '3-masonry'
+    : images.length === 4 ? '4-grid'
+    : images.length >= 5 ? `${images.length}-collage`
+    : 'single';
+
   return (
-    <div className={cn('grid', getLayoutClasses(), className)}>
+    <div 
+      className={cn('grid', getLayoutClasses(), className)}
+      data-testid="multi-image-layout"
+      data-layout={layoutType}
+    >
       {images.map((image, index) => (
         <div
           key={image.id}
@@ -114,7 +124,10 @@ export function MultiImageLayout({
           data-test="image-thumb"
         >
           {/* Drag Handle */}
-          <div className="absolute top-2 left-2 z-10 p-1 bg-background/80 rounded">
+          <div 
+            className="absolute top-2 left-2 z-10 p-1 bg-background/80 rounded"
+            data-testid="image-reorder-btn"
+          >
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
 
@@ -124,6 +137,7 @@ export function MultiImageLayout({
             onClick={() => onRemove(image.id)}
             className="absolute top-2 right-2 z-10 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
             aria-label="Remove image"
+            data-testid="remove-image-btn"
           >
             <X className="h-4 w-4" />
           </button>
