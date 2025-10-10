@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette } from 'lucide-react'
+import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette, Download, Upload } from 'lucide-react'
 import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
@@ -16,6 +16,7 @@ import BlockRenderer from '@/components/person-page/BlockRenderer'
 import { PersonPageSEO } from '@/components/seo'
 import { CustomizerPanel, ThemeProvider } from '@/components/theme-customizer'
 import { LayoutRenderer } from '@/components/theme-customizer/LayoutRenderer'
+import { ExportDialog, ImportDialog } from '@/components/import-export'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
@@ -28,6 +29,8 @@ export default function PersonPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showBlockLibrary, setShowBlockLibrary] = useState(false)
   const [showCustomizer, setShowCustomizer] = useState(false)
+  const [showExport, setShowExport] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   
   const {
     data,
@@ -49,6 +52,12 @@ export default function PersonPage() {
 
   const canEdit = data?.permission?.role && 
     ['owner', 'co_curator', 'steward'].includes(data.permission.role)
+  
+  const canExportPrivate = data?.permission?.role &&
+    ['owner', 'steward'].includes(data.permission.role)
+  
+  const canImport = data?.permission?.role &&
+    ['owner', 'steward', 'co_curator'].includes(data.permission.role)
 
   // Get theme from data
   const themeId = data?.person.theme_id
@@ -213,6 +222,24 @@ export default function PersonPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Block
               </Button>
+              {canImport && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowImport(true)}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowExport(true)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -362,6 +389,19 @@ export default function PersonPage() {
           onAddBlock={handleAddBlock}
           existingBlocks={blocks.map(b => b.type)}
           currentPreset={currentPreset}
+        />
+
+        <ExportDialog
+          open={showExport}
+          onOpenChange={setShowExport}
+          personId={id!}
+          canExportPrivate={!!canExportPrivate}
+        />
+
+        <ImportDialog
+          open={showImport}
+          onOpenChange={setShowImport}
+          personId={id!}
         />
       </div>
       </div>

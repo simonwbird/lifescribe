@@ -1816,6 +1816,86 @@ export type Database = {
           },
         ]
       }
+      export_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_message: string | null
+          expires_at: string | null
+          export_type: string
+          family_id: string
+          file_size_bytes: number | null
+          file_url: string | null
+          id: string
+          include_private: boolean | null
+          metadata: Json | null
+          person_id: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          expires_at?: string | null
+          export_type: string
+          family_id: string
+          file_size_bytes?: number | null
+          file_url?: string | null
+          id?: string
+          include_private?: boolean | null
+          metadata?: Json | null
+          person_id: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          expires_at?: string | null
+          export_type?: string
+          family_id?: string
+          file_size_bytes?: number | null
+          file_url?: string | null
+          id?: string
+          include_private?: boolean | null
+          metadata?: Json | null
+          person_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_jobs_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "export_jobs_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "export_jobs_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "export_jobs_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       face_tags: {
         Row: {
           created_at: string
@@ -2637,6 +2717,77 @@ export type Database = {
           },
           {
             foreignKeyName: "guestbook_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_log: Json | null
+          failed_items: number | null
+          family_id: string
+          id: string
+          person_id: string
+          processed_items: number | null
+          status: string
+          total_items: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_log?: Json | null
+          failed_items?: number | null
+          family_id: string
+          id?: string
+          person_id: string
+          processed_items?: number | null
+          status?: string
+          total_items?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_log?: Json | null
+          failed_items?: number | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          processed_items?: number | null
+          status?: string
+          total_items?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_jobs_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_jobs_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "import_jobs_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_jobs_person_id_fkey"
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "public_person_pages"
@@ -7423,6 +7574,10 @@ export type Database = {
       cleanup_auth_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      cleanup_expired_exports: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       complete_memorialization: {
         Args: { p_death_date: string; p_memorialization_id: string }
