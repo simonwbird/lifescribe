@@ -1,0 +1,127 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    // Create Supabase admin client with service role key for full access
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    // Find QA-seeded data by qa_seed marker
+    const { data: qaFollowPrefs, error: followError } = await supabaseAdmin
+      .from('digest_follow_preferences')
+      .select('family_id')
+      .eq('qa_seed', true)
+      .limit(1)
+
+    if (followError) {
+      console.error('Error finding QA data:', followError)
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          status: null,
+          message: 'Error finding QA seeded data'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      )
+    }
+
+    if (!qaFollowPrefs || qaFollowPrefs.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          status: null,
+          message: 'No QA seeded data found'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      )
+    }
+
+    const familyId = qaFollowPrefs[0].family_id
+
+    // Count entities using service role to bypass RLS
+    const [
+      { count: peopleCount },
+      { count: storiesCount },
+      { count: recipesCount },
+      { count: propertiesCount },
+      { count: tributesCount },
+      { count: promptsCount },
+      { count: digestSettingsCount },
+      { count: followPrefsCount }
+    ] = await Promise.all([
+      supabaseAdmin.from('people').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('stories').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('recipes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('properties').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('tributes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('prompt_instances').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('weekly_digest_settings').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+      supabaseAdmin.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', familyId).eq('qa_seed', true)
+    ])
+
+    const status = {
+      people: peopleCount || 0,
+      stories: storiesCount || 0,
+      recipes: recipesCount || 0,
+      properties: propertiesCount || 0,
+      tributes: tributesCount || 0,
+      prompts: promptsCount || 0,
+      digest_settings: digestSettingsCount || 0,
+      follow_prefs: followPrefsCount || 0,
+      total: (peopleCount || 0) + (storiesCount || 0) + (recipesCount || 0) + 
+             (propertiesCount || 0) + (tributesCount || 0) + (promptsCount || 0) +
+             (digestSettingsCount || 0) + (followPrefsCount || 0)
+    }
+
+    console.log('QA seed status:', status)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        status,
+        message: 'QA seed status retrieved successfully'
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
+    )
+  } catch (error) {
+    console.error('Error in qa-seed-status:', error)
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        status: null,
+        message: error.message || 'Internal server error'
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      }
+    )
+  }
+})

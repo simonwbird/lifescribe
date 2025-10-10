@@ -66,6 +66,9 @@ verify_jwt = false
 [functions.seed-qa-data]
 verify_jwt = true
 
+[functions.qa-seed-status]
+verify_jwt = true
+
 [db]
 # Port to use for the local database URL.
 port = 54322

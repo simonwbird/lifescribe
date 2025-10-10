@@ -18,45 +18,19 @@ export default function AdminLabs() {
   const fetchCurrentStatus = async () => {
     setIsLoadingStatus(true)
     try {
-      // Use qa_seed marker to find QA data
-      const { data: qaFollowPrefs } = await supabase
-        .from('digest_follow_preferences')
-        .select('family_id')
-        .eq('qa_seed', true)
-        .limit(1)
+      const { data, error } = await supabase.functions.invoke('qa-seed-status')
 
-      if (!qaFollowPrefs || qaFollowPrefs.length === 0) {
+      if (error) {
+        console.error('Status fetch error:', error)
         setCurrentStatus(null)
         return
       }
 
-      const familyId = qaFollowPrefs[0].family_id
-
-      // Count entities for this family
-      const [people, stories, recipes, properties, tributes, prompts, digestSettings, followPrefs] = await Promise.all([
-        supabase.from('people').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('stories').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('recipes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('properties').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('tributes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('prompt_instances').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('weekly_digest_settings').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-        supabase.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', familyId).eq('qa_seed', true),
-      ])
-
-      setCurrentStatus({
-        people: people.count || 0,
-        stories: stories.count || 0,
-        recipes: recipes.count || 0,
-        properties: properties.count || 0,
-        tributes: tributes.count || 0,
-        prompts: prompts.count || 0,
-        digest_settings: digestSettings.count || 0,
-        follow_prefs: followPrefs.count || 0,
-        total: (people.count || 0) + (stories.count || 0) + (recipes.count || 0) + 
-               (properties.count || 0) + (tributes.count || 0) + (prompts.count || 0) +
-               (digestSettings.count || 0) + (followPrefs.count || 0)
-      })
+      if (data.success && data.status) {
+        setCurrentStatus(data.status)
+      } else {
+        setCurrentStatus(null)
+      }
     } catch (error: any) {
       console.error('Status fetch error:', error)
       setCurrentStatus(null)
