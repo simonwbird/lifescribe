@@ -34,29 +34,45 @@ export function usePersonPageData(personId: string, viewerUserId: string | null)
 
         if (blocksError) throw blocksError
 
-        // Fetch permission for current user
+        // Fetch permission for current user (non-blocking)
         let permission: PersonPagePermission | null = null
         if (viewerUserId) {
-          const { data: permData } = await supabase
-            .from('person_page_permissions')
-            .select('*')
-            .eq('person_id', personId)
-            .eq('user_id', viewerUserId)
-            .single()
-          
-          permission = permData as PersonPagePermission
+          try {
+            const { data: permData, error: permError } = await supabase
+              .from('person_page_permissions')
+              .select('*')
+              .eq('person_id', personId)
+              .eq('user_id', viewerUserId)
+              .maybeSingle()
+
+            if (permError) {
+              console.warn('Permission lookup failed; continuing without permission', permError)
+            } else {
+              permission = (permData || null) as PersonPagePermission | null
+            }
+          } catch (permErr) {
+            console.warn('Permission lookup threw; continuing without permission', permErr)
+          }
         }
 
-        // Fetch theme
+        // Fetch theme (non-blocking)
         let theme: PersonPageTheme | null = null
         if (person.theme_id) {
-          const { data: themeData } = await supabase
-            .from('person_page_themes')
-            .select('*')
-            .eq('id', person.theme_id)
-            .single()
-          
-          theme = themeData as unknown as PersonPageTheme
+          try {
+            const { data: themeData, error: themeError } = await supabase
+              .from('person_page_themes')
+              .select('*')
+              .eq('id', person.theme_id)
+              .maybeSingle()
+            
+            if (themeError) {
+              console.warn('Theme lookup failed; continuing with default theme', themeError)
+            } else {
+              theme = (themeData || null) as unknown as PersonPageTheme | null
+            }
+          } catch (themeErr) {
+            console.warn('Theme lookup threw; continuing with default theme', themeErr)
+          }
         }
 
         setData({
