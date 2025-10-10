@@ -249,11 +249,14 @@ export async function updatePassword(password: string): Promise<AuthResponse> {
 export async function signInWithGoogle(): Promise<AuthResponse> {
   try {
     const redirectUrl = `${window.location.origin}/auth/callback`
-    
+
+    // Get the OAuth URL without attempting to open a popup (works inside iframes)
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+        queryParams: { prompt: 'select_account' }
       }
     })
 
@@ -262,7 +265,27 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
       return { error: mappedError }
     }
 
-    return { data: true }
+    if (data?.url) {
+      try {
+        if (window.top) {
+          window.top.location.href = data.url
+        } else {
+          window.location.href = data.url
+        }
+      } catch {
+        window.location.href = data.url
+      }
+      return { data: true }
+    }
+
+    return {
+      error: {
+        code: 'AUTH/UNKNOWN',
+        message: 'Could not initiate Google sign-in',
+        originalError: new Error('Missing OAuth URL'),
+        actionable: true
+      }
+    }
   } catch (err) {
     const mappedError = mapAuthError(err)
     return { error: mappedError }
