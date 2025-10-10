@@ -28,6 +28,26 @@ const visibilityConfig = {
   public: { icon: Globe, label: 'Public', color: 'text-green-500' }
 }
 
+const blockTitles: Record<string, string> = {
+  hero: 'Hero',
+  hero_memorial: 'Memorial',
+  timeline: 'Timeline',
+  life_arc_timeline: 'Life Timeline',
+  story_roll: 'Stories',
+  story_collage: 'Story Collage',
+  stories: 'Stories',
+  photos: 'Photos',
+  gallery: 'Photo Gallery',
+  audio_remembrances: 'Audio Memories',
+  people_web: 'Family Tree',
+  relationships: 'Relationships',
+  guestbook_live: 'Guestbook',
+  guestbook_tribute: 'Memorial Guestbook',
+  now_next: 'Now & Next',
+  service_events: 'Services & Events',
+  objects_places: 'Places & Things',
+}
+
 export default function PersonPageBlock({
   block,
   canEdit,
@@ -38,6 +58,7 @@ export default function PersonPageBlock({
 }: PersonPageBlockProps) {
   const visConfig = visibilityConfig[block.visibility]
   const VisIcon = visConfig.icon
+  const blockTitle = blockTitles[block.type] || block.type
 
   return (
     <Card className={cn(
@@ -55,7 +76,7 @@ export default function PersonPageBlock({
 
       <CardHeader className={cn(canEdit && "pl-10")}>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg capitalize">{block.type}</CardTitle>
+          <CardTitle className="text-lg">{blockTitle}</CardTitle>
           
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={cn("gap-1", visConfig.color)}>
