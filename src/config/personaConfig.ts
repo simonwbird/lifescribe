@@ -26,7 +26,7 @@ export const personaConfigs: Record<PersonaType, PersonaConfig> = {
   elder: {
     defaultMode: 'voice',
     headline: '{first_name}, tell it like you would to the grandkids.',
-    subtext: 'No need to be perfect—just talk.',
+    subtext: "Don't aim for perfect—aim for true. 60–90 seconds is plenty.",
     chips: ['60–90 sec', 'Private by default'],
     fontScale: 'lg',
     liveTranscript: true,
@@ -38,32 +38,32 @@ export const personaConfigs: Record<PersonaType, PersonaConfig> = {
   busy_parent: {
     defaultMode: 'voice',
     headline: 'One minute while the kettle boils.',
-    subtext: 'Quick capture, auto-saved.',
+    subtext: "Don't aim for perfect—aim for true. 60–90 seconds is plenty.",
     chips: ['Quick: 30–60 sec', 'Auto-save on'],
     fontScale: 'base',
     liveTranscript: true,
     streak: true,
-    ctaText: 'Quick Record',
-    secondaryCtaText: 'Type It'
+    ctaText: 'Start Recording',
+    secondaryCtaText: 'Write Instead'
   },
   
   storyteller: {
     defaultMode: 'choice',
     headline: 'Start a new chapter or add to a series.',
-    subtext: 'Voice, text, or build on an existing story.',
+    subtext: "Don't aim for perfect—aim for true. 60–90 seconds is plenty.",
     fontScale: 'base',
     showTags: true,
     showSeries: true,
     showPromptVariations: true,
     streak: true,
-    ctaText: 'Choose Your Style',
-    secondaryCtaText: 'Browse Series'
+    ctaText: 'Start Recording',
+    secondaryCtaText: 'Write Instead'
   },
   
   archivist: {
     defaultMode: 'voice',
     headline: "Tell the story; we'll fill the details.",
-    subtext: 'Start with your voice. Add context after.',
+    subtext: "Don't aim for perfect—aim for true. 60–90 seconds is plenty.",
     templateChips: ['Person', 'Object', 'Place', 'Event'],
     fontScale: 'base',
     liveTranscript: true,
@@ -75,25 +75,25 @@ export const personaConfigs: Record<PersonaType, PersonaConfig> = {
   teen: {
     defaultMode: 'text',
     headline: 'Drop a 20-second truth.',
-    subtext: 'Quick thoughts, your way.',
+    subtext: "Don't aim for perfect—aim for true. 60–90 seconds is plenty.",
     chips: ['Text or voice', 'You control who sees'],
     fontScale: 'base',
     privacyToggle: 'prominent',
     stickers: true,
     streak: true,
-    ctaText: 'Start Typing',
-    secondaryCtaText: 'Record Voice'
+    ctaText: 'Start Recording',
+    secondaryCtaText: 'Write Instead'
   },
   
   guest: {
     defaultMode: 'choice',
     headline: 'Share one memory of who invited you.',
-    subtext: 'Your story adds to theirs.',
+    subtext: "Don't aim for perfect—aim for true. 60–90 seconds is plenty.",
     chips: ['Voice or text', 'Added to family album'],
     fontScale: 'base',
     showTourAfterSkip: true,
-    ctaText: 'Share Memory',
-    secondaryCtaText: 'Learn More'
+    ctaText: 'Start Recording',
+    secondaryCtaText: 'Write Instead'
   }
 }
 

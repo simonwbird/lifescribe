@@ -123,8 +123,16 @@ export function FirstLoginPromptCard({
       setCountdown(3)
     } catch (error) {
       console.error('Microphone access denied:', error)
-      // Fallback to text mode
-      handleWriteInstead()
+      track({
+        event_name: 'first_prompt_mic_blocked',
+        properties: {
+          prompt_id: prompt.id,
+          persona
+        }
+      } as any)
+      // Show fallback message
+      setRecordingState('idle')
+      alert('Browser blocked the mic. Try text, or enable microphone in settings.')
     }
   }
 
@@ -261,8 +269,8 @@ export function FirstLoginPromptCard({
               </div>
             )}
             
-            <p className="text-sm text-muted-foreground">
-              Press R or click Stop when done
+            <p className="text-sm text-success font-medium">
+              Recording… Auto-saving
             </p>
           </div>
         )}
@@ -364,7 +372,8 @@ export function FirstLoginPromptCard({
                 variant="outline"
                 size="lg"
                 className="h-12 w-12 p-0"
-                aria-label="Shuffle prompt"
+                aria-label="Get a different prompt"
+                title="Get a different prompt."
               >
                 <Shuffle className="w-4 h-4" />
               </Button>
@@ -379,7 +388,7 @@ export function FirstLoginPromptCard({
             variant="destructive"
             className="w-full h-14 text-lg font-semibold"
           >
-            Stop & Save (S)
+            Finish (S)
           </Button>
         )}
 
