@@ -7,14 +7,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette } from 'lucide-react'
 import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
 import BlockRenderer from '@/components/person-page/BlockRenderer'
 import { PersonPageSEO } from '@/components/seo'
+import { CustomizerPanel, ThemeProvider } from '@/components/theme-customizer'
+import { LayoutRenderer } from '@/components/theme-customizer/LayoutRenderer'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
+import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { toast } from '@/components/ui/use-toast'
 
@@ -23,6 +27,7 @@ export default function PersonPage() {
   const navigate = useNavigate()
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showBlockLibrary, setShowBlockLibrary] = useState(false)
+  const [showCustomizer, setShowCustomizer] = useState(false)
   
   const {
     data,
@@ -44,6 +49,10 @@ export default function PersonPage() {
 
   const canEdit = data?.permission?.role && 
     ['owner', 'co_curator', 'steward'].includes(data.permission.role)
+
+  // Get theme from data
+  const themeId = data?.person.theme_id
+  const { currentTheme } = useThemeCustomizer(id!, themeId)
 
   // Initialize presets
   const {
@@ -171,15 +180,16 @@ export default function PersonPage() {
   const personWithSEO = person as any
 
   return (
-    <div className="min-h-screen bg-background">
-      <PersonPageSEO
-        person={person}
-        indexability={personWithSEO.indexability || 'private'}
-        ogTitle={personWithSEO.og_title}
-        ogDescription={personWithSEO.og_description}
-        ogImageUrl={personWithSEO.og_image_url}
-      />
-      <Header />
+    <ThemeProvider theme={currentTheme}>
+      <div className="min-h-screen bg-background">
+        <PersonPageSEO
+          person={person}
+          indexability={personWithSEO.indexability || 'private'}
+          ogTitle={personWithSEO.og_title}
+          ogDescription={personWithSEO.og_description}
+          ogImageUrl={personWithSEO.og_image_url}
+        />
+        <Header />
       
       <div className="max-w-4xl mx-auto p-6 space-y-8">
         {/* Top Bar */}
@@ -227,13 +237,21 @@ export default function PersonPage() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Switch to {currentPreset === 'life' ? 'Tribute' : 'Life'}
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Customize
-              </Button>
+              <Sheet open={showCustomizer} onOpenChange={setShowCustomizer}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Palette className="h-4 w-4 mr-2" />
+                    Customize
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-xl p-0">
+                  <CustomizerPanel 
+                    personId={id!} 
+                    themeId={themeId}
+                    onClose={() => setShowCustomizer(false)}
+                  />
+                </SheetContent>
+              </Sheet>
             </div>
           )}
         </div>
@@ -269,71 +287,71 @@ export default function PersonPage() {
           </div>
         </div>
 
-        {/* Blocks */}
+        {/* Blocks with Layout */}
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="blocks">
             {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-4"
-              >
-                {blocks.map((block, index) => (
-                  <Draggable 
-                    key={block.id} 
-                    draggableId={block.id} 
-                    index={index}
-                    isDragDisabled={!canEdit}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={snapshot.isDragging ? 'opacity-50' : ''}
+              <LayoutRenderer layout={currentTheme?.layout || 'magazine'}>
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  {blocks.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed rounded-lg col-span-full">
+                      <p className="text-muted-foreground mb-4">
+                        No blocks added yet. Click "Add Block" to get started.
+                      </p>
+                      {canEdit && (
+                        <Button onClick={() => setShowBlockLibrary(true)}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Your First Block
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    blocks.map((block, index) => (
+                      <Draggable 
+                        key={block.id} 
+                        draggableId={block.id} 
+                        index={index}
+                        isDragDisabled={!canEdit}
                       >
-                        <PersonPageBlock
-                          block={block}
-                          canEdit={!!canEdit}
-                          onVisibilityChange={(visibility) => 
-                            handleVisibilityChange(block.id, visibility)
-                          }
-                          onRemove={() => handleRemoveBlock(block.id)}
-                          dragHandleProps={provided.dragHandleProps}
-                        >
-                           <BlockRenderer 
-                            block={block} 
-                            person={{
-                              ...person,
-                              family_id: person.family_id || ''
-                            }}
-                            currentUserId={currentUserId}
-                            canEdit={!!canEdit}
-                            onUpdate={() => {
-                              // Refetch data after update
-                              window.location.reload()
-                            }}
-                          />
-                        </PersonPageBlock>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-                
-                {blocks.length === 0 && (
-                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground mb-4">
-                      No blocks added yet
-                    </p>
-                    {canEdit && (
-                      <Button onClick={() => setShowBlockLibrary(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Your First Block
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={snapshot.isDragging ? 'opacity-50' : ''}
+                          >
+                            <PersonPageBlock
+                              block={block}
+                              canEdit={!!canEdit}
+                              onVisibilityChange={(visibility) => 
+                                handleVisibilityChange(block.id, visibility)
+                              }
+                              onRemove={() => handleRemoveBlock(block.id)}
+                              dragHandleProps={provided.dragHandleProps}
+                            >
+                              <BlockRenderer 
+                                block={block} 
+                                person={{
+                                  ...person,
+                                  family_id: person.family_id || ''
+                                }}
+                                currentUserId={currentUserId}
+                                canEdit={!!canEdit}
+                                onUpdate={() => {
+                                  window.location.reload()
+                                }}
+                              />
+                            </PersonPageBlock>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))
+                  )}
+                  {provided.placeholder}
+                </div>
+              </LayoutRenderer>
             )}
           </Droppable>
         </DragDropContext>
@@ -346,6 +364,7 @@ export default function PersonPage() {
           currentPreset={currentPreset}
         />
       </div>
-    </div>
+      </div>
+    </ThemeProvider>
   )
 }

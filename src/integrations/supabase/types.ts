@@ -4356,8 +4356,11 @@ export type Database = {
       person_page_themes: {
         Row: {
           created_at: string
+          custom_css: Json | null
           font_scale: number | null
+          high_contrast_mode: boolean
           id: string
+          layout: string
           name: string
           palette: Json
           shape: string | null
@@ -4365,8 +4368,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_css?: Json | null
           font_scale?: number | null
+          high_contrast_mode?: boolean
           id?: string
+          layout?: string
           name: string
           palette?: Json
           shape?: string | null
@@ -4374,8 +4380,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_css?: Json | null
           font_scale?: number | null
+          high_contrast_mode?: boolean
           id?: string
+          layout?: string
           name?: string
           palette?: Json
           shape?: string | null
@@ -6389,6 +6398,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      theme_presets: {
+        Row: {
+          created_at: string
+          description: string | null
+          font_scale: number | null
+          high_contrast_mode: boolean | null
+          id: string
+          is_system: boolean | null
+          layout: string | null
+          name: string
+          palette: Json
+          shape: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          font_scale?: number | null
+          high_contrast_mode?: boolean | null
+          id?: string
+          is_system?: boolean | null
+          layout?: string | null
+          name: string
+          palette: Json
+          shape?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          font_scale?: number | null
+          high_contrast_mode?: boolean | null
+          id?: string
+          is_system?: boolean | null
+          layout?: string | null
+          name?: string
+          palette?: Json
+          shape?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       thing_person_links: {
         Row: {

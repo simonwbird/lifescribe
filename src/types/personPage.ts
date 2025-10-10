@@ -6,9 +6,13 @@ export interface PersonPageTheme {
     secondary: string
     accent: string
     background: string
+    foreground: string
   }
   font_scale: number
   shape: 'rounded' | 'sharp' | 'soft'
+  layout: 'magazine' | 'linear' | 'card_stack'
+  high_contrast_mode: boolean
+  custom_css?: Record<string, any>
 }
 
 export interface PersonPagePermission {
