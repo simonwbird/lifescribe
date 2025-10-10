@@ -277,7 +277,11 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         family_id: familyId,
         created_by: userId,
       })
-      if (!error) summary.people++
+      if (error) {
+        console.error(`Failed to insert person ${person.full_name}:`, error)
+      } else {
+        summary.people++
+      }
     }
   }
 
@@ -308,7 +312,9 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         profile_id: userId,
       }).select().single()
 
-      if (!error && newStory) {
+      if (error) {
+        console.error(`Failed to insert story ${story.title}:`, error)
+      } else if (newStory) {
         summary.stories++
         
         // Link Lucy to graduation story
@@ -349,7 +355,11 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         family_id: familyId,
         profile_id: userId,
       })
-      if (!error) summary.recipes++
+      if (error) {
+        console.error(`Failed to insert recipe ${recipe.title}:`, error)
+      } else {
+        summary.recipes++
+      }
     }
   }
 
@@ -370,7 +380,11 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         family_id: familyId,
         profile_id: userId,
       })
-      if (!error) summary.objects++
+      if (error) {
+        console.error(`Failed to insert thing ${obj.title}:`, error)
+      } else {
+        summary.objects++
+      }
     }
   }
 
@@ -391,7 +405,11 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         family_id: familyId,
         profile_id: userId,
       })
-      if (!error) summary.properties++
+      if (error) {
+        console.error(`Failed to insert property ${property.title}:`, error)
+      } else {
+        summary.properties++
+      }
     }
   }
 
@@ -405,7 +423,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     .maybeSingle()
 
   if (!existingDigest) {
-    await supabase.from('weekly_digest_settings').insert({
+    const { error } = await supabase.from('weekly_digest_settings').insert({
       family_id: familyId,
       is_enabled: true,
       digest_day: 'sunday',
@@ -413,7 +431,11 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       qa_seed: true,
       qa_seed_version: QA_SEED_VERSION
     })
-    summary.digest_settings++
+    if (error) {
+      console.error('Failed to insert digest settings:', error)
+    } else {
+      summary.digest_settings++
+    }
   }
 
   // Set follow preferences for Lucy & Jamie
