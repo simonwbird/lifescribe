@@ -10,6 +10,8 @@ import { ListenButton } from '@/components/prompts/ListenButton'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
+import { MetadataPanel } from '@/components/stories/MetadataPanel'
+import { getPersonaConfig } from '@/config/personaConfig'
 
 interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
@@ -39,11 +41,17 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   const [lastAutoSave, setLastAutoSave] = useState<number>(0)
   const [recordingPauses, setRecordingPauses] = useState<number>(0)
   const [listenStartTime, setListenStartTime] = useState<number>(0)
+  const [showMetadataPanel, setShowMetadataPanel] = useState(false)
+  const [currentStoryId, setCurrentStoryId] = useState<string | null>(null)
+  const [recordingTranscript, setRecordingTranscript] = useState<string>('')
   const navigate = useNavigate()
   const { track } = useAnalytics()
   const { toast } = useToast()
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const hasTrackedImpressionRef = useRef(false)
+
+  // Get persona config
+  const personaConfig = persona ? getPersonaConfig(persona as any) : null
 
   // Track prompt impression on mount
   useEffect(() => {
@@ -207,18 +215,35 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       }
     } as any)
     
-    // Navigate to new story page with recording data
-    setTimeout(() => {
-      if (promptInstance) {
-        const searchParams = new URLSearchParams({
-          type: 'voice',
-          promptTitle: promptInstance.prompt?.title || '',
-          prompt_id: promptInstance.id,
-          prompt_text: promptInstance.prompt?.body || ''
-        })
-        navigate(`/stories/new?${searchParams.toString()}`)
-      }
-    }, 500)
+    // Check if archivist persona should open metadata panel
+    if (personaConfig?.postRecordAction === 'openMetadataPanel') {
+      // Simulate transcript for now (in real app, this would come from actual recording)
+      setRecordingTranscript('Sample transcript from recording...')
+      setShowMetadataPanel(true)
+      setRecordingState('idle')
+      
+      track({
+        event_name: 'metadata_panel_opened',
+        properties: {
+          prompt_id: promptInstance?.id,
+          persona,
+          trigger: 'post_record'
+        }
+      } as any)
+    } else {
+      // Navigate to new story page for other personas
+      setTimeout(() => {
+        if (promptInstance) {
+          const searchParams = new URLSearchParams({
+            type: 'voice',
+            promptTitle: promptInstance.prompt?.title || '',
+            prompt_id: promptInstance.id,
+            prompt_text: promptInstance.prompt?.body || ''
+          })
+          navigate(`/stories/new?${searchParams.toString()}`)
+        }
+      }, 500)
+    }
   }
 
   const handleWriteInstead = () => {
@@ -650,6 +675,25 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
           onSelectResponse={handleResponseSelect}
         />
       )}
+
+      {/* Metadata Panel (Archivist Mode) */}
+      <MetadataPanel
+        isOpen={showMetadataPanel}
+        onClose={() => {
+          setShowMetadataPanel(false)
+          track({
+            event_name: 'metadata_panel_closed',
+            properties: {
+              prompt_id: promptInstance?.id,
+              persona
+            }
+          } as any)
+        }}
+        storyId={currentStoryId || undefined}
+        transcript={recordingTranscript}
+        promptId={promptInstance?.id}
+        familyId={promptInstance?.family_id || ''}
+      />
     </div>
     )
   }
