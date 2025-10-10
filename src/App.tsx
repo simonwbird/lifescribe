@@ -24,6 +24,7 @@ const NewStory = () => <LazyRoute factory={() => import("./pages/NewStory")} />
 const DraftsPage = () => <LazyRoute factory={() => import("./pages/DraftsPage")} />
 const StoryDetail = () => <LazyRoute factory={() => import("./pages/StoryDetail")} />
 const Prompts = () => <LazyRoute factory={() => import("./pages/Prompts")} />
+const PromptsSimple = () => <LazyRoute factory={() => import("./pages/PromptsSimple")} />
 const FamilyTree = () => <LazyRoute factory={() => import("./pages/FamilyTree")} />
 const PersonProfile = () => <LazyRoute factory={() => import("./pages/PersonProfile")} />
 const Collections = () => <LazyRoute factory={() => import("./pages/Collections")} />
@@ -155,6 +156,7 @@ function AppContent() {
       <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />
       <Route path="/stories/:id/edit" element={<AuthGate><StoryEdit /></AuthGate>} />
       <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />
+      <Route path="/prompts/simple" element={<AuthGate><PromptsSimple /></AuthGate>} />
       <Route path="/prompts/hub" element={<AuthGate><PromptHub /></AuthGate>} />
       <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
       <Route path="/sharing" element={<AuthGate><SharingPermissions /></AuthGate>} />
