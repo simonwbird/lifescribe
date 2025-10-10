@@ -45,7 +45,6 @@ export default function PhotoGalleryBlock({
             id,
             file_path,
             mime_type,
-            caption,
             created_at
           )
         `)
