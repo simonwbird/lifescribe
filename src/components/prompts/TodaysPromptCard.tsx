@@ -44,6 +44,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   const [showMetadataPanel, setShowMetadataPanel] = useState(false)
   const [currentStoryId, setCurrentStoryId] = useState<string | null>(null)
   const [recordingTranscript, setRecordingTranscript] = useState<string>('')
+  const [isShuffling, setIsShuffling] = useState(false)
   const navigate = useNavigate()
   const { track } = useAnalytics()
   const { toast } = useToast()
@@ -271,6 +272,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
 
   const handleShuffle = () => {
     if (onShuffle) {
+      setIsShuffling(true)
       track({
         event_name: 'shuffle',
         properties: {
@@ -280,6 +282,8 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
         }
       } as any)
       onShuffle()
+      // Reset shuffle animation after transition completes
+      setTimeout(() => setIsShuffling(false), 200)
     }
   }
 
@@ -408,14 +412,18 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               variant="ghost" 
               size="lg" 
               className={cn(
-                "gap-2 h-12 px-6 transition-all",
+                "gap-2 h-12 px-6",
+                "transition-all duration-150 ease-out",
                 "hover:bg-accent"
               )}
               onClick={handleShuffle}
               disabled={!onShuffle || recordingState !== 'idle'}
               title="Get a different prompt."
             >
-              <Shuffle className="h-5 w-5 transition-transform duration-300 hover:rotate-180" />
+              <Shuffle className={cn(
+                "h-5 w-5 transition-transform duration-150 ease-out",
+                isShuffling && "rotate-180"
+              )} />
               Shuffle
             </Button>
           </div>

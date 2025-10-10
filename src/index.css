@@ -32,7 +32,7 @@ All colors MUST be HSL for consistency
 
 /* Typography System - Ancestry.com inspired */
 :root {
-  --font-sans: Inter, "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
 }
 
@@ -123,19 +123,14 @@ small, .overline {
     --z-4: 40;
     --z-5: 50;
 
-    /* Transition System */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Transition System - optimized for Shuffle and state transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
 
     /* Focus styles for better accessibility */
     --focus-ring: 2px solid hsl(var(--primary));
     --focus-ring-offset: 2px;
-    
-    /* Performance budget variables */
-    --transition-fast: 150ms ease-out;
-    --transition-normal: 250ms ease-out;
-    --transition-slow: 350ms ease-out;
 
     /* ==================== HERITAGE PALETTE ==================== */
     
@@ -410,7 +405,10 @@ small, .overline {
 /* Terracotta Component Classes */
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-2xl px-5 py-3 font-medium transition-colors focus:outline-none;
+    @apply inline-flex items-center justify-center rounded-2xl font-medium focus:outline-none;
+    padding: 0.75rem 1.5rem;
+    min-height: 2.75rem;
+    transition: all var(--transition-fast);
     box-shadow: 0 0 0 0 rgba(0,0,0,0);
   }
   
@@ -421,6 +419,8 @@ small, .overline {
   
   .btn-primary:hover {
     background: hsl(var(--brand-600));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
   }
   
   .btn-primary:focus-visible {
@@ -436,6 +436,8 @@ small, .overline {
   .btn-outline:hover {
     background: hsl(var(--brand-700));
     color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
   }
 
   .chip {
@@ -446,13 +448,15 @@ small, .overline {
   }
 
   .card-terracotta {
-    @apply rounded-2xl p-6;
+    @apply rounded-2xl;
+    padding: 1.5rem; /* 24px minimum */
     background: white;
     box-shadow: var(--shadow-card);
   }
   
   .card-tint {
-    @apply rounded-2xl p-6;
+    @apply rounded-2xl;
+    padding: 1.5rem; /* 24px minimum */
     background: hsl(var(--neutral-card));
     box-shadow: var(--shadow-card);
   }

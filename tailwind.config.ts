@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'Helvetica Neue', 'Arial', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
         serif: ['"Source Serif 4"', 'Georgia', '"Times New Roman"', 'serif'],
       },
       fontSize: {
@@ -147,9 +147,9 @@ export default {
         '5': 'var(--z-5)',   // 50
       },
       transitionDuration: {
-        'fast': 'var(--transition-fast)',   // 150ms
-        'base': 'var(--transition-base)',   // 250ms
-        'slow': 'var(--transition-slow)',   // 350ms
+        'fast': '150ms',   // Shuffle and state transitions
+        'base': '200ms',   // Standard interactions
+        'slow': '300ms',   // Larger animations
       },
       keyframes: {
         "accordion-down": {
