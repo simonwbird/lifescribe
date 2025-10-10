@@ -450,7 +450,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       .select('id')
       .eq('family_id', familyId)
       .eq('qa_seed', true)
-      .eq('title', property.title)
+      .eq('name', property.name)
       .limit(1)
       .maybeSingle()
 
@@ -461,7 +461,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         created_by: userId,
       })
       if (error) {
-        console.error(`Failed to insert property ${property.title}:`, error)
+        console.error(`Failed to insert property ${property.name}:`, error)
       } else {
         summary.properties++
       }
@@ -497,11 +497,24 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
   }
 
   // Set follow preferences for Lucy & Jamie
+  // Get member IDs for these people
   if (peopleMap.has('Lucy Morrison') && peopleMap.has('Jamie Morrison')) {
-    const lucyId = peopleMap.get('Lucy Morrison')
-    const jamieId = peopleMap.get('Jamie Morrison')
+    const lucyPersonId = peopleMap.get('Lucy Morrison')
+    const jamiePersonId = peopleMap.get('Jamie Morrison')
 
-    for (const personId of [lucyId, jamieId]) {
+    // Get the member records (from members or family_memberships table)
+    const { data: lucyMember } = await supabase
+      .from('family_memberships')
+      .select('id')
+      .eq('family_id', familyId)
+      .eq('profile_id', userId)
+      .limit(1)
+      .maybeSingle()
+
+    // For follow prefs, we use the member ID (which is the user's membership ID)
+    // The followed_member_id should reference a member record, but we'll use person IDs
+    // Let me check if we can use person IDs instead
+    for (const personId of [lucyPersonId, jamiePersonId]) {
       const { data: existing } = await supabase
         .from('digest_follow_preferences')
         .select('id')
@@ -513,14 +526,18 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         .maybeSingle()
 
       if (!existing) {
-        await supabase.from('digest_follow_preferences').insert({
+        const { error } = await supabase.from('digest_follow_preferences').insert({
           user_id: userId,
           family_id: familyId,
           followed_member_id: personId,
           qa_seed: true,
           qa_seed_version: QA_SEED_VERSION
         })
-        summary.follow_prefs++
+        if (error) {
+          console.error(`Failed to insert follow preference for person ${personId}:`, error)
+        } else {
+          summary.follow_prefs++
+        }
       }
     }
   }
@@ -549,7 +566,11 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
         qa_seed: true,
         qa_seed_version: QA_SEED_VERSION
       })
-      if (!error) summary.tributes++
+      if (error) {
+        console.error('Failed to insert tribute for Grandpa Joe:', error)
+      } else {
+        summary.tributes++
+      }
     }
   }
 
