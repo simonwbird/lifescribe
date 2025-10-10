@@ -11,11 +11,11 @@ interface RoleGateProps {
 }
 
 export default function RoleGate({ children, role, fallback }: RoleGateProps) {
-  const { roles, loading, rolesLoading, isSuperAdmin } = useAuth()
+  const { roles, loading, rolesLoading, profileLoading, isSuperAdmin } = useAuth()
   const navigate = useNavigate()
 
-  // Show loading while roles are being fetched
-  if (loading || rolesLoading) {
+  // Show loading while roles/profile are being fetched
+  if (loading || rolesLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
