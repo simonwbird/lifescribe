@@ -24,6 +24,9 @@ verify_jwt = false
 [functions.transcribe]
 verify_jwt = true
 
+[functions.transcribe-audio]
+verify_jwt = true
+
 [functions.smart-transcribe]
 verify_jwt = true
 
