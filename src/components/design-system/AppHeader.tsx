@@ -62,13 +62,53 @@ export function AppHeader() {
         <div className="flex items-center gap-1">
           {/* Desktop Navigation Tabs */}
           <nav className="hidden lg:flex items-center gap-1 mr-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={activeSection === 'stories' ? 'bg-accent text-accent-foreground' : ''}
-            >
-              <Link to="/prompts/hub">Stories</Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`${activeSection === 'stories' ? 'bg-accent text-accent-foreground' : ''} gap-1`}
+                  onClick={() => window.location.href = '/stories/new'}
+                  onMouseEnter={(e) => {
+                    const trigger = e.currentTarget;
+                    setTimeout(() => trigger.click(), 100);
+                  }}
+                >
+                  Stories
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="start" 
+                className="w-48 bg-background border shadow-lg z-50"
+              >
+                <DropdownMenuItem asChild>
+                  <Link to="/stories/new" className="cursor-pointer">
+                    <PenTool className="h-4 w-4 mr-2" />
+                    New Story
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/mylife" className="cursor-pointer">
+                    <BookHeart className="h-4 w-4 mr-2" />
+                    My Life Page
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/tree" className="cursor-pointer">
+                    <GitBranch className="h-4 w-4 mr-2" />
+                    Family Tree
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/prompts/hub" className="cursor-pointer">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Prompts
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="sm"
