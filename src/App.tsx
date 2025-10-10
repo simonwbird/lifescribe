@@ -27,6 +27,7 @@ const Prompts = () => <LazyRoute factory={() => import("./pages/Prompts")} />
 const PromptsSimple = () => <LazyRoute factory={() => import("./pages/PromptsSimple")} />
 const FamilyTree = () => <LazyRoute factory={() => import("./pages/FamilyTree")} />
 const PersonProfile = () => <LazyRoute factory={() => import("./pages/PersonProfile")} />
+const PersonPage = () => <LazyRoute factory={() => import("./pages/PersonPage")} />
 const Collections = () => <LazyRoute factory={() => import("./pages/Collections")} />
 const Media = () => <LazyRoute factory={() => import("./pages/Media")} />
 const SearchPage = () => <LazyRoute factory={() => import("./pages/Search")} />
@@ -170,6 +171,7 @@ function AppContent() {
       <Route path="/family-tree/explorer" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthGate>} />
       <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />
       <Route path="/people" element={<AuthGate><People /></AuthGate>} />
+      <Route path="/people/:id/page" element={<AuthGate><PersonPage /></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
        <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />

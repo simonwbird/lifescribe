@@ -3579,6 +3579,7 @@ export type Database = {
           qa_seed_version: string | null
           slug: string | null
           surname: string | null
+          theme_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3609,6 +3610,7 @@ export type Database = {
           qa_seed_version?: string | null
           slug?: string | null
           surname?: string | null
+          theme_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3639,6 +3641,7 @@ export type Database = {
           qa_seed_version?: string | null
           slug?: string | null
           surname?: string | null
+          theme_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -3655,6 +3658,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_my_roles"
             referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "people_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "person_page_themes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3780,6 +3790,121 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      person_page_blocks: {
+        Row: {
+          block_order: number
+          content_json: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_enabled: boolean | null
+          person_id: string
+          type: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          block_order?: number
+          content_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          person_id: string
+          type: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          block_order?: number
+          content_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          person_id?: string
+          type?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_page_blocks_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_page_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          person_id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          person_id: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          person_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_page_permissions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_page_themes: {
+        Row: {
+          created_at: string
+          font_scale: number | null
+          id: string
+          name: string
+          palette: Json
+          shape: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          font_scale?: number | null
+          id?: string
+          name: string
+          palette?: Json
+          shape?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          font_scale?: number | null
+          id?: string
+          name?: string
+          palette?: Json
+          shape?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       person_redirects: {
         Row: {
