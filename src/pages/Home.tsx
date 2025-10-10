@@ -145,19 +145,26 @@ export default function Home() {
       setProfileId(user.id);
 
       // Get user's profile and family
-      const [profileResult, memberResult] = await Promise.all([supabase.from('profiles').select('simple_mode').eq('id', user.id).single(), supabase.from('members').select('family_id').eq('profile_id', user.id).single()]);
+      const [profileResult, memberResult] = await Promise.all([
+        supabase.from('profiles').select('simple_mode').eq('id', user.id).single(),
+        supabase.from('members').select('family_id').eq('profile_id', user.id).limit(1)
+      ])
       if (profileResult.data) {
-        setIsSimpleMode(profileResult.data.simple_mode ?? true);
+        setIsSimpleMode(profileResult.data.simple_mode ?? true)
       }
-      if (!memberResult.data) return;
-      setSpaceId(memberResult.data.family_id);
+      const firstMembership = Array.isArray(memberResult.data) ? memberResult.data[0] : null
+      if (!firstMembership) return
+      setSpaceId(firstMembership.family_id)
 
       // Check if family has other members
       const {
         data: memberCount
-      } = await supabase.from('members').select('id').eq('family_id', memberResult.data.family_id);
-      setHasOtherMembers((memberCount?.length || 0) > 1);
-      await Promise.all([loadActivities(memberResult.data.family_id), loadDrafts(user.id, memberResult.data.family_id)]);
+      } = await supabase.from('members').select('id').eq('family_id', firstMembership.family_id)
+      setHasOtherMembers((memberCount?.length || 0) > 1)
+      await Promise.all([
+        loadActivities(firstMembership.family_id),
+        loadDrafts(user.id, firstMembership.family_id)
+      ])
     } catch (error) {
       console.error('Error loading home data:', error);
     } finally {
