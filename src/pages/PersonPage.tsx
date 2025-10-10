@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
+import { AvatarService } from '@/lib/avatarService'
+import { getSignedMediaUrl } from '@/lib/media'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -35,6 +37,7 @@ export default function PersonPage() {
   const [showCustomizer, setShowCustomizer] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null)
   
   const {
     data,
@@ -53,6 +56,33 @@ export default function PersonPage() {
     }
     fetchUser()
   }, [])
+
+  // Resolve avatar URL from storage
+  useEffect(() => {
+    const resolveAvatar = async () => {
+      if (!data?.person.avatar_url) {
+        setResolvedAvatarUrl(null)
+        return
+      }
+
+      const avatarUrl = data.person.avatar_url
+
+      // If it's already a full URL, check if it needs refresh
+      if (avatarUrl.startsWith('http')) {
+        const refreshed = await AvatarService.getValidAvatarUrl(avatarUrl)
+        setResolvedAvatarUrl(refreshed)
+        return
+      }
+
+      // If it's a storage path, get signed URL
+      if (data.person.family_id) {
+        const signedUrl = await getSignedMediaUrl(avatarUrl, data.person.family_id)
+        setResolvedAvatarUrl(signedUrl)
+      }
+    }
+
+    resolveAvatar()
+  }, [data?.person.avatar_url, data?.person.family_id])
 
   const canEdit = data?.permission?.role && 
     ['owner', 'co_curator', 'steward'].includes(data.permission.role)
@@ -329,7 +359,7 @@ export default function PersonPage() {
         {/* Person Header */}
         <div className="flex items-start gap-6 p-6 rounded-lg border bg-card">
           <Avatar className="h-24 w-24">
-            <AvatarImage src={person.avatar_url || ''} alt={person.full_name} />
+            <AvatarImage src={resolvedAvatarUrl || ''} alt={person.full_name} />
             <AvatarFallback className="text-2xl">
               {person.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'P'}
             </AvatarFallback>
