@@ -20,19 +20,34 @@ export function usePersonPageData(personId: string, viewerUserId: string | null)
           .from('people')
           .select('*')
           .eq('id', personId)
-          .single()
+          .maybeSingle()
 
         if (personError) throw personError
+        if (!person) {
+          setError('Page not found')
+          setData(null)
+          setLoading(false)
+          return
+        }
 
-        // Fetch blocks
-        const { data: blocks, error: blocksError } = await supabase
-          .from('person_page_blocks')
-          .select('*')
-          .eq('person_id', personId)
-          .eq('is_enabled', true)
-          .order('block_order', { ascending: true })
+        // Fetch blocks (non-blocking; default to empty)
+        let blocks: PersonPageBlock[] = []
+        try {
+          const { data: blocksData, error: blocksError } = await supabase
+            .from('person_page_blocks')
+            .select('*')
+            .eq('person_id', personId)
+            .eq('is_enabled', true)
+            .order('block_order', { ascending: true })
 
-        if (blocksError) throw blocksError
+          if (blocksError) {
+            console.warn('Blocks lookup failed; continuing with empty blocks', blocksError)
+          } else {
+            blocks = (blocksData || []) as PersonPageBlock[]
+          }
+        } catch (blocksErr) {
+          console.warn('Blocks lookup threw; continuing with empty blocks', blocksErr)
+        }
 
         // Fetch permission for current user (non-blocking)
         let permission: PersonPagePermission | null = null
