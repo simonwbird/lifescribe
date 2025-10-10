@@ -132,8 +132,6 @@ export function InlineAdminControls({
         description: 'Story has been deleted and removed from the family feed'
       })
 
-      onStoryAction?.('deleted')
-      
       // Trigger page reload to refresh feed
       window.location.reload()
     } catch (error: any) {

@@ -66,7 +66,21 @@ export default function FamilyUpdatesFeed({
   const [reactionStates, setReactionStates] = useState<Record<string, { liked: boolean; likeCount: number }>>({})
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [newFeedItems, setNewFeedItems] = useState<any[]>([])
+  const [localActivities, setLocalActivities] = useState(activities)
   const tickerRef = useRef<HTMLDivElement | null>(null)
+
+  // Update local activities when prop changes
+  useEffect(() => {
+    setLocalActivities(activities)
+  }, [activities])
+
+  // Handle admin actions
+  const handleAdminAction = (action: string, storyId: string) => {
+    if (action === 'delete') {
+      // Remove the story from local state immediately
+      setLocalActivities(prev => prev.filter(activity => activity.id !== `story-${storyId}`))
+    }
+  }
 
   // Load current user's profile (for avatar)
   useEffect(() => {
@@ -92,7 +106,7 @@ export default function FamilyUpdatesFeed({
   }, [])
 
   // Filter activities based on current filters
-  const filteredActivities = activities.filter((activity) => {
+  const filteredActivities = localActivities.filter((activity) => {
     // Filter by family member
     if (filters.member && activity.author_id !== filters.member) {
       return false
@@ -434,6 +448,7 @@ export default function FamilyUpdatesFeed({
               onNavigate={() => navigate(`/stories/${activity.id.replace('story-', '')}`)}
               showAdminActions={true}
               compact={true}
+              onAdminAction={handleAdminAction}
             />
           ))}
         </div>

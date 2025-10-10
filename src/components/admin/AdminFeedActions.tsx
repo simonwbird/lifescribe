@@ -75,9 +75,6 @@ export default function AdminFeedActions({
 
       onAction?.('delete', storyId)
       setShowDeleteDialog(false)
-
-      // Ensure feed updates immediately
-      window.location.reload()
     } catch (err) {
       console.error('Failed to delete story', err)
       toast({

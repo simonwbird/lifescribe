@@ -41,6 +41,7 @@ interface EnhancedFeedItemProps {
   onNavigate?: () => void;
   compact?: boolean;
   showAdminActions?: boolean;
+  onAdminAction?: (action: string, storyId: string) => void;
 }
 export function EnhancedFeedItem({
   activity,
@@ -50,7 +51,8 @@ export function EnhancedFeedItem({
   onToggleExpand,
   onNavigate,
   compact = false,
-  showAdminActions = false
+  showAdminActions = false,
+  onAdminAction
 }: EnhancedFeedItemProps) {
   const [showComments, setShowComments] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -179,9 +181,7 @@ export function EnhancedFeedItem({
                 <div onClick={(e) => e.stopPropagation()}>
                   <AdminFeedActions 
                     storyId={activity.id.replace('story-', '')} 
-                    onAction={(action, storyId) => {
-                      console.log('Admin action:', action, 'on story:', storyId);
-                    }} 
+                    onAction={onAdminAction} 
                   />
                 </div>
               )}
@@ -264,9 +264,7 @@ export function EnhancedFeedItem({
           </div>
           
           <div className="flex items-center gap-2">
-            {showAdminActions && <AdminFeedActions storyId={activity.id.replace('story-', '')} onAction={(action, storyId) => {
-            console.log('Admin action:', action, 'on story:', storyId);
-          }} />}
+            {showAdminActions && <AdminFeedActions storyId={activity.id.replace('story-', '')} onAction={onAdminAction} />}
             
           </div>
         </div>
