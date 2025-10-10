@@ -11,6 +11,7 @@ import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw } from 'lucide-reac
 import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
+import BlockRenderer from '@/components/person-page/BlockRenderer'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
@@ -288,9 +289,11 @@ export default function PersonPage() {
                           onRemove={() => handleRemoveBlock(block.id)}
                           dragHandleProps={provided.dragHandleProps}
                         >
-                          <div className="text-muted-foreground">
-                            Block content for {block.type} will be rendered here
-                          </div>
+                          <BlockRenderer 
+                            block={block} 
+                            personId={person.id}
+                            currentUserId={currentUserId}
+                          />
                         </PersonPageBlock>
                       </div>
                     )}
