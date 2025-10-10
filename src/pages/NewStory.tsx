@@ -18,8 +18,9 @@ export default function NewStory() {
   const [families, setFamilies] = useState<{ id: string; name: string }[]>([])
   const [needsFamilyPicker, setNeedsFamilyPicker] = useState(false)
   
-  // Get type from URL (?type=text|photo|voice)
+  // Get type and family_id from URL (?type=text|photo|voice&family_id=...)
   const typeParam = searchParams.get('type')
+  const familyIdParam = searchParams.get('family_id')
   const defaultTab = typeParam === 'photo' || typeParam === 'voice' ? typeParam : 'text'
   const [activeTab, setActiveTab] = useState(defaultTab)
 
@@ -47,8 +48,12 @@ export default function NewStory() {
 
         setFamilies(familyList)
 
+        // Check if family_id was provided in URL (from New Memory modal)
+        if (familyIdParam && familyList.some(f => f.id === familyIdParam)) {
+          setFamilyId(familyIdParam)
+        }
         // Auto-select if only one family
-        if (familyList.length === 1) {
+        else if (familyList.length === 1) {
           setFamilyId(familyList[0].id)
         } else if (familyList.length > 1) {
           setNeedsFamilyPicker(true)

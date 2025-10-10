@@ -8,6 +8,7 @@ import { PrivacyBadge } from '@/components/ui/privacy-badge'
 import { MissingContentBanner } from '@/components/audit/MissingContentBanner'
 import { DiscoveryModeBanner } from '@/components/discovery/DiscoveryModeBanner'
 import { useIsUnder13 } from '@/hooks/useUserAge'
+import { NewMemoryFAB } from '@/components/NewMemoryFAB'
 
 export default function FeedPage() {
   const [familyId, setFamilyId] = useState<string>('')
@@ -18,6 +19,25 @@ export default function FeedPage() {
 
   useEffect(() => {
     initializePage()
+  }, [])
+
+  // Keyboard shortcut: N to open New Memory modal
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Only trigger if not in an input/textarea and N is pressed
+      if (
+        (e.key === 'n' || e.key === 'N') &&
+        !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)
+      ) {
+        e.preventDefault()
+        // Trigger FAB click
+        const fab = document.querySelector('[data-testid="new-memory-fab"]') as HTMLButtonElement
+        fab?.click()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   const initializePage = async () => {
@@ -79,6 +99,9 @@ export default function FeedPage() {
           currentUserId={currentUserId} 
         />
       </main>
+
+      {/* Floating Action Button */}
+      <NewMemoryFAB />
     </div>
   )
 }

@@ -184,6 +184,9 @@ export type AnalyticsEvent =
   | 'upcoming_add_photo_clicked'
   | 'digest_follow_toggled'
   | 'digest_follow_everyone'
+  // New Memory FAB events
+  | 'new_memory_opened'
+  | 'new_memory_selected'
   // Admin impersonation events
   | 'ADMIN_IMPERSONATE_STARTED'
   | 'ADMIN_IMPERSONATE_ENDED'
