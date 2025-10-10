@@ -13,13 +13,13 @@ import { BLOCK_LIBRARY, BlockType } from '@/types/personPage'
 import { 
   User, Calendar, Camera, BookOpen, Heart, 
   Users, Award, Star, Quote, MessageSquare, MessageCircle,
-  TrendingUp, Grid, Mic, MapPin, Image, Book, Flag, Clock
+  TrendingUp, Grid, Mic, MapPin, Image, Book, Flag, Clock, FileText
 } from 'lucide-react'
 
 const iconMap = {
   User, Calendar, Camera, BookOpen, Heart, 
   Users, Award, Star, Quote, MessageSquare, MessageCircle,
-  TrendingUp, Grid, Mic, MapPin, Image, Book, Flag, Clock
+  TrendingUp, Grid, Mic, MapPin, Image, Book, Flag, Clock, FileText
 }
 
 interface BlockLibraryDialogProps {

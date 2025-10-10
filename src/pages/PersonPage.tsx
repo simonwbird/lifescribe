@@ -422,6 +422,7 @@ export default function PersonPage() {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
+                  className="lg:grid lg:grid-cols-12 lg:gap-8"
                 >
                   {blocks.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg col-span-full">
@@ -436,47 +437,129 @@ export default function PersonPage() {
                       )}
                     </div>
                   ) : (
-                    blocks.map((block, index) => (
-                      <Draggable 
-                        key={block.id} 
-                        draggableId={block.id} 
-                        index={index}
-                        isDragDisabled={!canEdit}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={cn(
-                              snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
-                            )}
-                          >
-                            <PersonPageBlock
-                              block={block}
-                              canEdit={!!canEdit}
-                              onVisibilityChange={(visibility) => 
-                                handleVisibilityChange(block.id, visibility)
-                              }
-                              onRemove={() => handleRemoveBlock(block.id)}
-                              dragHandleProps={provided.dragHandleProps}
-                            >
-                              <BlockRenderer 
-                                block={block} 
-                                person={{
-                                  ...person,
-                                  family_id: person.family_id || ''
-                                }}
-                                currentUserId={currentUserId}
-                                canEdit={!!canEdit}
-                                onUpdate={() => {
-                                  window.location.reload()
-                                }}
-                              />
-                            </PersonPageBlock>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))
+                    <>
+                      {/* Main content column */}
+                      <div className="lg:col-span-8 space-y-6">
+                        {blocks
+                          .filter(block => block.type !== 'quick_facts')
+                          .map((block, index) => {
+                            // Get actual index in original blocks array for drag and drop
+                            const actualIndex = blocks.findIndex(b => b.id === block.id)
+                            return (
+                              <Draggable 
+                                key={block.id} 
+                                draggableId={block.id} 
+                                index={actualIndex}
+                                isDragDisabled={!canEdit}
+                              >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={cn(
+                                      snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
+                                    )}
+                                  >
+                                    <PersonPageBlock
+                                      block={block}
+                                      canEdit={!!canEdit}
+                                      onVisibilityChange={(visibility) => 
+                                        handleVisibilityChange(block.id, visibility)
+                                      }
+                                      onRemove={() => handleRemoveBlock(block.id)}
+                                      dragHandleProps={provided.dragHandleProps}
+                                    >
+                                      <BlockRenderer 
+                                        block={block} 
+                                        person={{
+                                          ...person,
+                                          family_id: person.family_id || ''
+                                        }}
+                                        currentUserId={currentUserId}
+                                        canEdit={!!canEdit}
+                                        onUpdate={() => {
+                                          window.location.reload()
+                                        }}
+                                      />
+                                    </PersonPageBlock>
+                                  </div>
+                                )}
+                              </Draggable>
+                            )
+                          })}
+                      </div>
+
+                      {/* Sidebar column for Quick Facts (desktop only, mobile shows inline) */}
+                      <div className="lg:col-span-4">
+                        {blocks
+                          .filter(block => block.type === 'quick_facts')
+                          .map((block, index) => {
+                            const actualIndex = blocks.findIndex(b => b.id === block.id)
+                            return (
+                              <div key={block.id} className="lg:block">
+                                {/* On mobile, show after bio */}
+                                <div className="lg:hidden">
+                                  <Draggable 
+                                    draggableId={block.id} 
+                                    index={actualIndex}
+                                    isDragDisabled={!canEdit}
+                                  >
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className={cn(
+                                          "mb-6",
+                                          snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
+                                        )}
+                                      >
+                                        <PersonPageBlock
+                                          block={block}
+                                          canEdit={!!canEdit}
+                                          onVisibilityChange={(visibility) => 
+                                            handleVisibilityChange(block.id, visibility)
+                                          }
+                                          onRemove={() => handleRemoveBlock(block.id)}
+                                          dragHandleProps={provided.dragHandleProps}
+                                        >
+                                          <BlockRenderer 
+                                            block={block} 
+                                            person={{
+                                              ...person,
+                                              family_id: person.family_id || ''
+                                            }}
+                                            currentUserId={currentUserId}
+                                            canEdit={!!canEdit}
+                                            onUpdate={() => {
+                                              window.location.reload()
+                                            }}
+                                          />
+                                        </PersonPageBlock>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                </div>
+                                
+                                {/* On desktop, show in sidebar (no drag, sticky) */}
+                                <div className="hidden lg:block">
+                                  <BlockRenderer 
+                                    block={block} 
+                                    person={{
+                                      ...person,
+                                      family_id: person.family_id || ''
+                                    }}
+                                    currentUserId={currentUserId}
+                                    canEdit={!!canEdit}
+                                    onUpdate={() => {
+                                      window.location.reload()
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </>
                   )}
                   {provided.placeholder}
                 </div>

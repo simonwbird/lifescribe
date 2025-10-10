@@ -6,6 +6,7 @@ import HeroMemorialBlock from './blocks/HeroMemorialBlock'
 import BioOverviewBlock from './blocks/BioOverviewBlock'
 import TimelineBlock from './blocks/TimelineBlock'
 import { ObjectsPlacesBlock } from './blocks/ObjectsPlacesBlock'
+import QuickFactsBlock from './blocks/QuickFactsBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -125,6 +126,16 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
         <div className="text-center py-8">
           <p className="text-muted-foreground">Service events coming soon</p>
         </div>
+      )
+
+    case 'quick_facts':
+      return (
+        <QuickFactsBlock
+          person={person}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
       )
 
     default:

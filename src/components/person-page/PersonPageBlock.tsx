@@ -47,6 +47,7 @@ const blockTitles: Record<string, string> = {
   now_next: 'Now & Next',
   service_events: 'Services & Events',
   objects_places: 'Places & Things',
+  quick_facts: 'Quick Facts',
 }
 
 export default function PersonPageBlock({

@@ -63,6 +63,7 @@ export type BlockType =
   | 'achievements'
   | 'milestones'
   | 'quotes'
+  | 'quick_facts'
 
 export interface PersonPageData {
   person: {
@@ -293,6 +294,21 @@ export const BLOCK_LIBRARY: Array<{
     description: 'Memorable sayings',
     icon: 'Quote',
     defaultContent: { quotes: [] },
+    presets: ['both']
+  },
+  {
+    type: 'quick_facts',
+    label: 'Quick Facts',
+    description: 'Key biographical information sidebar',
+    icon: 'FileText',
+    defaultContent: { 
+      occupations: [],
+      schools: [],
+      spouses: [],
+      children: [],
+      notable_places: [],
+      languages: []
+    },
     presets: ['both']
   }
 ]
