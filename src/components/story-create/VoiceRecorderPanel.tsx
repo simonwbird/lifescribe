@@ -14,9 +14,15 @@ interface VoiceRecorderPanelProps {
   onTranscriptReady: (transcript: string, audioBlob: Blob, duration: number) => void
   onPublish?: () => void
   className?: string
+  initialAudio?: { blob: Blob; duration: number } // Pre-loaded audio from prompt recording
 }
 
-export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, className }: VoiceRecorderPanelProps) {
+export default function VoiceRecorderPanel({ 
+  onTranscriptReady, 
+  onPublish, 
+  className,
+  initialAudio 
+}: VoiceRecorderPanelProps) {
   const { toast } = useToast()
   const [state, setState] = useState<RecorderState>('idle')
   const [recordingTime, setRecordingTime] = useState(0)
@@ -38,6 +44,19 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
     const hasMediaDevices = !!navigator.mediaDevices?.getUserMedia
     setMicCapable(isSecureContext && hasMediaDevices)
   }, [])
+
+  // Handle initial audio from prompt recording
+  useEffect(() => {
+    if (initialAudio && initialAudio.blob) {
+      const url = URL.createObjectURL(initialAudio.blob)
+      setAudioBlob(initialAudio.blob)
+      setAudioUrl(url)
+      setDuration(initialAudio.duration)
+      
+      // Auto-transcribe the pre-recorded audio
+      transcribeAudio(initialAudio.blob, initialAudio.duration)
+    }
+  }, [initialAudio])
 
   // Recording timer
   useEffect(() => {
@@ -142,7 +161,7 @@ export default function VoiceRecorderPanel({ onTranscriptReady, onPublish, class
       const base64Audio = await base64Promise
 
       // Call transcription function
-      const { data, error } = await supabase.functions.invoke('transcribe', {
+      const { data, error } = await supabase.functions.invoke('smart-transcribe', {
         body: { audio: base64Audio }
       })
 

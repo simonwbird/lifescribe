@@ -45,8 +45,8 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   const [currentStoryId, setCurrentStoryId] = useState<string | null>(null)
   const [recordingTranscript, setRecordingTranscript] = useState<string>('')
   const [isShuffling, setIsShuffling] = useState(false)
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const navigate = useNavigate()
   const { track } = useAnalytics()
@@ -100,15 +100,12 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
           mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
         })
         
-        const chunks: Blob[] = []
+        audioChunksRef.current = [] // Reset chunks
+        
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
-            chunks.push(e.data)
+            audioChunksRef.current.push(e.data)
           }
-        }
-        
-        recorder.onstop = () => {
-          setAudioChunks(chunks)
         }
         
         recorder.start()
@@ -130,7 +127,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       }, 1000)
       return () => {
         clearInterval(timer)
-        if (mediaRecorderRef.current) {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop()
         }
       }
@@ -273,10 +270,14 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       }
     } as any)
     
-    // Wait for audio chunks to be ready, then navigate
+    // Give MediaRecorder time to finalize, then process audio
     setTimeout(() => {
-      if (audioChunks.length > 0 && promptInstance) {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+      const chunks = audioChunksRef.current
+      
+      if (chunks.length > 0 && promptInstance) {
+        const audioBlob = new Blob(chunks, { 
+          type: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+        })
         
         // Store audio temporarily in sessionStorage
         const reader = new FileReader()

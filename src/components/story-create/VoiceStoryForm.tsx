@@ -20,6 +20,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [autoSaved, setAutoSaved] = useState(false)
   const [searchParams] = useSearchParams()
+  const [initialAudio, setInitialAudio] = useState<{ blob: Blob; duration: number } | null>(null)
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -46,68 +47,26 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
         fetch(audioData)
           .then(res => res.blob())
           .then(blob => {
+            const duration = audioDuration ? parseFloat(audioDuration) : 0
+            setInitialAudio({ blob, duration })
             setAudioBlob(blob)
-            setDuration(audioDuration ? parseFloat(audioDuration) : 0)
+            setDuration(duration)
             
             // Clear from session storage
             sessionStorage.removeItem('pendingAudioRecording')
             sessionStorage.removeItem('pendingAudioDuration')
-            
-            // Trigger transcription
-            transcribeExistingAudio(blob, audioDuration ? parseFloat(audioDuration) : 0)
+          })
+          .catch(err => {
+            console.error('Error loading recording:', err)
+            toast({
+              title: 'Could not load recording',
+              description: 'Please record again.',
+              variant: 'destructive'
+            })
           })
       }
     }
   }, [searchParams])
-
-  const transcribeExistingAudio = async (blob: Blob, audioDuration: number) => {
-    try {
-      // Convert blob to base64
-      const reader = new FileReader()
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = (reader.result as string).split(',')[1]
-          resolve(base64)
-        }
-        reader.onerror = reject
-      })
-      reader.readAsDataURL(blob)
-
-      const base64Audio = await base64Promise
-
-      // Call transcription function
-      const { data, error } = await supabase.functions.invoke('transcribe', {
-        body: { audio: base64Audio }
-      })
-
-      if (error) throw error
-      if (!data?.text) throw new Error('No transcription text returned')
-
-      // Set content with transcription
-      const cleanedText = data.text
-        .replace(/\s+/g, ' ')
-        .replace(/\s+([.,!?])/g, '$1')
-        .trim()
-
-      setContent(cleanedText)
-      
-      // Auto-save as draft
-      await autoSaveDraft(cleanedText, blob)
-
-      toast({
-        title: 'Recording loaded!',
-        description: `Your ${Math.round(audioDuration)}s recording has been transcribed.`,
-      })
-
-    } catch (error: any) {
-      console.error('Transcription error:', error)
-      toast({
-        title: 'Transcription unavailable',
-        description: 'You can still manually type the content.',
-        variant: 'destructive'
-      })
-    }
-  }
 
   const handleTranscriptReady = async (transcript: string, blob: Blob, audioDuration: number) => {
     setAudioBlob(blob)
@@ -280,6 +239,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
           <VoiceRecorderPanel
             onTranscriptReady={handleTranscriptReady}
             onPublish={() => handleSubmit(new Event('submit') as any, false)}
+            initialAudio={initialAudio || undefined}
           />
 
           <div>
