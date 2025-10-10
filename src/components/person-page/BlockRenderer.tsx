@@ -1,26 +1,51 @@
 import React from 'react'
 import { PersonPageBlock } from '@/types/personPage'
 import PeopleWebBlock from './blocks/PeopleWebBlock'
+import HeroLifeBlock from './blocks/HeroLifeBlock'
+import HeroMemorialBlock from './blocks/HeroMemorialBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
-  personId: string
+  person: {
+    id: string
+    full_name: string
+    preferred_name?: string
+    avatar_url?: string
+    bio?: string
+    birth_date?: string
+    death_date?: string
+    status: 'living' | 'passed'
+  }
   currentUserId: string | null
+  canEdit: boolean
+  onUpdate?: () => void
 }
 
-export default function BlockRenderer({ block, personId, currentUserId }: BlockRendererProps) {
+export default function BlockRenderer({ block, person, currentUserId, canEdit, onUpdate }: BlockRendererProps) {
   switch (block.type) {
-    case 'people_web':
-    case 'relationships':
-      return <PeopleWebBlock personId={personId} currentUserId={currentUserId} />
-
     case 'hero':
+      return (
+        <HeroLifeBlock
+          person={person}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
+      )
+
     case 'hero_memorial':
       return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Hero section coming soon</p>
-        </div>
+        <HeroMemorialBlock
+          person={person}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
       )
+
+    case 'people_web':
+    case 'relationships':
+      return <PeopleWebBlock personId={person.id} currentUserId={currentUserId} />
 
     case 'timeline':
     case 'life_arc_timeline':

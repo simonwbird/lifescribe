@@ -291,8 +291,13 @@ export default function PersonPage() {
                         >
                           <BlockRenderer 
                             block={block} 
-                            personId={person.id}
+                            person={person}
                             currentUserId={currentUserId}
+                            canEdit={!!canEdit}
+                            onUpdate={() => {
+                              // Refetch data after update
+                              window.location.reload()
+                            }}
                           />
                         </PersonPageBlock>
                       </div>
