@@ -94,7 +94,7 @@ export function AppHeader() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/tree" className="cursor-pointer">
+                  <Link to="/tree" className="cursor-pointer flex items-center">
                     <GitBranch className="h-4 w-4 mr-2" />
                     Family Tree
                   </Link>
