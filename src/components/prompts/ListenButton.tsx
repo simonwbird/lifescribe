@@ -23,16 +23,15 @@ export function ListenButton({
   showLabel = false
 }: ListenButtonProps) {
   const { track } = useAnalytics()
-  const { isPlaying, speak, stop, currentText } = useSpeechPlayback({
-    rate: 0.9,
-    pitch: 1.0,
-    volume: 1.0,
+  const { isPlaying, isLoading, speak, stop, currentText } = useSpeechPlayback({
+    voice: 'Aria', // Premium ElevenLabs voice
     onEnd: () => {
       track({
         event_name: 'tts_play_end',
         properties: {
           prompt_id: promptId,
-          text_length: text.length
+          text_length: text.length,
+          voice: 'elevenlabs_aria'
         }
       } as any)
     },
@@ -41,22 +40,9 @@ export function ListenButton({
     }
   })
 
-  const [isSupported, setIsSupported] = useState(true)
   const isThisPlaying = isPlaying && currentText === text
 
-  useEffect(() => {
-    // Check if Web Speech API is supported
-    if (!('speechSynthesis' in window)) {
-      setIsSupported(false)
-    }
-  }, [])
-
   const handleClick = async () => {
-    if (!isSupported) {
-      alert('Speech playback is not supported in your browser. Please try using Chrome, Safari, or Edge.')
-      return
-    }
-
     if (isThisPlaying) {
       stop()
     } else {
@@ -64,15 +50,12 @@ export function ListenButton({
         event_name: 'tts_play_start',
         properties: {
           prompt_id: promptId,
-          text_length: text.length
+          text_length: text.length,
+          voice: 'elevenlabs_aria'
         }
       } as any)
       await speak(text)
     }
-  }
-
-  if (!isSupported) {
-    return null // Hide button if not supported
   }
 
   return (
@@ -88,7 +71,16 @@ export function ListenButton({
       aria-label={isThisPlaying ? 'Stop reading prompt' : 'Hear this prompt'}
       aria-pressed={isThisPlaying}
     >
-      {isThisPlaying ? (
+      {isLoading ? (
+        <>
+          <Loader2 className={cn(
+            size === 'icon' ? 'h-5 w-5' : 'h-4 w-4',
+            showLabel && 'mr-2',
+            'animate-spin'
+          )} />
+          {showLabel && 'Loading...'}
+        </>
+      ) : isThisPlaying ? (
         <>
           <VolumeX className={cn(
             size === 'icon' ? 'h-5 w-5' : 'h-4 w-4',

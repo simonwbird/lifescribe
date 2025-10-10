@@ -1,17 +1,19 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { speak, stopSpeaking, isSpeaking as checkIsSpeaking, type SpeechOptions } from '@/utils/speechUtils'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { supabase } from '@/integrations/supabase/client'
 
 export interface UseSpeechPlaybackOptions {
   rate?: number
   pitch?: number
   volume?: number
   lang?: string
+  voice?: string
   onEnd?: () => void
   onError?: (error: Error) => void
 }
 
 export interface UseSpeechPlaybackReturn {
   isPlaying: boolean
+  isLoading: boolean
   speak: (text: string) => Promise<void>
   stop: () => void
   toggle: (text: string) => void
@@ -19,62 +21,93 @@ export interface UseSpeechPlaybackReturn {
 }
 
 /**
- * React hook for managing speech playback
+ * React hook for managing speech playback with ElevenLabs
  * Provides controls for speaking text, stopping, and tracking playback state
  */
 export const useSpeechPlayback = (options: UseSpeechPlaybackOptions = {}): UseSpeechPlaybackReturn => {
+  const {
+    voice = 'Aria',
+    onEnd,
+    onError
+  } = options
+
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [currentText, setCurrentText] = useState<string | null>(null)
-  const checkIntervalRef = useRef<NodeJS.Timeout>()
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Check if speech is actually playing (polling for accuracy)
   useEffect(() => {
-    if (isPlaying) {
-      checkIntervalRef.current = setInterval(() => {
-        if (!checkIsSpeaking()) {
-          setIsPlaying(false)
-          setCurrentText(null)
-        }
-      }, 100)
-    }
-
     return () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current)
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
       }
     }
-  }, [isPlaying])
+  }, [])
 
   const speakText = useCallback(async (text: string) => {
     if (!text) return
 
     try {
-      setIsPlaying(true)
+      // Stop any ongoing playback
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+
+      setIsLoading(true)
       setCurrentText(text)
 
-      await speak(text, {
-        ...options,
-        onEnd: () => {
-          setIsPlaying(false)
-          setCurrentText(null)
-          options.onEnd?.()
-        },
-        onError: (error) => {
-          setIsPlaying(false)
-          setCurrentText(null)
-          options.onError?.(error)
-        }
+      // Call ElevenLabs TTS edge function
+      const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
+        body: { text, voice }
       })
+
+      if (error) throw error
+      if (!data?.audioContent) throw new Error('No audio data received')
+
+      // Create audio element and play
+      const audio = new Audio(`data:audio/mpeg;base64,${data.audioContent}`)
+      audioRef.current = audio
+
+      audio.onplay = () => {
+        setIsLoading(false)
+        setIsPlaying(true)
+      }
+
+      audio.onended = () => {
+        setIsPlaying(false)
+        setCurrentText(null)
+        audioRef.current = null
+        onEnd?.()
+      }
+
+      audio.onerror = (event) => {
+        console.error('Audio playback error:', event)
+        setIsPlaying(false)
+        setIsLoading(false)
+        setCurrentText(null)
+        audioRef.current = null
+        onError?.(new Error('Audio playback failed'))
+      }
+
+      await audio.play()
     } catch (error) {
+      console.error('Error in speak:', error)
+      setIsLoading(false)
       setIsPlaying(false)
       setCurrentText(null)
-      console.error('Speech playback error:', error)
+      onError?.(error as Error)
     }
-  }, [options])
+  }, [voice, onEnd, onError])
 
   const stop = useCallback(() => {
-    stopSpeaking()
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
     setIsPlaying(false)
+    setIsLoading(false)
     setCurrentText(null)
   }, [])
 
@@ -86,15 +119,9 @@ export const useSpeechPlayback = (options: UseSpeechPlaybackOptions = {}): UseSp
     }
   }, [isPlaying, currentText, stop, speakText])
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stop()
-    }
-  }, [stop])
-
   return {
     isPlaying,
+    isLoading,
     speak: speakText,
     stop,
     toggle,
