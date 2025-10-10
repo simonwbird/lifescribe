@@ -14,41 +14,41 @@ const PEOPLE_FIXTURES = [
   { 
     slug: 'lucy-morrison',
     full_name: 'Lucy Morrison', 
-    birth_date: '1985-03-15', 
-    relationship: 'daughter',
+    birth_date: '1985-03-15',
+    is_living: true,
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
   { 
     slug: 'jamie-morrison',
     full_name: 'Jamie Morrison', 
-    birth_date: '1987-07-22', 
-    relationship: 'son',
+    birth_date: '1987-07-22',
+    is_living: true,
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
   { 
     slug: 'grandpa-joe',
     full_name: 'Grandpa Joe', 
-    birth_date: '1935-11-10', 
-    relationship: 'grandfather', 
-    is_deceased: true,
+    birth_date: '1935-11-10',
+    death_date: '2020-05-15',
+    is_living: false,
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
   { 
     slug: 'aunt-sarah',
     full_name: 'Aunt Sarah', 
-    birth_date: '1960-05-18', 
-    relationship: 'aunt',
+    birth_date: '1960-05-18',
+    is_living: true,
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
   { 
     slug: 'uncle-mike',
     full_name: 'Uncle Mike', 
-    birth_date: '1958-09-25', 
-    relationship: 'uncle',
+    birth_date: '1958-09-25',
+    is_living: true,
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
@@ -124,37 +124,66 @@ const STORIES_FIXTURES = [
 const RECIPES_FIXTURES = [
   {
     title: 'Grandmas Apple Pie',
-    description: 'The secret family recipe passed down for generations',
-    ingredients: ['6 apples', '1 cup sugar', '2 tsp cinnamon', 'pie crust', 'butter'],
-    instructions: 'Peel and slice apples. Mix with sugar and cinnamon. Pour into crust. Bake at 350°F for 45 minutes.',
-    prep_time: 30,
-    cook_time: 45,
-    servings: 8,
-    tags: [SEED_TAG],
+    notes: 'The secret family recipe passed down for generations',
+    ingredients: [
+      { item: '6 apples', amount: '6' },
+      { item: 'sugar', amount: '1 cup' },
+      { item: 'cinnamon', amount: '2 tsp' },
+      { item: 'pie crust', amount: '1' },
+      { item: 'butter', amount: '2 tbsp' }
+    ],
+    steps: [
+      'Peel and slice apples',
+      'Mix apples with sugar and cinnamon',
+      'Pour into pie crust',
+      'Dot with butter',
+      'Bake at 350°F for 45 minutes'
+    ],
+    time_prep_minutes: 30,
+    time_cook_minutes: 45,
+    serves: '8',
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Sunday Roast Dinner',
-    description: 'Traditional Sunday family dinner',
-    ingredients: ['beef roast', 'potatoes', 'carrots', 'onions', 'gravy'],
-    instructions: 'Season roast. Roast at 325°F for 3 hours. Add vegetables in last hour. Make gravy from drippings.',
-    prep_time: 20,
-    cook_time: 180,
-    servings: 6,
-    tags: [SEED_TAG],
+    notes: 'Traditional Sunday family dinner',
+    ingredients: [
+      { item: 'beef roast', amount: '3 lbs' },
+      { item: 'potatoes', amount: '6' },
+      { item: 'carrots', amount: '4' },
+      { item: 'onions', amount: '2' }
+    ],
+    steps: [
+      'Season roast generously',
+      'Roast at 325°F for 3 hours',
+      'Add vegetables in last hour',
+      'Make gravy from drippings'
+    ],
+    time_prep_minutes: 20,
+    time_cook_minutes: 180,
+    serves: '6',
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
   {
     title: 'Summer BBQ Ribs',
-    description: 'Uncle Mikes famous BBQ ribs recipe',
-    ingredients: ['pork ribs', 'BBQ sauce', 'dry rub', 'apple cider vinegar'],
-    instructions: 'Apply dry rub. Smoke low and slow for 4 hours. Baste with sauce in last 30 minutes.',
-    prep_time: 15,
-    cook_time: 240,
-    servings: 4,
-    tags: [SEED_TAG],
+    notes: 'Uncle Mikes famous BBQ ribs recipe',
+    ingredients: [
+      { item: 'pork ribs', amount: '2 racks' },
+      { item: 'BBQ sauce', amount: '2 cups' },
+      { item: 'dry rub', amount: '1/4 cup' },
+      { item: 'apple cider vinegar', amount: '1/2 cup' }
+    ],
+    steps: [
+      'Apply dry rub generously to ribs',
+      'Smoke low and slow for 4 hours',
+      'Baste with sauce in last 30 minutes',
+      'Let rest 10 minutes before serving'
+    ],
+    time_prep_minutes: 15,
+    time_cook_minutes: 240,
+    serves: '4',
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
   },
@@ -164,10 +193,10 @@ const OBJECTS_FIXTURES = [
   {
     title: 'Wedding Ring',
     description: 'Great-grandmothers wedding ring from 1920',
-    category: 'jewelry',
-    acquisition_date: '1920-06-15',
-    current_location: 'Safe deposit box',
-    estimated_value: 5000,
+    object_type: 'jewelry',
+    year_estimated: 1920,
+    provenance: 'Passed down from great-grandmother',
+    value_estimate: '$5,000',
     tags: [SEED_TAG],
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
@@ -175,10 +204,10 @@ const OBJECTS_FIXTURES = [
   {
     title: 'Grandfather Clock',
     description: 'Antique grandfather clock that has been in the family for 100 years',
-    category: 'furniture',
-    acquisition_date: '1923-01-01',
-    current_location: 'Living room',
-    estimated_value: 8000,
+    object_type: 'furniture',
+    year_estimated: 1923,
+    provenance: 'Family heirloom',
+    value_estimate: '$8,000',
     tags: [SEED_TAG],
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
@@ -187,12 +216,11 @@ const OBJECTS_FIXTURES = [
 
 const PROPERTIES_FIXTURES = [
   {
-    title: 'Family Cottage at Lake Michigan',
+    name: 'Family Cottage at Lake Michigan',
     description: 'Summer cottage where the family has vacationed for 50 years',
-    property_type: 'vacation_home',
+    property_types: ['vacation_home'],
     address: '123 Lakeshore Drive, Holland, MI 49423',
-    acquisition_date: '1974-06-01',
-    current_value: 450000,
+    acquired_year: 1974,
     tags: [SEED_TAG],
     qa_seed: true,
     qa_seed_version: QA_SEED_VERSION
@@ -353,7 +381,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       const { error } = await supabase.from('recipes').insert({
         ...recipe,
         family_id: familyId,
-        profile_id: userId,
+        created_by: userId,
       })
       if (error) {
         console.error(`Failed to insert recipe ${recipe.title}:`, error)
@@ -378,7 +406,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       const { error } = await supabase.from('things').insert({
         ...obj,
         family_id: familyId,
-        profile_id: userId,
+        created_by: userId,
       })
       if (error) {
         console.error(`Failed to insert thing ${obj.title}:`, error)
@@ -403,7 +431,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       const { error } = await supabase.from('properties').insert({
         ...property,
         family_id: familyId,
-        profile_id: userId,
+        created_by: userId,
       })
       if (error) {
         console.error(`Failed to insert property ${property.title}:`, error)
@@ -425,9 +453,12 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
   if (!existingDigest) {
     const { error } = await supabase.from('weekly_digest_settings').insert({
       family_id: familyId,
-      is_enabled: true,
-      digest_day: 'sunday',
-      digest_time: '09:00',
+      created_by: userId,
+      enabled: true,
+      delivery_day: 0, // Sunday = 0
+      delivery_hour: 9,
+      delivery_timezone: 'America/New_York',
+      recipients: [],
       qa_seed: true,
       qa_seed_version: QA_SEED_VERSION
     })
