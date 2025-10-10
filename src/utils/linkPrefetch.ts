@@ -64,6 +64,12 @@ export function prefetchRoute(url: string, options: PrefetchOptions = {}) {
 export function enableHoverPrefetch() {
   const handleMouseEnter = (e: MouseEvent) => {
     const target = e.target as HTMLElement
+    
+    // Check if target has closest method (is an Element)
+    if (!target || typeof target.closest !== 'function') {
+      return
+    }
+    
     const link = target.closest('a[href^="/"]') as HTMLAnchorElement
     
     if (link && link.href) {
