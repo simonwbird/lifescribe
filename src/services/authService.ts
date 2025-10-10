@@ -242,3 +242,29 @@ export async function updatePassword(password: string): Promise<AuthResponse> {
     return { error: mappedError }
   }
 }
+
+/**
+ * Sign in with Google OAuth
+ */
+export async function signInWithGoogle(): Promise<AuthResponse> {
+  try {
+    const redirectUrl = `${window.location.origin}/auth/callback`
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    })
+
+    if (error) {
+      const mappedError = mapAuthError(error)
+      return { error: mappedError }
+    }
+
+    return { data: true }
+  } catch (err) {
+    const mappedError = mapAuthError(err)
+    return { error: mappedError }
+  }
+}
