@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Mic, PenLine, Shuffle, Volume2, Loader2, Check, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { ListenButton } from './ListenButton'
 import { cn } from '@/lib/utils'
+import { PersonaType, getPersonaConfig, interpolateHeadline } from '@/config/personaConfig'
+import { useUserPersona } from '@/hooks/useUserPersona'
 
 interface Prompt {
   id: string
@@ -19,7 +22,7 @@ interface FirstLoginPromptCardProps {
   onShuffle: () => void
   profileId: string
   familyId: string
-  persona?: 'elder' | 'family' | 'general'
+  persona?: PersonaType
 }
 
 type RecordingState = 'idle' | 'preflight' | 'countdown' | 'recording' | 'saving' | 'saved'
@@ -29,7 +32,7 @@ export function FirstLoginPromptCard({
   onShuffle,
   profileId,
   familyId,
-  persona = 'general'
+  persona = 'elder'
 }: FirstLoginPromptCardProps) {
   const navigate = useNavigate()
   const { track } = useAnalytics()
@@ -37,12 +40,16 @@ export function FirstLoginPromptCard({
   const [countdown, setCountdown] = useState(3)
   const [recordingDuration, setRecordingDuration] = useState(0)
 
-  // Persona-aware headlines
-  const headlines = {
-    elder: "Share your story in your own voice",
-    family: "Capture a memory together",
-    general: "Your first story starts here"
-  }
+  // Fetch user profile for first name and persona
+  const { data: userProfile } = useUserPersona(profileId)
+  
+  // Get persona config
+  const personaConfig = getPersonaConfig(persona)
+  const firstName = userProfile?.first_name
+  const headline = interpolateHeadline(personaConfig.headline, firstName)
+  const fontSizeClass = personaConfig.fontScale === 'lg' ? 'text-2xl sm:text-3xl' : 
+                       personaConfig.fontScale === 'xl' ? 'text-3xl sm:text-4xl' : 
+                       'text-xl sm:text-2xl'
 
   // Track impression on mount
   useEffect(() => {
@@ -164,31 +171,51 @@ export function FirstLoginPromptCard({
       <CardContent className="p-6 space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-sm font-medium text-muted-foreground">Today's Prompt</h2>
-            {recordingState === 'saved' && (
-              <div className="flex items-center gap-1 text-sm text-green-600">
-                <Check className="w-4 h-4" />
-                <span>Saved</span>
-              </div>
-            )}
+            
+            <div className="flex items-center gap-2">
+              {personaConfig.chips?.map((chip, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs">
+                  {chip}
+                </Badge>
+              ))}
+              
+              {recordingState === 'saved' && (
+                <div className="flex items-center gap-1 text-sm text-green-600">
+                  <Check className="w-4 h-4" />
+                  <span>Saved</span>
+                </div>
+              )}
+            </div>
           </div>
           
-          <h3 className="text-2xl sm:text-3xl font-semibold leading-tight">
-            {headlines[persona]}
+          <h3 className={cn("font-semibold leading-tight", fontSizeClass)}>
+            {headline}
           </h3>
+          
+          {personaConfig.subtext && !isRecordingActive && recordingState === 'idle' && (
+            <p className="text-sm text-muted-foreground">
+              {personaConfig.subtext}
+            </p>
+          )}
         </div>
 
         {/* Prompt Text */}
         <div className="space-y-3">
-          <p className="text-xl sm:text-2xl leading-relaxed text-foreground">
+          <p className={cn("leading-relaxed text-foreground", fontSizeClass)}>
             {prompt.text}
           </p>
           
-          {!isRecordingActive && (
-            <p className="text-sm text-muted-foreground">
-              {recordingState === 'saving' ? 'Saving your story...' : 'Takes 60–90 seconds. No need to be perfect—just talk.'}
-            </p>
+          {/* Template chips for archivist */}
+          {personaConfig.templateChips && recordingState === 'idle' && (
+            <div className="flex flex-wrap gap-2">
+              {personaConfig.templateChips.map((template, idx) => (
+                <Badge key={idx} variant="outline" className="cursor-pointer hover:bg-accent">
+                  {template}
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
 
@@ -225,6 +252,15 @@ export function FirstLoginPromptCard({
               ))}
             </div>
             
+            {/* Live transcript if enabled */}
+            {personaConfig.liveTranscript && (
+              <div className="w-full p-3 bg-accent/50 rounded-lg">
+                <p className="text-sm text-muted-foreground italic">
+                  Live transcript coming soon...
+                </p>
+              </div>
+            )}
+            
             <p className="text-sm text-muted-foreground">
               Press R or click Stop when done
             </p>
@@ -241,37 +277,79 @@ export function FirstLoginPromptCard({
         {/* Controls */}
         {!isRecordingActive && recordingState !== 'saving' && recordingState !== 'saved' && (
           <div className="space-y-3">
-            {/* Primary Action */}
-            <Button
-              onClick={handleStartRecording}
-              size="lg"
-              className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90"
-              disabled={recordingState === 'preflight'}
-            >
-              {recordingState === 'preflight' ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Checking microphone...
-                </>
-              ) : (
-                <>
+            {/* Primary Action - adapts to persona */}
+            {personaConfig.defaultMode === 'choice' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={handleStartRecording}
+                  size="lg"
+                  className="h-14 text-lg font-semibold"
+                >
                   <Mic className="w-5 h-5 mr-2" />
-                  Start Recording (R)
-                </>
-              )}
-            </Button>
+                  Voice
+                </Button>
+                <Button
+                  onClick={handleWriteInstead}
+                  size="lg"
+                  variant="outline"
+                  className="h-14 text-lg font-semibold"
+                >
+                  <PenLine className="w-5 h-5 mr-2" />
+                  Text
+                </Button>
+              </div>
+            ) : personaConfig.defaultMode === 'text' ? (
+              <Button
+                onClick={handleWriteInstead}
+                size="lg"
+                className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90"
+              >
+                <PenLine className="w-5 h-5 mr-2" />
+                {personaConfig.ctaText || 'Start Typing'}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleStartRecording}
+                size="lg"
+                className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90"
+                disabled={recordingState === 'preflight'}
+              >
+                {recordingState === 'preflight' ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Checking microphone...
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-5 h-5 mr-2" />
+                    {personaConfig.ctaText || 'Start Recording'} (R)
+                  </>
+                )}
+              </Button>
+            )}
 
             {/* Secondary Actions */}
             <div className="flex gap-2">
-              <Button
-                onClick={handleWriteInstead}
-                variant="outline"
-                size="lg"
-                className="flex-1 h-12"
-              >
-                <PenLine className="w-4 h-4 mr-2" />
-                Write Instead
-              </Button>
+              {personaConfig.defaultMode !== 'choice' && (
+                <Button
+                  onClick={personaConfig.defaultMode === 'text' ? handleStartRecording : handleWriteInstead}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1 h-12"
+                >
+                  {personaConfig.defaultMode === 'text' ? (
+                    <>
+                      <Mic className="w-4 h-4 mr-2" />
+                      {personaConfig.secondaryCtaText || 'Record Voice'}
+                    </>
+                  ) : (
+                    <>
+                      <PenLine className="w-4 h-4 mr-2" />
+                      {personaConfig.secondaryCtaText || 'Write Instead'}
+                    </>
+                  )}
+                </Button>
+              )}
 
               <ListenButton
                 text={prompt.text}
@@ -305,9 +383,17 @@ export function FirstLoginPromptCard({
           </Button>
         )}
 
-        {/* Privacy Cue */}
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-2 border-t">
-          <Lock className="w-3 h-3" />
+        {/* Privacy Cue - prominent for teen persona */}
+        <div className={cn(
+          "flex items-center justify-center gap-2 text-sm pt-2 border-t",
+          personaConfig.privacyToggle === 'prominent' 
+            ? "text-foreground font-medium" 
+            : "text-muted-foreground"
+        )}>
+          <Lock className={cn(
+            "w-3 h-3",
+            personaConfig.privacyToggle === 'prominent' && "text-primary"
+          )} />
           <span>Private by default. You choose who sees it.</span>
         </div>
       </CardContent>
