@@ -18,40 +18,30 @@ export default function AdminLabs() {
   const fetchCurrentStatus = async () => {
     setIsLoadingStatus(true)
     try {
-      // Get qa-tester profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', 'qa-tester@lifescribe.family')
-        .single()
-
-      if (!profile) {
-        setCurrentStatus(null)
-        return
-      }
-
-      // Get their family
-      const { data: member } = await supabase
-        .from('members')
+      // Use qa_seed marker to find QA data
+      const { data: qaFollowPrefs } = await supabase
+        .from('digest_follow_preferences')
         .select('family_id')
-        .eq('profile_id', profile.id)
-        .single()
+        .eq('qa_seed', true)
+        .limit(1)
 
-      if (!member) {
+      if (!qaFollowPrefs || qaFollowPrefs.length === 0) {
         setCurrentStatus(null)
         return
       }
 
-      // Count entities
+      const familyId = qaFollowPrefs[0].family_id
+
+      // Count entities for this family
       const [people, stories, recipes, properties, tributes, prompts, digestSettings, followPrefs] = await Promise.all([
-        supabase.from('people').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('stories').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('recipes').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('properties').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('tributes').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('prompt_instances').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('weekly_digest_settings').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
-        supabase.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', member.family_id),
+        supabase.from('people').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('stories').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('recipes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('properties').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('tributes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('prompt_instances').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('weekly_digest_settings').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
+        supabase.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', familyId).eq('qa_seed', true),
       ])
 
       setCurrentStatus({
@@ -69,6 +59,7 @@ export default function AdminLabs() {
       })
     } catch (error: any) {
       console.error('Status fetch error:', error)
+      setCurrentStatus(null)
     } finally {
       setIsLoadingStatus(false)
     }
@@ -221,7 +212,7 @@ export default function AdminLabs() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                QA tester account not found. Please ensure qa-tester@lifescribe.family exists.
+                No QA seeded data found. Click "Seed QA Data" to populate test data.
               </AlertDescription>
             </Alert>
           )}
