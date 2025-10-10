@@ -476,19 +476,6 @@ export default function People() {
             </div>
 
             {/* Content */}
-            <CondensedPeopleTable 
-              people={filteredPeople}
-              currentUserRole={currentUserRole}
-              onInvite={(person) => {
-                // Handle invite logic
-                console.log('Invite person:', person)
-              }}
-              onCall={(person) => {
-                // Handle call logic
-                console.log('Call person:', person)
-              }}
-            />
-            
             {(currentUserRole === 'admin' || currentUserRole === 'member') ? (
               <PeopleTable 
                 people={filteredPeople}
