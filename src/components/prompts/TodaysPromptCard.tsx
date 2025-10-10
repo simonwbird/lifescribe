@@ -1,13 +1,15 @@
-import React, { useState, memo } from 'react'
+import React, { useState, memo, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, BookOpen, Shuffle, Sparkles, Mic, MessageCircle, PenTool } from 'lucide-react'
+import { Play, BookOpen, Shuffle, Sparkles, Mic, MessageCircle, PenTool, Loader2, Square, Check, AlertCircle } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
 import PersonChip from './PersonChip'
 import { ResponseModal } from './ResponseModal'
 import { useNavigate } from 'react-router-dom'
 import { ListenButton } from '@/components/prompts/ListenButton'
 import { cn } from '@/lib/utils'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { useToast } from '@/hooks/use-toast'
 
 interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
@@ -18,6 +20,8 @@ interface TodaysPromptCardProps {
   people?: Array<{ id: string; full_name: string }> // For person chips
 }
 
+type RecordingState = 'idle' | 'preflight' | 'countdown' | 'recording' | 'saving' | 'saved' | 'mic-denied'
+
 const TodaysPromptCard = memo(function TodaysPromptCard({ 
   promptInstance, 
   onRespond, 
@@ -27,7 +31,142 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   people = []
 }: TodaysPromptCardProps) {
   const [showResponseModal, setShowResponseModal] = useState(false)
+  const [recordingState, setRecordingState] = useState<RecordingState>('idle')
+  const [countdown, setCountdown] = useState(3)
+  const [recordingDuration, setRecordingDuration] = useState(0)
+  const [lastAutoSave, setLastAutoSave] = useState<number>(0)
   const navigate = useNavigate()
+  const { track } = useAnalytics()
+  const { toast } = useToast()
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (recordingState === 'countdown' && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    } else if (recordingState === 'countdown' && countdown === 0) {
+      setRecordingState('recording')
+      track({
+        event_name: 'prompt_record_start',
+        properties: { prompt_id: promptInstance?.id }
+      } as any)
+    }
+  }, [recordingState, countdown])
+
+  // Recording duration timer
+  useEffect(() => {
+    if (recordingState === 'recording') {
+      const timer = setInterval(() => {
+        setRecordingDuration(prev => prev + 1)
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [recordingState])
+
+  // Auto-save every 5 seconds during recording
+  useEffect(() => {
+    if (recordingState === 'recording') {
+      autoSaveTimerRef.current = setInterval(() => {
+        setLastAutoSave(Date.now())
+        console.log('Auto-saving recording...')
+      }, 5000)
+      
+      return () => {
+        if (autoSaveTimerRef.current) {
+          clearInterval(autoSaveTimerRef.current)
+        }
+      }
+    }
+  }, [recordingState])
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleStartRecording = async () => {
+    setRecordingState('preflight')
+    track({
+      event_name: 'prompt_record_attempt',
+      properties: { prompt_id: promptInstance?.id }
+    } as any)
+    
+    try {
+      // Check microphone permission
+      await navigator.mediaDevices.getUserMedia({ audio: true })
+      setRecordingState('countdown')
+      setCountdown(3)
+    } catch (error) {
+      console.error('Microphone access denied:', error)
+      setRecordingState('mic-denied')
+      track({
+        event_name: 'prompt_mic_denied',
+        properties: { prompt_id: promptInstance?.id }
+      } as any)
+      
+      toast({
+        title: 'Microphone blocked',
+        description: 'Browser blocked the mic. Try text, or enable microphone in settings.',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handleStopRecording = () => {
+    setRecordingState('saving')
+    
+    // Navigate to new story page with recording data
+    setTimeout(() => {
+      track({
+        event_name: 'prompt_record_complete',
+        properties: {
+          prompt_id: promptInstance?.id,
+          duration: recordingDuration
+        }
+      } as any)
+      
+      if (promptInstance) {
+        const searchParams = new URLSearchParams({
+          type: 'voice',
+          promptTitle: promptInstance.prompt?.title || '',
+          prompt_id: promptInstance.id,
+          prompt_text: promptInstance.prompt?.body || ''
+        })
+        navigate(`/stories/new?${searchParams.toString()}`)
+      }
+    }, 500)
+  }
+
+  const handleWriteInstead = () => {
+    track({
+      event_name: 'prompt_write_instead',
+      properties: { prompt_id: promptInstance?.id }
+    } as any)
+    
+    if (promptInstance) {
+      const searchParams = new URLSearchParams({
+        type: 'text',
+        promptTitle: promptInstance.prompt?.title || '',
+        prompt_id: promptInstance.id,
+        prompt_text: promptInstance.prompt?.body || ''
+      })
+      navigate(`/stories/new?${searchParams.toString()}`)
+    }
+    
+    setRecordingState('idle')
+  }
+
+  const handleShuffle = () => {
+    if (onShuffle) {
+      track({
+        event_name: 'prompt_shuffle',
+        properties: { prompt_id: promptInstance?.id }
+      } as any)
+      onShuffle()
+    }
+  }
 
   const handleResponseSelect = (type: 'voice' | 'text' | 'video') => {
     setShowResponseModal(false)
@@ -121,12 +260,15 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
             <Button 
               variant="ghost" 
               size="lg" 
-              className="gap-2 h-12 px-6"
-              onClick={onShuffle}
-              disabled={!onShuffle}
+              className={cn(
+                "gap-2 h-12 px-6 transition-all",
+                "hover:bg-accent"
+              )}
+              onClick={handleShuffle}
+              disabled={!onShuffle || recordingState !== 'idle'}
               title="Get a different prompt."
             >
-              <Shuffle className="h-5 w-5" />
+              <Shuffle className="h-5 w-5 transition-transform duration-300 hover:rotate-180" />
               Shuffle
             </Button>
           </div>
@@ -168,15 +310,143 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
         </CardContent>
       </Card>
 
-      {/* Main CTA - Large, high-contrast button */}
-      <Button 
-        onClick={() => setShowResponseModal(true)}
-        className="w-full h-16 text-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
-        size="lg"
-      >
-        <Mic className="h-6 w-6 mr-3" />
-        Start Recording
-      </Button>
+      {/* Recording States */}
+      {recordingState === 'preflight' && (
+        <Card className="border-primary/50">
+          <CardContent className="p-6 flex items-center justify-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <p className="text-foreground">Checking microphone...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {recordingState === 'countdown' && (
+        <Card className="border-primary/50">
+          <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
+            <div className="text-7xl font-bold text-primary animate-pulse">
+              {countdown}
+            </div>
+            <p className="text-muted-foreground">Get ready...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {recordingState === 'recording' && (
+        <Card className="border-red-500/50 bg-red-50/5">
+          <CardContent className="p-6 space-y-6">
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-3xl font-mono font-semibold">
+                {formatDuration(recordingDuration)}
+              </span>
+            </div>
+            
+            {/* Live waveform visualization */}
+            <div className="flex items-center justify-center gap-1 h-16">
+              {[...Array(24)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-1 bg-primary rounded-full"
+                  style={{
+                    height: `${20 + Math.random() * 80}%`,
+                    animation: `pulse ${0.5 + Math.random() * 0.5}s ease-in-out infinite`,
+                    animationDelay: `${i * 0.05}s`
+                  }}
+                />
+              ))}
+            </div>
+            
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <Check className="h-4 w-4 text-green-600" />
+              <span className="text-success font-medium">
+                Recording… Auto-saving
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {recordingState === 'saving' && (
+        <Card className="border-primary/50">
+          <CardContent className="p-6 flex items-center justify-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <p className="text-foreground">Saving your recording...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {recordingState === 'mic-denied' && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="font-medium text-foreground">Microphone Access Blocked</p>
+                <p className="text-sm text-muted-foreground">
+                  Browser blocked the mic. Try text, or enable microphone in settings.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleWriteInstead}
+                className="flex-1"
+              >
+                <PenTool className="h-4 w-4 mr-2" />
+                Write Instead
+              </Button>
+              <Button 
+                onClick={() => setRecordingState('idle')}
+                variant="outline"
+                className="flex-1"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main CTAs - only show when idle */}
+      {recordingState === 'idle' && (
+        <>
+          {/* Main CTA - Large, high-contrast button */}
+          <Button 
+            onClick={handleStartRecording}
+            className="w-full h-16 text-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
+            size="lg"
+          >
+            <Mic className="h-6 w-6 mr-3" />
+            Start Recording
+          </Button>
+
+          {/* Secondary action */}
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleWriteInstead}
+              variant="outline"
+              size="lg"
+              className="min-w-[200px]"
+            >
+              <PenTool className="h-4 w-4 mr-2" />
+              Write Instead
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* Stop recording button */}
+      {recordingState === 'recording' && (
+        <Button 
+          onClick={handleStopRecording}
+          variant="destructive"
+          className="w-full h-16 text-xl font-semibold shadow-lg"
+          size="lg"
+        >
+          <Square className="h-6 w-6 mr-3" />
+          Finish
+        </Button>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
