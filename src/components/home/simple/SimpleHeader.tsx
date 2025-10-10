@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client'
 import TodaysPromptCard from '@/components/prompts/TodaysPromptCard'
 import ContinueSection from '@/components/prompts/ContinueSection'
 import { useTodaysPrompt, useInProgressPrompts } from '@/hooks/useTodaysPrompt'
+import { useUserStreak } from '@/hooks/useUserStreak'
 import { ElderPrompt } from '@/lib/prompts/getElderPrompts'
 import { AudioConfirmDialog } from '@/components/audio/AudioConfirmDialog'
 import { Mic, Square } from 'lucide-react'
@@ -27,6 +28,7 @@ export function SimpleHeader({
 }: SimpleHeaderProps) {
   const { data: todaysPrompt, isLoading: todaysLoading, refetch } = useTodaysPrompt(spaceId)
   const { data: inProgressPrompts = [], isLoading: inProgressLoading } = useInProgressPrompts(spaceId)
+  const { data: streakData } = useUserStreak(profileId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -203,9 +205,22 @@ export function SimpleHeader({
     }
   }
 
+  const showStreak = persona !== 'guest' && streakData && streakData.current_streak > 0
+
   return (
     <>
       <div className="w-full mb-8 space-y-6">
+        {/* Streak Chip - shown under headline */}
+        {showStreak && (
+          <div className="flex justify-center -mt-2 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20">
+              <span className="text-sm font-medium">
+                Day {streakData.current_streak} • Keep your streak 🔥
+              </span>
+            </div>
+          </div>
+        )}
+
         <TodaysPromptCard 
           promptInstance={todaysPrompt}
           onRespond={handleRespondToPrompt}
