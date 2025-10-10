@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,6 +19,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [autoSaved, setAutoSaved] = useState(false)
+  const [searchParams] = useSearchParams()
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -26,6 +27,87 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const [duration, setDuration] = useState(0)
   const [draftId, setDraftId] = useState<string | null>(null)
+
+  // Check for pending recording from prompt
+  useEffect(() => {
+    const promptTitle = searchParams.get('promptTitle')
+    const hasRecording = searchParams.get('hasRecording')
+    
+    if (promptTitle) {
+      setTitle(promptTitle)
+    }
+    
+    if (hasRecording === 'true') {
+      const audioData = sessionStorage.getItem('pendingAudioRecording')
+      const audioDuration = sessionStorage.getItem('pendingAudioDuration')
+      
+      if (audioData) {
+        // Convert base64 back to blob
+        fetch(audioData)
+          .then(res => res.blob())
+          .then(blob => {
+            setAudioBlob(blob)
+            setDuration(audioDuration ? parseFloat(audioDuration) : 0)
+            
+            // Clear from session storage
+            sessionStorage.removeItem('pendingAudioRecording')
+            sessionStorage.removeItem('pendingAudioDuration')
+            
+            // Trigger transcription
+            transcribeExistingAudio(blob, audioDuration ? parseFloat(audioDuration) : 0)
+          })
+      }
+    }
+  }, [searchParams])
+
+  const transcribeExistingAudio = async (blob: Blob, audioDuration: number) => {
+    try {
+      // Convert blob to base64
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(',')[1]
+          resolve(base64)
+        }
+        reader.onerror = reject
+      })
+      reader.readAsDataURL(blob)
+
+      const base64Audio = await base64Promise
+
+      // Call transcription function
+      const { data, error } = await supabase.functions.invoke('transcribe', {
+        body: { audio: base64Audio }
+      })
+
+      if (error) throw error
+      if (!data?.text) throw new Error('No transcription text returned')
+
+      // Set content with transcription
+      const cleanedText = data.text
+        .replace(/\s+/g, ' ')
+        .replace(/\s+([.,!?])/g, '$1')
+        .trim()
+
+      setContent(cleanedText)
+      
+      // Auto-save as draft
+      await autoSaveDraft(cleanedText, blob)
+
+      toast({
+        title: 'Recording loaded!',
+        description: `Your ${Math.round(audioDuration)}s recording has been transcribed.`,
+      })
+
+    } catch (error: any) {
+      console.error('Transcription error:', error)
+      toast({
+        title: 'Transcription unavailable',
+        description: 'You can still manually type the content.',
+        variant: 'destructive'
+      })
+    }
+  }
 
   const handleTranscriptReady = async (transcript: string, blob: Blob, audioDuration: number) => {
     setAudioBlob(blob)

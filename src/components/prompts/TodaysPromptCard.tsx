@@ -45,6 +45,9 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   const [currentStoryId, setCurrentStoryId] = useState<string | null>(null)
   const [recordingTranscript, setRecordingTranscript] = useState<string>('')
   const [isShuffling, setIsShuffling] = useState(false)
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const navigate = useNavigate()
   const { track } = useAnalytics()
   const { toast } = useToast()
@@ -88,15 +91,51 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     }
   }, [recordingState, countdown])
 
-  // Recording duration timer
+  // Recording duration timer and MediaRecorder start
   useEffect(() => {
-    if (recordingState === 'recording') {
+    if (recordingState === 'recording' && mediaStream) {
+      // Start MediaRecorder
+      try {
+        const recorder = new MediaRecorder(mediaStream, {
+          mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+        })
+        
+        const chunks: Blob[] = []
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            chunks.push(e.data)
+          }
+        }
+        
+        recorder.onstop = () => {
+          setAudioChunks(chunks)
+        }
+        
+        recorder.start()
+        mediaRecorderRef.current = recorder
+      } catch (error) {
+        console.error('Failed to start MediaRecorder:', error)
+        toast({
+          title: 'Recording failed',
+          description: 'Could not start recording. Please try again.',
+          variant: 'destructive'
+        })
+        setRecordingState('idle')
+        return
+      }
+      
+      // Duration timer
       const timer = setInterval(() => {
         setRecordingDuration(prev => prev + 1)
       }, 1000)
-      return () => clearInterval(timer)
+      return () => {
+        clearInterval(timer)
+        if (mediaRecorderRef.current) {
+          mediaRecorderRef.current.stop()
+        }
+      }
     }
-  }, [recordingState])
+  }, [recordingState, mediaStream])
 
   // Auto-save every 5 seconds during recording
   useEffect(() => {
@@ -167,8 +206,15 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     } as any)
     
     try {
-      // Check microphone permission
-      await navigator.mediaDevices.getUserMedia({ audio: true })
+      // Check microphone permission and get stream
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      })
+      setMediaStream(stream)
       setRecordingState('countdown')
       setCountdown(3)
     } catch (error) {
@@ -200,6 +246,17 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
   }
 
   const handleStopRecording = () => {
+    // Stop MediaRecorder
+    if (mediaRecorderRef.current && recordingState === 'recording') {
+      mediaRecorderRef.current.stop()
+    }
+    
+    // Stop media stream
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop())
+      setMediaStream(null)
+    }
+    
     setRecordingState('saving')
     
     // Track record completion
@@ -216,35 +273,55 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       }
     } as any)
     
-    // Check if archivist persona should open metadata panel
-    if (personaConfig?.postRecordAction === 'openMetadataPanel') {
-      // Simulate transcript for now (in real app, this would come from actual recording)
-      setRecordingTranscript('Sample transcript from recording...')
-      setShowMetadataPanel(true)
-      setRecordingState('idle')
-      
-      track({
-        event_name: 'metadata_panel_opened',
-        properties: {
-          prompt_id: promptInstance?.id,
-          persona,
-          trigger: 'post_record'
+    // Wait for audio chunks to be ready, then navigate
+    setTimeout(() => {
+      if (audioChunks.length > 0 && promptInstance) {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+        
+        // Store audio temporarily in sessionStorage
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          sessionStorage.setItem('pendingAudioRecording', reader.result as string)
+          sessionStorage.setItem('pendingAudioDuration', recordingDuration.toString())
+          
+          // Check if archivist persona should open metadata panel
+          if (personaConfig?.postRecordAction === 'openMetadataPanel') {
+            setRecordingTranscript('Sample transcript from recording...')
+            setShowMetadataPanel(true)
+            setRecordingState('idle')
+            
+            track({
+              event_name: 'metadata_panel_opened',
+              properties: {
+                prompt_id: promptInstance.id,
+                persona,
+                trigger: 'post_record'
+              }
+            } as any)
+          } else {
+            // Navigate to story creation with prompt info
+            const searchParams = new URLSearchParams({
+              type: 'voice',
+              promptTitle: promptInstance.prompt?.title || '',
+              prompt_id: promptInstance.id,
+              prompt_text: promptInstance.prompt?.body || '',
+              hasRecording: 'true'
+            })
+            navigate(`/stories/new?${searchParams.toString()}`)
+          }
         }
-      } as any)
-    } else {
-      // Navigate to new story page for other personas
-      setTimeout(() => {
-        if (promptInstance) {
-          const searchParams = new URLSearchParams({
-            type: 'voice',
-            promptTitle: promptInstance.prompt?.title || '',
-            prompt_id: promptInstance.id,
-            prompt_text: promptInstance.prompt?.body || ''
-          })
-          navigate(`/stories/new?${searchParams.toString()}`)
-        }
-      }, 500)
-    }
+        reader.readAsDataURL(audioBlob)
+      } else if (promptInstance) {
+        // No audio captured, just navigate
+        const searchParams = new URLSearchParams({
+          type: 'voice',
+          promptTitle: promptInstance.prompt?.title || '',
+          prompt_id: promptInstance.id,
+          prompt_text: promptInstance.prompt?.body || ''
+        })
+        navigate(`/stories/new?${searchParams.toString()}`)
+      }
+    }, 500)
   }
 
   const handleWriteInstead = () => {
