@@ -7794,6 +7794,10 @@ export type Database = {
         Args: { p_claim_id: string }
         Returns: Json
       }
+      grant_person_owner_access: {
+        Args: { p_person_id: string; p_user_id: string }
+        Returns: string
+      }
       has_person_role: {
         Args: {
           p_person_id: string

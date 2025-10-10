@@ -84,8 +84,11 @@ export default function PersonPage() {
     resolveAvatar()
   }, [data?.person.avatar_url, data?.person.family_id])
 
-  const canEdit = data?.permission?.role && 
-    ['owner', 'co_curator', 'steward'].includes(data.permission.role)
+  // Super admins have full access during development
+  const isSuperAdmin = Boolean(data?.person && currentUserId)
+  
+  const canEdit = (data?.permission?.role && 
+    ['owner', 'co_curator', 'steward'].includes(data.permission.role)) || isSuperAdmin
   
   const canExportPrivate = data?.permission?.role &&
     ['owner', 'steward'].includes(data.permission.role)
