@@ -32,7 +32,7 @@ export default function AudioRemembrancesBlock({
         .from('audio_recordings')
         .select(`
           *,
-          profiles:created_by(id, full_name, avatar_url)
+          creator:created_by(id, full_name, avatar_url)
         `)
         .eq('family_id', familyId)
         .eq('is_draft', false)
@@ -40,7 +40,12 @@ export default function AudioRemembrancesBlock({
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return data || []
+      
+      // Map creator to profiles for consistent naming
+      return (data || []).map(rec => ({
+        ...rec,
+        profiles: rec.creator
+      }))
     }
   })
 

@@ -33,6 +33,7 @@ export default function PhotoGalleryBlock({
     queryKey: ['person-photos', personId, familyId],
     queryFn: async () => {
       // Get all stories with media linked to this person
+      // Using the story_id foreign key relationship
       const { data: stories, error: storiesError } = await supabase
         .from('stories')
         .select(`
@@ -40,7 +41,7 @@ export default function PhotoGalleryBlock({
           title,
           created_at,
           occurred_on,
-          media(
+          media!media_story_id_fkey(
             id,
             file_path,
             mime_type,
