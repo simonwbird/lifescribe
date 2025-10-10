@@ -202,7 +202,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
               file_name: audioFile.name,
               file_size: audioFile.size,
               mime_type: audioFile.type,
-              transcript: content.trim()
+              transcript_text: content.trim()
             })
 
           if (mediaError) throw mediaError

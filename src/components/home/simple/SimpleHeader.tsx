@@ -147,11 +147,25 @@ export function SimpleHeader({
     }
   }
 
-  const handleKeepRecording = () => {
+  const handleKeepRecording = async () => {
     setShowConfirmDialog(false)
-    // Navigate to story creation with audio
+    // Store audio in session storage for the form to pick up
     if (recordedBlob) {
-      navigate('/stories/new?type=audio')
+      try {
+        // Convert blob to base64
+        const reader = new FileReader()
+        reader.readAsDataURL(recordedBlob)
+        reader.onloadend = () => {
+          sessionStorage.setItem('pendingAudioRecording', reader.result as string)
+          sessionStorage.setItem('pendingAudioDuration', '0') // Duration tracking can be added later
+          navigate('/stories/new?type=voice&hasRecording=true')
+        }
+      } catch (error) {
+        console.error('Error storing audio:', error)
+        navigate('/stories/new?type=voice')
+      }
+    } else {
+      navigate('/stories/new?type=voice')
     }
   }
 
