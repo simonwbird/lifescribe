@@ -21,8 +21,11 @@ import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
 import { usePrivacyAnalytics } from '@/hooks/usePrivacyAnalytics'
+import { usePersonPageShortcuts } from '@/hooks/usePersonPageShortcuts'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { toast } from '@/components/ui/use-toast'
+import { PerformanceBudgetMonitor, SkipLink } from '@/components/performance'
+import { prefetchVisibleLinks, enableHoverPrefetch } from '@/utils/linkPrefetch'
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>()
@@ -72,6 +75,24 @@ export default function PersonPage() {
       trackPageView(data.person.id, data.person.status === 'living' ? 'life' : 'tribute')
     }
   }, [data?.person, trackPageView])
+
+  // Keyboard shortcuts (E: edit, P: publish, T: theme)
+  usePersonPageShortcuts({
+    onEdit: canEdit ? () => setShowBlockLibrary(true) : undefined,
+    onTheme: canEdit ? () => setShowCustomizer(true) : undefined,
+    enabled: canEdit
+  })
+
+  // Link prefetching for performance
+  useEffect(() => {
+    const cleanupVisible = prefetchVisibleLinks()
+    const cleanupHover = enableHoverPrefetch()
+
+    return () => {
+      cleanupVisible?.()
+      cleanupHover?.()
+    }
+  }, [])
 
   // Get theme from data
   const themeId = data?.person.theme_id
@@ -207,6 +228,9 @@ export default function PersonPage() {
   return (
     <ThemeProvider theme={currentTheme}>
       <div className="min-h-screen bg-background">
+        {/* Skip to content link for accessibility */}
+        <SkipLink href="#main-content">Skip to main content</SkipLink>
+
         <PersonPageSEO
           person={person}
           indexability={personWithSEO.indexability || 'private'}
@@ -215,8 +239,11 @@ export default function PersonPage() {
           ogImageUrl={personWithSEO.og_image_url}
         />
         <Header />
+
+        {/* Performance budget monitor (dev only) */}
+        <PerformanceBudgetMonitor />
       
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="max-w-4xl mx-auto p-6 space-y-8" id="main-content">
         {/* Top Bar */}
         <div className="flex items-center justify-between">
           <Button 
