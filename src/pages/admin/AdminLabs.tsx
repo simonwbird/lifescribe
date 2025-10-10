@@ -115,6 +115,7 @@ export default function AdminLabs() {
               <li>1 property (Family Cottage)</li>
               <li>1 event with invites (Family Reunion)</li>
               <li>1 tribute for Grandpa Joe</li>
+              <li>Prompt instances (general + person-specific)</li>
               <li>Weekly digest enabled with follow preferences</li>
             </ul>
           </div>
@@ -155,6 +156,7 @@ export default function AdminLabs() {
                     <li>Objects: {lastSeedResult.summary.objects || 0}</li>
                     <li>Properties: {lastSeedResult.summary.properties || 0}</li>
                     <li>Tributes: {lastSeedResult.summary.tributes || 0}</li>
+                    <li>Prompts: {lastSeedResult.summary.prompts || 0}</li>
                     <li>Digest settings: {lastSeedResult.summary.digest_settings || 0}</li>
                     <li>Follow prefs: {lastSeedResult.summary.follow_prefs || 0}</li>
                     <li className="font-semibold pt-1">Total: {lastSeedResult.summary.total_created || lastSeedResult.summary.total_deleted || 0}</li>

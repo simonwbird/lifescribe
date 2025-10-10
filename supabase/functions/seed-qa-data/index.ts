@@ -286,6 +286,7 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     tributes: 0,
     digest_settings: 0,
     follow_prefs: 0,
+    prompts: 0,
     total_created: 0,
   }
 
@@ -321,6 +322,32 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     .in('slug', PEOPLE_FIXTURES.map(p => p.slug))
 
   const peopleMap = new Map(peopleData?.map((p: any) => [p.full_name, p.id]) || [])
+
+  // Generate prompt instances for the family
+  try {
+    // Create general prompt instances
+    const { data: generalPrompts, error: generalError } = await supabase
+      .rpc('create_default_prompt_instances', { p_family_id: familyId })
+    
+    if (!generalError && generalPrompts) {
+      summary.prompts += generalPrompts
+    }
+
+    // Generate person-specific prompt instances for each person
+    for (const personId of peopleMap.values()) {
+      const { data: personPrompts, error: personError } = await supabase
+        .rpc('generate_person_prompt_instances', { 
+          p_person_id: personId, 
+          p_family_id: familyId 
+        })
+      
+      if (!personError && personPrompts) {
+        summary.prompts += personPrompts
+      }
+    }
+  } catch (error) {
+    console.error('Failed to generate prompt instances:', error)
+  }
 
   // Seed Stories
   for (const story of STORIES_FIXTURES) {
@@ -556,6 +583,7 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
     tributes: 0,
     digest_settings: 0,
     follow_prefs: 0,
+    prompts: 0,
     total_deleted: 0,
   }
 
@@ -677,6 +705,20 @@ async function purgeQAData(supabase: any, familyId: string, userId: string) {
       .delete()
       .in('id', peopleToDelete.map((p: any) => p.id))
     if (!error) summary.people = peopleToDelete.length
+  }
+
+  // Delete prompt instances for this family (they get recreated on next seed)
+  const { data: promptInstances } = await supabase
+    .from('prompt_instances')
+    .select('id')
+    .eq('family_id', familyId)
+
+  if (promptInstances && promptInstances.length > 0) {
+    const { error } = await supabase
+      .from('prompt_instances')
+      .delete()
+      .in('id', promptInstances.map((pi: any) => pi.id))
+    if (!error) summary.prompts = promptInstances.length
   }
 
   summary.total_deleted = Object.values(summary).reduce((a, b) => typeof b === 'number' ? a + b : a, 0) - summary.total_deleted
