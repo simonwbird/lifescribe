@@ -11,7 +11,7 @@ interface RoleGateProps {
 }
 
 export default function RoleGate({ children, role, fallback }: RoleGateProps) {
-  const { roles, loading, rolesLoading } = useAuth()
+  const { roles, loading, rolesLoading, isSuperAdmin } = useAuth()
   const navigate = useNavigate()
 
   // Show loading while roles are being fetched
@@ -24,7 +24,10 @@ export default function RoleGate({ children, role, fallback }: RoleGateProps) {
   }
 
   // Check if user has the required role
-  const hasRole = roles.some(userRole => userRole.role === role)
+  // For "admin" role, also check super_admin status
+  const hasRole = role === 'admin' 
+    ? (isSuperAdmin || roles.some(userRole => userRole.role === role))
+    : roles.some(userRole => userRole.role === role)
 
   if (!hasRole) {
     return fallback || (
