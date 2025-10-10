@@ -49,10 +49,16 @@ export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlo
 
         const avatarUrl = rel.person_avatar
 
-        // If it's already a full URL, check if it needs refresh
-        if (avatarUrl.startsWith('http')) {
-          const refreshed = await AvatarService.getValidAvatarUrl(avatarUrl)
+        // If it's already a full signed URL (contains supabase.co), check if it needs refresh
+        if (avatarUrl.includes('supabase.co/storage/v1/object/sign')) {
+          const refreshed = await AvatarService.refreshSignedUrl(avatarUrl)
           resolved[rel.person_id] = refreshed
+          continue
+        }
+
+        // If it's a full URL but not signed, use as-is
+        if (avatarUrl.startsWith('http')) {
+          resolved[rel.person_id] = avatarUrl
           continue
         }
 
