@@ -107,12 +107,19 @@ export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlo
     return acc
   }, {} as Record<string, typeof relationships>)
 
+  // Helper to pluralize labels correctly
+  const pluralize = (label: string, count: number) => {
+    if (count === 1) return label
+    if (label === 'Child') return 'Children'
+    return label + 's'
+  }
+
   return (
     <div className="space-y-6">
       {Object.entries(grouped).map(([label, rels]) => (
         <div key={label}>
           <h4 className="text-sm font-semibold text-muted-foreground mb-3">
-            {label}{rels.length > 1 ? 's' : ''}
+            {pluralize(label, rels.length)}
           </h4>
           <div className="space-y-2">
             {rels.map((rel) => (
