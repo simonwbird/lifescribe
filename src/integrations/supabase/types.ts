@@ -3627,6 +3627,129 @@ export type Database = {
           },
         ]
       }
+      object_person_links: {
+        Row: {
+          created_at: string
+          from_date: string | null
+          id: string
+          notes: string | null
+          object_id: string
+          person_id: string
+          relationship_type: string
+          to_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          object_id: string
+          person_id: string
+          relationship_type?: string
+          to_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          object_id?: string
+          person_id?: string
+          relationship_type?: string
+          to_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "object_person_links_object_id_fkey"
+            columns: ["object_id"]
+            isOneToOne: false
+            referencedRelation: "objects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "object_person_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      objects: {
+        Row: {
+          acquired_date: string | null
+          condition: string | null
+          created_at: string
+          created_by: string
+          cultural_significance: string | null
+          current_location: string | null
+          description: string | null
+          estimated_value: number | null
+          family_id: string
+          id: string
+          media_ids: string[] | null
+          metadata: Json | null
+          name: string
+          object_type: string
+          provenance: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          acquired_date?: string | null
+          condition?: string | null
+          created_at?: string
+          created_by: string
+          cultural_significance?: string | null
+          current_location?: string | null
+          description?: string | null
+          estimated_value?: number | null
+          family_id: string
+          id?: string
+          media_ids?: string[] | null
+          metadata?: Json | null
+          name: string
+          object_type?: string
+          provenance?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          acquired_date?: string | null
+          condition?: string | null
+          created_at?: string
+          created_by?: string
+          cultural_significance?: string | null
+          current_location?: string | null
+          description?: string | null
+          estimated_value?: number | null
+          family_id?: string
+          id?: string
+          media_ids?: string[] | null
+          metadata?: Json | null
+          name?: string
+          object_type?: string
+          provenance?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objects_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objects_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       people: {
         Row: {
           alt_names: string[] | null
@@ -4434,6 +4557,141 @@ export type Database = {
           },
         ]
       }
+      place_person_links: {
+        Row: {
+          created_at: string
+          from_date: string | null
+          id: string
+          notes: string | null
+          person_id: string
+          place_id: string
+          relationship_type: string
+          to_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          person_id: string
+          place_id: string
+          relationship_type?: string
+          to_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          person_id?: string
+          place_id?: string
+          relationship_type?: string
+          to_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_person_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "place_person_links_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      places: {
+        Row: {
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          family_id: string
+          geocode_hash: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          media_ids: string[] | null
+          metadata: Json | null
+          name: string
+          place_type: string
+          postal_code: string | null
+          significance: string | null
+          state: string | null
+          updated_at: string
+          visibility: string
+          years_active: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          family_id: string
+          geocode_hash?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          media_ids?: string[] | null
+          metadata?: Json | null
+          name: string
+          place_type?: string
+          postal_code?: string | null
+          significance?: string | null
+          state?: string | null
+          updated_at?: string
+          visibility?: string
+          years_active?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          family_id?: string
+          geocode_hash?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          media_ids?: string[] | null
+          metadata?: Json | null
+          name?: string
+          place_type?: string
+          postal_code?: string | null
+          significance?: string | null
+          state?: string | null
+          updated_at?: string
+          visibility?: string
+          years_active?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "places_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "places_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -4518,6 +4776,126 @@ export type Database = {
           {
             foreignKeyName: "profiles_default_space_id_fkey"
             columns: ["default_space_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
+      project_person_links: {
+        Row: {
+          created_at: string
+          from_date: string | null
+          id: string
+          notes: string | null
+          person_id: string
+          project_id: string
+          role: string
+          to_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          person_id: string
+          project_id: string
+          role?: string
+          to_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          person_id?: string
+          project_id?: string
+          role?: string
+          to_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_person_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_person_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          achievements: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          family_id: string
+          id: string
+          impact: string | null
+          media_ids: string[] | null
+          metadata: Json | null
+          name: string
+          project_type: string
+          start_date: string | null
+          status: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          achievements?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          family_id: string
+          id?: string
+          impact?: string | null
+          media_ids?: string[] | null
+          metadata?: Json | null
+          name: string
+          project_type?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          achievements?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          family_id?: string
+          id?: string
+          impact?: string | null
+          media_ids?: string[] | null
+          metadata?: Json | null
+          name?: string
+          project_type?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_family_id_fkey"
+            columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "v_my_roles"
             referencedColumns: ["family_id"]
@@ -6536,6 +6914,21 @@ export type Database = {
         Args: { p_confirmed_by: string; p_merge_proposal_id: string }
         Returns: Json
       }
+      find_duplicate_places: {
+        Args: {
+          p_family_id: string
+          p_latitude: number
+          p_longitude: number
+          p_name: string
+        }
+        Returns: {
+          address: string
+          id: string
+          name: string
+          place_type: string
+          similarity_score: number
+        }[]
+      }
       find_possible_duplicates: {
         Args: { p_dedupe_key: string; p_family_id?: string }
         Returns: {
@@ -6556,6 +6949,10 @@ export type Database = {
       }
       generate_event_upload_token: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_geocode_hash: {
+        Args: { p_latitude: number; p_longitude: number; p_name: string }
         Returns: string
       }
       generate_person_prompt_instances: {

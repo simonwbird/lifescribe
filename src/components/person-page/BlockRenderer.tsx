@@ -4,6 +4,7 @@ import PeopleWebBlock from './blocks/PeopleWebBlock'
 import HeroLifeBlock from './blocks/HeroLifeBlock'
 import HeroMemorialBlock from './blocks/HeroMemorialBlock'
 import TimelineBlock from './blocks/TimelineBlock'
+import { ObjectsPlacesBlock } from './blocks/ObjectsPlacesBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -93,9 +94,11 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
 
     case 'objects_places':
       return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Favorite places & things coming soon</p>
-        </div>
+        <ObjectsPlacesBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          canEdit={canEdit}
+        />
       )
 
     case 'now_next':
