@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +11,7 @@ import EnhancedReactionBar from './EnhancedReactionBar';
 import { InteractiveCommentField } from './InteractiveCommentField';
 import { formatForUser, getCurrentUserRegion } from '@/utils/date';
 import AdminFeedActions from '@/components/admin/AdminFeedActions';
+import { supabase } from '@/integrations/supabase/client';
 interface ActivityItem {
   id: string;
   type: 'story' | 'comment' | 'invite' | 'photo';
@@ -59,12 +60,56 @@ export function EnhancedFeedItem({
   const [likeCount, setLikeCount] = useState(activity.reactions_count || 0);
   const [commentCount, setCommentCount] = useState(activity.comments_count || 0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [mediaUrls, setMediaUrls] = useState<Array<{ url: string; type: string; mimeType: string }>>([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
   const {
     track
   } = useAnalytics();
   const {
     toast
   } = useToast();
+
+  // Load media for this story
+  useEffect(() => {
+    const loadMedia = async () => {
+      if (activity.type !== 'story') return;
+      
+      setLoadingMedia(true);
+      try {
+        const storyId = activity.id.replace('story-', '');
+        const { data: media } = await supabase
+          .from('media')
+          .select('*')
+          .eq('story_id', storyId)
+          .order('created_at')
+          .limit(3); // Limit to first 3 media items for preview
+
+        if (media) {
+          const urls = await Promise.all(
+            media.map(async (item) => {
+              const { data: { signedUrl } } = await supabase.storage
+                .from('media')
+                .createSignedUrl(item.file_path, 3600);
+              
+              return {
+                url: signedUrl || '',
+                type: item.mime_type?.startsWith('image/') ? 'image' : 
+                      item.mime_type?.startsWith('video/') ? 'video' : 'audio',
+                mimeType: item.mime_type || ''
+              };
+            })
+          );
+          setMediaUrls(urls.filter(u => u.url));
+        }
+      } catch (error) {
+        console.error('Error loading media:', error);
+      } finally {
+        setLoadingMedia(false);
+      }
+    };
+
+    loadMedia();
+  }, [activity.id, activity.type]);
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const newLiked = !isLiked;
@@ -198,6 +243,50 @@ export function EnhancedFeedItem({
             </p>
           )}
 
+          {/* Media Preview */}
+          {mediaUrls.length > 0 && (
+            <div className="space-y-2">
+              {mediaUrls.map((media, index) => (
+                <div key={index} className="rounded-lg overflow-hidden">
+                  {media.type === 'image' && (
+                    <img 
+                      src={media.url} 
+                      alt="Story media" 
+                      className="w-full max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate?.();
+                      }}
+                    />
+                  )}
+                  {media.type === 'video' && (
+                    <video 
+                      src={media.url} 
+                      controls 
+                      className="w-full max-h-48 rounded-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                  {media.type === 'audio' && (
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <audio 
+                        src={media.url} 
+                        controls 
+                        className="w-full"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+              {activity.media_count && activity.media_count > 3 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  +{activity.media_count - 3} more
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Compact Actions */}
           <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-1">
@@ -274,6 +363,50 @@ export function EnhancedFeedItem({
           {getContentPreview() && <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {getContentPreview()}
             </p>}
+          
+          {/* Media Preview */}
+          {mediaUrls.length > 0 && (
+            <div className="space-y-2">
+              {mediaUrls.map((media, index) => (
+                <div key={index} className="rounded-lg overflow-hidden">
+                  {media.type === 'image' && (
+                    <img 
+                      src={media.url} 
+                      alt="Story media" 
+                      className="w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity rounded-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate?.();
+                      }}
+                    />
+                  )}
+                  {media.type === 'video' && (
+                    <video 
+                      src={media.url} 
+                      controls 
+                      className="w-full max-h-64 rounded-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                  {media.type === 'audio' && (
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <audio 
+                        src={media.url} 
+                        controls 
+                        className="w-full"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+              {activity.media_count && activity.media_count > 3 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  +{activity.media_count - 3} more • Click to view all
+                </p>
+              )}
+            </div>
+          )}
           
           {activity.content_type === 'audio' && activity.has_audio && <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
               <Button variant="ghost" size="sm" onClick={handleAudioToggle} className="h-10 w-10 p-0 rounded-full bg-primary/10 hover:bg-primary/20">
