@@ -67,15 +67,13 @@ export function AppHeader() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  asChild
                   className={`${activeSection === 'stories' ? 'bg-accent text-accent-foreground' : ''} gap-1`}
-                  onClick={() => window.location.href = '/stories/new'}
-                  onMouseEnter={(e) => {
-                    const trigger = e.currentTarget;
-                    setTimeout(() => trigger.click(), 100);
-                  }}
                 >
-                  Stories
-                  <ChevronDown className="h-3 w-3 opacity-50" />
+                  <Link to="/stories/new">
+                    Stories
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </Link>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
