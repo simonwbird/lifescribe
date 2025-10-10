@@ -100,6 +100,7 @@ import BugDetail from './pages/admin/BugDetail';
 import AdminConfig from './pages/admin/AdminConfig';
 import AdminUserManagement from '@/pages/admin/AdminUserManagement';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminDuplicates from './pages/admin/AdminDuplicates';
 import { BugReportWidget } from './components/BugReportWidget';
 import PromptsWow from './pages/PromptsWow';
 import { ABTestProvider } from './components/analytics/ABTestProvider';
@@ -223,6 +224,7 @@ function AppContent() {
            <Route path="growth" element={<div className="p-8"><h1 className="text-2xl font-bold">Growth & Digests</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="config" element={<AdminConfig />} />
            <Route path="analytics" element={<AdminAnalytics />} />
+           <Route path="duplicates" element={<AdminDuplicates />} />
            <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />

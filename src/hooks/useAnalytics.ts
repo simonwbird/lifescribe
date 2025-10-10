@@ -98,6 +98,11 @@ export type AnalyticsEvent =
   // New home events
   | 'draft_resumed'
   | 'draft_deleted'
+  // Dedupe/merge events
+  | 'dedupe.viewed'
+  | 'dedupe.merged'
+  | 'dedupe.undone'
+  | 'dedupe.dismissed'
   | 'activity_clicked'
   | 'activity_reaction'
   | 'invite_banner_dismissed'

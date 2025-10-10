@@ -1173,6 +1173,80 @@ export type Database = {
         }
         Relationships: []
       }
+      duplicate_candidates: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          family_id: string
+          heuristic_details: Json | null
+          id: string
+          match_reasons: string[]
+          person_a_id: string
+          person_b_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string
+          family_id: string
+          heuristic_details?: Json | null
+          id?: string
+          match_reasons?: string[]
+          person_a_id: string
+          person_b_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          family_id?: string
+          heuristic_details?: Json | null
+          id?: string
+          match_reasons?: string[]
+          person_a_id?: string
+          person_b_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duplicate_candidates_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_candidates_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "duplicate_candidates_person_a_id_fkey"
+            columns: ["person_a_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_candidates_person_b_id_fkey"
+            columns: ["person_b_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_links: {
         Row: {
           created_at: string
@@ -3413,6 +3487,132 @@ export type Database = {
           {
             foreignKeyName: "person_answer_links_person_id_fkey"
             columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_merges: {
+        Row: {
+          can_undo: boolean
+          confidence_score: number | null
+          family_id: string
+          id: string
+          merge_data: Json
+          merge_reasons: string[] | null
+          merged_at: string
+          merged_by: string
+          source_person_id: string
+          target_person_id: string
+          undo_expires_at: string
+          undone_at: string | null
+          undone_by: string | null
+        }
+        Insert: {
+          can_undo?: boolean
+          confidence_score?: number | null
+          family_id: string
+          id?: string
+          merge_data?: Json
+          merge_reasons?: string[] | null
+          merged_at?: string
+          merged_by: string
+          source_person_id: string
+          target_person_id: string
+          undo_expires_at?: string
+          undone_at?: string | null
+          undone_by?: string | null
+        }
+        Update: {
+          can_undo?: boolean
+          confidence_score?: number | null
+          family_id?: string
+          id?: string
+          merge_data?: Json
+          merge_reasons?: string[] | null
+          merged_at?: string
+          merged_by?: string
+          source_person_id?: string
+          target_person_id?: string
+          undo_expires_at?: string
+          undone_at?: string | null
+          undone_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_merges_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_merges_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "person_merges_target_person_id_fkey"
+            columns: ["target_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_redirects: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          merge_id: string | null
+          new_person_id: string
+          old_person_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          merge_id?: string | null
+          new_person_id: string
+          old_person_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          merge_id?: string | null
+          new_person_id?: string
+          old_person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_redirects_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_redirects_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "person_redirects_merge_id_fkey"
+            columns: ["merge_id"]
+            isOneToOne: false
+            referencedRelation: "person_merges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_redirects_new_person_id_fkey"
+            columns: ["new_person_id"]
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["id"]
@@ -5759,6 +5959,14 @@ export type Database = {
           p_sequence_number: number
         }
         Returns: string
+      }
+      calculate_duplicate_score: {
+        Args: { p_person_a_id: string; p_person_b_id: string }
+        Returns: {
+          details: Json
+          reasons: string[]
+          score: number
+        }[]
       }
       check_digest_unlock_status: {
         Args: { p_family_id: string }

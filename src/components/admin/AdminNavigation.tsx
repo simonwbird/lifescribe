@@ -10,7 +10,8 @@ import {
   Flag,
   Clock,
   Bug,
-  Beaker
+  Beaker,
+  GitMerge
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -65,6 +66,13 @@ const adminNavItems: AdminNavItem[] = [
     href: '/admin/labs',
     icon: Beaker,
     roles: ['SUPER_ADMIN']
+  },
+  {
+    id: 'duplicates',
+    label: 'Duplicate Manager',
+    href: '/admin/duplicates',
+    icon: GitMerge,
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN']
   },
   {
     id: 'admin-debug',
