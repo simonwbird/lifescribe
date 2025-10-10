@@ -289,9 +289,12 @@ export default function PersonPage() {
                           onRemove={() => handleRemoveBlock(block.id)}
                           dragHandleProps={provided.dragHandleProps}
                         >
-                          <BlockRenderer 
+                           <BlockRenderer 
                             block={block} 
-                            person={person}
+                            person={{
+                              ...person,
+                              family_id: person.family_id || ''
+                            }}
                             currentUserId={currentUserId}
                             canEdit={!!canEdit}
                             onUpdate={() => {

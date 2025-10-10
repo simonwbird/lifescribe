@@ -3,6 +3,7 @@ import { PersonPageBlock } from '@/types/personPage'
 import PeopleWebBlock from './blocks/PeopleWebBlock'
 import HeroLifeBlock from './blocks/HeroLifeBlock'
 import HeroMemorialBlock from './blocks/HeroMemorialBlock'
+import TimelineBlock from './blocks/TimelineBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -15,6 +16,7 @@ interface BlockRendererProps {
     birth_date?: string
     death_date?: string
     status: 'living' | 'passed'
+    family_id?: string
   }
   currentUserId: string | null
   canEdit: boolean
@@ -50,9 +52,11 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
     case 'timeline':
     case 'life_arc_timeline':
       return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Timeline coming soon</p>
-        </div>
+        <TimelineBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          canEdit={canEdit}
+        />
       )
 
     case 'story_roll':
