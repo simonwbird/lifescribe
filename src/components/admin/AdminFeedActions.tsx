@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { supabase } from '@/integrations/supabase/client'
 
 interface AdminFeedActionsProps {
   storyId: string
@@ -51,17 +52,40 @@ export default function AdminFeedActions({
     onAction?.(action, storyId)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     track('activity_clicked', { action: 'delete', storyId })
-    
-    toast({
-      title: 'Story deleted',
-      description: 'The story has been permanently removed',
-      variant: 'destructive'
-    })
-    
-    onAction?.('delete', storyId)
-    setShowDeleteDialog(false)
+
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .update({
+          title: '[Deleted by admin]',
+          content: '[Content removed by family admin]',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', storyId)
+
+      if (error) throw error
+
+      toast({
+        title: 'Story deleted',
+        description: 'The story has been removed',
+        variant: 'destructive',
+      })
+
+      onAction?.('delete', storyId)
+      setShowDeleteDialog(false)
+
+      // Ensure feed updates immediately
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to delete story', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete story',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleModerate = () => {
