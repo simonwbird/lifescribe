@@ -63,7 +63,7 @@ export function ResponseModal({ isOpen, onClose, prompt, onSelectResponse }: Res
                     <Mic className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="space-y-1 flex-1">
-                    <p className="font-semibold text-foreground">Voice Recording</p>
+                    <p className="font-semibold text-foreground">Start Recording</p>
                     <p className="text-sm text-muted-foreground">
                       Speak naturally — just like having a conversation
                     </p>
@@ -82,7 +82,7 @@ export function ResponseModal({ isOpen, onClose, prompt, onSelectResponse }: Res
                     <Type className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-1 flex-1">
-                    <p className="font-semibold text-foreground">Write Your Story</p>
+                    <p className="font-semibold text-foreground">Write Instead</p>
                     <p className="text-sm text-muted-foreground">
                       Type your thoughts and memories
                     </p>
@@ -113,8 +113,9 @@ export function ResponseModal({ isOpen, onClose, prompt, onSelectResponse }: Res
 
           {/* Encouragement text */}
           <div className="text-center pt-2">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Don't worry about being perfect — your family will love hearing from you
+            <p className="text-sm text-muted-foreground leading-relaxed flex items-center justify-center gap-2">
+              <span>🔒</span>
+              Private by default. You choose who sees it.
             </p>
           </div>
         </div>

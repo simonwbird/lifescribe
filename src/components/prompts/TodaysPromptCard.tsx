@@ -124,6 +124,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               className="gap-2 h-12 px-6"
               onClick={onShuffle}
               disabled={!onShuffle}
+              title="Get a different prompt."
             >
               <Shuffle className="h-5 w-5" />
               Shuffle
@@ -132,7 +133,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
         </div>
         
         <p className="text-muted-foreground">
-          No need to be perfect—just talk.
+          Don't aim for perfect—aim for true. 60–90 seconds is plenty.
         </p>
       </div>
 
@@ -174,7 +175,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
         size="lg"
       >
         <Mic className="h-6 w-6 mr-3" />
-        Record Your Story
+        Start Recording
       </Button>
 
       {/* Quick Actions */}
@@ -239,9 +240,9 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
 
       {/* Encouragement */}
       <div className="text-center flex items-center justify-center gap-2">
-        <MessageCircle className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">🔒</span>
         <p className="text-sm text-muted-foreground">
-          Just hit record and be yourself.
+          Private by default. You choose who sees it.
         </p>
       </div>
 
