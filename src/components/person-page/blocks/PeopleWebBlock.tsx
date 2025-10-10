@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,9 @@ import { Lock, ExternalLink, Heart } from 'lucide-react'
 import { usePersonRelationships } from '@/hooks/usePersonRelationships'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { AvatarService } from '@/lib/avatarService'
+import { getSignedMediaUrl } from '@/lib/media'
+import { supabase } from '@/integrations/supabase/client'
 
 interface PeopleWebBlockProps {
   personId: string
@@ -16,6 +19,53 @@ interface PeopleWebBlockProps {
 export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlockProps) {
   const navigate = useNavigate()
   const { relationships, loading, error } = usePersonRelationships(personId, currentUserId)
+  const [resolvedAvatars, setResolvedAvatars] = useState<Record<string, string | null>>({})
+
+  // Resolve avatar URLs from storage
+  useEffect(() => {
+    const resolveAvatars = async () => {
+      if (!relationships.length) return
+
+      // Get family_id from the first person
+      const firstPersonId = relationships[0]?.person_id
+      if (!firstPersonId) return
+
+      const { data: personData } = await supabase
+        .from('people')
+        .select('family_id')
+        .eq('id', firstPersonId)
+        .single()
+
+      const familyId = personData?.family_id
+      if (!familyId) return
+
+      const resolved: Record<string, string | null> = {}
+
+      for (const rel of relationships) {
+        if (!rel.person_avatar) {
+          resolved[rel.person_id] = null
+          continue
+        }
+
+        const avatarUrl = rel.person_avatar
+
+        // If it's already a full URL, check if it needs refresh
+        if (avatarUrl.startsWith('http')) {
+          const refreshed = await AvatarService.getValidAvatarUrl(avatarUrl)
+          resolved[rel.person_id] = refreshed
+          continue
+        }
+
+        // If it's a storage path, get signed URL
+        const signedUrl = await getSignedMediaUrl(avatarUrl, familyId)
+        resolved[rel.person_id] = signedUrl
+      }
+
+      setResolvedAvatars(resolved)
+    }
+
+    resolveAvatars()
+  }, [relationships])
 
   if (loading) {
     return (
@@ -81,7 +131,7 @@ export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlo
                 }}
               >
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={rel.person_avatar || ''} alt={rel.person_name} />
+                  <AvatarImage src={resolvedAvatars[rel.person_id] || ''} alt={rel.person_name} />
                   <AvatarFallback>
                     {rel.person_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
