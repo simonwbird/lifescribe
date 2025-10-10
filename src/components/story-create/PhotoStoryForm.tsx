@@ -226,6 +226,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             </label>
             <input
               type="file"
+              data-testid="photo-input"
               accept="image/jpeg,image/png,image/webp,image/heic"
               multiple
               onChange={handleFileChange}
@@ -234,7 +235,11 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             {files.length > 0 && (
               <div className="mt-4 grid grid-cols-3 gap-4">
                 {previews.map((preview, index) => (
-                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
+                  <div 
+                    key={index} 
+                    data-testid="photo-preview"
+                    className="relative aspect-square rounded-lg overflow-hidden border"
+                  >
                     <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
                     <button
                       type="button"
@@ -255,6 +260,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             </label>
             <Input
               id="title"
+              data-testid="story-title-input"
               placeholder="Give your story a title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -269,6 +275,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             </label>
             <Textarea
               id="content"
+              data-testid="story-content-input"
               placeholder="Tell the story behind these photos..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -296,6 +303,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             {(files.length === 0 || !content.trim()) && (
               <Button 
                 type="button"
+                data-testid="save-draft-button"
                 variant="secondary"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={isSubmitting}
@@ -304,7 +312,8 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
               </Button>
             )}
             <Button 
-              type="submit" 
+              type="submit"
+              data-testid="publish-button"
               disabled={isSubmitting}
               className="flex-1"
             >

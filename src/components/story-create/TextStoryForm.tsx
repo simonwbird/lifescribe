@@ -160,6 +160,7 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
             </label>
             <Input
               id="title"
+              data-testid="story-title-input"
               placeholder="Give your story a title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -174,6 +175,7 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
             </label>
             <Textarea
               id="content"
+              data-testid="story-content-input"
               placeholder="Tell your story..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -200,7 +202,8 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
               Cancel
             </Button>
             <Button 
-              type="submit" 
+              type="submit"
+              data-testid="publish-button"
               disabled={isSubmitting}
               className="flex-1"
             >

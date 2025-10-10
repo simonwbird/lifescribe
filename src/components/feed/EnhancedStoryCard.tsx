@@ -105,6 +105,7 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
 
   return (
     <Card 
+      data-testid="story-card"
       className={cn(
         "cursor-pointer transition-all duration-200 hover:shadow-lg",
         isHovered && "shadow-md transform-gpu scale-[1.02]"

@@ -19,6 +19,7 @@ export default function FamilyPicker({ families, onSelect }: FamilyPickerProps) 
         {families.map((family) => (
           <Button
             key={family.id}
+            data-testid={`family-select-${family.id}`}
             onClick={() => onSelect(family.id)}
             variant="outline"
             className="w-full justify-start text-left h-auto py-4"

@@ -321,6 +321,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
                   </div>
                   <input
                     type="file"
+                    data-testid="voice-upload-input"
                     accept="audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/x-m4a"
                     onChange={handleFileUpload}
                     className="hidden"
@@ -361,6 +362,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
             </label>
             <Input
               id="title"
+              data-testid="story-title-input"
               placeholder="Give your story a title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -375,6 +377,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
             </label>
             <Textarea
               id="content"
+              data-testid="story-content-input"
               placeholder="Describe what's in the recording..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -417,6 +420,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
             {!audioBlob && (
               <Button 
                 type="button"
+                data-testid="save-draft-button"
                 variant="secondary"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={isSubmitting}
@@ -425,7 +429,8 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
               </Button>
             )}
             <Button 
-              type="submit" 
+              type="submit"
+              data-testid="publish-button"
               disabled={isSubmitting}
               className="flex-1"
             >
