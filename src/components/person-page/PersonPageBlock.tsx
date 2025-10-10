@@ -63,15 +63,17 @@ export default function PersonPageBlock({
 
   return (
     <Card className={cn(
-      "relative transition-shadow hover:shadow-md",
-      canEdit && "group"
+      "relative transition-all duration-200",
+      "hover:shadow-md hover:scale-[1.01]",
+      canEdit && "group cursor-default"
     )}>
       {canEdit && (
         <div 
           {...dragHandleProps}
-          className="absolute left-2 top-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute left-2 top-2 cursor-grab active:cursor-grabbing opacity-40 group-hover:opacity-100 hover:scale-110 transition-all z-10"
+          title="Drag to reorder"
         >
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
+          <GripVertical className="h-6 w-6 text-muted-foreground hover:text-primary" />
         </div>
       )}
 

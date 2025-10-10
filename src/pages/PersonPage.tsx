@@ -28,6 +28,7 @@ import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { toast } from '@/components/ui/use-toast'
 import { PerformanceBudgetMonitor, SkipLink } from '@/components/performance'
 import { prefetchVisibleLinks, enableHoverPrefetch } from '@/utils/linkPrefetch'
+import { cn } from '@/lib/utils'
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>()
@@ -423,7 +424,9 @@ export default function PersonPage() {
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={snapshot.isDragging ? 'opacity-50' : ''}
+                            className={cn(
+                              snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
+                            )}
                           >
                             <PersonPageBlock
                               block={block}
