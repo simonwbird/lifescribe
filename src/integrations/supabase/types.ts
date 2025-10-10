@@ -1424,6 +1424,221 @@ export type Database = {
         }
         Relationships: []
       }
+      event_recaps: {
+        Row: {
+          attendee_count: number | null
+          auto_generated: boolean | null
+          content: Json | null
+          created_at: string | null
+          created_by: string | null
+          event_id: string
+          family_id: string
+          hero_collage_url: string | null
+          id: string
+          photo_ids: string[] | null
+          published_at: string | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          attendee_count?: number | null
+          auto_generated?: boolean | null
+          content?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          event_id: string
+          family_id: string
+          hero_collage_url?: string | null
+          id?: string
+          photo_ids?: string[] | null
+          published_at?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          attendee_count?: number | null
+          auto_generated?: boolean | null
+          content?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          event_id?: string
+          family_id?: string
+          hero_collage_url?: string | null
+          id?: string
+          photo_ids?: string[] | null
+          published_at?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_recaps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "life_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_recaps_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_recaps_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
+      event_upload_tokens: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          current_uploads: number | null
+          event_id: string
+          expires_at: string
+          family_id: string
+          id: string
+          is_active: boolean | null
+          max_uploads: number | null
+          revoked_at: string | null
+          revoked_by: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          current_uploads?: number | null
+          event_id: string
+          expires_at: string
+          family_id: string
+          id?: string
+          is_active?: boolean | null
+          max_uploads?: number | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          current_uploads?: number | null
+          event_id?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          is_active?: boolean | null
+          max_uploads?: number | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_upload_tokens_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "life_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_upload_tokens_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_upload_tokens_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
+      event_uploads: {
+        Row: {
+          event_id: string
+          family_id: string
+          guest_name: string | null
+          guest_note: string | null
+          id: string
+          ip_address: unknown | null
+          media_id: string | null
+          tagged_people: string[] | null
+          upload_token_id: string | null
+          uploaded_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          event_id: string
+          family_id: string
+          guest_name?: string | null
+          guest_note?: string | null
+          id?: string
+          ip_address?: unknown | null
+          media_id?: string | null
+          tagged_people?: string[] | null
+          upload_token_id?: string | null
+          uploaded_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          event_id?: string
+          family_id?: string
+          guest_name?: string | null
+          guest_note?: string | null
+          id?: string
+          ip_address?: unknown | null
+          media_id?: string | null
+          tagged_people?: string[] | null
+          upload_token_id?: string | null
+          uploaded_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_uploads_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "life_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_uploads_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_uploads_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "event_uploads_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_uploads_upload_token_id_fkey"
+            columns: ["upload_token_id"]
+            isOneToOne: false
+            referencedRelation: "event_upload_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       face_tags: {
         Row: {
           created_at: string
@@ -6036,6 +6251,10 @@ export type Database = {
         Returns: Json
       }
       generate_event_join_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_event_upload_token: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

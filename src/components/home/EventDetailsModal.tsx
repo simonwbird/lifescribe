@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { EventUploadLinkModal } from '@/components/events/EventUploadLinkModal'
+import { EventRecapViewer } from '@/components/events/EventRecapViewer'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -36,6 +38,8 @@ export const EventDetailsModal = ({ event, isOpen, onClose }: EventDetailsModalP
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showCalendarOptions, setShowCalendarOptions] = useState(false)
+  const [showUploadLinkModal, setShowUploadLinkModal] = useState(false)
+  const [showRecapViewer, setShowRecapViewer] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
   const { track } = useAnalytics()
   const { toast } = useToast()
@@ -384,17 +388,46 @@ export const EventDetailsModal = ({ event, isOpen, onClose }: EventDetailsModalP
                   Invite Family
                 </Button>
               </div>
-              
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUploadLinkModal(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Camera className="h-4 w-4" />
+                  Share Upload Link
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="flex items-center gap-2"
+                >
+                  <Share className="h-4 w-4" />
+                  Share
+                </Button>
+              </div>
+
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
-                onClick={handleShare}
+                onClick={() => setShowRecapViewer(!showRecapViewer)}
                 className="w-full flex items-center gap-2"
               >
-                <Share className="h-4 w-4" />
-                Share Event
+                <MessageCircle className="h-4 w-4" />
+                {showRecapViewer ? 'Hide Event Recap' : 'View Event Recap'}
               </Button>
             </div>
+
+            {showRecapViewer && event && (
+              <>
+                <Separator />
+                <EventRecapViewer eventId={event.id} />
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -412,6 +445,16 @@ export const EventDetailsModal = ({ event, isOpen, onClose }: EventDetailsModalP
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
       />
+
+      {/* Upload Link Modal */}
+      {event && familyId && (
+        <EventUploadLinkModal
+          open={showUploadLinkModal}
+          onOpenChange={setShowUploadLinkModal}
+          eventId={event.id}
+          familyId={familyId}
+        />
+      )}
     </>
   )
 }

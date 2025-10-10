@@ -101,6 +101,7 @@ import AdminConfig from './pages/admin/AdminConfig';
 import AdminUserManagement from '@/pages/admin/AdminUserManagement';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminDuplicates from './pages/admin/AdminDuplicates';
+import EventUpload from './pages/EventUpload';
 import { BugReportWidget } from './components/BugReportWidget';
 import PromptsWow from './pages/PromptsWow';
 import { ABTestProvider } from './components/analytics/ABTestProvider';
@@ -130,6 +131,7 @@ function AppContent() {
       <Route path="/request-access" element={<RequestAccess />} />
         <Route path="/family/invitations" element={<FamilyInvitations />} />
       <Route path="/invite/:token" element={<InviteAccept />} />
+      <Route path="/events/:eventId/upload/:token" element={<EventUpload />} />
       <Route path="/join/:code" element={<EventJoin />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />

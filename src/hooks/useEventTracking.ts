@@ -142,6 +142,33 @@ export function useEventTracking() {
     await eventTracker.trackAdminClaimDenied(metadata)
   }, [])
 
+  const trackEventUploadLinkCreated = useCallback(async (metadata: { 
+    event_id: string; 
+    family_id: string; 
+    expires_in_days: number; 
+    max_uploads?: number | null;
+  }) => {
+    await eventTracker.trackCustomEvent('event.upload_link_created', metadata)
+  }, [])
+
+  const trackEventUploadReceived = useCallback(async (metadata: { 
+    event_id: string; 
+    upload_id: string; 
+    guest_name?: string;
+    has_note: boolean;
+  }) => {
+    await eventTracker.trackCustomEvent('event.upload_received', metadata)
+  }, [])
+
+  const trackRecapAutoCreated = useCallback(async (metadata: { 
+    event_id: string; 
+    recap_id: string; 
+    photo_count: number;
+    guest_count: number;
+  }) => {
+    await eventTracker.trackCustomEvent('recap.autocreated', metadata)
+  }, [])
+
   const trackCustomEvent = useCallback(async (eventName: string, metadata: Record<string, any>) => {
     await eventTracker.trackCustomEvent(eventName, metadata)
   }, [])
@@ -172,6 +199,9 @@ export function useEventTracking() {
     trackAdminClaimEndorsed,
     trackAdminClaimGranted,
     trackAdminClaimDenied,
+    trackEventUploadLinkCreated,
+    trackEventUploadReceived,
+    trackRecapAutoCreated,
     trackCustomEvent
   }
 }
