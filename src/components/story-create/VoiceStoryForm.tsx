@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,8 @@ import { DatePrecisionPicker, DatePrecisionValue } from '@/components/DatePrecis
 import { useToast } from '@/components/ui/use-toast'
 import { supabase } from '@/lib/supabase'
 import { uploadMediaFile } from '@/lib/media'
-import { Mic, Square, Upload } from 'lucide-react'
+import { Mic, Square, Upload, AlertCircle, Settings } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface VoiceStoryFormProps {
   familyId: string
@@ -19,6 +20,9 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [micCapable, setMicCapable] = useState<boolean | null>(null)
+  const [micDenied, setMicDenied] = useState(false)
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -29,6 +33,39 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const recordingIntervalRef = useRef<number | null>(null)
+
+  // Step 0: Capability probe on mount
+  useEffect(() => {
+    const isSecureContext = window.isSecureContext
+    const hasMediaDevices = !!navigator.mediaDevices?.getUserMedia
+    setMicCapable(isSecureContext && hasMediaDevices)
+  }, [])
+
+  // Timer for recording
+  useEffect(() => {
+    if (isRecording) {
+      recordingIntervalRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+    } else {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current)
+        recordingIntervalRef.current = null
+      }
+    }
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current)
+      }
+    }
+  }, [isRecording])
+
+  function formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   async function startRecording() {
     try {
@@ -55,11 +92,18 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
 
       mediaRecorder.start()
       setIsRecording(true)
+      setRecordingTime(0)
     } catch (error: any) {
       console.error('Mic access error:', error)
+      
+      // Step 1: Handle denial
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setMicDenied(true)
+      }
+      
       toast({
         title: 'Microphone access denied',
-        description: 'Please allow microphone access or upload an audio file instead.',
+        description: 'Please check your browser settings or upload an audio file instead.',
         variant: 'destructive'
       })
     }
@@ -70,6 +114,12 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
     }
+  }
+
+  function reRecord() {
+    setAudioBlob(null)
+    setAudioUrl(null)
+    setRecordingTime(0)
   }
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -96,7 +146,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
     reader.readAsArrayBuffer(file)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent, asDraft = false) {
     e.preventDefault()
     
     // Validation
@@ -109,10 +159,11 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
       return
     }
 
-    if (!audioBlob) {
+    // Allow saving draft without audio
+    if (!audioBlob && !asDraft) {
       toast({
         title: 'No audio',
-        description: 'Please record or upload audio.',
+        description: 'Please record or upload audio, or save as draft.',
         variant: 'destructive'
       })
       return
@@ -135,38 +186,41 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
           title: title.trim(),
           content: content.trim(),
           occurred_on: occurredDate,
-          is_approx: dateValue.yearOnly
+          is_approx: dateValue.yearOnly,
+          status: asDraft ? 'draft' : 'published'
         })
         .select()
         .single()
 
       if (storyError) throw storyError
 
-      // Upload audio file
-      const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, { type: audioBlob.type })
-      const { path, error: uploadError } = await uploadMediaFile(audioFile, familyId, user.id)
+      // Upload audio file (only if audio exists)
+      if (audioBlob) {
+        const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, { type: audioBlob.type })
+        const { path, error: uploadError } = await uploadMediaFile(audioFile, familyId, user.id)
 
-      if (uploadError || !path) throw new Error(uploadError || 'Failed to upload audio')
+        if (uploadError || !path) throw new Error(uploadError || 'Failed to upload audio')
 
-      // Create media record with optional transcript
-      const { error: mediaError } = await supabase
-        .from('media')
-        .insert({
-          story_id: story.id,
-          profile_id: user.id,
-          family_id: familyId,
-          file_path: path,
-          file_name: audioFile.name,
-          file_size: audioFile.size,
-          mime_type: audioFile.type,
-          transcript: transcript.trim() || null
-        })
+        // Create media record with optional transcript
+        const { error: mediaError } = await supabase
+          .from('media')
+          .insert({
+            story_id: story.id,
+            profile_id: user.id,
+            family_id: familyId,
+            file_path: path,
+            file_name: audioFile.name,
+            file_size: audioFile.size,
+            mime_type: audioFile.type,
+            transcript: transcript.trim() || null
+          })
 
-      if (mediaError) throw mediaError
+        if (mediaError) throw mediaError
+      }
 
       toast({
-        title: 'Story created!',
-        description: 'Your voice story has been published.'
+        title: asDraft ? 'Draft saved!' : 'Story created!',
+        description: asDraft ? 'Your draft has been saved.' : 'Your voice story has been published.'
       })
 
       navigate('/feed')
@@ -188,42 +242,72 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
         <CardTitle>Create Voice Story</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
+          {/* Step 0: Capability fallback */}
+          {micCapable === false && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Voice recording is not available (requires secure connection). Please upload an audio file instead.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Step 1: Permission denied guidance */}
+          {micDenied && (
+            <Alert>
+              <Settings className="h-4 w-4" />
+              <AlertDescription className="space-y-2">
+                <p className="font-semibold">Enable microphone in browser settings:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Click the lock icon in your browser's address bar</li>
+                  <li>Find "Microphone" in the permissions list</li>
+                  <li>Select "Allow" and refresh this page</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Audio Recording/Upload */}
           <div className="space-y-4">
             <label className="block text-sm font-medium">
-              Audio <span className="text-destructive">*</span>
+              Audio {!audioBlob && <span className="text-muted-foreground">(or save as draft)</span>}
             </label>
             
             {!audioUrl ? (
               <div className="space-y-3">
-                <Button
-                  type="button"
-                  variant={isRecording ? 'destructive' : 'default'}
-                  onClick={isRecording ? stopRecording : startRecording}
-                  className="w-full"
-                >
-                  {isRecording ? (
-                    <>
-                      <Square className="h-4 w-4 mr-2" />
-                      Stop Recording
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4 mr-2" />
-                      Start Recording
-                    </>
-                  )}
-                </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or</span>
-                  </div>
-                </div>
+                {/* Recording button - only show if capable */}
+                {micCapable !== false && (
+                  <>
+                    <Button
+                      type="button"
+                      variant={isRecording ? 'destructive' : 'default'}
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className="w-full"
+                    >
+                      {isRecording ? (
+                        <>
+                          <Square className="h-4 w-4 mr-2" />
+                          Stop Recording ({formatTime(recordingTime)})
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-4 w-4 mr-2" />
+                          Start Recording
+                        </>
+                      )}
+                    </Button>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or</span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <label className="flex items-center justify-center w-full h-32 px-4 transition border-2 border-dashed rounded-md appearance-none cursor-pointer hover:border-primary focus:outline-none">
                   <div className="flex flex-col items-center space-y-2">
@@ -246,17 +330,27 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
             ) : (
               <div className="space-y-3">
                 <audio controls src={audioUrl} className="w-full" />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setAudioBlob(null)
-                    setAudioUrl(null)
-                  }}
-                  className="w-full"
-                >
-                  Remove Audio
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={reRecord}
+                    className="flex-1"
+                  >
+                    Re-record
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setAudioBlob(null)
+                      setAudioUrl(null)
+                    }}
+                    className="flex-1"
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -320,6 +414,16 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
             >
               Cancel
             </Button>
+            {!audioBlob && (
+              <Button 
+                type="button"
+                variant="secondary"
+                onClick={(e) => handleSubmit(e, true)}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save as Draft'}
+              </Button>
+            )}
             <Button 
               type="submit" 
               disabled={isSubmitting}
