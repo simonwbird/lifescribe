@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthProvider'
+import { useSecureRoles } from '@/hooks/useSecureRoles'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShieldAlert, ArrowLeft } from 'lucide-react'
@@ -13,9 +14,10 @@ interface RoleGateProps {
 export default function RoleGate({ children, role, fallback }: RoleGateProps) {
   const { roles, loading, rolesLoading, profileLoading, isSuperAdmin } = useAuth()
   const navigate = useNavigate()
+  const { data: secureRoles, isLoading: secureRolesLoading } = useSecureRoles()
 
   // Show loading while roles/profile are being fetched
-  if (loading || rolesLoading || profileLoading) {
+  if (loading || rolesLoading || profileLoading || secureRolesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -25,8 +27,9 @@ export default function RoleGate({ children, role, fallback }: RoleGateProps) {
 
   // Check if user has the required role
   // For "admin" role, also check super_admin status
-  const hasRole = role === 'admin' 
-    ? (isSuperAdmin || roles.some(userRole => userRole.role === role))
+  const superAdmin = (secureRoles?.systemRole === 'super_admin') || isSuperAdmin
+  const hasRole = role === 'admin'
+    ? (superAdmin || roles.some(userRole => userRole.role === role))
     : roles.some(userRole => userRole.role === role)
 
   if (!hasRole) {
