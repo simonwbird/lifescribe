@@ -24,7 +24,10 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Find QA-seeded data by qa_seed marker
+    // Identify QA family
+    let familyId: string | null = null
+
+    // 1) Prefer explicit qa_seed marker if present
     const { data: qaFollowPrefs, error: followError } = await supabaseAdmin
       .from('digest_follow_preferences')
       .select('family_id')
@@ -32,21 +35,57 @@ Deno.serve(async (req) => {
       .limit(1)
 
     if (followError) {
-      console.error('Error finding QA data:', followError)
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          status: null,
-          message: 'Error finding QA seeded data'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
-        }
-      )
+      console.error('Error finding QA data (qa_seed marker):', followError)
+      // don't return yet, we'll try a fallback
     }
 
-    if (!qaFollowPrefs || qaFollowPrefs.length === 0) {
+    if (qaFollowPrefs && qaFollowPrefs.length > 0) {
+      familyId = qaFollowPrefs[0].family_id as string
+      console.log('QA seed status: using familyId from qa_seed marker')
+    }
+
+    // 2) Fallback: infer from current authenticated user's family memberships
+    if (!familyId) {
+      const authHeader = req.headers.get('Authorization') || req.headers.get('authorization')
+      const token = authHeader?.split(' ')[1] ?? null
+
+      if (token) {
+        const { data: userRes, error: userErr } = await supabaseAdmin.auth.getUser(token)
+        if (userErr) {
+          console.error('Error fetching user from token:', userErr)
+        }
+
+        const userId = userRes?.user?.id
+        if (userId) {
+          // Try family_memberships first
+          const { data: memberships, error: memErr } = await supabaseAdmin
+            .from('family_memberships')
+            .select('family_id')
+            .eq('profile_id', userId)
+            .eq('status', 'active')
+            .limit(1)
+
+          if (!memErr && memberships && memberships.length > 0) {
+            familyId = memberships[0].family_id as string
+            console.log('QA seed status: using familyId from family_memberships for user')
+          } else {
+            // Fallback to legacy members table if present
+            const { data: membersAlt, error: membersAltErr } = await supabaseAdmin
+              .from('members')
+              .select('family_id')
+              .eq('profile_id', userId)
+              .limit(1)
+
+            if (!membersAltErr && membersAlt && membersAlt.length > 0) {
+              familyId = membersAlt[0].family_id as string
+              console.log('QA seed status: using familyId from members table for user')
+            }
+          }
+        }
+      }
+    }
+
+    if (!familyId) {
       return new Response(
         JSON.stringify({ 
           success: true,
@@ -60,7 +99,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const familyId = qaFollowPrefs[0].family_id
+    const familyIdValue = familyId
 
     // Count entities using service role to bypass RLS
     const [
@@ -80,7 +119,7 @@ Deno.serve(async (req) => {
       supabaseAdmin.from('tributes').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
       supabaseAdmin.from('prompt_instances').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
       supabaseAdmin.from('weekly_digest_settings').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
-      supabaseAdmin.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', familyId).eq('qa_seed', true)
+      supabaseAdmin.from('digest_follow_preferences').select('id', { count: 'exact', head: true }).eq('family_id', familyId)
     ])
 
     const status = {
