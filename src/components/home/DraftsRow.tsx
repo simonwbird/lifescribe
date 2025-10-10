@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -55,9 +56,16 @@ export default function DraftsRow({ drafts, onResume, onDelete }: DraftsRowProps
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-serif flex items-center gap-2">
-          <Edit className="h-5 w-5" />
-          Continue where you left off
+        <CardTitle className="text-lg font-serif flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Edit className="h-5 w-5" />
+            Continue where you left off
+          </div>
+          <Link to="/stories/drafts">
+            <Button variant="ghost" size="sm" className="text-xs">
+              View All
+            </Button>
+          </Link>
         </CardTitle>
       </CardHeader>
       

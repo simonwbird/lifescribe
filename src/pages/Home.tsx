@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import RegionConfirmationBanner from '@/components/RegionConfirmationBanner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useToast } from '@/hooks/use-toast';
 import { useMode } from '@/hooks/useMode';
 import { useLabs } from '@/hooks/useLabs';
 import { useNavigate } from 'react-router-dom';
@@ -82,9 +83,8 @@ export default function Home() {
   const [showVoiceModal, setShowVoiceModal] = useState(false);
 
   // Track analytics
-  const {
-    track
-  } = useAnalytics();
+  const { track } = useAnalytics()
+  const { toast } = useToast()
   const {
     mode,
     flags,
@@ -281,14 +281,18 @@ export default function Home() {
   };
   const loadDrafts = async (userId: string, familyId: string) => {
     try {
-      const drafts: DraftItem[] = [];
+      const drafts: DraftItem[] = []
 
-      // Get recent stories (as drafts)
-      const {
-        data: stories
-      } = await supabase.from('stories').select('id, title, updated_at').eq('family_id', familyId).eq('profile_id', userId).order('updated_at', {
-        ascending: false
-      }).limit(3);
+      // Get recent draft stories only
+      const { data: stories } = await supabase
+        .from('stories')
+        .select('id, title, updated_at')
+        .eq('family_id', familyId)
+        .eq('profile_id', userId)
+        .eq('status', 'draft')
+        .order('updated_at', { ascending: false })
+        .limit(3)
+        
       if (stories) {
         stories.forEach(story => {
           drafts.push({
@@ -297,15 +301,15 @@ export default function Home() {
             title: story.title,
             progress: Math.floor(Math.random() * 40) + 60,
             lastEdited: getRelativeTime(story.updated_at)
-          });
-        });
+          })
+        })
       }
-      setDrafts(drafts);
+      setDrafts(drafts)
     } catch (error) {
-      console.error('Error loading drafts:', error);
-      setDrafts([]);
+      console.error('Error loading drafts:', error)
+      setDrafts([])
     }
-  };
+  }
   const getRelativeTime = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
@@ -343,17 +347,35 @@ export default function Home() {
     });
   };
   const handleResumeDraft = (draftId: string) => {
-    track('draft_resumed', {
-      draftId
-    });
-    // Navigate to edit the draft
-  };
-  const handleDeleteDraft = (draftId: string) => {
-    track('draft_deleted', {
-      draftId
-    });
-    setDrafts(prev => prev.filter(d => d.id !== draftId));
-  };
+    track('draft_resumed', { draftId })
+    navigate(`/stories/new?draft=${draftId}`)
+  }
+  
+  const handleDeleteDraft = async (draftId: string) => {
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', draftId)
+
+      if (error) throw error
+      
+      track('draft_deleted', { draftId })
+      setDrafts(prev => prev.filter(d => d.id !== draftId))
+      
+      toast({
+        title: 'Draft deleted',
+        description: 'The draft has been removed.'
+      })
+    } catch (error) {
+      console.error('Error deleting draft:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete draft.',
+        variant: 'destructive'
+      })
+    }
+  }
 
   // Simple Mode Recording Integration
   const handlePromptSelected = async (prompt: ElderPrompt) => {

@@ -21,6 +21,7 @@ import Landing from "./pages/Landing";
 const Home = () => <LazyRoute factory={() => import("./pages/Home")} />
 const FeedPage = () => <LazyRoute factory={() => import("./pages/FeedPage")} />
 const NewStory = () => <LazyRoute factory={() => import("./pages/NewStory")} />
+const DraftsPage = () => <LazyRoute factory={() => import("./pages/DraftsPage")} />
 const StoryDetail = () => <LazyRoute factory={() => import("./pages/StoryDetail")} />
 const Prompts = () => <LazyRoute factory={() => import("./pages/Prompts")} />
 const FamilyTree = () => <LazyRoute factory={() => import("./pages/FamilyTree")} />
@@ -150,6 +151,7 @@ function AppContent() {
       {/* Story routes with legacy redirect */}
       <Route path="/simple/story/new" element={<Navigate to="/stories/new" replace />} />
       <Route path="/stories/new" element={<AuthGate><NewStory /></AuthGate>} />
+      <Route path="/stories/drafts" element={<AuthGate><DraftsPage /></AuthGate>} />
       <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />
       <Route path="/stories/:id/edit" element={<AuthGate><StoryEdit /></AuthGate>} />
       <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />

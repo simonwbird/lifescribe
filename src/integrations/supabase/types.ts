@@ -4699,6 +4699,7 @@ export type Database = {
           prompt_text: string | null
           qa_seed: boolean | null
           qa_seed_version: string | null
+          status: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -4719,6 +4720,7 @@ export type Database = {
           prompt_text?: string | null
           qa_seed?: boolean | null
           qa_seed_version?: string | null
+          status?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -4739,6 +4741,7 @@ export type Database = {
           prompt_text?: string | null
           qa_seed?: boolean | null
           qa_seed_version?: string | null
+          status?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
