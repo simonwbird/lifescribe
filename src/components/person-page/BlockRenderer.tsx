@@ -8,6 +8,7 @@ import TimelineBlockEnhanced from './blocks/TimelineBlockEnhanced'
 import { ObjectsPlacesBlock } from './blocks/ObjectsPlacesBlock'
 import QuickFactsBlock from './blocks/QuickFactsBlock'
 import StoryCollageBlock from './blocks/StoryCollageBlock'
+import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -97,9 +98,13 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
 
     case 'audio_remembrances':
       return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Audio remembrances coming soon</p>
-        </div>
+        <AudioRemembrancesBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
       )
 
     case 'guestbook_live':
