@@ -24,18 +24,19 @@ serve(async (req) => {
     }
 
     // Map friendly names to ElevenLabs voice IDs
-    const voiceMap: Record<string, string> = {
-      'Aria': '9BWtsMINqrJLrRacOk9x',
-      'Roger': 'CwhRBWXzGAHq8TQ4Fs17',
-      'Sarah': 'EXAVITQu4vr4xnSDxMaL',
-      'Laura': 'FGY2WhTYpPnrIDTdsKH5',
-      'Charlie': 'IKne3meq5aSn9XLyUdCD',
-      'George': 'JBFqnCBsd6RMkjVDRZzb',
-      'River': 'SAz9YHcvj6GT2YYXdXww',
-      'Liam': 'TX3LPaxmHKxFdv7VOQHJ',
-      'Charlotte': 'XB0fDUnXU5powFXDhCwa',
-      'Alice': 'Xb7hH8MSUJpSbSDYk0k2'
-    }
+const voiceMap: Record<string, string> = {
+  'Aria': '9BWtsMINqrJLrRacOk9x',
+  'Roger': 'CwhRBWXzGAHq8TQ4Fs17',
+  'Sarah': 'EXAVITQu4vr4xnSDxMaL',
+  'Laura': 'FGY2WhTYpPnrIDTdsKH5',
+  'Charlie': 'IKne3meq5aSn9XLyUdCD',
+  'George': 'JBFqnCBsd6RMkjVDRZzb',
+  'River': 'SAz9YHcvj6GT2YYXdXww',
+  'Liam': 'TX3LPaxmHKxFdv7VOQHJ',
+  'Charlotte': 'XB0fDUnXU5powFXDhCwa',
+  'Alice': 'Xb7hH8MSUJpSbSDYk0k2',
+  'Brian': 'nPczCjzI2devNBz1zQrb'
+}
 
     const voiceId = voiceMap[voice] || voiceMap['Aria']
 
