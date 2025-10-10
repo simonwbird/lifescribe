@@ -1216,6 +1216,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "death_verifications_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       digest_content_cache: {
@@ -1395,10 +1402,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "duplicate_candidates_person_a_id_fkey"
+            columns: ["person_a_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "duplicate_candidates_person_b_id_fkey"
             columns: ["person_b_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_candidates_person_b_id_fkey"
+            columns: ["person_b_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -2376,6 +2397,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gedcom_people_stage_matched_person_id_fkey"
+            columns: ["matched_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gedcom_people_stage_upload_id_fkey"
             columns: ["upload_id"]
             isOneToOne: false
@@ -2607,6 +2635,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "guestbook_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       invites: {
@@ -2776,10 +2811,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "life_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "life_events_with_person_id_fkey"
             columns: ["with_person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "life_events_with_person_id_fkey"
+            columns: ["with_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -3262,6 +3311,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memorialization_records_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
           {
@@ -3847,6 +3903,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "object_person_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       objects: {
@@ -3944,9 +4007,13 @@ export type Database = {
           gender: string | null
           given_name: string | null
           id: string
+          indexability: string
           is_living: boolean | null
           middle_name: string | null
           notes: string | null
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
           person_type: string
           pinned_story_ids: string[] | null
           qa_seed: boolean | null
@@ -3975,9 +4042,13 @@ export type Database = {
           gender?: string | null
           given_name?: string | null
           id?: string
+          indexability?: string
           is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
           person_type?: string
           pinned_story_ids?: string[] | null
           qa_seed?: boolean | null
@@ -4006,9 +4077,13 @@ export type Database = {
           gender?: string | null
           given_name?: string | null
           id?: string
+          indexability?: string
           is_living?: boolean | null
           middle_name?: string | null
           notes?: string | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
           person_type?: string
           pinned_story_ids?: string[] | null
           qa_seed?: boolean | null
@@ -4093,6 +4168,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "person_answer_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       person_merges: {
@@ -4163,6 +4245,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "person_merges_target_person_id_fkey"
+            columns: ["target_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       person_page_blocks: {
@@ -4210,6 +4299,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "person_page_blocks_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       person_page_permissions: {
@@ -4246,6 +4342,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_page_permissions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -4334,6 +4437,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "person_redirects_new_person_id_fkey"
+            columns: ["new_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       person_roles: {
@@ -4401,6 +4511,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "person_roles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       person_story_links: {
@@ -4445,6 +4562,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_story_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
           {
@@ -4498,6 +4622,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_user_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -4838,6 +4969,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "place_person_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "place_person_links_place_id_fkey"
             columns: ["place_id"]
             isOneToOne: false
@@ -5060,6 +5198,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_person_links_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
           {
@@ -5526,6 +5671,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "property_occupancy_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "property_occupancy_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -5935,10 +6087,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "relationships_from_person_id_fkey"
+            columns: ["from_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "relationships_to_person_id_fkey"
             columns: ["to_person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_to_person_id_fkey"
+            columns: ["to_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -6213,6 +6379,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -6703,6 +6876,13 @@ export type Database = {
             referencedRelation: "people"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tree_preferences_root_person_id_fkey"
+            columns: ["root_person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tribute_anniversary_reminders: {
@@ -6853,6 +7033,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tributes_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -7071,6 +7258,78 @@ export type Database = {
       }
     }
     Views: {
+      public_person_pages: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          death_date: string | null
+          family_id: string | null
+          full_name: string | null
+          given_name: string | null
+          id: string | null
+          indexability: string | null
+          is_living: boolean | null
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
+          slug: string | null
+          surname: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          death_date?: string | null
+          family_id?: string | null
+          full_name?: string | null
+          given_name?: string | null
+          id?: string | null
+          indexability?: string | null
+          is_living?: boolean | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          slug?: string | null
+          surname?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          death_date?: string | null
+          family_id?: string | null
+          full_name?: string | null
+          given_name?: string | null
+          id?: string | null
+          indexability?: string | null
+          is_living?: boolean | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          slug?: string | null
+          surname?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "people_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "people_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       v_my_roles: {
         Row: {
           family_id: string | null
@@ -7203,6 +7462,10 @@ export type Database = {
       generate_person_prompt_instances: {
         Args: { p_family_id: string; p_person_id: string }
         Returns: number
+      }
+      generate_person_slug: {
+        Args: { p_given_name: string; p_person_id: string; p_surname: string }
+        Returns: string
       }
       get_all_family_invites_masked: {
         Args: Record<PropertyKey, never>

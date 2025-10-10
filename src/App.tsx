@@ -78,6 +78,8 @@ import FamilyInvitations from "./pages/FamilyInvitations";
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import People from './pages/People'
+import PersonPageBySlug from './pages/PersonPageBySlug'
+import SitemapPage from './pages/SitemapPage'
 import DateFormattingExamplePage from './pages/DateFormattingExample'
 import AdminShell from './components/admin/AdminShell'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -132,12 +134,16 @@ function AppContent() {
       <Route path="/login" element={<Login />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/request-access" element={<RequestAccess />} />
-        <Route path="/family/invitations" element={<FamilyInvitations />} />
+      <Route path="/family/invitations" element={<FamilyInvitations />} />
       <Route path="/invite/:token" element={<InviteAccept />} />
       <Route path="/events/:eventId/upload/:token" element={<EventUpload />} />
       <Route path="/join/:code" element={<EventJoin />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
+      
+      {/* SEO routes */}
+      <Route path="/p/:slug" element={<PersonPageBySlug />} />
+      <Route path="/sitemap.xml" element={<SitemapPage />} />
       
       {/* Auth routes */}
           <Route path="/auth/login" element={<LoginPageEnhanced />} />

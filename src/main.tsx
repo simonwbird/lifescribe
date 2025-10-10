@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
+import { HelmetProvider } from 'react-helmet-async'
 import App from "./App.tsx";
 import { AuthProvider } from './contexts/AuthProvider'
 import { Toaster } from "@/components/ui/toaster"
@@ -20,11 +21,13 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-        <Toaster />
-      </AuthProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+          <Toaster />
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   </React.StrictMode>
 );

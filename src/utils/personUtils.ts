@@ -12,6 +12,11 @@ export interface Person extends Omit<BasePerson, 'favorites'> {
   } | null
   pinned_story_ids?: string[]
   claimed_by_profile_id?: string
+  slug?: string
+  indexability?: 'private' | 'unlisted' | 'public_indexable'
+  og_title?: string
+  og_description?: string
+  og_image_url?: string
 }
 
 export interface UserRole {

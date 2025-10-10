@@ -12,6 +12,7 @@ import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
 import BlockRenderer from '@/components/person-page/BlockRenderer'
+import { PersonPageSEO } from '@/components/seo'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
@@ -166,8 +167,18 @@ export default function PersonPage() {
   const { person, blocks } = data
   const isLiving = person.status === 'living'
 
+  // Get SEO fields (will be present in data but not yet in types)
+  const personWithSEO = person as any
+
   return (
     <div className="min-h-screen bg-background">
+      <PersonPageSEO
+        person={person}
+        indexability={personWithSEO.indexability || 'private'}
+        ogTitle={personWithSEO.og_title}
+        ogDescription={personWithSEO.og_description}
+        ogImageUrl={personWithSEO.og_image_url}
+      />
       <Header />
       
       <div className="max-w-4xl mx-auto p-6 space-y-8">
