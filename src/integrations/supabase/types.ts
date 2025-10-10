@@ -2049,39 +2049,76 @@ export type Database = {
       }
       guest_sessions: {
         Row: {
-          created_at: string | null
+          created_at: string
           created_via_code: string | null
-          event_id: string
+          event_id: string | null
           expires_at: string
           family_id: string
           guest_email: string | null
           guest_name: string | null
           id: string
-          last_activity_at: string | null
+          ip_address: unknown | null
+          last_activity_at: string
+          magic_link_id: string | null
+          role_scope: string | null
+          session_token: string | null
+          user_agent: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           created_via_code?: string | null
-          event_id: string
+          event_id?: string | null
           expires_at?: string
           family_id: string
           guest_email?: string | null
           guest_name?: string | null
-          id: string
-          last_activity_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          last_activity_at?: string
+          magic_link_id?: string | null
+          role_scope?: string | null
+          session_token?: string | null
+          user_agent?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           created_via_code?: string | null
-          event_id?: string
+          event_id?: string | null
           expires_at?: string
           family_id?: string
           guest_email?: string | null
           guest_name?: string | null
           id?: string
-          last_activity_at?: string | null
+          ip_address?: unknown | null
+          last_activity_at?: string
+          magic_link_id?: string | null
+          role_scope?: string | null
+          session_token?: string | null
+          user_agent?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "guest_sessions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_sessions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "guest_sessions_magic_link_id_fkey"
+            columns: ["magic_link_id"]
+            isOneToOne: false
+            referencedRelation: "magic_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       guestbook: {
         Row: {
@@ -2299,6 +2336,72 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      magic_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_uses: number
+          expires_at: string
+          family_id: string
+          id: string
+          last_used_at: string | null
+          max_uses: number
+          metadata: Json | null
+          revoked: boolean
+          revoked_at: string | null
+          revoked_by: string | null
+          role_scope: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_uses?: number
+          expires_at?: string
+          family_id: string
+          id?: string
+          last_used_at?: string | null
+          max_uses?: number
+          metadata?: Json | null
+          revoked?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_scope: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_uses?: number
+          expires_at?: string
+          family_id?: string
+          id?: string
+          last_used_at?: string | null
+          max_uses?: number
+          metadata?: Json | null
+          revoked?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_scope?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "magic_links_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "magic_links_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
           },
         ]
       }

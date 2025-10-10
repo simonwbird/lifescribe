@@ -72,6 +72,7 @@ import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
 import NotFound from "./pages/NotFound";
 import InviteLanding from "./pages/InviteLanding";
+import InviteAccept from "./pages/InviteAccept";
 import FamilyInvitations from "./pages/FamilyInvitations";
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
@@ -127,7 +128,7 @@ function AppContent() {
       <Route path="/landing" element={<Landing />} />
       <Route path="/request-access" element={<RequestAccess />} />
         <Route path="/family/invitations" element={<FamilyInvitations />} />
-      <Route path="/invite/:token" element={<InviteLanding />} />
+      <Route path="/invite/:token" element={<InviteAccept />} />
       <Route path="/join/:code" element={<EventJoin />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
