@@ -102,6 +102,8 @@ import AdminUserManagement from '@/pages/admin/AdminUserManagement';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminDuplicates from './pages/admin/AdminDuplicates';
 import EventUpload from './pages/EventUpload';
+import SafeBox from './pages/SafeBox';
+import AdminSafeBoxWaitlist from './pages/admin/AdminSafeBoxWaitlist';
 import { BugReportWidget } from './components/BugReportWidget';
 import PromptsWow from './pages/PromptsWow';
 import { ABTestProvider } from './components/analytics/ABTestProvider';
@@ -174,6 +176,7 @@ function AppContent() {
        <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
        <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
        <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
+       <Route path="/safebox" element={<AuthGate><SafeBox /></AuthGate>} />
        <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
        <Route path="/labs/spaces" element={<AuthGate><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthGate>} />
@@ -227,6 +230,7 @@ function AppContent() {
            <Route path="config" element={<AdminConfig />} />
            <Route path="analytics" element={<AdminAnalytics />} />
            <Route path="duplicates" element={<AdminDuplicates />} />
+           <Route path="safebox-waitlist" element={<AdminSafeBoxWaitlist />} />
            <Route path="integrations" element={<div className="p-8"><h1 className="text-2xl font-bold">Integrations</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="ops" element={<div className="p-8"><h1 className="text-2xl font-bold">Ops & Observability</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
            <Route path="audit" element={<div className="p-8"><h1 className="text-2xl font-bold">Compliance & Audit</h1><p className="text-muted-foreground">Coming soon...</p></div>} />

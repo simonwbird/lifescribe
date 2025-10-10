@@ -5167,6 +5167,63 @@ export type Database = {
         }
         Relationships: []
       }
+      safebox_waitlist: {
+        Row: {
+          contacted_at: string | null
+          contacted_by: string | null
+          created_at: string | null
+          email: string
+          family_id: string | null
+          id: string
+          notes: string | null
+          role_intent: string
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          contacted_at?: string | null
+          contacted_by?: string | null
+          created_at?: string | null
+          email: string
+          family_id?: string | null
+          id?: string
+          notes?: string | null
+          role_intent: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          contacted_at?: string | null
+          contacted_by?: string | null
+          created_at?: string | null
+          email?: string
+          family_id?: string | null
+          id?: string
+          notes?: string | null
+          role_intent?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safebox_waitlist_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safebox_waitlist_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           action: string

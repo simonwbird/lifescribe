@@ -11,7 +11,8 @@ import {
   Clock,
   Bug,
   Beaker,
-  GitMerge
+  GitMerge,
+  Vault
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -73,6 +74,13 @@ const adminNavItems: AdminNavItem[] = [
     href: '/admin/duplicates',
     icon: GitMerge,
     roles: ['SUPER_ADMIN', 'ORG_ADMIN']
+  },
+  {
+    id: 'safebox-waitlist',
+    label: 'SafeBox Waitlist',
+    href: '/admin/safebox-waitlist',
+    icon: Vault,
+    roles: ['SUPER_ADMIN']
   },
   {
     id: 'admin-debug',
