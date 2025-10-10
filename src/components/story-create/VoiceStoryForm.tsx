@@ -88,12 +88,14 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      const draftTitle = title || `Voice recording ${new Date().toLocaleDateString()}`
+
       const { data: story, error: storyError } = await supabase
         .from('stories')
         .insert({
           family_id: familyId,
           profile_id: user.id,
-          title: `Voice recording ${new Date().toLocaleDateString()}`,
+          title: draftTitle,
           content: transcript,
           status: 'draft'
         })
@@ -103,7 +105,9 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
       if (storyError) throw storyError
       
       setDraftId(story.id)
-      setTitle(`Voice recording ${new Date().toLocaleDateString()}`)
+      if (!title) {
+        setTitle(draftTitle)
+      }
       setAutoSaved(true)
       
       toast({
