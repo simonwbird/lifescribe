@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { PrivacyBadge } from '@/components/ui/privacy-badge'
+import { StoryImageGallery } from '@/components/story-view/StoryImageGallery'
 
 interface Story {
   id: string
@@ -148,46 +149,26 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
         {/* Media Preview */}
         {story.media && story.media.length > 0 && (
           <div className="mb-4">
-            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-hidden rounded-lg">
-              {story.media.slice(0, 4).map((media, index) => (
-                <div 
-                  key={media.id} 
-                  className={cn(
-                    "relative bg-muted rounded overflow-hidden",
-                    story.media!.length === 1 ? "col-span-2" : "",
-                    story.media!.length === 3 && index === 0 ? "row-span-2" : ""
-                  )}
-                >
-                  {media.mime_type.startsWith('image/') ? (
-                    <img 
-                      src={media.file_path} 
-                      alt="" 
-                      className="w-full h-32 object-cover"
-                    />
-                  ) : media.mime_type.startsWith('audio/') ? (
-                    <div className="w-full h-32 flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/20">
-                      <div className="text-center">
-                        <div className="w-8 h-8 bg-primary/20 rounded-full mx-auto mb-2 flex items-center justify-center">
-                          <div className="w-3 h-3 bg-primary rounded-full"></div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Audio</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-32 flex items-center justify-center bg-muted">
-                      <p className="text-xs text-muted-foreground">Media</p>
-                    </div>
-                  )}
-                  {story.media!.length > 4 && index === 3 && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white font-semibold">
-                        +{story.media!.length - 4}
-                      </span>
-                    </div>
-                  )}
+            <StoryImageGallery 
+              images={story.media
+                .filter(m => m.mime_type.startsWith('image/'))
+                .map(m => ({
+                  id: m.id,
+                  url: m.file_path,
+                  alt: story.title
+                }))
+              }
+            />
+            
+            {/* Audio indicator */}
+            {story.media.some(m => m.mime_type.startsWith('audio/')) && (
+              <div className="mt-2 p-3 bg-primary/5 rounded-lg flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
                 </div>
-              ))}
-            </div>
+                <p className="text-xs text-muted-foreground">Includes audio recording</p>
+              </div>
+            )}
           </div>
         )}
 

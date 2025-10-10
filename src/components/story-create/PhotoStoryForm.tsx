@@ -8,7 +8,8 @@ import { DatePrecisionPicker, DatePrecisionValue } from '@/components/DatePrecis
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { uploadMediaFile } from '@/lib/media'
-import { X } from 'lucide-react'
+import { MultiImageLayout } from './MultiImageLayout'
+import { useEventTracking } from '@/hooks/useEventTracking'
 
 interface PhotoStoryFormProps {
   familyId: string
@@ -17,20 +18,25 @@ interface PhotoStoryFormProps {
 export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { trackCustomEvent } = useEventTracking()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: null, yearOnly: false })
   const [files, setFiles] = useState<File[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
+  const [imageData, setImageData] = useState<Array<{ id: string; url: string; file: File }>>([])
+
+  function generateId() {
+    return Math.random().toString(36).substr(2, 9)
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files || [])
     
     // Validate files
     const validFiles: File[] = []
-    const newPreviews: string[] = []
+    const newImageData: Array<{ id: string; url: string; file: File }> = []
     
     for (const file of selected) {
       // Check file type
@@ -54,17 +60,44 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
       }
       
       validFiles.push(file)
-      newPreviews.push(URL.createObjectURL(file))
+      newImageData.push({
+        id: generateId(),
+        url: URL.createObjectURL(file),
+        file
+      })
     }
     
     setFiles(prev => [...prev, ...validFiles])
-    setPreviews(prev => [...prev, ...newPreviews])
+    setImageData(prev => [...prev, ...newImageData])
   }
 
-  function removeFile(index: number) {
-    URL.revokeObjectURL(previews[index])
-    setFiles(prev => prev.filter((_, i) => i !== index))
-    setPreviews(prev => prev.filter((_, i) => i !== index))
+  function handleReorder(newImages: Array<{ id: string; url: string; file: File }>) {
+    setImageData(newImages)
+    setFiles(newImages.map(img => img.file))
+    
+    // Track reorder action
+    trackCustomEvent('story.images_reordered', {
+      image_count: newImages.length,
+      story_type: 'photo',
+      timestamp: new Date().toISOString(),
+    })
+  }
+
+  function removeFile(id: string) {
+    const imageToRemove = imageData.find(img => img.id === id)
+    if (imageToRemove) {
+      URL.revokeObjectURL(imageToRemove.url)
+    }
+    
+    setImageData(prev => prev.filter(img => img.id !== id))
+    setFiles(prev => {
+      const newFiles = [...prev]
+      const index = imageData.findIndex(img => img.id === id)
+      if (index !== -1) {
+        newFiles.splice(index, 1)
+      }
+      return newFiles
+    })
   }
 
   async function handleSubmit(e: React.FormEvent, asDraft = false) {
@@ -117,7 +150,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
 
       if (storyError) throw storyError
 
-      // Step 2: Upload images and insert media records
+      // Step 2: Upload images in order and insert media records
       let successCount = 0
       let failCount = 0
       const errors: string[] = []
@@ -187,6 +220,17 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
             ? `Your draft has been saved with ${successCount} photo(s).` 
             : `Your photo story has been published with ${successCount} photo(s).`
         })
+        
+        // Track multi-image layout usage
+        if (successCount >= 2) {
+          trackCustomEvent('story.multi_image_layout_used', {
+            image_count: successCount,
+            layout_type: getLayoutType(successCount),
+            story_id: story.id,
+            is_draft: asDraft,
+            timestamp: new Date().toISOString(),
+          })
+        }
       }
 
       navigate('/feed')
@@ -213,6 +257,17 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
     }
   }
 
+  function getLayoutType(count: number): string {
+    switch (count) {
+      case 2: return '2-grid';
+      case 3: return '3-masonry';
+      case 4: return '4-grid';
+      case 5: return '5-collage';
+      case 6: return '6-collage';
+      default: return 'multi-grid';
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -232,24 +287,13 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
               onChange={handleFileChange}
               className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
             />
-            {files.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                {previews.map((preview, index) => (
-                  <div 
-                    key={index} 
-                    data-testid="photo-preview"
-                    className="relative aspect-square rounded-lg overflow-hidden border"
-                  >
-                    <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+            {imageData.length > 0 && (
+              <div className="mt-4">
+                <MultiImageLayout
+                  images={imageData}
+                  onReorder={handleReorder}
+                  onRemove={removeFile}
+                />
               </div>
             )}
           </div>

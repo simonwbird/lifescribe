@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import ReactionBar from './ReactionBar'
 import CommentThread from './CommentThread'
+import { StoryImageGallery } from './story-view/StoryImageGallery'
 import { Link } from 'react-router-dom'
 import { Calendar, MapPin, Users, MessageSquare, Mic2 } from 'lucide-react'
 import type { Story, Profile, Media } from '@/lib/types'
@@ -233,25 +234,36 @@ export default function StoryCard({ story }: StoryCardProps) {
         )}
 
         {mediaUrls.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <StoryImageGallery 
+            images={mediaUrls
+              .map((url, index) => {
+                const mediaItem = media[index]
+                if (mediaItem?.mime_type.startsWith('image/')) {
+                  return {
+                    id: mediaItem.id,
+                    url,
+                    alt: mediaItem.file_name
+                  }
+                }
+                return null
+              })
+              .filter(Boolean) as Array<{ id: string; url: string; alt?: string }>
+            }
+          />
+        )}
+
+        {/* Audio/Video media (not part of gallery) */}
+        {mediaUrls.length > 0 && (
+          <div className="space-y-2">
             {mediaUrls.map((url, index) => {
               const mediaItem = media[index]
-              if (mediaItem?.mime_type.startsWith('image/')) {
-                return (
-                  <img
-                    key={index}
-                    src={url}
-                    alt={mediaItem.file_name}
-                    className="rounded-lg max-h-64 object-cover w-full"
-                  />
-                )
-              } else if (mediaItem?.mime_type.startsWith('video/')) {
+              if (mediaItem?.mime_type.startsWith('video/')) {
                 return (
                   <video
                     key={index}
                     src={url}
                     controls
-                    className="rounded-lg max-h-64 w-full"
+                    className="rounded-lg max-h-96 w-full"
                   />
                 )
               } else if (mediaItem?.mime_type.startsWith('audio/')) {
