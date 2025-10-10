@@ -157,7 +157,30 @@ export default function PersonPage() {
 
     const blocks = Array.from(data.blocks)
     const [removed] = blocks.splice(result.source.index, 1)
-    blocks.splice(result.destination.index, 0, removed)
+    const newIndex = result.destination.index
+    
+    // Bio/bio_overview must stay after hero/memorial blocks
+    const isBioBlock = removed.type === 'bio' || removed.type === 'bio_overview'
+    const isHeroBlock = (type: string) => type === 'hero' || type === 'hero_memorial'
+    
+    if (isBioBlock) {
+      // Find the hero block index in the new array
+      const heroIndex = blocks.findIndex(b => isHeroBlock(b.type))
+      
+      // If trying to place bio before hero, force it after hero
+      if (heroIndex !== -1 && newIndex <= heroIndex) {
+        blocks.splice(heroIndex + 1, 0, removed)
+        toast({
+          title: 'Bio locked',
+          description: 'Biography must appear after the hero section',
+          variant: 'default'
+        })
+      } else {
+        blocks.splice(newIndex, 0, removed)
+      }
+    } else {
+      blocks.splice(newIndex, 0, removed)
+    }
 
     try {
       await updateBlockOrder(blocks)
