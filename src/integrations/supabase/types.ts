@@ -1139,6 +1139,85 @@ export type Database = {
         }
         Relationships: []
       }
+      death_verifications: {
+        Row: {
+          admin_override: boolean | null
+          certificate_number: string | null
+          created_at: string
+          death_date: string | null
+          death_place: string | null
+          document_type: string | null
+          document_url: string | null
+          family_id: string
+          id: string
+          issuing_authority: string | null
+          metadata: Json | null
+          override_reason: string | null
+          person_id: string
+          verification_type: string
+          verified_at: string
+          verified_by: string
+        }
+        Insert: {
+          admin_override?: boolean | null
+          certificate_number?: string | null
+          created_at?: string
+          death_date?: string | null
+          death_place?: string | null
+          document_type?: string | null
+          document_url?: string | null
+          family_id: string
+          id?: string
+          issuing_authority?: string | null
+          metadata?: Json | null
+          override_reason?: string | null
+          person_id: string
+          verification_type?: string
+          verified_at?: string
+          verified_by: string
+        }
+        Update: {
+          admin_override?: boolean | null
+          certificate_number?: string | null
+          created_at?: string
+          death_date?: string | null
+          death_place?: string | null
+          document_type?: string | null
+          document_url?: string | null
+          family_id?: string
+          id?: string
+          issuing_authority?: string | null
+          metadata?: Json | null
+          override_reason?: string | null
+          person_id?: string
+          verification_type?: string
+          verified_at?: string
+          verified_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "death_verifications_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "death_verifications_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "death_verifications_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digest_content_cache: {
         Row: {
           content_snapshot: Json
@@ -3099,6 +3178,101 @@ export type Database = {
           },
         ]
       }
+      memorialization_records: {
+        Row: {
+          completed_at: string | null
+          conversion_metadata: Json | null
+          created_at: string
+          family_id: string
+          id: string
+          initiated_at: string
+          initiated_by: string
+          is_reversed: boolean | null
+          locked_blocks: string[] | null
+          person_id: string
+          previous_blocks: Json | null
+          previous_status: string
+          reverse_reason: string | null
+          reversed_at: string | null
+          reversed_by: string | null
+          status: string
+          stewards_assigned: string[] | null
+          updated_at: string
+          verification_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          conversion_metadata?: Json | null
+          created_at?: string
+          family_id: string
+          id?: string
+          initiated_at?: string
+          initiated_by: string
+          is_reversed?: boolean | null
+          locked_blocks?: string[] | null
+          person_id: string
+          previous_blocks?: Json | null
+          previous_status: string
+          reverse_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          status?: string
+          stewards_assigned?: string[] | null
+          updated_at?: string
+          verification_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          conversion_metadata?: Json | null
+          created_at?: string
+          family_id?: string
+          id?: string
+          initiated_at?: string
+          initiated_by?: string
+          is_reversed?: boolean | null
+          locked_blocks?: string[] | null
+          person_id?: string
+          previous_blocks?: Json | null
+          previous_status?: string
+          reverse_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          status?: string
+          stewards_assigned?: string[] | null
+          updated_at?: string
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorialization_records_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memorialization_records_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "memorialization_records_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memorialization_records_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "death_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merge_proposals: {
         Row: {
           collision_score: number
@@ -4156,6 +4330,73 @@ export type Database = {
           {
             foreignKeyName: "person_redirects_new_person_id_fkey"
             columns: ["new_person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_roles: {
+        Row: {
+          created_at: string
+          family_id: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          notes: string | null
+          person_id: string
+          profile_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          role: Database["public"]["Enums"]["person_role_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          person_id: string
+          profile_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role?: Database["public"]["Enums"]["person_role_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          person_id?: string
+          profile_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role?: Database["public"]["Enums"]["person_role_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_roles_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_roles_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "person_roles_person_id_fkey"
+            columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["id"]
@@ -6873,6 +7114,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      complete_memorialization: {
+        Args: { p_death_date: string; p_memorialization_id: string }
+        Returns: Json
+      }
       compute_bug_dedupe_key: {
         Args: { p_route: string; p_title: string }
         Returns: string
@@ -7072,9 +7317,34 @@ export type Database = {
         Args: { user_id: string }
         Returns: string[]
       }
+      get_user_person_role: {
+        Args: { p_person_id: string; p_user_id: string }
+        Returns: Database["public"]["Enums"]["person_role_type"]
+      }
       grant_admin_after_cooling_off: {
         Args: { p_claim_id: string }
         Returns: Json
+      }
+      has_person_role: {
+        Args: {
+          p_person_id: string
+          p_role: Database["public"]["Enums"]["person_role_type"]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      initiate_memorialization: {
+        Args: {
+          p_initiated_by: string
+          p_person_id: string
+          p_steward_ids: string[]
+          p_verification_id: string
+        }
+        Returns: Json
+      }
+      is_block_locked: {
+        Args: { p_block_type: string; p_person_id: string }
+        Returns: boolean
       }
       is_family_admin: {
         Args: { family_id: string; user_id: string }
@@ -7161,6 +7431,14 @@ export type Database = {
       }
       resume_digest: {
         Args: { p_family_id: string; p_user_id: string }
+        Returns: Json
+      }
+      reverse_memorialization: {
+        Args: {
+          p_memorialization_id: string
+          p_reason: string
+          p_reversed_by: string
+        }
         Returns: Json
       }
       revoke_admin_access: {
@@ -7334,6 +7612,12 @@ export type Database = {
         | "family_setup"
         | "preferences"
         | "completed"
+      person_role_type:
+        | "owner"
+        | "co_curator"
+        | "steward"
+        | "contributor"
+        | "viewer"
       prompt_instance_status:
         | "open"
         | "in_progress"
@@ -7655,6 +7939,13 @@ export const Constants = {
         "family_setup",
         "preferences",
         "completed",
+      ],
+      person_role_type: [
+        "owner",
+        "co_curator",
+        "steward",
+        "contributor",
+        "viewer",
       ],
       prompt_instance_status: [
         "open",
