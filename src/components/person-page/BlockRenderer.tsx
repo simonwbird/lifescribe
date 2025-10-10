@@ -9,6 +9,7 @@ import { ObjectsPlacesBlock } from './blocks/ObjectsPlacesBlock'
 import QuickFactsBlock from './blocks/QuickFactsBlock'
 import StoryCollageBlock from './blocks/StoryCollageBlock'
 import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
+import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -91,9 +92,13 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
     case 'photos':
     case 'gallery':
       return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Photo gallery coming soon</p>
-        </div>
+        <PhotoGalleryBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
       )
 
     case 'audio_remembrances':
