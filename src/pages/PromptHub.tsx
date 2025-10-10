@@ -37,14 +37,15 @@ export default function PromptHub() {
         setUserId(user.id)
         setUserCreatedAt(new Date(user.created_at))
 
-        const { data: member } = await supabase
+        // Get first family membership (handles users with multiple families)
+        const { data: members } = await supabase
           .from('members')
           .select('family_id')
           .eq('profile_id', user.id)
-          .maybeSingle()
+          .limit(1)
 
-        if (member) {
-          setFamilyId(member.family_id)
+        if (members && members.length > 0) {
+          setFamilyId(members[0].family_id)
         }
 
         // Load completed starter prompts from localStorage
