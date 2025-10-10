@@ -496,50 +496,41 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
     }
   }
 
-  // Set follow preferences for Lucy & Jamie
-  // Get member IDs for these people
-  if (peopleMap.has('Lucy Morrison') && peopleMap.has('Jamie Morrison')) {
-    const lucyPersonId = peopleMap.get('Lucy Morrison')
-    const jamiePersonId = peopleMap.get('Jamie Morrison')
-
-    // Get the member records (from members or family_memberships table)
-    const { data: lucyMember } = await supabase
-      .from('family_memberships')
-      .select('id')
+  // Seed Follow Preferences - follow all other members in family (fallback to self if alone)
+  try {
+    const { data: membersList, error: membersErr } = await supabase
+      .from('members')
+      .select('profile_id')
       .eq('family_id', familyId)
-      .eq('profile_id', userId)
-      .limit(1)
-      .maybeSingle()
 
-    // For follow prefs, we use the member ID (which is the user's membership ID)
-    // The followed_member_id should reference a member record, but we'll use person IDs
-    // Let me check if we can use person IDs instead
-    for (const personId of [lucyPersonId, jamiePersonId]) {
-      const { data: existing } = await supabase
+    if (membersErr) {
+      console.error('Failed to fetch members for follow prefs:', membersErr)
+    } else if (membersList && membersList.length >= 0) {
+      const targetIds = (membersList.map((m: any) => m.profile_id) || [])
+        .filter((pid: string) => pid && pid !== userId)
+
+      if (targetIds.length === 0) targetIds.push(userId)
+
+      const rows = targetIds.map((followId: string) => ({
+        user_id: userId,
+        family_id: familyId,
+        followed_member_id: followId,
+        qa_seed: true,
+        qa_seed_version: QA_SEED_VERSION
+      }))
+
+      const { error: upsertErr } = await supabase
         .from('digest_follow_preferences')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('family_id', familyId)
-        .eq('followed_member_id', personId)
-        .eq('qa_seed', true)
-        .limit(1)
-        .maybeSingle()
+        .upsert(rows, { onConflict: 'user_id,family_id,followed_member_id', ignoreDuplicates: true })
 
-      if (!existing) {
-        const { error } = await supabase.from('digest_follow_preferences').insert({
-          user_id: userId,
-          family_id: familyId,
-          followed_member_id: personId,
-          qa_seed: true,
-          qa_seed_version: QA_SEED_VERSION
-        })
-        if (error) {
-          console.error(`Failed to insert follow preference for person ${personId}:`, error)
-        } else {
-          summary.follow_prefs++
-        }
+      if (upsertErr) {
+        console.error('Failed to upsert follow preferences:', upsertErr)
+      } else {
+        summary.follow_prefs += rows.length
       }
     }
+  } catch (e) {
+    console.error('Unexpected error seeding follow preferences:', e)
   }
 
   // Seed Tribute for Grandpa Joe
@@ -558,11 +549,10 @@ async function seedQAData(supabase: any, familyId: string, userId: string) {
       const { error } = await supabase.from('tributes').insert({
         family_id: familyId,
         person_id: grandpaId,
-        profile_id: userId,
+        created_by: userId,
         title: 'In Loving Memory of Grandpa Joe',
-        description: 'A celebration of Grandpa Joes life and the wonderful memories he left us.',
-        privacy_level: 'family',
-        tags: [SEED_TAG],
+        description: 'A celebration of Grandpa Joe\'s life and the wonderful memories he left us.',
+        privacy: 'family',
         qa_seed: true,
         qa_seed_version: QA_SEED_VERSION
       })
