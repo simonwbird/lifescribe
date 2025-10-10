@@ -133,6 +133,9 @@ export function InlineAdminControls({
       })
 
       onStoryAction?.('deleted')
+      
+      // Trigger page reload to refresh feed
+      window.location.reload()
     } catch (error: any) {
       console.error('Error deleting story:', error)
       toast({

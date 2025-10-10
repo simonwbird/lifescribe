@@ -178,7 +178,7 @@ export default function Home() {
     try {
       const activities: ActivityItem[] = [];
 
-      // Get recent stories
+      // Get recent stories (excluding deleted ones)
       const {
         data: stories
       } = await supabase.from('stories').select(`
@@ -187,7 +187,7 @@ export default function Home() {
             content,
             created_at,
             profile_id
-          `).eq('family_id', familyId).order('created_at', {
+          `).eq('family_id', familyId).neq('title', '[Deleted by admin]').order('created_at', {
         ascending: false
       }).limit(15);
 
