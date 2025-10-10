@@ -22,6 +22,10 @@ interface GuestbookEntry {
   created_at: string;
   updated_at: string;
   is_anonymous?: boolean;
+  is_featured?: boolean;
+  featured_at?: string;
+  featured_by?: string;
+  featured_order?: number;
 }
 
 export function useGuestbookEntries(personId: string, pageType: 'life' | 'tribute') {
@@ -179,6 +183,70 @@ export function useSubmitGuestbookEntry() {
     onError: (error: Error) => {
       toast({
         title: 'Submission failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+export function usePinEntry() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ entryId, personId, pageType }: { entryId: string; personId: string; pageType: 'life' | 'tribute' }) => {
+      const { data, error } = await (supabase.rpc as any)('pin_guestbook_entry', {
+        p_entry_id: entryId,
+        p_person_id: personId,
+        p_page_type: pageType,
+      });
+
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['guestbook-entries', variables.personId] });
+      toast({
+        title: 'Entry featured',
+        description: 'The tribute has been pinned as a featured entry.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Feature failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+export function useUnpinEntry() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ entryId, personId }: { entryId: string; personId: string }) => {
+      const { data, error } = await (supabase.rpc as any)('unpin_guestbook_entry', {
+        p_entry_id: entryId,
+        p_person_id: personId,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['guestbook-entries', variables.personId] });
+      toast({
+        title: 'Entry unpinned',
+        description: 'The tribute is no longer featured.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Unpin failed',
         description: error.message,
         variant: 'destructive',
       });

@@ -10,6 +10,7 @@ import QuickFactsBlock from './blocks/QuickFactsBlock'
 import StoryCollageBlock from './blocks/StoryCollageBlock'
 import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
 import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
+import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -115,9 +116,12 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
     case 'guestbook_live':
     case 'guestbook_tribute':
       return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Guestbook coming soon</p>
-        </div>
+        <GuestbookTributeBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          canModerate={canEdit}
+          pageVisibility={block.content_json?.visibility || 'private'}
+        />
       )
 
     case 'objects_places':

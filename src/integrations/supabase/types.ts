@@ -2724,6 +2724,107 @@ export type Database = {
           },
         ]
       }
+      guestbook_entries: {
+        Row: {
+          audio_recording_id: string | null
+          auto_approved: boolean | null
+          content: string
+          created_at: string | null
+          family_id: string
+          featured_at: string | null
+          featured_by: string | null
+          featured_order: number | null
+          id: string
+          is_anonymous: boolean | null
+          is_featured: boolean | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          page_type: string
+          person_id: string
+          profile_id: string | null
+          status: string
+          updated_at: string | null
+          visitor_email: string | null
+          visitor_name: string | null
+        }
+        Insert: {
+          audio_recording_id?: string | null
+          auto_approved?: boolean | null
+          content: string
+          created_at?: string | null
+          family_id: string
+          featured_at?: string | null
+          featured_by?: string | null
+          featured_order?: number | null
+          id?: string
+          is_anonymous?: boolean | null
+          is_featured?: boolean | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          page_type: string
+          person_id: string
+          profile_id?: string | null
+          status?: string
+          updated_at?: string | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Update: {
+          audio_recording_id?: string | null
+          auto_approved?: boolean | null
+          content?: string
+          created_at?: string | null
+          family_id?: string
+          featured_at?: string | null
+          featured_by?: string | null
+          featured_order?: number | null
+          id?: string
+          is_anonymous?: boolean | null
+          is_featured?: boolean | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          page_type?: string
+          person_id?: string
+          profile_id?: string | null
+          status?: string
+          updated_at?: string | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guestbook_entries_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guestbook_entries_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "guestbook_entries_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guestbook_entries_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_jobs: {
         Row: {
           completed_at: string | null
@@ -7543,6 +7644,10 @@ export type Database = {
       }
     }
     Functions: {
+      approve_guestbook_entry: {
+        Args: { p_entry_id: string; p_moderator_id: string }
+        Returns: Json
+      }
       calculate_audit_hash: {
         Args: {
           p_action: string
@@ -7894,8 +7999,16 @@ export type Database = {
         Args: { p_family_id: string; p_user_id: string }
         Returns: Json
       }
+      pin_guestbook_entry: {
+        Args: { p_entry_id: string; p_page_type: string; p_person_id: string }
+        Returns: Json
+      }
       process_admin_claim: {
         Args: { p_claim_id: string }
+        Returns: Json
+      }
+      reject_guestbook_entry: {
+        Args: { p_entry_id: string; p_moderator_id: string; p_reason: string }
         Returns: Json
       }
       resend_invite: {
@@ -7950,6 +8063,10 @@ export type Database = {
       unlock_user: {
         Args: { p_email: string }
         Returns: boolean
+      }
+      unpin_guestbook_entry: {
+        Args: { p_entry_id: string; p_person_id: string }
+        Returns: Json
       }
       update_onboarding_step: {
         Args: {
