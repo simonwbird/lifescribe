@@ -56,6 +56,7 @@ const PEOPLE_FIXTURES = [
 
 const STORIES_FIXTURES = [
   {
+    slug: 'summer-vacation-lake',
     title: 'Summer Vacation at the Lake',
     content: 'We spent two weeks at the family lake house. The kids learned to water ski and we had bonfires every night.',
     tags: ['vacation', 'summer', SEED_TAG],
@@ -64,6 +65,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'lucys-graduation-day',
     title: 'Lucys Graduation Day',
     content: 'So proud of Lucy graduating with honors! The whole family came to celebrate.',
     tags: ['milestone', 'graduation', SEED_TAG],
@@ -72,6 +74,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'thanksgiving-traditions',
     title: 'Thanksgiving Traditions',
     content: 'Our annual Thanksgiving gathering. Grandpa Joe told his famous stories and we all laughed until we cried.',
     tags: ['holiday', 'thanksgiving', SEED_TAG],
@@ -80,6 +83,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'first-day-school',
     title: 'First Day of School',
     content: 'Jamie started high school today. Time flies so fast! He was nervous but excited.',
     tags: ['school', 'milestone', SEED_TAG],
@@ -88,6 +92,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'road-trip-yellowstone',
     title: 'Road Trip to Yellowstone',
     content: 'Epic road trip with the kids. We saw Old Faithful, hiked trails, and made memories that will last forever.',
     tags: ['travel', 'adventure', SEED_TAG],
@@ -96,6 +101,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'birthday-celebration',
     title: 'Birthday Celebration',
     content: 'Surprise birthday party for Sarah. She turned 64 and we had the whole family there!',
     tags: ['birthday', 'celebration', SEED_TAG],
@@ -104,6 +110,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'weekend-grandpas',
     title: 'Weekend at Grandpas',
     content: 'The kids loved spending the weekend with Grandpa Joe. He taught them how to fish and told war stories.',
     tags: ['family', 'memories', SEED_TAG],
@@ -112,6 +119,7 @@ const STORIES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'christmas-morning-magic',
     title: 'Christmas Morning Magic',
     content: 'The look on the kids faces on Christmas morning never gets old. Hot cocoa, presents, and joy all around.',
     tags: ['christmas', 'holiday', SEED_TAG],
@@ -123,6 +131,7 @@ const STORIES_FIXTURES = [
 
 const RECIPES_FIXTURES = [
   {
+    slug: 'grandmas-apple-pie',
     title: 'Grandmas Apple Pie',
     notes: 'The secret family recipe passed down for generations',
     ingredients: [
@@ -146,6 +155,7 @@ const RECIPES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'sunday-roast-dinner',
     title: 'Sunday Roast Dinner',
     notes: 'Traditional Sunday family dinner',
     ingredients: [
@@ -167,6 +177,7 @@ const RECIPES_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'summer-bbq-ribs',
     title: 'Summer BBQ Ribs',
     notes: 'Uncle Mikes famous BBQ ribs recipe',
     ingredients: [
@@ -191,6 +202,7 @@ const RECIPES_FIXTURES = [
 
 const OBJECTS_FIXTURES = [
   {
+    slug: 'wedding-ring',
     title: 'Wedding Ring',
     description: 'Great-grandmothers wedding ring from 1920',
     object_type: 'jewelry',
@@ -202,6 +214,7 @@ const OBJECTS_FIXTURES = [
     qa_seed_version: QA_SEED_VERSION
   },
   {
+    slug: 'grandfather-clock',
     title: 'Grandfather Clock',
     description: 'Antique grandfather clock that has been in the family for 100 years',
     object_type: 'furniture',
@@ -218,7 +231,7 @@ const PROPERTIES_FIXTURES = [
   {
     name: 'Family Cottage at Lake Michigan',
     description: 'Summer cottage where the family has vacationed for 50 years',
-    property_types: ['vacation_home'],
+    property_types: ['holiday_home'],
     address: '123 Lakeshore Drive, Holland, MI 49423',
     acquired_year: 1974,
     tags: [SEED_TAG],
