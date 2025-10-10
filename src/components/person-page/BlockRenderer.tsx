@@ -48,7 +48,7 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
 
     case 'people_web':
     case 'relationships':
-      return <PeopleWebBlock personId={person.id} currentUserId={currentUserId} />
+      return <PeopleWebBlock personId={person.id} currentUserId={currentUserId} familyId={person.family_id} />
 
     case 'timeline':
     case 'life_arc_timeline':

@@ -14,9 +14,10 @@ import { supabase } from '@/integrations/supabase/client'
 interface PeopleWebBlockProps {
   personId: string
   currentUserId: string | null
+  familyId?: string
 }
 
-export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlockProps) {
+export default function PeopleWebBlock({ personId, currentUserId, familyId }: PeopleWebBlockProps) {
   const navigate = useNavigate()
   const { relationships, loading, error } = usePersonRelationships(personId, currentUserId)
   const [resolvedAvatars, setResolvedAvatars] = useState<Record<string, string | null>>({})
@@ -26,52 +27,53 @@ export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlo
     const resolveAvatars = async () => {
       if (!relationships.length) return
 
-      // Get family_id from the first person
-      const firstPersonId = relationships[0]?.person_id
-      if (!firstPersonId) return
+      // Use provided familyId or try to infer from a storage path
+      const inferFamilyId = (): string | null => {
+        for (const rel of relationships) {
+          const url = rel.person_avatar || ''
+          if (url && !url.startsWith('http') && url.includes('/')) {
+            return url.split('/')[0] || null
+          }
+        }
+        return null
+      }
 
-      const { data: personData } = await supabase
-        .from('people')
-        .select('family_id')
-        .eq('id', firstPersonId)
-        .single()
-
-      const familyId = personData?.family_id
-      if (!familyId) return
+      const effectiveFamilyId = familyId || inferFamilyId()
 
       const resolved: Record<string, string | null> = {}
 
       for (const rel of relationships) {
-        if (!rel.person_avatar) {
+        const avatarUrl = rel.person_avatar
+        if (!avatarUrl) {
           resolved[rel.person_id] = null
           continue
         }
 
-        const avatarUrl = rel.person_avatar
-
-        // If it's already a full signed URL (contains supabase.co), check if it needs refresh
+        // Refresh signed Supabase URLs
         if (avatarUrl.includes('supabase.co/storage/v1/object/sign')) {
-          const refreshed = await AvatarService.refreshSignedUrl(avatarUrl)
-          resolved[rel.person_id] = refreshed
+          resolved[rel.person_id] = await AvatarService.refreshSignedUrl(avatarUrl)
           continue
         }
 
-        // If it's a full URL but not signed, use as-is
+        // Full non-signed URL
         if (avatarUrl.startsWith('http')) {
           resolved[rel.person_id] = avatarUrl
           continue
         }
 
-        // If it's a storage path, get signed URL
-        const signedUrl = await getSignedMediaUrl(avatarUrl, familyId)
-        resolved[rel.person_id] = signedUrl
+        // Storage path -> sign via media-proxy
+        if (effectiveFamilyId) {
+          resolved[rel.person_id] = await getSignedMediaUrl(avatarUrl, effectiveFamilyId)
+        } else {
+          resolved[rel.person_id] = null
+        }
       }
 
       setResolvedAvatars(resolved)
     }
 
     resolveAvatars()
-  }, [relationships])
+  }, [relationships, familyId])
 
   if (loading) {
     return (
@@ -144,7 +146,7 @@ export default function PeopleWebBlock({ personId, currentUserId }: PeopleWebBlo
                 }}
               >
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={resolvedAvatars[rel.person_id] || ''} alt={rel.person_name} />
+                  <AvatarImage src={resolvedAvatars[rel.person_id] ?? (rel.person_avatar?.startsWith('http') ? rel.person_avatar : '')} alt={rel.person_name} />
                   <AvatarFallback>
                     {rel.person_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
