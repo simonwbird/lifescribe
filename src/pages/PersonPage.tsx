@@ -22,6 +22,7 @@ import { ExportDialog, ImportDialog } from '@/components/import-export'
 import { StewardToolsPanel } from '@/components/steward-tools'
 import { SuggestChangeButton } from '@/components/person-page/SuggestChangeButton'
 import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
+import { VisibilityChips } from '@/components/person-page/VisibilityChips'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
@@ -306,15 +307,29 @@ export default function PersonPage() {
       
       <div className="max-w-4xl mx-auto p-6 space-y-8" id="main-content">
         {/* Top Bar */}
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/people')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to People
-          </Button>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/people')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to People
+            </Button>
+
+            {/* Visibility Chips */}
+            <VisibilityChips
+              personId={id!}
+              currentVisibility={personWithSEO.visibility || 'private'}
+              currentIndexability={personWithSEO.indexability || 'private'}
+              canEdit={canEdit}
+              onUpdate={async () => {
+                // Refresh page data
+                window.location.reload()
+              }}
+            />
+          </div>
           
           {canEdit && (
             <div className="flex gap-2">

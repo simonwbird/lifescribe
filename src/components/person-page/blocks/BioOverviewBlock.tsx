@@ -50,33 +50,46 @@ export default function BioOverviewBlock({
   const handleGenerateFromStories = async () => {
     setIsGenerating(true)
     try {
-      const { data, error } = await supabase.functions.invoke('generate-bio', {
-        body: {
-          personId,
-          familyId,
-          tone: formData.tone
+      const { data, error } = await supabase.functions.invoke('generate-bio-from-stories', {
+        body: { 
+          personId, 
+          tone: formData.tone || 'warm'
         }
       })
 
-      if (error) throw error
-
-      if (data?.short_bio && data?.long_bio) {
-        setFormData({
-          ...formData,
-          short_bio: data.short_bio,
-          long_bio: data.long_bio,
-          sources: data.sources || []
-        })
-        toast({
-          title: 'Bio generated',
-          description: 'Review and edit the AI-generated biography before saving'
-        })
+      if (error) {
+        console.error('Function error:', error)
+        throw error
       }
-    } catch (error) {
-      console.error('Generation error:', error)
+
+      if (!data) {
+        throw new Error('No data returned from function')
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        short_bio: data.short_bio || '',
+        long_bio: data.long_bio || '',
+        sources: data.sources || []
+      }))
+
       toast({
-        title: 'Generation failed',
-        description: 'Could not generate bio from stories',
+        title: 'Biography generated',
+        description: 'Review and edit the generated content before saving'
+      })
+    } catch (error: any) {
+      console.error('Error generating bio:', error)
+      
+      let errorMessage = 'Failed to generate biography'
+      if (error.message?.includes('429')) {
+        errorMessage = 'Rate limit exceeded. Please try again in a moment.'
+      } else if (error.message?.includes('402')) {
+        errorMessage = 'AI credits depleted. Please add funds to continue.'
+      }
+      
+      toast({
+        title: 'Error',
+        description: errorMessage,
         variant: 'destructive'
       })
     } finally {
@@ -130,7 +143,7 @@ export default function BioOverviewBlock({
     return (
       <div className="text-center py-12 border-2 border-dashed rounded-lg">
         <p className="text-muted-foreground mb-4">
-          Add a short bio so visitors meet Shirley the person, not just the dates.
+          Add a short bio so visitors meet the person, not just the dates.
         </p>
         <div className="flex gap-2 justify-center">
           <Button onClick={() => setIsEditing(true)}>
@@ -213,21 +226,24 @@ export default function BioOverviewBlock({
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>Short Bio (max 140 characters)</Label>
+                <Label>Short Bio (40-160 characters for SEO)</Label>
                 <span className="text-sm text-muted-foreground">
-                  {formData.short_bio?.length || 0}/140
+                  {formData.short_bio?.length || 0}/160
                 </span>
               </div>
               <Textarea
                 value={formData.short_bio}
                 onChange={(e) => {
-                  if (e.target.value.length <= 140) {
+                  if (e.target.value.length <= 160) {
                     setFormData({ ...formData, short_bio: e.target.value })
                   }
                 }}
-                placeholder="A brief one-sentence summary..."
+                placeholder="A brief summary for search engines and social media..."
                 rows={2}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Required when page is public and searchable
+              </p>
             </div>
 
             <div>

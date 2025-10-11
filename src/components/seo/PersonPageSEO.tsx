@@ -11,8 +11,10 @@ interface PersonData {
   death_date?: string
   avatar_url?: string
   bio?: string
+  short_bio?: string
   slug?: string
   is_living?: boolean
+  status?: 'living' | 'passed'
 }
 
 interface PersonPageSEOProps {
@@ -30,14 +32,20 @@ export function PersonPageSEO({
   ogDescription,
   ogImageUrl 
 }: PersonPageSEOProps) {
-  const isMemorial = Boolean(person.death_date || person.is_living === false)
+  const isMemorial = Boolean(person.death_date || person.is_living === false || person.status === 'passed')
   
-  // Default meta values
+  // Use short_bio for SEO description when public_indexable, fallback to defaults
+  const defaultDescription = isMemorial 
+    ? `Remembering ${person.full_name}. Share memories and celebrate their life.`
+    : `Explore the life story of ${person.full_name}.`
+  
+  // For public_indexable pages, prefer short_bio (required for SEO)
+  const seoDescription = indexability === 'public_indexable' && person.short_bio
+    ? person.short_bio
+    : (person.bio || defaultDescription)
+  
   const title = ogTitle || `${person.full_name} | ${isMemorial ? 'In Memory' : 'Life Page'}`
-  const description = ogDescription || 
-    (isMemorial 
-      ? `Remembering ${person.full_name}. Share memories and celebrate their life.`
-      : `Explore the life story of ${person.full_name}.`)
+  const description = ogDescription || seoDescription
   
   const imageUrl = ogImageUrl || person.avatar_url
   const canonicalUrl = person.slug ? `${window.location.origin}/p/${person.slug}` : window.location.href
