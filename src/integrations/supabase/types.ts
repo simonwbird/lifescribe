@@ -1088,6 +1088,95 @@ export type Database = {
         }
         Relationships: []
       }
+      content_change_suggestions: {
+        Row: {
+          block_id: string | null
+          change_type: string
+          created_at: string | null
+          current_value: Json | null
+          family_id: string
+          id: string
+          person_id: string
+          reason: string | null
+          review_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_by: string | null
+          suggested_value: Json
+          suggester_email: string | null
+          suggester_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          block_id?: string | null
+          change_type: string
+          created_at?: string | null
+          current_value?: Json | null
+          family_id: string
+          id?: string
+          person_id: string
+          reason?: string | null
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string | null
+          suggested_value: Json
+          suggester_email?: string | null
+          suggester_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          block_id?: string | null
+          change_type?: string
+          created_at?: string | null
+          current_value?: Json | null
+          family_id?: string
+          id?: string
+          person_id?: string
+          reason?: string | null
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string | null
+          suggested_value?: Json
+          suggester_email?: string | null
+          suggester_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_change_suggestions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_change_suggestions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "content_change_suggestions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_change_suggestions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_suggestions: {
         Row: {
           confidence_score: number | null
@@ -7644,6 +7733,14 @@ export type Database = {
       }
     }
     Functions: {
+      approve_change_suggestion: {
+        Args: {
+          p_apply_changes?: boolean
+          p_reviewer_id: string
+          p_suggestion_id: string
+        }
+        Returns: Json
+      }
       approve_guestbook_entry: {
         Args: { p_entry_id: string; p_moderator_id: string }
         Returns: Json
@@ -8005,6 +8102,14 @@ export type Database = {
       }
       process_admin_claim: {
         Args: { p_claim_id: string }
+        Returns: Json
+      }
+      reject_change_suggestion: {
+        Args: {
+          p_reason: string
+          p_reviewer_id: string
+          p_suggestion_id: string
+        }
         Returns: Json
       }
       reject_guestbook_entry: {

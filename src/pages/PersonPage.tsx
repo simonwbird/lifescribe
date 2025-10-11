@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette, Download, Upload } from 'lucide-react'
+import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette, Download, Upload, Wrench } from 'lucide-react'
 import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
@@ -19,6 +19,9 @@ import { PersonPageSEO } from '@/components/seo'
 import { CustomizerPanel, ThemeProvider } from '@/components/theme-customizer'
 import { LayoutRenderer } from '@/components/theme-customizer/LayoutRenderer'
 import { ExportDialog, ImportDialog } from '@/components/import-export'
+import { StewardToolsPanel } from '@/components/steward-tools'
+import { SuggestChangeButton } from '@/components/person-page/SuggestChangeButton'
+import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
@@ -38,6 +41,7 @@ export default function PersonPage() {
   const [showCustomizer, setShowCustomizer] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showStewardTools, setShowStewardTools] = useState(false)
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null)
   
   const {
@@ -314,6 +318,26 @@ export default function PersonPage() {
           
           {canEdit && (
             <div className="flex gap-2">
+              <Sheet open={showStewardTools} onOpenChange={setShowStewardTools}>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                  >
+                    <Wrench className="h-4 w-4 mr-2" />
+                    Steward Tools
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-2xl p-0">
+                  <StewardToolsPanel
+                    personId={id!}
+                    familyId={data.person.family_id || ''}
+                    personName={data.person.full_name}
+                    onClose={() => setShowStewardTools(false)}
+                  />
+                </SheetContent>
+              </Sheet>
+
               <Button 
                 variant="outline" 
                 size="sm"
@@ -411,7 +435,22 @@ export default function PersonPage() {
                 {person.pronouns}
               </p>
             )}
+
+            {/* Last Updated Info */}
+            <LastUpdatedInfo 
+              personId={person.id}
+              familyId={person.family_id || ''}
+              className="mt-3"
+            />
           </div>
+
+          {/* Suggest Changes for viewers */}
+          {!canEdit && (
+            <SuggestChangeButton
+              personId={person.id}
+              familyId={person.family_id || ''}
+            />
+          )}
         </div>
 
         {/* Blocks with Layout */}
