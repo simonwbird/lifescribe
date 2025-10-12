@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Camera, Edit2, MapPin, Sparkles } from 'lucide-react'
+import { Camera, Edit2, MapPin, Sparkles, TreePine } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
@@ -47,6 +48,7 @@ const THEME_OPTIONS = [
 export default function HeroLifeBlock({ person, blockContent, canEdit, onUpdate }: HeroLifeBlockProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     tagline: blockContent.tagline || '',
     city: blockContent.city || '',
@@ -287,22 +289,33 @@ export default function HeroLifeBlock({ person, blockContent, canEdit, onUpdate 
           )}
         </div>
 
-        {/* Edit Button */}
-        {canEdit && (
-          <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogTrigger asChild>
-              <Button variant="secondary" size="sm">
-                <Edit2 className="h-4 w-4 mr-2" />
-                Edit Hero
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Edit Hero Section</DialogTitle>
-                <DialogDescription>
-                  Customize your life page hero
-                </DialogDescription>
-              </DialogHeader>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/family/tree?focus=${person.id}`)}
+            className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            <TreePine className="h-4 w-4" />
+            View in Tree
+          </Button>
+          
+          {canEdit && (
+            <Dialog open={isEditing} onOpenChange={setIsEditing}>
+              <DialogTrigger asChild>
+                <Button variant="secondary" size="sm">
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit Hero
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Edit Hero Section</DialogTitle>
+                  <DialogDescription>
+                    Customize your life page hero
+                  </DialogDescription>
+                </DialogHeader>
 
               <div className="space-y-4">
                 <div>
@@ -386,6 +399,7 @@ export default function HeroLifeBlock({ person, blockContent, canEdit, onUpdate 
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
     </div>
   )

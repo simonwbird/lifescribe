@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 import { AvatarService } from '@/lib/avatarService'
 import { getSignedMediaUrl } from '@/lib/media'
 import { supabase } from '@/integrations/supabase/client'
+import { AccessRequestDialog } from './AccessRequestDialog'
+import { Badge } from '@/components/ui/badge'
 
 interface PeopleWebBlockProps {
   personId: string
@@ -20,6 +22,10 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
   const navigate = useNavigate()
   const { relationships, loading, error } = usePersonRelationships(personId, currentUserId)
   const [resolvedAvatars, setResolvedAvatars] = useState<Record<string, string | null>>({})
+  const [requestingAccessFor, setRequestingAccessFor] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   // Resolve avatar URLs from storage
   useEffect(() => {
@@ -162,6 +168,18 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium truncate">{rel.person_name}</p>
+                    {rel.person_status === 'passed' && (
+                      <Badge 
+                        variant="secondary" 
+                        className="shrink-0 bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                      >
+                        <Heart className="h-3 w-3 mr-1 fill-current" />
+                        In Tribute
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">{rel.relation_label}</p>
                     {rel.has_page_access && (
                       <Button
                         variant="ghost"
@@ -177,18 +195,6 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
                       </Button>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <span>{rel.relation_label}</span>
-                    {rel.person_status === 'passed' && (
-                      <>
-                        <span>·</span>
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          In Tribute
-                        </span>
-                      </>
-                    )}
-                  </p>
                 </div>
 
                 {!rel.has_page_access && (
@@ -198,8 +204,10 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
                     className="shrink-0"
                     onClick={(e) => {
                       e.stopPropagation()
-                      // TODO: Implement access request
-                      alert('Request access feature coming soon')
+                      setRequestingAccessFor({
+                        id: rel.person_id,
+                        name: rel.person_name
+                      })
                     }}
                   >
                     <Lock className="h-3 w-3 mr-1.5" />
@@ -211,6 +219,17 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
           </div>
         </div>
       ))}
+
+      {/* Access Request Dialog */}
+      {requestingAccessFor && familyId && (
+        <AccessRequestDialog
+          open={!!requestingAccessFor}
+          onOpenChange={(open) => !open && setRequestingAccessFor(null)}
+          personId={requestingAccessFor.id}
+          personName={requestingAccessFor.name}
+          familyId={familyId}
+        />
+      )}
     </div>
   )
 }
