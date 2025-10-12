@@ -176,19 +176,6 @@ export function PortalLayoutManager({
 
   return (
     <div className={cn('sm:grid sm:grid-cols-12 sm:gap-6', className)}>
-      {/* Right rail column - complementary landmark (render first to prefer rail in singleton conflicts) */}
-      <aside 
-        id="portal-rail"
-        className={cn(
-          'md:col-span-4 space-y-4'
-        )}
-        data-portal-container="rail"
-        role="complementary"
-        aria-label="Sidebar widgets"
-      >
-        {railBlockIds.map(blockId => renderBlock(blockId))}
-      </aside>
-
       {/* Main content column - semantic main landmark */}
       <main 
         id="portal-main" 
@@ -200,6 +187,21 @@ export function PortalLayoutManager({
       >
         {mainBlockIds.map(blockId => renderBlock(blockId))}
       </main>
+
+      {/* Right rail column - complementary landmark */}
+      {railBlockIds.length > 0 && (
+        <aside 
+          id="portal-rail"
+          className={cn(
+            'md:col-span-4 space-y-4'
+          )}
+          data-portal-container="rail"
+          role="complementary"
+          aria-label="Sidebar widgets"
+        >
+          {railBlockIds.map(blockId => renderBlock(blockId))}
+        </aside>
+      )}
     </div>
   )
 }
