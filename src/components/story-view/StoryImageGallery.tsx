@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ImageViewer } from '@/components/ui/image-viewer';
+import { PhotoTagger } from '@/components/media/PhotoTagger';
 
 interface StoryImage {
   id: string;
@@ -8,12 +9,20 @@ interface StoryImage {
   alt?: string;
 }
 
+interface MediaItem {
+  id: string
+  mime_type: string
+  file_name: string
+}
+
 interface StoryImageGalleryProps {
   images: StoryImage[];
+  mediaItems?: MediaItem[];
+  familyId?: string;
   className?: string;
 }
 
-export function StoryImageGallery({ images, className }: StoryImageGalleryProps) {
+export function StoryImageGallery({ images, mediaItems, familyId, className }: StoryImageGalleryProps) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
@@ -76,43 +85,62 @@ export function StoryImageGallery({ images, className }: StoryImageGalleryProps)
 
   return (
     <>
-      <div className={cn('grid', getLayoutClasses(), className)}>
-        {images.map((image, index) => (
-          <div
-            key={image.id}
-            onClick={() => handleImageClick(index)}
-            className={cn(
-              'relative rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]',
-              getImageClasses(index),
-              getAspectRatio(index)
-            )}
-            data-test="image-thumb"
-          >
-            <img
-              src={image.url}
-              alt={image.alt || `Image ${index + 1}`}
-              className="w-full h-full object-cover"
-              width={600}
-              height={600}
-              loading={index < 2 ? 'eager' : 'lazy'}
-              fetchPriority={index < 2 ? 'high' : 'low'}
-              onError={(e) => {
-                console.error('Image failed to load:', image.url);
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            
-            {/* Overlay gradient for better visibility of corner badges */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-            
-            {/* Image count badge for galleries with 2+ images */}
-            {images.length > 1 && (
-              <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/90 backdrop-blur-sm rounded text-xs font-medium">
-                {index + 1} / {images.length}
+      <div className="space-y-4">
+        <div className={cn('grid', getLayoutClasses(), className)}>
+          {images.map((image, index) => (
+            <div
+              key={image.id}
+              onClick={() => handleImageClick(index)}
+              className={cn(
+                'relative rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]',
+                getImageClasses(index),
+                getAspectRatio(index)
+              )}
+              data-test="image-thumb"
+            >
+              <img
+                src={image.url}
+                alt={image.alt || `Image ${index + 1}`}
+                className="w-full h-full object-cover"
+                width={600}
+                height={600}
+                loading={index < 2 ? 'eager' : 'lazy'}
+                fetchPriority={index < 2 ? 'high' : 'low'}
+                onError={(e) => {
+                  console.error('Image failed to load:', image.url);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              
+              {/* Overlay gradient for better visibility of corner badges */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+              
+              {/* Image count badge for galleries with 2+ images */}
+              {images.length > 1 && (
+                <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/90 backdrop-blur-sm rounded text-xs font-medium">
+                  {index + 1} / {images.length}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Photo Tagging - show under gallery if we have the data */}
+        {mediaItems && familyId && mediaItems.length > 0 && (
+          <div className="space-y-3">
+            {mediaItems.map((mediaItem, index) => (
+              <div key={mediaItem.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+                <div className="text-sm font-medium text-muted-foreground shrink-0">
+                  Photo {index + 1}
+                </div>
+                <PhotoTagger
+                  mediaId={mediaItem.id}
+                  familyId={familyId}
+                />
               </div>
-            )}
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Image Viewer Modal */}

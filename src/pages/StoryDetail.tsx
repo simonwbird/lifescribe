@@ -8,6 +8,7 @@ import { ArrowLeft, Link as LinkIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Story, Profile } from '@/lib/types'
 import { AttachToEntityModal } from '@/components/entity/AttachToEntityModal'
+import { StoryComments } from '@/components/story/StoryComments'
 
 export default function StoryDetail() {
   const { id } = useParams<{ id: string }>()
@@ -97,6 +98,14 @@ export default function StoryDetail() {
           </div>
           
           <StoryCard story={story} />
+          
+          {/* Comments Section */}
+          <div className="mt-6">
+            <StoryComments 
+              storyId={story.id}
+              familyId={story.family_id}
+            />
+          </div>
         </div>
       </div>
 

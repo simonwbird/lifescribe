@@ -234,22 +234,26 @@ export default function StoryCard({ story }: StoryCardProps) {
         )}
 
         {mediaUrls.length > 0 && (
-          <StoryImageGallery 
-            images={mediaUrls
-              .map((url, index) => {
-                const mediaItem = media[index]
-                if (mediaItem?.mime_type.startsWith('image/')) {
-                  return {
-                    id: mediaItem.id,
-                    url,
-                    alt: mediaItem.file_name
+          <div className="space-y-3">
+            <StoryImageGallery 
+              images={mediaUrls
+                .map((url, index) => {
+                  const mediaItem = media[index]
+                  if (mediaItem?.mime_type.startsWith('image/')) {
+                    return {
+                      id: mediaItem.id,
+                      url,
+                      alt: mediaItem.file_name
+                    }
                   }
-                }
-                return null
-              })
-              .filter(Boolean) as Array<{ id: string; url: string; alt?: string }>
-            }
-          />
+                  return null
+                })
+                .filter(Boolean) as Array<{ id: string; url: string; alt?: string }>
+              }
+              mediaItems={media.filter(m => m.mime_type.startsWith('image/'))}
+              familyId={story.family_id}
+            />
+          </div>
         )}
 
         {/* Audio/Video media (not part of gallery) */}
