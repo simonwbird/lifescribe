@@ -472,6 +472,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "audio_recordings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "audio_recordings_family_id_fkey"
             columns: ["family_id"]
             isOneToOne: false

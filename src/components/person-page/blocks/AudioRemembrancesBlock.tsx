@@ -32,7 +32,7 @@ export default function AudioRemembrancesBlock({
         .from('audio_recordings')
         .select(`
           *,
-          creator:created_by(id, full_name, avatar_url)
+          creator:profiles!audio_recordings_created_by_fkey(id, full_name, avatar_url)
         `)
         .eq('family_id', familyId)
         .eq('is_draft', false)
