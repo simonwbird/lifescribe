@@ -191,10 +191,7 @@ export function PortalLayoutManager({
       <aside 
         id="portal-rail"
         className={cn(
-          'lg:col-span-4 space-y-4'
-          // Keep aside visible even if empty to aid debugging and prevent layout collapse
-          // It will simply occupy space without content
-
+          'md:col-span-4 space-y-4'
         )}
         data-portal-container="rail"
         role="complementary"
