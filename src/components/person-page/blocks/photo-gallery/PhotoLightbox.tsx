@@ -8,7 +8,8 @@ import {
   ChevronRight,
   Calendar,
   FileText,
-  Download
+  Download,
+  MoveHorizontal
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
@@ -18,16 +19,25 @@ interface PhotoLightboxProps {
   initialIndex: number
   onClose: () => void
   onNavigate: (index: number) => void
+  canEdit?: boolean
+  albums?: any[]
+  currentAlbumId?: string
+  onMovePhoto?: (photoId: string, targetAlbumId: string) => void
 }
 
 export function PhotoLightbox({
   photos,
   initialIndex,
   onClose,
-  onNavigate
+  onNavigate,
+  canEdit = false,
+  albums = [],
+  currentAlbumId = 'all',
+  onMovePhoto
 }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [showCaption, setShowCaption] = useState(true)
+  const [showMoveDialog, setShowMoveDialog] = useState(false)
   
   const currentPhoto = photos[currentIndex]
   const hasPrev = currentIndex > 0
@@ -36,12 +46,20 @@ export function PhotoLightbox({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default for arrow keys to avoid page scrolling
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault()
+      }
+
       if (e.key === 'ArrowLeft' && hasPrev) {
         goToPrevious()
       } else if (e.key === 'ArrowRight' && hasNext) {
         goToNext()
       } else if (e.key === 'Escape') {
         onClose()
+      } else if (e.key === 'c' || e.key === 'C') {
+        // Toggle caption with 'c' key
+        setShowCaption(prev => !prev)
       }
     }
 
@@ -91,6 +109,17 @@ export function PhotoLightbox({
               )}
             </div>
             <div className="flex items-center gap-2">
+              {canEdit && albums.length > 0 && onMovePhoto && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowMoveDialog(true)}
+                  className="text-white hover:bg-white/20"
+                  title="Move to album"
+                >
+                  <MoveHorizontal className="h-5 w-5" />
+                </Button>
+              )}
               <Button
                 size="icon"
                 variant="ghost"
@@ -143,7 +172,7 @@ export function PhotoLightbox({
         </div>
 
         {/* Caption Footer */}
-        {showCaption && (currentPhoto.caption || currentPhoto.date) && (
+        {showCaption && (currentPhoto.caption || currentPhoto.date || currentPhoto.story_title) && (
           <div className="absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/80 to-transparent p-6">
             <div className="max-w-3xl mx-auto space-y-2">
               {currentPhoto.caption && (
@@ -172,6 +201,7 @@ export function PhotoLightbox({
         {/* Keyboard hints */}
         <div className="absolute bottom-4 right-4 text-xs text-white/60 space-y-1">
           <div>← → to navigate</div>
+          <div>C to toggle caption</div>
           <div>ESC to close</div>
         </div>
       </DialogContent>

@@ -32,8 +32,9 @@ export default function PhotoGalleryBlock({
   const { data: photos, isLoading, refetch } = useQuery({
     queryKey: ['person-photos', personId, familyId],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
       // Get all stories with media linked to this person
-      // Using the story_id foreign key relationship
       const { data: stories, error: storiesError } = await supabase
         .from('stories')
         .select(`
@@ -45,7 +46,8 @@ export default function PhotoGalleryBlock({
             id,
             file_path,
             mime_type,
-            created_at
+            created_at,
+            caption
           )
         `)
         .eq('family_id', familyId)
@@ -53,7 +55,7 @@ export default function PhotoGalleryBlock({
 
       if (storiesError) throw storiesError
 
-      // Flatten media from stories
+      // Flatten media from stories (visibility check will be added when privacy field is confirmed)
       const allMedia = stories?.flatMap(story => 
         (story.media || [])
           .filter((m: any) => m.mime_type?.startsWith('image/'))
@@ -179,12 +181,20 @@ export default function PhotoGalleryBlock({
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
-        <PhotoLightbox
-          photos={displayPhotos}
-          initialIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onNavigate={setLightboxIndex}
-        />
+      <PhotoLightbox
+        photos={displayPhotos}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onNavigate={setLightboxIndex}
+        canEdit={canEdit}
+        albums={albums}
+        currentAlbumId={selectedAlbum}
+        onMovePhoto={(photoId, targetAlbumId) => {
+          // TODO: Implement photo moving logic
+          console.log('Move photo', photoId, 'to', targetAlbumId)
+          refetch()
+        }}
+      />
       )}
 
       {/* Album Manager */}
