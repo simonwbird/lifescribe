@@ -114,6 +114,22 @@ export function PortalLayoutManager({
     return source.filter(id => blocks.some(b => b.id === id))
   }, [currentLayout.rail, blocks, breakpoint])
 
+  // Debugging: log layout computation to help identify why rail may be empty in preview
+  useEffect(() => {
+    try {
+      // Avoid noisy logs in production; this is harmless during debugging
+      // eslint-disable-next-line no-console
+      console.debug('[PortalLayoutManager] Debug', {
+        breakpoint,
+        providedLayout: layoutMap[breakpoint],
+        currentLayout,
+        allBlockIds: blocks.map(b => b.id),
+        mainBlockIds,
+        railBlockIds
+      })
+    } catch {}
+  }, [breakpoint, layoutMap, currentLayout, blocks, mainBlockIds, railBlockIds])
+
   // Create portal containers
   useEffect(() => {
     const mainContainer = document.getElementById('portal-main')
@@ -158,11 +174,11 @@ export function PortalLayoutManager({
   }
 
   return (
-    <div className={cn('lg:grid lg:grid-cols-12 lg:gap-6', className)}>
+    <div className={cn('md:grid md:grid-cols-12 md:gap-6', className)}>
       {/* Main content column - semantic main landmark */}
       <main 
         id="portal-main" 
-        className="lg:col-span-8 space-y-6"
+        className="md:col-span-8 space-y-6"
         data-portal-container="main"
         role="main"
         aria-label="Main content"
@@ -175,8 +191,10 @@ export function PortalLayoutManager({
       <aside 
         id="portal-rail"
         className={cn(
-          'lg:col-span-4 space-y-4',
-          railBlockIds.length === 0 && 'hidden'
+          'lg:col-span-4 space-y-4'
+          // Keep aside visible even if empty to aid debugging and prevent layout collapse
+          // It will simply occupy space without content
+
         )}
         data-portal-container="rail"
         role="complementary"
