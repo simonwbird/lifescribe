@@ -26,6 +26,8 @@ import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
 import { VisibilityChips } from '@/components/person-page/VisibilityChips'
 import { PageLayoutManager, BlockItem } from '@/components/person-page/PageLayoutManager'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
+import { QuickAddBar } from '@/components/person-page/QuickAddBar'
+import { PromptOfTheWeek } from '@/components/person-page/PromptOfTheWeek'
 import {
   QuickFactsWidget,
   TOCWidget,
@@ -256,6 +258,7 @@ export default function PersonPage() {
   const navigate = useNavigate()
   const breakpoint = useBreakpoint() // Detect current breakpoint
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [mode, setMode] = useState<'simple' | 'studio'>('simple')
   const [showBlockLibrary, setShowBlockLibrary] = useState(false)
   const [showCustomizer, setShowCustomizer] = useState(false)
   const [showLayoutEditor, setShowLayoutEditor] = useState(false)
@@ -279,6 +282,19 @@ export default function PersonPage() {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setCurrentUserId(user?.id || null)
+      
+      // Fetch user's mode preference
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('simple_mode')
+          .eq('id', user.id)
+          .single()
+        
+        if (profile) {
+          setMode(profile.simple_mode ? 'simple' : 'studio')
+        }
+      }
     }
     fetchUser()
   }, [])
@@ -755,6 +771,50 @@ export default function PersonPage() {
             />
           )}
         </div>
+
+        {/* Simple Mode: Quick Add Bar */}
+        {mode === 'simple' && canEdit && (
+          <QuickAddBar
+            onAddStory={() => {
+              toast({
+                title: 'Story creation',
+                description: 'Story wizard would open here'
+              })
+            }}
+            onAddPhoto={() => {
+              toast({
+                title: 'Photo upload',
+                description: 'Photo upload dialog would open here'
+              })
+            }}
+            onAddVoice={() => {
+              toast({
+                title: 'Voice recording',
+                description: 'Voice recorder would start here'
+              })
+            }}
+            onAddMilestone={() => {
+              toast({
+                title: 'Milestone creation',
+                description: 'Milestone form would open here'
+              })
+            }}
+          />
+        )}
+
+        {/* Simple Mode: Prompt of the Week */}
+        {mode === 'simple' && (
+          <PromptOfTheWeek
+            personId={person.id}
+            onAnswer={(answer) => {
+              toast({
+                title: 'Answer recorded',
+                description: 'Your response has been saved'
+              })
+              console.log('Weekly prompt answer:', answer)
+            }}
+          />
+        )}
 
         {/* Blocks with PageLayoutManager */}
         <DragDropContext onDragEnd={handleDragEnd}>
