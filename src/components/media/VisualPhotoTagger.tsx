@@ -39,9 +39,10 @@ interface VisualPhotoTaggerProps {
   familyId: string
   imageUrl: string
   className?: string
+  onTagsUpdated?: () => void
 }
 
-export function VisualPhotoTagger({ mediaId, familyId, imageUrl, className }: VisualPhotoTaggerProps) {
+export function VisualPhotoTagger({ mediaId, familyId, imageUrl, className, onTagsUpdated }: VisualPhotoTaggerProps) {
   const [people, setPeople] = useState<Person[]>([])
   const [tags, setTags] = useState<PhotoTag[]>([])
   const [isTagging, setIsTagging] = useState(false)
@@ -155,6 +156,7 @@ export function VisualPhotoTagger({ mediaId, familyId, imageUrl, className }: Vi
       if (error) throw error
 
       await fetchTags()
+      onTagsUpdated?.()
       setPendingPosition(null)
       setOpen(false)
       setIsTagging(false)
@@ -185,6 +187,7 @@ export function VisualPhotoTagger({ mediaId, familyId, imageUrl, className }: Vi
       if (error) throw error
 
       await fetchTags()
+      onTagsUpdated?.()
       
       toast({
         title: 'Tag removed',

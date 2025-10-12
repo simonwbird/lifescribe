@@ -23,6 +23,15 @@ interface ImageViewerProps {
   storyId?: string
 }
 
+interface PhotoTag {
+  id: string
+  person_name: string
+  position_x: number
+  position_y: number
+  position_width?: number
+  position_height?: number
+}
+
 export function ImageViewer({ isOpen, onClose, imageUrl, imageAlt, title, mediaId, familyId, storyId }: ImageViewerProps) {
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
@@ -31,7 +40,15 @@ export function ImageViewer({ isOpen, onClose, imageUrl, imageAlt, title, mediaI
   const [newComment, setNewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [tags, setTags] = useState<PhotoTag[]>([])
   const { checkWritePermission } = useWriteProtection()
+
+  // Fetch tags when media changes
+  useEffect(() => {
+    if (mediaId && isOpen) {
+      fetchTags()
+    }
+  }, [mediaId, isOpen])
 
   // Fetch comments when story changes
   useEffect(() => {
@@ -129,6 +146,53 @@ export function ImageViewer({ isOpen, onClose, imageUrl, imageAlt, title, mediaI
     }
   }
 
+  const fetchTags = async () => {
+    if (!mediaId) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('entity_links')
+        .select(`
+          id,
+          entity_id,
+          position_x,
+          position_y,
+          position_width,
+          position_height
+        `)
+        .eq('source_type', 'media')
+        .eq('source_id', mediaId)
+        .eq('entity_type', 'person')
+
+      if (error) throw error
+
+      if (data && data.length > 0) {
+        const personIds = data.map(link => link.entity_id)
+        const { data: peopleData, error: peopleError } = await supabase
+          .from('people')
+          .select('id, full_name')
+          .in('id', personIds)
+
+        if (peopleError) throw peopleError
+
+        const peopleMap = new Map(peopleData?.map(p => [p.id, p.full_name]))
+
+        setTags(data.map(link => ({
+          id: link.id,
+          person_name: peopleMap.get(link.entity_id) || 'Unknown',
+          position_x: link.position_x || 0,
+          position_y: link.position_y || 0,
+          position_width: link.position_width,
+          position_height: link.position_height
+        })).filter(tag => tag.position_x !== null && tag.position_y !== null))
+      } else {
+        setTags([])
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error)
+    }
+  }
+
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
   }
@@ -217,21 +281,58 @@ export function ImageViewer({ isOpen, onClose, imageUrl, imageAlt, title, mediaI
             <X className="h-5 w-5" />
           </Button>
 
-          {/* Image Container */}
+          {/* Image Container with Tags */}
           <div className="flex items-center justify-center w-full h-full p-8 overflow-auto">
-            <img
-              src={imageUrl}
-              alt={imageAlt || 'Viewing image'}
-              className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
-              style={{
-                transform: `scale(${zoom}) rotate(${rotation}deg)`,
-              }}
-              draggable={false}
-              onError={(e) => {
-                e.currentTarget.onerror = null
-                e.currentTarget.src = '/placeholder.svg'
-              }}
-            />
+            <div className="relative inline-block">
+              <img
+                src={imageUrl}
+                alt={imageAlt || 'Viewing image'}
+                className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
+                style={{
+                  transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                }}
+                draggable={false}
+                onError={(e) => {
+                  e.currentTarget.onerror = null
+                  e.currentTarget.src = '/placeholder.svg'
+                }}
+              />
+              
+              {/* Visual Tags Overlay */}
+              {mediaId && familyId && tags.length > 0 && (
+                <>
+                  {tags.map(tag => (
+                    <div
+                      key={tag.id}
+                      className="absolute transition-opacity"
+                      style={{
+                        left: `${tag.position_x}%`,
+                        top: `${tag.position_y}%`,
+                        width: tag.position_width ? `${tag.position_width}%` : 'auto',
+                        height: tag.position_height ? `${tag.position_height}%` : 'auto',
+                        transform: `translate(-50%, -50%) scale(${zoom}) rotate(${rotation}deg)`,
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {/* Tag box */}
+                      <div 
+                        className="absolute inset-0 border-2 border-white rounded shadow-lg"
+                        style={{
+                          boxShadow: '0 0 0 1px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.5)',
+                        }}
+                      />
+                      
+                      {/* Tag label - always visible in viewer */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-10">
+                        <div className="bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap shadow-lg">
+                          {tag.person_name}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Title Bar */}
@@ -258,6 +359,7 @@ export function ImageViewer({ isOpen, onClose, imageUrl, imageAlt, title, mediaI
                       familyId={familyId}
                       imageUrl={imageUrl}
                       className="max-h-[60vh]"
+                      onTagsUpdated={fetchTags}
                     />
                   </div>
                 )}

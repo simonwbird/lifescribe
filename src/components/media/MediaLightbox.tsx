@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { supabase } from '@/integrations/supabase/client'
 import { 
   X, 
   ChevronLeft, 
@@ -24,6 +25,15 @@ import {
 } from 'lucide-react'
 import { LightboxItem } from '@/lib/mediaTypes'
 import { cn } from '@/lib/utils'
+
+interface PhotoTag {
+  id: string
+  person_name: string
+  position_x: number
+  position_y: number
+  position_width?: number
+  position_height?: number
+}
 
 interface MediaLightboxProps {
   isOpen: boolean
@@ -56,6 +66,7 @@ export function MediaLightbox({
   const [captionValue, setCaptionValue] = useState('')
   const [showTranscript, setShowTranscript] = useState(false)
   const [transcriptSearch, setTranscriptSearch] = useState('')
+  const [tags, setTags] = useState<PhotoTag[]>([])
 
   useEffect(() => {
     if (item) {
@@ -63,8 +74,56 @@ export function MediaLightbox({
       setIsEditingCaption(false)
       setCurrentTime(0)
       setIsPlaying(false)
+      fetchTags()
     }
   }, [item])
+
+  const fetchTags = async () => {
+    if (!item || item.type !== 'photo') return
+    
+    try {
+      const { data, error } = await supabase
+        .from('entity_links')
+        .select(`
+          id,
+          entity_id,
+          position_x,
+          position_y,
+          position_width,
+          position_height
+        `)
+        .eq('source_type', 'media')
+        .eq('source_id', item.id)
+        .eq('entity_type', 'person')
+
+      if (error) throw error
+
+      if (data && data.length > 0) {
+        const personIds = data.map(link => link.entity_id)
+        const { data: peopleData, error: peopleError } = await supabase
+          .from('people')
+          .select('id, full_name')
+          .in('id', personIds)
+
+        if (peopleError) throw peopleError
+
+        const peopleMap = new Map(peopleData?.map(p => [p.id, p.full_name]))
+
+        setTags(data.map(link => ({
+          id: link.id,
+          person_name: peopleMap.get(link.entity_id) || 'Unknown',
+          position_x: link.position_x || 0,
+          position_y: link.position_y || 0,
+          position_width: link.position_width,
+          position_height: link.position_height
+        })).filter(tag => tag.position_x !== null && tag.position_y !== null))
+      } else {
+        setTags([])
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error)
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,11 +185,48 @@ export function MediaLightbox({
       case 'photo':
         return (
           <div className="relative w-full h-full flex items-center justify-center">
-            <img 
-              src={item.srcUrl} 
-              alt={item.caption || 'Photo'}
-              className="max-w-full max-h-full object-contain"
-            />
+            <div className="relative inline-block">
+              <img 
+                src={item.srcUrl} 
+                alt={item.caption || 'Photo'}
+                className="max-w-full max-h-full object-contain"
+              />
+              
+              {/* Visual Tags Overlay */}
+              {tags.length > 0 && (
+                <>
+                  {tags.map(tag => (
+                    <div
+                      key={tag.id}
+                      className="absolute transition-opacity"
+                      style={{
+                        left: `${tag.position_x}%`,
+                        top: `${tag.position_y}%`,
+                        width: tag.position_width ? `${tag.position_width}%` : 'auto',
+                        height: tag.position_height ? `${tag.position_height}%` : 'auto',
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {/* Tag box */}
+                      <div 
+                        className="absolute inset-0 border-2 border-white rounded shadow-lg"
+                        style={{
+                          boxShadow: '0 0 0 1px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.5)',
+                        }}
+                      />
+                      
+                      {/* Tag label */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-10">
+                        <div className="bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap shadow-lg">
+                          {tag.person_name}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         )
       
