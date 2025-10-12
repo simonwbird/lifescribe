@@ -1,6 +1,8 @@
 import { Helmet } from 'react-helmet-async'
 import { getPageType } from '@/utils/personUtils'
 import { IndexabilityLevel } from '@/hooks/usePersonSEO'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@/integrations/supabase/client'
 
 interface PersonData {
   id: string
@@ -33,6 +35,40 @@ export function PersonPageSEO({
   ogImageUrl 
 }: PersonPageSEOProps) {
   const isMemorial = Boolean(person.death_date || person.is_living === false || person.status === 'passed')
+  
+  // Fetch surviving relatives for schema.org obituary
+  const { data: relationships } = useQuery({
+    queryKey: ['person-relationships-seo', person.id],
+    queryFn: async () => {
+      if (!isMemorial || indexability !== 'public_indexable') return []
+      
+      const { data, error } = await supabase
+        .from('relationships')
+        .select(`
+          to_person_id,
+          relationship_type,
+          people!relationships_to_person_id_fkey(
+            id,
+            full_name,
+            status
+          )
+        `)
+        .eq('from_person_id', person.id)
+        .in('relationship_type', ['spouse', 'child', 'sibling'])
+      
+      if (error) {
+        console.error('Error fetching relationships for SEO:', error)
+        return []
+      }
+      
+      // Filter to living relatives only
+      return data?.filter(rel => 
+        rel.people && 
+        (rel.people as any).status === 'living'
+      ) || []
+    },
+    enabled: isMemorial && indexability === 'public_indexable'
+  })
   
   // Use short_bio for SEO description when public_indexable, fallback to defaults
   const defaultDescription = isMemorial 
@@ -70,12 +106,20 @@ export function PersonPageSEO({
     ...(person.bio && { description: person.bio })
   }
   
+  // Build survivingPerson array for obituary schema
+  const survivingRelatives = relationships?.map(rel => ({
+    '@type': 'Person',
+    name: (rel.people as any)?.full_name,
+    relatedTo: person.full_name
+  })) || []
+  
   const obituarySchema = isMemorial && person.death_date ? {
     '@context': 'https://schema.org',
     '@type': 'Obituary',
     about: personSchema,
     datePublished: person.death_date,
-    ...(person.death_date && { deathDate: person.death_date })
+    ...(person.death_date && { deathDate: person.death_date }),
+    ...(survivingRelatives.length > 0 && { survivingPerson: survivingRelatives })
   } : null
 
   return (

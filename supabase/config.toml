@@ -81,6 +81,12 @@ verify_jwt = true
 [functions.qa-seed-status]
 verify_jwt = true
 
+[functions.generate-bio-from-stories]
+verify_jwt = true
+
+[functions.sitemap]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322
