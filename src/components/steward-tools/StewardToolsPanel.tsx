@@ -8,13 +8,17 @@ import {
   GitMerge, 
   FileText, 
   Download,
-  Clock
+  Clock,
+  Star,
+  LayoutList
 } from 'lucide-react';
 import { GuestbookModerationQueue } from '@/components/guestbook';
 import { ChangeSuggestionsPanel } from './ChangeSuggestionsPanel';
 import { DuplicateMergePanel } from './DuplicateMergePanel';
 import { AuditLogPanel } from './AuditLogPanel';
 import { ExportToolsPanel } from './ExportToolsPanel';
+import { FeaturedTributesPanel } from './FeaturedTributesPanel';
+import { BlockReorderPanel } from './BlockReorderPanel';
 import { useChangeSuggestions } from '@/hooks/useChangeSuggestions';
 import { useGuestbookModerationQueue } from '@/hooks/useGuestbookModeration';
 import { cn } from '@/lib/utils';
@@ -46,7 +50,7 @@ export function StewardToolsPanel({ personId, familyId, personName, onClose }: S
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-5 m-6 mb-0">
+        <TabsList className="grid w-full grid-cols-7 m-6 mb-0">
           <TabsTrigger value="approvals" className="relative">
             <CheckCircle2 className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Approvals</span>
@@ -68,6 +72,16 @@ export function StewardToolsPanel({ personId, familyId, personName, onClose }: S
                 {pendingModeration}
               </Badge>
             )}
+          </TabsTrigger>
+
+          <TabsTrigger value="featured">
+            <Star className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Featured</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="blocks">
+            <LayoutList className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Blocks</span>
           </TabsTrigger>
 
           <TabsTrigger value="duplicates">
@@ -106,6 +120,20 @@ export function StewardToolsPanel({ personId, familyId, personName, onClose }: S
                 <GuestbookModerationQueue familyId={familyId} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="featured" className="mt-0">
+            <FeaturedTributesPanel
+              personId={personId}
+              familyId={familyId}
+            />
+          </TabsContent>
+
+          <TabsContent value="blocks" className="mt-0">
+            <BlockReorderPanel
+              personId={personId}
+              onReorder={() => window.location.reload()}
+            />
           </TabsContent>
 
           <TabsContent value="duplicates" className="mt-0">
