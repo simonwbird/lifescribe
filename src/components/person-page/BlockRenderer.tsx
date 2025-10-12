@@ -11,6 +11,21 @@ import StoryCollageBlock from './blocks/StoryCollageBlock'
 import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
 import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
 import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
+import { Button } from '@/components/ui/button'
+import { AlertCircle } from 'lucide-react'
+
+function UnknownBlock({ type }: { type: string }) {
+  return (
+    <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center">
+      <AlertCircle className="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
+      <div className="font-medium text-sm mb-1">Unsupported block: <code className="font-mono bg-muted px-1.5 py-0.5 rounded">{type}</code></div>
+      <div className="text-sm text-muted-foreground mb-4">This block type is not yet implemented.</div>
+      <Button variant="outline" size="sm" className="gap-2">
+        <span>Replace Block</span>
+      </Button>
+    </div>
+  )
+}
 
 interface BlockRendererProps {
   block: PersonPageBlock
@@ -33,6 +48,7 @@ interface BlockRendererProps {
 export default function BlockRenderer({ block, person, currentUserId, canEdit, onUpdate }: BlockRendererProps) {
   switch (block.type) {
     case 'hero':
+    case 'hero_life':
       return (
         <HeroLifeBlock
           person={person}
@@ -68,6 +84,7 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       return <PeopleWebBlock personId={person.id} currentUserId={currentUserId} familyId={person.family_id} />
 
     case 'timeline':
+    case 'timeline_enhanced':
     case 'life_arc_timeline':
       return (
         <TimelineBlockEnhanced
@@ -91,6 +108,7 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'photos':
+    case 'photo_gallery':
     case 'gallery':
       return (
         <PhotoGalleryBlock
@@ -134,18 +152,17 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'now_next':
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Now & Next coming soon</p>
-        </div>
-      )
+      return <UnknownBlock type="now_next" />
+
+    case 'letters_time_capsule':
+      return <UnknownBlock type="letters_time_capsule" />
+
+    case 'favorites_quirks':
+    case 'favorites':
+      return <UnknownBlock type={block.type} />
 
     case 'service_events':
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Service events coming soon</p>
-        </div>
-      )
+      return <UnknownBlock type="service_events" />
 
     case 'quick_facts':
       return (
@@ -160,10 +177,6 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     default:
-      return (
-        <div className="text-muted-foreground">
-          Block content for {block.type} will be rendered here
-        </div>
-      )
+      return <UnknownBlock type={block.type} />
   }
 }

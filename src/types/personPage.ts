@@ -39,12 +39,17 @@ export interface PersonPageBlock {
 export type BlockType = 
   // Life preset blocks
   | 'hero'
+  | 'hero_life'
   | 'timeline'
+  | 'timeline_enhanced'
   | 'story_roll'
   | 'people_web'
   | 'objects_places'
   | 'now_next'
   | 'guestbook_live'
+  | 'letters_time_capsule'
+  | 'favorites_quirks'
+  | 'photo_gallery'
   // Tribute preset blocks
   | 'hero_memorial'
   | 'bio_overview'
@@ -99,6 +104,55 @@ export interface PresetConfig {
     accent: string
     mood: string
   }
+}
+
+// Default preset order for Life pages
+export const LIFE_PRESET: BlockType[] = [
+  'hero_life',
+  'quick_facts',
+  'now_next',
+  'story_collage',
+  'timeline_enhanced',
+  'photo_gallery',
+  'audio_remembrances',
+  'objects_places',
+  'people_web',
+  'favorites_quirks',
+  'letters_time_capsule',
+  'guestbook_live',
+]
+
+// Anchor map for URL navigation
+export const BLOCK_ANCHORS: Record<BlockType, string> = {
+  hero: 'top',
+  hero_life: 'top',
+  hero_memorial: 'top',
+  quick_facts: 'facts',
+  now_next: 'now-next',
+  story_roll: 'stories',
+  story_collage: 'stories',
+  stories: 'stories',
+  timeline: 'timeline',
+  timeline_enhanced: 'timeline',
+  life_arc_timeline: 'timeline',
+  photo_gallery: 'photos',
+  photos: 'photos',
+  gallery: 'photos',
+  audio_remembrances: 'audio',
+  objects_places: 'places',
+  people_web: 'people',
+  relationships: 'people',
+  favorites: 'favorites',
+  favorites_quirks: 'favorites',
+  letters_time_capsule: 'letters',
+  guestbook_live: 'guestbook',
+  guestbook_tribute: 'guestbook',
+  bio: 'bio',
+  bio_overview: 'bio',
+  achievements: 'achievements',
+  milestones: 'milestones',
+  quotes: 'quotes',
+  service_events: 'services',
 }
 
 export const BLOCK_LIBRARY: Array<{
@@ -156,6 +210,46 @@ export const BLOCK_LIBRARY: Array<{
     description: 'Messages and well-wishes',
     icon: 'MessageSquare',
     defaultContent: { entries: [] },
+    presets: ['life']
+  },
+  {
+    type: 'letters_time_capsule',
+    label: 'Letters & Time Capsule',
+    description: 'Letters to future self and time capsule entries',
+    icon: 'Mail',
+    defaultContent: { letters: [] },
+    presets: ['life']
+  },
+  {
+    type: 'favorites_quirks',
+    label: 'Favorites & Quirks',
+    description: 'Favorite things and unique personality traits',
+    icon: 'Sparkles',
+    defaultContent: { favorites: {}, quirks: [] },
+    presets: ['life']
+  },
+  {
+    type: 'hero_life',
+    label: 'Life Hero Section',
+    description: 'Featured introduction for living person',
+    icon: 'Star',
+    defaultContent: { layout: 'full' },
+    presets: ['life']
+  },
+  {
+    type: 'timeline_enhanced',
+    label: 'Enhanced Timeline',
+    description: 'Interactive life timeline with rich events',
+    icon: 'Clock',
+    defaultContent: { events: [], style: 'enhanced' },
+    presets: ['life']
+  },
+  {
+    type: 'photo_gallery',
+    label: 'Photo Gallery',
+    description: 'Organized photo collection with albums',
+    icon: 'Camera',
+    defaultContent: { layout: 'gallery', albums: [] },
     presets: ['life']
   },
   // Tribute preset blocks
