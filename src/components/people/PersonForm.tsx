@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import ProfilePhotoUploader from '@/components/ProfilePhotoUploader'
+import { CountrySelect } from './CountrySelect'
 import type { Person } from '@/lib/familyTreeTypes'
 
 interface PersonFormProps {
@@ -41,15 +42,6 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
   const [altNameInput, setAltNameInput] = useState('')
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
-
-  const countries = [
-    "United States", "United Kingdom", "Canada", "Australia", "Ireland",
-    "France", "Germany", "Italy", "Spain", "Netherlands", "Belgium",
-    "Switzerland", "Austria", "Poland", "Czech Republic", "Sweden",
-    "Norway", "Denmark", "Finland", "Greece", "Portugal", "Israel",
-    "India", "China", "Japan", "South Korea", "Mexico", "Brazil",
-    "Argentina", "Chile", "South Africa", "New Zealand", "Other"
-  ]
 
   useEffect(() => {
     if (person) {
@@ -365,26 +357,16 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
                     id="birth_city"
                     value={birthLocation.city}
                     onChange={(e) => setBirthLocation(prev => ({ ...prev, city: e.target.value }))}
-                    placeholder="City"
+                    placeholder="Type city name..."
                     maxLength={100}
                   />
                 </div>
                 <div>
-                  <Select 
-                    value={birthLocation.country} 
-                    onValueChange={(value) => setBirthLocation(prev => ({ ...prev, country: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CountrySelect
+                    value={birthLocation.country}
+                    onChange={(value) => setBirthLocation(prev => ({ ...prev, country: value }))}
+                    placeholder="Search country..."
+                  />
                 </div>
               </div>
             </div>
@@ -398,26 +380,16 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
                       id="death_city"
                       value={deathLocation.city}
                       onChange={(e) => setDeathLocation(prev => ({ ...prev, city: e.target.value }))}
-                      placeholder="City"
+                      placeholder="Type city name..."
                       maxLength={100}
                     />
                   </div>
                   <div>
-                    <Select 
-                      value={deathLocation.country} 
-                      onValueChange={(value) => setDeathLocation(prev => ({ ...prev, country: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[300px]">
-                        {countries.map((country) => (
-                          <SelectItem key={country} value={country}>
-                            {country}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CountrySelect
+                      value={deathLocation.country}
+                      onChange={(value) => setDeathLocation(prev => ({ ...prev, country: value }))}
+                      placeholder="Search country..."
+                    />
                   </div>
                 </div>
               </div>
