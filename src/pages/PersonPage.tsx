@@ -26,6 +26,7 @@ import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
 import { VisibilityChips } from '@/components/person-page/VisibilityChips'
 import { RightRail } from '@/components/person-page/RightRail'
 import { PageLayoutManager, BlockItem } from '@/components/person-page/PageLayoutManager'
+import { PortalLayoutManager } from '@/components/person-page/PortalLayoutManager'
 import { DEFAULT_LAYOUT_MAP, getBlockLayoutId } from '@/config/personPageLayouts'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
@@ -743,7 +744,7 @@ export default function PersonPage() {
                       )}
                     </div>
                   ) : (
-                    <PageLayoutManager
+                    <PortalLayoutManager
                       blocks={buildBlocksArray(
                         blocks,
                         {

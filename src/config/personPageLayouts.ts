@@ -1,4 +1,4 @@
-import { LayoutMap } from '@/components/person-page/PageLayoutManager'
+import { LayoutMap } from '@/components/person-page/PortalLayoutManager'
 
 export const DEFAULT_LAYOUT_MAP: LayoutMap = {
   desktop: {
