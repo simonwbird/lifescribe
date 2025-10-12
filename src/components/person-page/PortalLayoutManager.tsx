@@ -209,13 +209,19 @@ export function PortalLayoutManager({
       <aside 
         id="portal-rail"
         className={cn(
-          'hidden lg:block lg:col-span-4 space-y-4'
+          'hidden lg:block lg:col-span-4 space-y-4 bg-accent/10 border border-accent/20 rounded-lg p-4 min-h-[200px]'
         )}
         data-portal-container="rail"
         role="complementary"
         aria-label="Sidebar widgets"
       >
-        {railBlockIds.map(blockId => renderBlock(blockId))}
+        {railBlockIds.length === 0 ? (
+          <div className="text-muted-foreground text-sm">
+            Rail Container (Empty - blocks: {blocks.length}, breakpoint: {breakpoint})
+          </div>
+        ) : (
+          railBlockIds.map(blockId => renderBlock(blockId))
+        )}
       </aside>
     </div>
   )
