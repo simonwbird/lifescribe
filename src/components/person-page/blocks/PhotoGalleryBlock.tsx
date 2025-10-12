@@ -73,7 +73,7 @@ export default function PhotoGalleryBlock({
       const storiesMap = new Map<string, any>(((storiesData as any[]) || []).map((s: any) => [s.id, s]))
 
       // 4) Shape gallery items
-      const allMedia = (mediaData || []).map((m: any) => {
+      const baseMedia = (mediaData || []).map((m: any) => {
         const story = storiesMap.get(m.story_id) || storiesMap.get(m.individual_story_id)
         return {
           id: m.id,
@@ -86,7 +86,32 @@ export default function PhotoGalleryBlock({
         }
       })
 
-      return allMedia
+      // Generate signed URLs for all images (faster in batch)
+      try {
+        const paths = baseMedia.map((p: any) => p.file_path)
+        const { data: signedUrls, error: signError } = await supabase
+          .storage
+          .from('media')
+          .createSignedUrls(paths, 3600)
+
+        if (signError) {
+          console.warn('Signing media URLs failed, falling back to public URLs', signError)
+        }
+
+        const withUrls = baseMedia.map((p: any, idx: number) => {
+          const signed = signedUrls?.[idx]?.signedUrl
+          if (signed) return { ...p, url: signed }
+
+          // Fallback to public URL (works if bucket/objects are public)
+          const { data: pub } = supabase.storage.from('media').getPublicUrl(p.file_path)
+          return { ...p, url: pub.publicUrl }
+        })
+
+        return withUrls
+      } catch (e) {
+        console.error('Error generating media URLs', e)
+        return baseMedia
+      }
     }
   })
 

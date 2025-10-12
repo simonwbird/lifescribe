@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, FileText } from 'lucide-react'
 import { format } from 'date-fns'
+import { MediaService } from '@/lib/mediaService'
 
 interface AlbumGridProps {
   photos: any[]
@@ -28,10 +29,14 @@ export function AlbumGrid({ photos, onPhotoClick }: AlbumGridProps) {
           {/* Image */}
           <div className="aspect-square relative overflow-hidden bg-muted">
             <img
-              src={photo.file_path}
+              src={photo.url || MediaService.getSignedMediaUrl(photo.file_path)}
               alt={photo.caption || photo.story_title || 'Photo'}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              onError={(e) => {
+                const pub = MediaService.getMediaUrl(photo.file_path)
+                ;(e.currentTarget as HTMLImageElement).src = pub
+              }}
             />
             
             {/* Overlay on hover */}

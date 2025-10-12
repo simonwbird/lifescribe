@@ -85,7 +85,8 @@ export function PhotoLightbox({
 
   const handleDownload = () => {
     const link = document.createElement('a')
-    link.href = currentPhoto.file_path
+    const href = currentPhoto.url || currentPhoto.file_path
+    link.href = href
     link.download = `photo-${currentPhoto.id}.jpg`
     document.body.appendChild(link)
     link.click()
@@ -143,7 +144,7 @@ export function PhotoLightbox({
         {/* Main Image */}
         <div className="relative w-full h-full flex items-center justify-center">
           <img
-            src={currentPhoto.file_path}
+            src={currentPhoto.url || currentPhoto.file_path}
             alt={currentPhoto.caption || currentPhoto.story_title || 'Photo'}
             className="max-w-full max-h-full object-contain"
           />
