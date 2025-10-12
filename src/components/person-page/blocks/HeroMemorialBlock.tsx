@@ -320,7 +320,7 @@ export default function HeroMemorialBlock({ person, blockContent, canEdit, onUpd
           {canEdit && (
             <Dialog open={isEditing} onOpenChange={setIsEditing}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="mt-4">
+                <Button variant="outline" size="sm">
                   <Edit2 className="h-4 w-4 mr-2" />
                   Edit Memorial
                 </Button>
