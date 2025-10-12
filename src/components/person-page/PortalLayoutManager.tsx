@@ -88,18 +88,19 @@ export function PortalLayoutManager({
   }, [blocks])
 
   const mainBlockIds = useMemo(() => {
-    // Get all blocks that should be in main based on layout
-    const mainIds = currentLayout.main.filter(id => 
-      blocks.some(b => b.id === id)
-    )
-    
     // Determine effective rail IDs (fallback to defaults if rail config is empty)
-    const fallbackRail = currentLayout.rail.length === 0
+    const effectiveRail = currentLayout.rail.length === 0
       ? DEFAULT_LAYOUT_MAP[breakpoint].rail
       : currentLayout.rail
 
-    // Add any unplaced blocks to main
-    const placedIds = new Set([...mainIds, ...fallbackRail])
+    // Get all blocks that should be in main based on layout,
+    // but never include items that also appear in the rail (prefer rail)
+    const mainIds = currentLayout.main
+      .filter(id => blocks.some(b => b.id === id))
+      .filter(id => !effectiveRail.includes(id))
+    
+    // Add any unplaced blocks to main (excluding anything in the rail)
+    const placedIds = new Set([...mainIds, ...effectiveRail])
     const unplacedIds = logicalOrder.filter(blockId => !placedIds.has(blockId))
     
     return [...mainIds, ...unplacedIds]
