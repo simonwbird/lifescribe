@@ -11,6 +11,7 @@ import { VisibilitySearchStatus } from './blocks/VisibilitySearchStatus'
 import { MiniMap } from './blocks/MiniMap'
 import { MediaCounters } from './blocks/MediaCounters'
 import { FavoritesQuirks } from './blocks/FavoritesQuirks'
+import { CausesBlock } from './blocks/CausesBlock'
 import { 
   Info, 
   Pin, 
@@ -234,18 +235,23 @@ const FavoritesQuirksSlot = ({
   />
 )
 
-const CausesSlot = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <FileText className="h-4 w-4" />
-        Causes & Legacy
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="text-sm text-muted-foreground">
-      <p>No causes listed yet</p>
-    </CardContent>
-  </Card>
+const CausesSlot = ({ 
+  personId, 
+  familyId, 
+  canEdit, 
+  onUpdate 
+}: { 
+  personId: string
+  familyId: string
+  canEdit?: boolean
+  onUpdate?: () => void
+}) => (
+  <CausesBlock 
+    personId={personId} 
+    familyId={familyId}
+    canEdit={canEdit}
+    onUpdate={onUpdate}
+  />
 )
 
 const ShareExportSlot = () => (
@@ -284,7 +290,7 @@ export function RightRail({
     miniMap: true,
     mediaCounters: true,
     favoritesQuirks: true,
-    causes: false,
+    causes: true,
     shareExport: true
   },
   className,
@@ -350,7 +356,14 @@ export function RightRail({
             onUpdate={onUpdate}
           />
         )}
-        {config.causes && <CausesSlot />}
+        {config.causes && (
+          <CausesSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+            canEdit={canEdit}
+            onUpdate={onUpdate}
+          />
+        )}
         {config.shareExport && <ShareExportSlot />}
       </div>
 

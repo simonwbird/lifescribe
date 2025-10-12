@@ -9,6 +9,7 @@ type AnalyticsEvent =
   | 'guestbook_submit'
   | 'memorialize'
   | 'indexability_change'
+  | 'cause_click'
 
 interface AnalyticsProperties {
   person_id?: string

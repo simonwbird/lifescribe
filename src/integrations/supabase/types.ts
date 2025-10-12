@@ -4337,6 +4337,9 @@ export type Database = {
           birth_date_precision: string | null
           birth_place: string | null
           birth_year: number | null
+          cause_name: string | null
+          cause_note: string | null
+          cause_url: string | null
           claimed_by_profile_id: string | null
           created_at: string | null
           created_by: string | null
@@ -4381,6 +4384,9 @@ export type Database = {
           birth_date_precision?: string | null
           birth_place?: string | null
           birth_year?: number | null
+          cause_name?: string | null
+          cause_note?: string | null
+          cause_url?: string | null
           claimed_by_profile_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -4425,6 +4431,9 @@ export type Database = {
           birth_date_precision?: string | null
           birth_place?: string | null
           birth_year?: number | null
+          cause_name?: string | null
+          cause_note?: string | null
+          cause_url?: string | null
           claimed_by_profile_id?: string | null
           created_at?: string | null
           created_by?: string | null
