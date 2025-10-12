@@ -154,6 +154,9 @@ export function PhotoLightbox({
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!canEdit || !showTagOverlay) return
     
+    e.preventDefault()
+    e.stopPropagation()
+    
     const rect = e.currentTarget.getBoundingClientRect()
     const x_percent = ((e.clientX - rect.left) / rect.width) * 100
     const y_percent = ((e.clientY - rect.top) / rect.height) * 100
@@ -165,6 +168,9 @@ export function PhotoLightbox({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isDragging || !dragStart || !canEdit || !showTagOverlay) return
+    
+    e.preventDefault()
+    e.stopPropagation()
     
     const rect = e.currentTarget.getBoundingClientRect()
     const x_percent = ((e.clientX - rect.left) / rect.width) * 100
@@ -180,6 +186,9 @@ export function PhotoLightbox({
 
   const handleMouseUp = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isDragging || !pendingTag) return
+    
+    e.preventDefault()
+    e.stopPropagation()
     
     setIsDragging(false)
     setDragStart(null)
@@ -382,7 +391,9 @@ export function PhotoLightbox({
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            style={{ userSelect: 'none' }}
+            onDragStart={(e) => e.preventDefault()}
+            draggable={false}
+            style={{ userSelect: 'none', pointerEvents: 'auto' }}
           />
 
           {/* Drag Preview Box */}
