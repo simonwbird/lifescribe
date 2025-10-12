@@ -63,28 +63,13 @@ export function MiniMap({ personId, familyId }: MiniMapProps) {
       // Fetch person data for birth/death locations
       const { data: personData, error: personError } = await supabase
         .from('people')
-        .select('birth_place, death_place')
+        .select('birth_place, death_place, is_living')
         .eq('id', personId)
         .single()
 
       if (personError) throw personError
 
-      // Fetch places from places table
-      const { data: placesData, error: placesError } = await supabase
-        .from('places')
-        .select('id, name, place_type, latitude, longitude')
-        .eq('family_id', familyId)
-        .or(`person_id.eq.${personId},created_by.eq.${personId}`)
-        .limit(6)
-
-      if (placesError) throw placesError
-
-      // Filter to key place types
-      const keyPlaces = (placesData || []).filter(place => 
-        ['birth', 'home', 'school', 'burial', 'residence', 'workplace'].includes(place.place_type?.toLowerCase() || '')
-      )
-
-      const allPlaces: Place[] = [...keyPlaces]
+      const allPlaces: Place[] = []
 
       // Add birth location if available
       if (personData?.birth_place) {
@@ -93,7 +78,7 @@ export function MiniMap({ personId, familyId }: MiniMapProps) {
           allPlaces.push({
             id: `birth-${personId}`,
             name: personData.birth_place,
-            place_type: 'birth',
+            place_type: 'Birth',
             latitude: coords.latitude,
             longitude: coords.longitude
           })
@@ -101,20 +86,20 @@ export function MiniMap({ personId, familyId }: MiniMapProps) {
       }
 
       // Add death location if available
-      if (personData?.death_place) {
+      if (personData?.death_place && !personData.is_living) {
         const coords = await geocodeLocation(personData.death_place)
         if (coords) {
           allPlaces.push({
             id: `death-${personId}`,
             name: personData.death_place,
-            place_type: 'death',
+            place_type: 'Death',
             latitude: coords.latitude,
             longitude: coords.longitude
           })
         }
       }
 
-      setPlaces(allPlaces.slice(0, 6))
+      setPlaces(allPlaces)
     } catch (error) {
       console.error('Error fetching places:', error)
     } finally {
