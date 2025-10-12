@@ -67,19 +67,26 @@ export function AudioCard({ recording, person, familyId, canEdit, onUpdate }: Au
 
   const handleChangePerson = async (newPersonId: string) => {
     try {
-      // Update the audio recording's tribute_id to link to the new person
-      const { error } = await supabase
+      console.log('Attempting to update recording:', recording.id, 'to person:', newPersonId)
+      
+      const { data, error } = await supabase
         .from('audio_recordings')
         .update({ tribute_id: newPersonId })
         .eq('id', recording.id)
+        .select()
 
-      if (error) throw error
+      console.log('Update result:', { data, error })
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       toast.success('Audio memory reassigned successfully')
       onUpdate()
     } catch (error) {
       console.error('Error changing person:', error)
-      toast.error('Failed to reassign audio memory')
+      toast.error('Failed to reassign audio memory: ' + (error as Error).message)
     }
   }
 
