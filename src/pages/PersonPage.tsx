@@ -550,11 +550,13 @@ export default function PersonPage() {
                                           updated_at: new Date().toISOString()
                                         } as Person}
                                         preset={isLiving ? 'life' : 'tribute'}
-                                        viewer_role={data.permission?.role || null}
-                                        visibility={personWithSEO.visibility || 'private'}
-                                        indexability={personWithSEO.indexability || 'private'}
-                                      />
-                                    )}
+                          viewer_role={data.permission?.role || null}
+                          visibility={personWithSEO.visibility || 'private'}
+                          indexability={personWithSEO.indexability || 'private'}
+                          canEdit={canEdit}
+                          onUpdate={() => window.location.reload()}
+                        />
+                      )}
                                   </div>
                                 )}
                               </Draggable>
@@ -576,6 +578,8 @@ export default function PersonPage() {
                           visibility={personWithSEO.visibility || 'private'}
                           indexability={personWithSEO.indexability || 'private'}
                           className="w-full"
+                          canEdit={canEdit}
+                          onUpdate={() => window.location.reload()}
                         />
                       </div>
                     </>

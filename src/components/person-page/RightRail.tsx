@@ -42,6 +42,8 @@ interface RightRailProps {
   indexability: string
   config?: RightRailConfig
   className?: string
+  canEdit?: boolean
+  onUpdate?: () => void
 }
 
 // Slot Components
@@ -76,7 +78,12 @@ const QuickFactsSlot = ({ person }: { person: Person }) => (
   </Card>
 )
 
-const PinnedHighlightsSlot = () => (
+const PinnedHighlightsSlot = ({ personId, familyId, canEdit, onUpdate }: { 
+  personId: string
+  familyId: string
+  canEdit?: boolean
+  onUpdate?: () => void 
+}) => (
   <Card>
     <CardHeader className="pb-3">
       <CardTitle className="text-sm flex items-center gap-2">
@@ -85,7 +92,15 @@ const PinnedHighlightsSlot = () => (
       </CardTitle>
     </CardHeader>
     <CardContent className="text-sm text-muted-foreground">
-      <p>No highlights pinned yet</p>
+      <div className="text-center py-4">
+        <p className="mb-3">Pin your favorite moments to keep them at the top</p>
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={onUpdate}>
+            <Pin className="h-3 w-3 mr-2" />
+            Pin Highlights
+          </Button>
+        )}
+      </div>
     </CardContent>
   </Card>
 )
@@ -292,14 +307,23 @@ export function RightRail({
     causes: false,
     shareExport: true
   },
-  className
+  className,
+  canEdit,
+  onUpdate
 }: RightRailProps) {
   return (
     <div className={cn(className)}>
       {/* Desktop: Sticky rail */}
       <div className="hidden lg:block lg:sticky lg:top-[120px] space-y-4">
         {config.quickFacts && <QuickFactsSlot person={person} />}
-        {config.pinnedHighlights && <PinnedHighlightsSlot />}
+        {config.pinnedHighlights && (
+          <PinnedHighlightsSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+            canEdit={canEdit}
+            onUpdate={onUpdate}
+          />
+        )}
         {config.toc && <TOCSlot />}
         {config.contributeCTA && <ContributeCTASlot preset={preset} />}
         {config.anniversaries && <AnniversariesSlot person={person} preset={preset} />}
