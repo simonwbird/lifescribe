@@ -54,7 +54,7 @@ export default function MiniMapView({ places, onPlaceClick }: MiniMapViewProps) 
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: [center.lng, center.lat],
-      zoom: 10,
+      zoom: 4,
       interactive: true,
       attributionControl: false
     })
@@ -68,10 +68,10 @@ export default function MiniMapView({ places, onPlaceClick }: MiniMapViewProps) 
       'top-right'
     )
 
-    // Fit bounds with padding
+    // Fit bounds with padding - country level view
     map.current.fitBounds(bounds, {
       padding: { top: 40, bottom: 40, left: 40, right: 40 },
-      maxZoom: 13
+      maxZoom: 5
     })
 
     // Add markers
