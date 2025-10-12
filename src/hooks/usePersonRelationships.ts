@@ -71,6 +71,7 @@ export function usePersonRelationships(personId: string, currentUserId: string |
 
         // Transform to PersonRelationship format
         const transformed: PersonRelationship[] = []
+        const parentIds: string[] = []
         
         for (const rel of relData || []) {
           // Determine which person is the related one
@@ -78,6 +79,11 @@ export function usePersonRelationships(personId: string, currentUserId: string |
           const relatedPerson = isFromPerson ? rel.to_person : rel.from_person
           
           if (!relatedPerson) continue
+
+          // Track parent IDs for sibling derivation
+          if (rel.relationship_type === 'parent' && !isFromPerson) {
+            parentIds.push(relatedPerson.id)
+          }
 
           // Adjust relation type based on perspective
           let relationType = rel.relationship_type
@@ -113,6 +119,50 @@ export function usePersonRelationships(personId: string, currentUserId: string |
             relation_label: RELATION_LABELS[relationType] || relationType,
             has_page_access: hasAccess
           })
+        }
+
+        // Derive siblings from shared parents
+        if (parentIds.length > 0) {
+          const { data: siblings, error: sibError } = await supabase
+            .from('relationships')
+            .select(`
+              to_person_id,
+              to_person:people!relationships_to_person_id_fkey(
+                id,
+                full_name,
+                avatar_url,
+                death_date,
+                is_living
+              )
+            `)
+            .in('from_person_id', parentIds)
+            .eq('relationship_type', 'parent')
+            .neq('to_person_id', personId)
+
+          if (!sibError && siblings) {
+            // Get unique siblings (deduplicate in case both parents are in the list)
+            const uniqueSiblings = siblings.reduce((acc, sib) => {
+              if (!acc.find(s => s.to_person_id === sib.to_person_id)) {
+                acc.push(sib)
+              }
+              return acc
+            }, [] as typeof siblings)
+
+            for (const sib of uniqueSiblings) {
+              if (!sib.to_person) continue
+
+              transformed.push({
+                id: `derived-sibling-${sib.to_person_id}`,
+                person_id: sib.to_person.id,
+                person_name: sib.to_person.full_name,
+                person_avatar: sib.to_person.avatar_url,
+                person_status: sib.to_person.death_date || sib.to_person.is_living === false ? 'passed' : 'living',
+                relation_type: 'sibling',
+                relation_label: 'Sibling',
+                has_page_access: true
+              })
+            }
+          }
         }
 
         // Group and sort
