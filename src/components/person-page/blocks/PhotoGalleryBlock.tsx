@@ -2,8 +2,10 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { EmptyState } from '@/components/design-system/EmptyState'
-import { Image as ImageIcon, FolderOpen, Grid3x3, Plus } from 'lucide-react'
+import { Image as ImageIcon, FolderOpen, Grid3x3, Plus, Users } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlbumGrid } from './photo-gallery/AlbumGrid'
 import { PhotoLightbox } from './photo-gallery/PhotoLightbox'
@@ -27,8 +29,9 @@ export default function PhotoGalleryBlock({
   const [selectedAlbum, setSelectedAlbum] = useState<string>('all')
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [showAlbumManager, setShowAlbumManager] = useState(false)
+  const [selectedTaggedPerson, setSelectedTaggedPerson] = useState<string | null>(null)
 
-  // Fetch photos from stories and media linked to this person
+  // Fetch photos from stories and media linked to this person OR tagged in photos
   const { data: photos, isLoading, refetch } = useQuery({
     queryKey: ['person-photos', personId, familyId],
     queryFn: async () => {
@@ -41,21 +44,42 @@ export default function PhotoGalleryBlock({
       if (linksError) throw linksError
 
       const storyIds = (links || []).map((l: any) => l.story_id).filter(Boolean)
-      if (storyIds.length === 0) return []
+      
+      // 2) Also find photos where this person is tagged
+      const { data: faceTags, error: faceTagsError } = await supabase
+        .from('face_tags')
+        .select('media_id')
+        .eq('person_id', personId)
+        .eq('family_id', familyId)
 
-      // 2) Fetch media for those stories (either group story_id or individual_story_id)
-      const { data: mediaData, error: mediaError } = await supabase
+      if (faceTagsError) throw faceTagsError
+
+      const taggedMediaIds = (faceTags || []).map((t: any) => t.media_id).filter(Boolean)
+      
+      if (storyIds.length === 0 && taggedMediaIds.length === 0) return []
+
+      // 3) Fetch media for those stories OR tagged media
+      let query = supabase
         .from('media')
         .select('id, file_path, mime_type, created_at, story_id, individual_story_id')
         .eq('family_id', familyId)
         .ilike('mime_type', 'image/%')
-        .or(`story_id.in.(${storyIds.join(',')}),individual_story_id.in.(${storyIds.join(',')})`)
+
+      if (storyIds.length > 0 && taggedMediaIds.length > 0) {
+        query = query.or(`story_id.in.(${storyIds.join(',')}),individual_story_id.in.(${storyIds.join(',')}),id.in.(${taggedMediaIds.join(',')})`)
+      } else if (storyIds.length > 0) {
+        query = query.or(`story_id.in.(${storyIds.join(',')}),individual_story_id.in.(${storyIds.join(',')})`)
+      } else if (taggedMediaIds.length > 0) {
+        query = query.in('id', taggedMediaIds)
+      }
+
+      const { data: mediaData, error: mediaError } = await query
 
       if (mediaError) throw mediaError
 
       if (!mediaData || mediaData.length === 0) return []
 
-      // 3) Fetch story metadata for titles/dates
+      // 4) Fetch story metadata for titles/dates
       const uniqueStoryIds = Array.from(new Set([
         ...mediaData.map((m: any) => m.story_id).filter(Boolean),
         ...mediaData.map((m: any) => m.individual_story_id).filter(Boolean)
@@ -72,7 +96,7 @@ export default function PhotoGalleryBlock({
 
       const storiesMap = new Map<string, any>(((storiesData as any[]) || []).map((s: any) => [s.id, s]))
 
-      // 4) Shape gallery items
+      // 5) Shape gallery items
       const baseMedia = (mediaData || []).map((m: any) => {
         const story = storiesMap.get(m.story_id) || storiesMap.get(m.individual_story_id)
         return {
@@ -115,6 +139,40 @@ export default function PhotoGalleryBlock({
     }
   })
 
+  // Fetch tagged people in photos
+  const { data: taggedPeople } = useQuery({
+    queryKey: ['tagged-people', personId, familyId],
+    queryFn: async () => {
+      if (!photos || photos.length === 0) return []
+      
+      const mediaIds = photos.map((p: any) => p.id)
+      
+      // Get all face tags for these photos
+      const { data: tags, error: tagsError } = await supabase
+        .from('face_tags')
+        .select('person_id')
+        .in('media_id', mediaIds)
+        .eq('family_id', familyId)
+      
+      if (tagsError) throw tagsError
+      if (!tags || tags.length === 0) return []
+      
+      // Get unique person IDs
+      const uniquePersonIds = [...new Set(tags.map((t: any) => t.person_id))]
+      
+      // Fetch person details
+      const { data: people, error: peopleError } = await supabase
+        .from('people')
+        .select('id, given_name, surname')
+        .in('id', uniquePersonIds)
+      
+      if (peopleError) throw peopleError
+      
+      return people || []
+    },
+    enabled: !!photos && photos.length > 0
+  })
+
   // Auto-generate albums by decade
   const albums = useMemo(() => {
     if (!photos || photos.length === 0) return []
@@ -145,17 +203,51 @@ export default function PhotoGalleryBlock({
       .sort((a, b) => b.name.localeCompare(a.name))
   }, [photos])
 
-  // Get photos for selected album
+  // Get photos for selected album and/or tagged person
   const displayPhotos = useMemo(() => {
     if (!photos) return []
     
-    if (selectedAlbum === 'all') {
-      return photos
+    let filtered = photos
+    
+    // Filter by album
+    if (selectedAlbum !== 'all') {
+      const album = albums.find(a => a.id === selectedAlbum)
+      filtered = album?.photos || []
     }
     
-    const album = albums.find(a => a.id === selectedAlbum)
-    return album?.photos || []
-  }, [photos, albums, selectedAlbum])
+    // Further filter by tagged person if selected
+    if (selectedTaggedPerson) {
+      // We need to check which photos have this person tagged
+      // This requires async data, so we'll handle it differently
+      return filtered
+    }
+    
+    return filtered
+  }, [photos, albums, selectedAlbum, selectedTaggedPerson])
+  
+  // Filter photos by tagged person (async)
+  const { data: filteredByTag } = useQuery({
+    queryKey: ['photos-by-tag', selectedTaggedPerson, displayPhotos],
+    queryFn: async () => {
+      if (!selectedTaggedPerson || !displayPhotos) return displayPhotos
+      
+      const mediaIds = displayPhotos.map((p: any) => p.id)
+      
+      const { data: tags, error } = await supabase
+        .from('face_tags')
+        .select('media_id')
+        .eq('person_id', selectedTaggedPerson)
+        .in('media_id', mediaIds)
+      
+      if (error) throw error
+      
+      const taggedMediaIds = new Set(tags?.map((t: any) => t.media_id) || [])
+      return displayPhotos.filter((p: any) => taggedMediaIds.has(p.id))
+    },
+    enabled: !!selectedTaggedPerson && !!displayPhotos
+  })
+  
+  const finalPhotos = selectedTaggedPerson ? (filteredByTag || []) : displayPhotos
 
   const handleMovePhoto = async (photoId: string, targetAlbumId: string) => {
     // TODO: Implement album moving logic when albums are fully implemented
@@ -187,11 +279,36 @@ export default function PhotoGalleryBlock({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="space-y-2">
           <h3 className="font-serif text-lg font-semibold">Photo Gallery</h3>
           <p className="text-sm text-muted-foreground">
             {photos.length} {photos.length === 1 ? 'photo' : 'photos'} • {albums.length} {albums.length === 1 ? 'album' : 'albums'}
           </p>
+          
+          {/* Tagged People */}
+          {taggedPeople && taggedPeople.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Tagged:</span>
+              {taggedPeople.map((person: any) => (
+                <Badge
+                  key={person.id}
+                  variant={selectedTaggedPerson === person.id ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedTaggedPerson(
+                    selectedTaggedPerson === person.id ? null : person.id
+                  )}
+                >
+                  <Avatar className="h-4 w-4 mr-1">
+                    <AvatarFallback className="text-[10px]">
+                      {person.given_name?.[0]}{person.surname?.[0] || ''}
+                    </AvatarFallback>
+                  </Avatar>
+                  {person.given_name} {person.surname || ''}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         {canEdit && (
           <Button
@@ -223,7 +340,7 @@ export default function PhotoGalleryBlock({
 
         <TabsContent value={selectedAlbum} className="mt-6">
           <AlbumGrid
-            photos={displayPhotos}
+            photos={finalPhotos}
             onPhotoClick={(index) => setLightboxIndex(index)}
           />
         </TabsContent>
@@ -232,7 +349,7 @@ export default function PhotoGalleryBlock({
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <PhotoLightbox
-          photos={displayPhotos}
+          photos={finalPhotos}
           initialIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}
