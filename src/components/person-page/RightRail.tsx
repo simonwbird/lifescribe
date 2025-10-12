@@ -9,6 +9,7 @@ import { ContributeCTA } from './blocks/ContributeCTA'
 import { AnniversariesWidget } from './blocks/AnniversariesWidget'
 import { VisibilitySearchStatus } from './blocks/VisibilitySearchStatus'
 import { MiniMap } from './blocks/MiniMap'
+import { MediaCounters } from './blocks/MediaCounters'
 import { 
   Info, 
   Pin, 
@@ -203,25 +204,14 @@ const MiniMapSlot = ({
   <MiniMap personId={personId} familyId={familyId} />
 )
 
-const MediaCountersSlot = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <Image className="h-4 w-4" />
-        Media Stats
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="grid grid-cols-2 gap-3 text-sm">
-      <div className="text-center">
-        <div className="text-2xl font-bold">0</div>
-        <div className="text-muted-foreground text-xs">Photos</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold">0</div>
-        <div className="text-muted-foreground text-xs">Stories</div>
-      </div>
-    </CardContent>
-  </Card>
+const MediaCountersSlot = ({ 
+  personId, 
+  familyId 
+}: { 
+  personId: string
+  familyId: string
+}) => (
+  <MediaCounters personId={personId} familyId={familyId} />
 )
 
 const FavoritesQuirksSlot = () => (
@@ -340,7 +330,12 @@ export function RightRail({
             familyId={person.family_id}
           />
         )}
-        {config.mediaCounters && <MediaCountersSlot />}
+        {config.mediaCounters && (
+          <MediaCountersSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
         {config.favoritesQuirks && <FavoritesQuirksSlot />}
         {config.causes && <CausesSlot />}
         {config.shareExport && <ShareExportSlot />}
@@ -365,7 +360,12 @@ export function RightRail({
             canManageReminders={canEdit}
           />
         )}
-        {config.mediaCounters && <MediaCountersSlot />}
+        {config.mediaCounters && (
+          <MediaCountersSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
         {config.shareExport && <ShareExportSlot />}
       </div>
     </div>
