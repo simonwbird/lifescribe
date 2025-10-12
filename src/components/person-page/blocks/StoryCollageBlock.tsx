@@ -55,7 +55,7 @@ export default function StoryCollageBlock({
           media(id, file_path, mime_type)
         `)
         .eq('family_id', familyId)
-        .contains('linked_people', [personId])
+        .contains('tagged_people', [personId])
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -82,15 +82,63 @@ export default function StoryCollageBlock({
     enabled: canEdit
   })
 
+  // Fetch relationships for contributor badges
+  const { data: relationships } = useQuery({
+    queryKey: ['contributor-relationships', personId, familyId],
+    queryFn: async () => {
+      // Get all people in this family who have claimed profiles
+      const { data: people, error: peopleError } = await supabase
+        .from('people')
+        .select('id, claimed_by_profile_id')
+        .eq('family_id', familyId)
+        .not('claimed_by_profile_id', 'is', null)
+
+      if (peopleError) throw peopleError
+
+      // Get relationships TO the person we're viewing
+      const { data: rels, error: relsError } = await supabase
+        .from('relationships')
+        .select('from_person_id, relationship_type')
+        .eq('to_person_id', personId)
+
+      if (relsError) throw relsError
+
+      // Build a map of claimed_by_profile_id -> relationship_type
+      const relationshipMap: Record<string, string> = {}
+      ;(people as any[] || []).forEach((person: any) => {
+        const rel = (rels as any[] || []).find((r: any) => r.from_person_id === person.id)
+        if (rel && person.claimed_by_profile_id) {
+          relationshipMap[person.claimed_by_profile_id] = rel.relationship_type
+        }
+      })
+
+      return relationshipMap
+    }
+  })
+
   // Get contributor relationship badge
-  const getRelationshipBadge = (storyId: string) => {
-    // TODO: Fetch from relationships table
-    return 'Family Member'
+  const getRelationshipBadge = (contributorProfileId: string) => {
+    const type = relationships?.[contributorProfileId]
+    
+    if (!type) return 'Family Member'
+    
+    // Return friendly relationship label
+    if (type === 'child') return 'Daughter'
+    if (type === 'son') return 'Son'
+    if (type === 'daughter') return 'Daughter'
+    if (type === 'parent') return 'Parent'
+    if (type === 'spouse') return 'Spouse'
+    if (type === 'sibling') return 'Sibling'
+    if (type === 'grandchild') return 'Grandchild'
+    if (type === 'grandson') return 'Grandson'
+    if (type === 'granddaughter') return 'Granddaughter'
+    if (type === 'grandparent') return 'Grandparent'
+    return type || 'Family Member'
   }
 
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {stories?.map((story) => {
+      {stories?.map((story: any) => {
         const primaryMedia = story.media?.[0]
         const hasPhoto = primaryMedia && primaryMedia.mime_type?.startsWith('image/')
         
@@ -129,9 +177,11 @@ export default function StoryCollageBlock({
                   <p className="text-xs font-medium truncate">
                     {story.profiles?.full_name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {getRelationshipBadge(story.id)}
-                  </p>
+                  {story.profile_id && (
+                    <Badge variant="outline" className="text-xs h-5 mt-1">
+                      {getRelationshipBadge(story.profile_id)}
+                    </Badge>
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {format(new Date(story.created_at), 'MMM d, yyyy')}
@@ -146,7 +196,7 @@ export default function StoryCollageBlock({
 
   const renderListView = () => (
     <div className="space-y-3">
-      {stories?.map((story) => (
+      {stories?.map((story: any) => (
         <Card 
           key={story.id}
           className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -161,13 +211,15 @@ export default function StoryCollageBlock({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-serif font-semibold text-lg">
                     {story.title}
                   </h3>
-                  <Badge variant="secondary" className="text-xs shrink-0">
-                    {getRelationshipBadge(story.id)}
-                  </Badge>
+                  {story.profile_id && (
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      {getRelationshipBadge(story.profile_id)}
+                    </Badge>
+                  )}
                 </div>
                 {story.content && (
                   <p className="text-sm text-muted-foreground line-clamp-2">
@@ -307,7 +359,7 @@ export default function StoryCollageBlock({
         <EmptyState
           icon={<MessageSquare className="h-6 w-6" />}
           title="No stories yet"
-          description="Share memories and moments from this person's life"
+          description="No stories yet—add the first memory."
           action={{
             label: "Add a Story",
             onClick: () => setShowContribution(true),

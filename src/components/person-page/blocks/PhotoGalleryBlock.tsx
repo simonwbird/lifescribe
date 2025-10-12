@@ -49,7 +49,7 @@ export default function PhotoGalleryBlock({
           )
         `)
         .eq('family_id', familyId)
-        .contains('linked_people', [personId])
+        .contains('tagged_people', [personId])
 
       if (storiesError) throw storiesError
 

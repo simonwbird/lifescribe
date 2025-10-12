@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import {
@@ -46,6 +46,39 @@ export function ReviewQueueDialog({
   const queryClient = useQueryClient()
   const [selectedItem, setSelectedItem] = useState<any>(null)
   const [stewardNotes, setStewardNotes] = useState('')
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  // Run AI analysis when item is selected
+  useEffect(() => {
+    if (!selectedItem?.story) {
+      setAiAnalysis(null)
+      return
+    }
+
+    const runAnalysis = async () => {
+      setIsAnalyzing(true)
+      try {
+        const { data, error } = await supabase.functions.invoke('moderate-story', {
+          body: {
+            storyId: selectedItem.item_id,
+            title: selectedItem.story.title,
+            content: selectedItem.story.content || '',
+            familyId
+          }
+        })
+
+        if (error) throw error
+        setAiAnalysis(data)
+      } catch (error) {
+        console.error('AI analysis failed:', error)
+      } finally {
+        setIsAnalyzing(false)
+      }
+    }
+
+    runAnalysis()
+  }, [selectedItem?.item_id])
 
   // Fetch pending stories
   const { data: queueItems, isLoading } = useQuery({
@@ -331,22 +364,94 @@ export function ReviewQueueDialog({
         {/* Review Panel */}
         {selectedItem && (
           <div className="border-t pt-6 space-y-4">
+            {/* AI Analysis */}
+            {isAnalyzing && (
+              <div className="bg-muted/50 p-4 rounded-lg text-center">
+                <div className="animate-pulse text-sm text-muted-foreground">
+                  Running AI analysis...
+                </div>
+              </div>
+            )}
+
+            {aiAnalysis && (
+              <div className="space-y-3">
+                {/* Duplicate Detection */}
+                {aiAnalysis.duplicate_score > 50 && (
+                  <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-amber-600 flex items-center gap-2">
+                        <Copy className="h-4 w-4" />
+                        Possible Duplicate
+                      </h4>
+                      <Badge variant="outline" className="text-amber-600">
+                        {aiAnalysis.duplicate_score}% match
+                      </Badge>
+                    </div>
+                    {aiAnalysis.duplicate_ids?.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Similar to {aiAnalysis.duplicate_ids.length} existing {aiAnalysis.duplicate_ids.length === 1 ? 'story' : 'stories'}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Sensitivity Detection */}
+                {aiAnalysis.sensitivity_score > 40 && (
+                  <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-red-600 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        Sensitivity Alert
+                      </h4>
+                      <Badge variant={aiAnalysis.sensitivity_score > 70 ? 'destructive' : 'default'}>
+                        {aiAnalysis.sensitivity_score}/100
+                      </Badge>
+                    </div>
+                    {aiAnalysis.concerns?.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-medium mb-1">AI detected:</p>
+                        <ul className="text-xs space-y-1 list-disc list-inside">
+                          {aiAnalysis.concerns.map((concern: string, idx: number) => (
+                            <li key={idx}>{concern}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* All clear */}
+                {aiAnalysis.duplicate_score <= 50 && aiAnalysis.sensitivity_score <= 40 && (
+                  <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg">
+                    <p className="text-sm text-green-600 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      No issues detected by AI
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
-              <h4 className="font-semibold mb-2">Review Details</h4>
+              <h4 className="font-semibold mb-2">Story Content</h4>
               <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                 <p className="text-sm">
                   <span className="font-medium">Title:</span> {selectedItem.story?.title}
                 </p>
                 {selectedItem.story?.content && (
-                  <p className="text-sm">
-                    <span className="font-medium">Content:</span> {selectedItem.story.content}
-                  </p>
+                  <div className="text-sm">
+                    <span className="font-medium">Content:</span>
+                    <p className="mt-1 whitespace-pre-wrap">{selectedItem.story.content}</p>
+                  </div>
                 )}
                 {selectedItem.story?.media && selectedItem.story.media.length > 0 && (
                   <p className="text-sm">
                     <span className="font-medium">Media:</span> {selectedItem.story.media.length} file(s)
                   </p>
                 )}
+                <p className="text-xs text-muted-foreground pt-2">
+                  Submitted by {selectedItem.story?.profiles?.full_name} on {format(new Date(selectedItem.created_at), 'MMM d, yyyy')}
+                </p>
               </div>
             </div>
 
@@ -354,8 +459,11 @@ export function ReviewQueueDialog({
               <div>
                 <h4 className="font-semibold mb-2 flex items-center gap-2 text-amber-600">
                   <Copy className="h-4 w-4" />
-                  Possible Duplicates Found
+                  AI Detected Possible Duplicates
                 </h4>
+                <p className="text-xs text-muted-foreground mb-2">
+                  These stories may be similar in content or meaning
+                </p>
                 <div className="space-y-2">
                   {duplicates.map((dup: any) => (
                     <div key={dup.id} className="bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg text-sm">
@@ -365,6 +473,66 @@ export function ReviewQueueDialog({
                       </p>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI Sensitivity Flags */}
+            {selectedItem?.flag?.metadata?.sensitivity_score > 40 && (
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2 text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  AI Sensitivity Alert
+                </h4>
+                <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Sensitivity Score</span>
+                    <Badge variant={
+                      selectedItem.flag.metadata.sensitivity_score > 70 ? 'destructive' : 'default'
+                    }>
+                      {selectedItem.flag.metadata.sensitivity_score}/100
+                    </Badge>
+                  </div>
+                  {selectedItem.flag.metadata.concerns?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium mb-1">Concerns:</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside">
+                        {selectedItem.flag.metadata.concerns.map((concern: string, idx: number) => (
+                          <li key={idx}>{concern}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* AI Sensitivity Flags */}
+            {aiAnalysis?.sensitivity_score > 40 && (
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2 text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  AI Sensitivity Alert
+                </h4>
+                <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Sensitivity Score</span>
+                    <Badge variant={
+                      aiAnalysis.sensitivity_score > 70 ? 'destructive' : 'default'
+                    }>
+                      {aiAnalysis.sensitivity_score}/100
+                    </Badge>
+                  </div>
+                  {aiAnalysis.concerns?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium mb-1">Concerns:</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside">
+                        {aiAnalysis.concerns.map((concern: string, idx: number) => (
+                          <li key={idx}>{concern}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

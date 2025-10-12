@@ -87,6 +87,9 @@ verify_jwt = true
 [functions.sitemap]
 verify_jwt = false
 
+[functions.moderate-story]
+verify_jwt = true
+
 [db]
 # Port to use for the local database URL.
 port = 54322
