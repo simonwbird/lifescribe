@@ -30,7 +30,14 @@ export default function AudioRemembrancesBlock({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('audio_recordings')
-        .select('*')
+        .select(`
+          *,
+          profiles:created_by (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('family_id', familyId)
         .eq('is_draft', false)
         .eq('status', 'completed')
