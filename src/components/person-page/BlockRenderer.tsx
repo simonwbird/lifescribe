@@ -11,6 +11,7 @@ import StoryCollageBlock from './blocks/StoryCollageBlock'
 import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
 import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
 import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
+import NowNextBlock from './blocks/NowNextBlock'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 
@@ -152,7 +153,15 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'now_next':
-      return <UnknownBlock type="now_next" />
+      return (
+        <NowNextBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
+      )
 
     case 'letters_time_capsule':
       return <UnknownBlock type="letters_time_capsule" />
