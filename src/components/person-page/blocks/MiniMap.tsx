@@ -28,7 +28,7 @@ const MapView = lazy(() => import('./MiniMapView'))
 export function MiniMap({ personId, familyId }: MiniMapProps) {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(true)
-  const [showMap, setShowMap] = useState(false)
+  const [showMap, setShowMap] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function MiniMap({ personId, familyId }: MiniMapProps) {
         .from('people')
         .select('birth_place, death_place, is_living')
         .eq('id', personId)
-        .single()
+        .maybeSingle()
 
       if (personError) throw personError
 
