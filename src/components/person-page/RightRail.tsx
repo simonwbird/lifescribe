@@ -8,6 +8,7 @@ import TOCBlock from './blocks/TOCBlock'
 import { ContributeCTA } from './blocks/ContributeCTA'
 import { AnniversariesWidget } from './blocks/AnniversariesWidget'
 import { VisibilitySearchStatus } from './blocks/VisibilitySearchStatus'
+import { MiniMap } from './blocks/MiniMap'
 import { 
   Info, 
   Pin, 
@@ -176,20 +177,14 @@ const VisibilitySearchSlot = ({
   />
 )
 
-const MiniMapSlot = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <Map className="h-4 w-4" />
-        Places Map
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="aspect-video bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
-        Map preview
-      </div>
-    </CardContent>
-  </Card>
+const MiniMapSlot = ({ 
+  personId, 
+  familyId 
+}: { 
+  personId: string
+  familyId: string
+}) => (
+  <MiniMap personId={personId} familyId={familyId} />
 )
 
 const MediaCountersSlot = () => (
@@ -323,7 +318,12 @@ export function RightRail({
             onUpdate={onUpdate}
           />
         )}
-        {config.miniMap && <MiniMapSlot />}
+        {config.miniMap && (
+          <MiniMapSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
         {config.mediaCounters && <MediaCountersSlot />}
         {config.favoritesQuirks && <FavoritesQuirksSlot />}
         {config.causes && <CausesSlot />}
