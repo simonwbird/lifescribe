@@ -36,12 +36,39 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
     notes: '',
     avatar_url: ''
   })
+  const [birthLocation, setBirthLocation] = useState({ city: '', country: '' })
+  const [deathLocation, setDeathLocation] = useState({ city: '', country: '' })
   const [altNameInput, setAltNameInput] = useState('')
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
+  const countries = [
+    "United States", "United Kingdom", "Canada", "Australia", "Ireland",
+    "France", "Germany", "Italy", "Spain", "Netherlands", "Belgium",
+    "Switzerland", "Austria", "Poland", "Czech Republic", "Sweden",
+    "Norway", "Denmark", "Finland", "Greece", "Portugal", "Israel",
+    "India", "China", "Japan", "South Korea", "Mexico", "Brazil",
+    "Argentina", "Chile", "South Africa", "New Zealand", "Other"
+  ]
+
   useEffect(() => {
     if (person) {
+      const birthPlace = (person as any).birth_place || ''
+      const deathPlace = (person as any).death_place || ''
+      
+      // Parse existing place strings (format: "City, Country")
+      const parseBirthPlace = birthPlace ? birthPlace.split(',').map((s: string) => s.trim()) : ['', '']
+      const parseDeathPlace = deathPlace ? deathPlace.split(',').map((s: string) => s.trim()) : ['', '']
+      
+      setBirthLocation({ 
+        city: parseBirthPlace[0] || '', 
+        country: parseBirthPlace[1] || '' 
+      })
+      setDeathLocation({ 
+        city: parseDeathPlace[0] || '', 
+        country: parseDeathPlace[1] || '' 
+      })
+      
       setFormData({
         given_name: person.given_name || '',
         middle_name: person.middle_name || '',
@@ -50,10 +77,10 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
         alt_names: person.alt_names || [],
         birth_date: person.birth_date || '',
         birth_date_precision: person.birth_date_precision || 'ymd',
-        birth_place: (person as any).birth_place || '',
+        birth_place: birthPlace,
         death_date: person.death_date || '',
         death_date_precision: person.death_date_precision || 'ymd',
-        death_place: (person as any).death_place || '',
+        death_place: deathPlace,
         is_living: person.is_living !== false,
         gender: person.gender || '',
         notes: person.notes || '',
@@ -61,6 +88,18 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
       })
     }
   }, [person])
+
+  // Update birth_place when location changes
+  useEffect(() => {
+    const parts = [birthLocation.city, birthLocation.country].filter(Boolean)
+    setFormData(prev => ({ ...prev, birth_place: parts.join(', ') }))
+  }, [birthLocation])
+
+  // Update death_place when location changes
+  useEffect(() => {
+    const parts = [deathLocation.city, deathLocation.country].filter(Boolean)
+    setFormData(prev => ({ ...prev, death_place: parts.join(', ') }))
+  }, [deathLocation])
 
   // Auto-generate full name
   useEffect(() => {
@@ -317,28 +356,70 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="birth_place">Birth Place</Label>
-              <Input
-                id="birth_place"
-                value={formData.birth_place}
-                onChange={(e) => setFormData(prev => ({ ...prev, birth_place: e.target.value }))}
-                placeholder="City, State/Country"
-                maxLength={200}
-              />
+              <Label className="text-sm font-medium mb-2 block">Birth Place</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Input
+                    id="birth_city"
+                    value={birthLocation.city}
+                    onChange={(e) => setBirthLocation(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="City"
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <Select 
+                    value={birthLocation.country} 
+                    onValueChange={(value) => setBirthLocation(prev => ({ ...prev, country: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             {!formData.is_living && (
               <div>
-                <Label htmlFor="death_place">Death Place</Label>
-                <Input
-                  id="death_place"
-                  value={formData.death_place}
-                  onChange={(e) => setFormData(prev => ({ ...prev, death_place: e.target.value }))}
-                  placeholder="City, State/Country"
-                  maxLength={200}
-                />
+                <Label className="text-sm font-medium mb-2 block">Death Place</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Input
+                      id="death_city"
+                      value={deathLocation.city}
+                      onChange={(e) => setDeathLocation(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="City"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <Select 
+                      value={deathLocation.country} 
+                      onValueChange={(value) => setDeathLocation(prev => ({ ...prev, country: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {countries.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
             )}
           </div>
