@@ -56,7 +56,7 @@ export default function AudioRemembrancesBlock({
         .eq('family_id', familyId)
         .eq('tribute_id', personId)
         .eq('is_draft', false)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'ready', 'processing'])
         .order('created_at', { ascending: false })
 
       if (error) throw error
