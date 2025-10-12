@@ -29,44 +29,58 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
 
   const fetchCounts = async () => {
     try {
-      // Fetch stories count
-      const { count: storiesCount, error: storiesError } = await supabase
-        .from('stories')
-        .select('*', { count: 'exact', head: true })
-        .contains('linked_people', [personId])
+      // Fetch stories linked to this person via entity_links
+      const { data: storyLinks, error: storyLinksError } = await supabase
+        .from('entity_links')
+        .select('source_id')
+        .eq('entity_type', 'person')
+        .eq('entity_id', personId)
+        .eq('source_type', 'story')
         .eq('family_id', familyId)
 
-      if (storiesError) {
-        console.error('Stories count error:', storiesError)
+      if (storyLinksError) {
+        console.error('Story links error:', storyLinksError)
       }
 
-      // Fetch photos count (media with image mime types)
-      const { count: photosCount, error: photosError } = await supabase
-        .from('media')
-        .select('*', { count: 'exact', head: true })
-        .contains('linked_people', [personId])
-        .eq('family_id', familyId)
-        .like('mime_type', 'image/%')
+      const storiesCount = storyLinks?.length || 0
 
-      if (photosError) {
-        console.error('Photos count error:', photosError)
+      // Fetch photos linked to this person via entity_links
+      const { data: mediaLinks, error: mediaLinksError } = await supabase
+        .from('entity_links')
+        .select('source_id')
+        .eq('entity_type', 'person')
+        .eq('entity_id', personId)
+        .eq('source_type', 'media')
+        .eq('family_id', familyId)
+
+      if (mediaLinksError) {
+        console.error('Media links error:', mediaLinksError)
       }
 
-      // Fetch audio count - checking for any audio linked to stories for this person
-      const { data: personStories } = await supabase
-        .from('stories')
-        .select('id')
-        .contains('linked_people', [personId])
-        .eq('family_id', familyId)
-
-      const storyIds = personStories?.map(s => s.id) || []
+      // Filter for photos only
+      const mediaIds = mediaLinks?.map(link => link.source_id) || []
+      let photosCount = 0
       
+      if (mediaIds.length > 0) {
+        const { count, error: photosError } = await supabase
+          .from('media')
+          .select('*', { count: 'exact', head: true })
+          .in('id', mediaIds)
+          .like('mime_type', 'image/%')
+
+        if (photosError) {
+          console.error('Photos count error:', photosError)
+        }
+        photosCount = count || 0
+      }
+
+      // Fetch audio count
       const { count: audioCount, error: audioError } = await supabase
         .from('audio_recordings')
         .select('*', { count: 'exact', head: true })
         .eq('family_id', familyId)
         .eq('status', 'completed')
-        .in('story_id', storyIds.length > 0 ? storyIds : ['00000000-0000-0000-0000-000000000000'])
+        .eq('is_draft', false)
 
       if (audioError) {
         console.error('Audio count error:', audioError)
@@ -92,8 +106,8 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
       }
 
       console.log('📊 Media Stats:', {
-        stories: storiesCount || 0,
-        photos: photosCount || 0,
+        stories: storiesCount,
+        photos: photosCount,
         audio: audioCount || 0,
         relations: (relationsFromCount || 0) + (relationsToCount || 0),
         personId,
@@ -101,8 +115,8 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
       })
 
       setCounts({
-        stories: storiesCount || 0,
-        photos: photosCount || 0,
+        stories: storiesCount,
+        photos: photosCount,
         audio: audioCount || 0,
         relations: (relationsFromCount || 0) + (relationsToCount || 0)
       })
