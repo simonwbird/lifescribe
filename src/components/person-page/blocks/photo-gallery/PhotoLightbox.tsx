@@ -74,8 +74,10 @@ export function PhotoLightbox({
   const [showTagOverlay, setShowTagOverlay] = useState(false)
   const [familyMembers, setFamilyMembers] = useState<any[]>([])
   const [showPersonSelector, setShowPersonSelector] = useState(false)
-  const [pendingTag, setPendingTag] = useState<{ x: number, y: number } | null>(null)
+  const [pendingTag, setPendingTag] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState<{ x: number, y: number } | null>(null)
   
   const currentPhoto = photos[currentIndex]
   const hasPrev = currentIndex > 0
@@ -149,15 +151,49 @@ export function PhotoLightbox({
     }
   }
 
-  const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!canEdit || !showTagOverlay) return
-
+    
     const rect = e.currentTarget.getBoundingClientRect()
     const x_percent = ((e.clientX - rect.left) / rect.width) * 100
     const y_percent = ((e.clientY - rect.top) / rect.height) * 100
+    
+    setIsDragging(true)
+    setDragStart({ x: x_percent, y: y_percent })
+    setPendingTag({ x: x_percent, y: y_percent, width: 0, height: 0 })
+  }
 
-    // Store the click coordinates and show person selector
-    setPendingTag({ x: x_percent, y: y_percent })
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isDragging || !dragStart || !canEdit || !showTagOverlay) return
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x_percent = ((e.clientX - rect.left) / rect.width) * 100
+    const y_percent = ((e.clientY - rect.top) / rect.height) * 100
+    
+    const width = Math.abs(x_percent - dragStart.x)
+    const height = Math.abs(y_percent - dragStart.y)
+    const x = Math.min(x_percent, dragStart.x)
+    const y = Math.min(y_percent, dragStart.y)
+    
+    setPendingTag({ x, y, width, height })
+  }
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isDragging || !pendingTag) return
+    
+    setIsDragging(false)
+    setDragStart(null)
+    
+    // If the box is too small, use a default size
+    if (pendingTag.width < 5 || pendingTag.height < 5) {
+      setPendingTag({
+        x: pendingTag.x,
+        y: pendingTag.y,
+        width: 10,
+        height: 10
+      })
+    }
+    
     setShowPersonSelector(true)
   }
 
@@ -175,10 +211,10 @@ export function PhotoLightbox({
           person_id: selectedPersonId,
           family_id: familyId,
           created_by: user.id,
-          x_percent: pendingTag.x,
-          y_percent: pendingTag.y,
-          width_percent: 10,
-          height_percent: 10
+          x_percent: pendingTag.x + (pendingTag.width / 2),
+          y_percent: pendingTag.y + (pendingTag.height / 2),
+          width_percent: pendingTag.width,
+          height_percent: pendingTag.height
         })
 
       if (error) throw error
@@ -339,9 +375,28 @@ export function PhotoLightbox({
           <img
             src={currentPhoto.url || currentPhoto.file_path}
             alt={currentPhoto.caption || currentPhoto.story_title || 'Photo'}
-            className="max-w-full max-h-full object-contain cursor-crosshair"
-            onClick={handleImageClick}
+            className={cn(
+              "max-w-full max-h-full object-contain",
+              showTagOverlay && canEdit ? "cursor-crosshair" : "cursor-default"
+            )}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            style={{ userSelect: 'none' }}
           />
+
+          {/* Drag Preview Box */}
+          {isDragging && pendingTag && (
+            <div
+              className="absolute border-2 border-white bg-white/20 pointer-events-none"
+              style={{
+                left: `${pendingTag.x}%`,
+                top: `${pendingTag.y}%`,
+                width: `${pendingTag.width}%`,
+                height: `${pendingTag.height}%`,
+              }}
+            />
+          )}
 
           {/* Face Tags Overlay */}
           {faceTags.map((tag) => (
@@ -465,7 +520,7 @@ export function PhotoLightbox({
                         className="w-full text-left px-4 py-3 rounded-md hover:bg-accent transition-colors flex items-center gap-3"
                       >
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                          {member.given_name[0]}{member.surname?.[0] || ''}
+                          {member.given_name?.[0] || ''}{member.surname?.[0] || ''}
                         </div>
                         <span className="font-medium">
                           {member.given_name} {member.surname || ''}
