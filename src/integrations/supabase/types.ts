@@ -926,6 +926,49 @@ export type Database = {
           },
         ]
       }
+      comment_mentions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          person_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          person_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_mentions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_mentions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_mentions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           answer_id: string | null
@@ -3903,42 +3946,48 @@ export type Database = {
       notifications: {
         Row: {
           created_at: string
-          family_id: string
+          created_by: string | null
+          family_id: string | null
           id: string
-          is_read: boolean
-          media_id: string | null
+          link_url: string | null
+          mentioned_person_id: string | null
           message: string
-          recipient_id: string
-          sender_id: string
-          story_id: string | null
+          read_at: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
           title: string
           type: string
+          user_id: string
         }
         Insert: {
           created_at?: string
-          family_id: string
+          created_by?: string | null
+          family_id?: string | null
           id?: string
-          is_read?: boolean
-          media_id?: string | null
+          link_url?: string | null
+          mentioned_person_id?: string | null
           message: string
-          recipient_id: string
-          sender_id: string
-          story_id?: string | null
+          read_at?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
           title: string
           type: string
+          user_id: string
         }
         Update: {
           created_at?: string
-          family_id?: string
+          created_by?: string | null
+          family_id?: string | null
           id?: string
-          is_read?: boolean
-          media_id?: string | null
+          link_url?: string | null
+          mentioned_person_id?: string | null
           message?: string
-          recipient_id?: string
-          sender_id?: string
-          story_id?: string | null
+          read_at?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
           title?: string
           type?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -3956,31 +4005,17 @@ export type Database = {
             referencedColumns: ["family_id"]
           },
           {
-            foreignKeyName: "notifications_media_id_fkey"
-            columns: ["media_id"]
+            foreignKeyName: "notifications_mentioned_person_id_fkey"
+            columns: ["mentioned_person_id"]
             isOneToOne: false
-            referencedRelation: "media"
+            referencedRelation: "people"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notifications_recipient_id_fkey"
-            columns: ["recipient_id"]
+            foreignKeyName: "notifications_mentioned_person_id_fkey"
+            columns: ["mentioned_person_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_story_id_fkey"
-            columns: ["story_id"]
-            isOneToOne: false
-            referencedRelation: "stories"
+            referencedRelation: "public_person_pages"
             referencedColumns: ["id"]
           },
         ]

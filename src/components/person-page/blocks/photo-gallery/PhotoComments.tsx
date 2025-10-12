@@ -92,7 +92,8 @@ export function PhotoComments({ mediaId, familyId }: PhotoCommentsProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const { error } = await supabase
+      // Insert comment
+      const { data: newComment, error } = await supabase
         .from('comments')
         .insert({
           content,
@@ -100,8 +101,71 @@ export function PhotoComments({ mediaId, familyId }: PhotoCommentsProps) {
           family_id: familyId,
           profile_id: user.id
         })
+        .select()
+        .single()
 
       if (error) throw error
+
+      // Parse @mentions and create notifications
+      const mentionRegex = /@([^\s@]+(?:\s+[^\s@]+)?)/g
+      const mentions = [...content.matchAll(mentionRegex)]
+      
+      if (mentions.length > 0 && newComment) {
+        // Find mentioned people by name
+        const mentionedNames = mentions.map(m => m[1].trim().toLowerCase())
+        const { data: mentionedPeople } = await supabase
+          .from('people')
+          .select('id, given_name, surname')
+          .eq('family_id', familyId)
+        
+        if (mentionedPeople) {
+          const matchedPeople = mentionedPeople.filter(person => {
+            const fullName = `${person.given_name} ${person.surname || ''}`.trim().toLowerCase()
+            return mentionedNames.some(mention => fullName.includes(mention))
+          })
+
+          // Store mentions
+          if (matchedPeople.length > 0) {
+            await supabase
+              .from('comment_mentions')
+              .insert(
+                matchedPeople.map(person => ({
+                  comment_id: newComment.id,
+                  person_id: person.id
+                }))
+              )
+
+            // Get profiles linked to mentioned people and create notifications
+            const { data: personRoles } = await supabase
+              .from('person_roles')
+              .select('profile_id, person_id')
+              .in('person_id', matchedPeople.map(p => p.id))
+              .is('revoked_at', null)
+
+            if (personRoles && personRoles.length > 0) {
+              const notifications = personRoles.map(role => {
+                const person = matchedPeople.find(p => p.id === role.person_id)
+                return {
+                  user_id: role.profile_id,
+                  created_by: user.id,
+                  family_id: familyId,
+                  type: 'mention',
+                  title: 'You were mentioned in a photo',
+                  message: `Someone mentioned ${person?.given_name} in a comment: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`,
+                  related_entity_type: 'comment',
+                  related_entity_id: newComment.id,
+                  mentioned_person_id: role.person_id,
+                  link_url: `/people/${role.person_id}`
+                }
+              })
+
+              await supabase
+                .from('notifications')
+                .insert(notifications)
+            }
+          }
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photo-comments', mediaId] })

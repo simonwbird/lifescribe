@@ -796,13 +796,14 @@ export function MemoryPhotosGallery({ person }: MemoryPhotosGalleryProps) {
       const notifications = mentionedPeople
         .filter(p => p.claimed_by_profile_id) // Only living users with accounts
         .map(p => ({
-          recipient_id: p.claimed_by_profile_id,
-          sender_id: user.id,
+          user_id: p.claimed_by_profile_id,
+          created_by: user.id,
           family_id: person.family_id,
           type: 'mention',
           title: 'You were mentioned in a story',
           message: `${person.full_name} mentioned you: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`,
-          story_id: storyId
+          related_entity_type: 'story',
+          related_entity_id: storyId
         }))
 
       if (notifications.length > 0) {
