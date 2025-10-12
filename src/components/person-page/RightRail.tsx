@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import TOCBlock from './blocks/TOCBlock'
 import { ContributeCTA } from './blocks/ContributeCTA'
+import { AnniversariesWidget } from './blocks/AnniversariesWidget'
 import { 
   Info, 
   Pin, 
@@ -133,33 +134,20 @@ const ContributeCTASlot = ({
   />
 )
 
-const AnniversariesSlot = ({ person, preset }: { person: Person; preset: 'life' | 'tribute' }) => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <Calendar className="h-4 w-4" />
-        {preset === 'tribute' ? 'Anniversaries' : 'Upcoming'}
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="text-sm space-y-2">
-      {person.birth_date && (
-        <div>
-          <Badge variant="outline" className="mb-1">Birthday</Badge>
-          <p className="text-muted-foreground">
-            {new Date(person.birth_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-      )}
-      {person.death_date && (
-        <div className="mt-2">
-          <Badge variant="outline" className="mb-1">Memorial</Badge>
-          <p className="text-muted-foreground">
-            {new Date(person.death_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-      )}
-    </CardContent>
-  </Card>
+const AnniversariesSlot = ({ 
+  person, 
+  preset,
+  canManageReminders 
+}: { 
+  person: Person
+  preset: 'life' | 'tribute'
+  canManageReminders?: boolean
+}) => (
+  <AnniversariesWidget 
+    person={person}
+    preset={preset}
+    canManageReminders={canManageReminders}
+  />
 )
 
 const VisibilitySearchSlot = ({ visibility, indexability }: { visibility: string; indexability: string }) => (
@@ -314,7 +302,13 @@ export function RightRail({
             canContribute={canEdit}
           />
         )}
-        {config.anniversaries && <AnniversariesSlot person={person} preset={preset} />}
+        {config.anniversaries && (
+          <AnniversariesSlot 
+            person={person} 
+            preset={preset}
+            canManageReminders={canEdit}
+          />
+        )}
         {config.visibilitySearch && <VisibilitySearchSlot visibility={visibility} indexability={indexability} />}
         {config.miniMap && <MiniMapSlot />}
         {config.mediaCounters && <MediaCountersSlot />}
@@ -335,7 +329,13 @@ export function RightRail({
             canContribute={canEdit}
           />
         )}
-        {config.anniversaries && <AnniversariesSlot person={person} preset={preset} />}
+        {config.anniversaries && (
+          <AnniversariesSlot 
+            person={person} 
+            preset={preset}
+            canManageReminders={canEdit}
+          />
+        )}
         {config.mediaCounters && <MediaCountersSlot />}
         {config.shareExport && <ShareExportSlot />}
       </div>
