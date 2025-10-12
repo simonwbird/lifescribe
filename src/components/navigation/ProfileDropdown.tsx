@@ -317,14 +317,12 @@ export default function ProfileDropdown() {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem className="p-0">
-          <button
-            className="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-accent hover:text-accent-foreground text-left"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
+        <DropdownMenuItem 
+          className="flex items-center gap-3 px-3 py-2 cursor-pointer"
+          onSelect={handleSignOut}
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
