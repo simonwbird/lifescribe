@@ -13,6 +13,7 @@ import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
 import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
 import GuestbookLiveBlock from './blocks/GuestbookLiveBlock'
 import NowNextBlock from './blocks/NowNextBlock'
+import LettersTimeCapsuleBlock from './blocks/LettersTimeCapsuleBlock'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 
@@ -174,7 +175,15 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'letters_time_capsule':
-      return <UnknownBlock type="letters_time_capsule" />
+      return (
+        <LettersTimeCapsuleBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
+      )
 
     case 'favorites_quirks':
     case 'favorites':
