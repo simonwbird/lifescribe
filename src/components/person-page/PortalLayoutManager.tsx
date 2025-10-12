@@ -24,6 +24,9 @@ export interface LayoutMap {
   }
 }
 
+// Re-export Breakpoint for convenience
+export type { Breakpoint }
+
 interface PortalLayoutManagerProps {
   blocks: BlockItem[]
   layoutMap: LayoutMap

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette, Download, Upload, Wrench } from 'lucide-react'
+import { AlertTriangle, Settings, Plus, ArrowLeft, RefreshCw, Palette, Download, Upload, Wrench, Layout as LayoutIcon } from 'lucide-react'
 import Header from '@/components/Header'
 import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
@@ -46,6 +46,8 @@ import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
 import { usePrivacyAnalytics } from '@/hooks/usePrivacyAnalytics'
 import { usePersonPageShortcuts } from '@/hooks/usePersonPageShortcuts'
+import { usePersonPageLayout } from '@/hooks/usePersonPageLayout'
+import { LayoutEditor } from '@/components/person-page/customize/LayoutEditor'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { Person } from '@/utils/personUtils'
 import { toast } from '@/components/ui/use-toast'
@@ -273,6 +275,7 @@ export default function PersonPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showBlockLibrary, setShowBlockLibrary] = useState(false)
   const [showCustomizer, setShowCustomizer] = useState(false)
+  const [showLayoutEditor, setShowLayoutEditor] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [showStewardTools, setShowStewardTools] = useState(false)
@@ -369,6 +372,15 @@ export default function PersonPage() {
   // Get theme from data
   const themeId = data?.person.theme_id
   const { currentTheme } = useThemeCustomizer(id!, themeId)
+
+  // Get custom layout for this person
+  const { 
+    layoutMap, 
+    loading: layoutLoading, 
+    saving: layoutSaving,
+    saveLayout,
+    resetToDefaults
+  } = usePersonPageLayout(id!, data?.person.family_id || '')
 
   // Initialize presets
   const {
@@ -661,7 +673,7 @@ export default function PersonPage() {
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Palette className="h-4 w-4 mr-2" />
-                    Customize
+                    Theme
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-xl p-0">
@@ -670,6 +682,24 @@ export default function PersonPage() {
                     themeId={themeId}
                     onClose={() => setShowCustomizer(false)}
                   />
+                </SheetContent>
+              </Sheet>
+              <Sheet open={showLayoutEditor} onOpenChange={setShowLayoutEditor}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <LayoutIcon className="h-4 w-4 mr-2" />
+                    Layout
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-4xl p-0 overflow-y-auto">
+                  <div className="p-6">
+                    <LayoutEditor
+                      layoutMap={layoutMap}
+                      onSave={saveLayout}
+                      onReset={resetToDefaults}
+                      saving={layoutSaving}
+                    />
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
@@ -766,7 +796,7 @@ export default function PersonPage() {
                         handleVisibilityChange,
                         handleRemoveBlock
                       )}
-                      layoutMap={DEFAULT_LAYOUT_MAP}
+                      layoutMap={layoutMap}
                       breakpoint={breakpoint}
                     />
                   )}
