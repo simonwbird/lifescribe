@@ -78,6 +78,8 @@ export function PhotoLightbox({
   const [searchQuery, setSearchQuery] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<{ x: number, y: number } | null>(null)
+  const [imageRect, setImageRect] = useState<DOMRect | null>(null)
+  const imageRef = useState<HTMLImageElement | null>(null)[0]
   
   const currentPhoto = photos[currentIndex]
   const hasPrev = currentIndex > 0
@@ -158,6 +160,7 @@ export function PhotoLightbox({
     e.stopPropagation()
     
     const rect = e.currentTarget.getBoundingClientRect()
+    setImageRect(rect)
     const x_percent = ((e.clientX - rect.left) / rect.width) * 100
     const y_percent = ((e.clientY - rect.top) / rect.height) * 100
     
@@ -385,7 +388,7 @@ export function PhotoLightbox({
             src={currentPhoto.url || currentPhoto.file_path}
             alt={currentPhoto.caption || currentPhoto.story_title || 'Photo'}
             className={cn(
-              "max-w-full max-h-full object-contain",
+              "lightbox-image max-w-full max-h-full object-contain",
               showTagOverlay && canEdit ? "cursor-crosshair" : "cursor-default"
             )}
             onMouseDown={handleMouseDown}
@@ -397,47 +400,53 @@ export function PhotoLightbox({
           />
 
           {/* Drag Preview Box */}
-          {isDragging && pendingTag && (
+          {isDragging && pendingTag && imageRect && (
             <div
-              className="absolute border-2 border-white bg-white/20 pointer-events-none"
+              className="fixed border-2 border-white bg-white/20 pointer-events-none z-50"
               style={{
-                left: `${pendingTag.x}%`,
-                top: `${pendingTag.y}%`,
-                width: `${pendingTag.width}%`,
-                height: `${pendingTag.height}%`,
+                left: imageRect.left + (pendingTag.x / 100) * imageRect.width,
+                top: imageRect.top + (pendingTag.y / 100) * imageRect.height,
+                width: (pendingTag.width / 100) * imageRect.width,
+                height: (pendingTag.height / 100) * imageRect.height,
               }}
             />
           )}
 
-          {/* Face Tags Overlay */}
-          {faceTags.map((tag) => (
-            <div
-              key={tag.id}
-              className="absolute pointer-events-none"
-              style={{
-                left: `${tag.x_percent}%`,
-                top: `${tag.y_percent}%`,
-                width: `${tag.width_percent}%`,
-                height: `${tag.height_percent}%`,
-                transform: 'translate(-50%, -50%)'
-              }}
-            >
-              <div className="relative w-full h-full">
-                <div className="absolute inset-0 border-2 border-white rounded shadow-lg" />
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap">
-                  {tag.person_name}
-                  {canEdit && (
-                    <button
-                      className="ml-2 pointer-events-auto hover:text-red-400"
-                      onClick={() => handleDeleteTag(tag.id)}
-                    >
-                      ×
-                    </button>
-                  )}
+          {/* Face Tags Overlay - render with actual image dimensions */}
+          {faceTags.map((tag) => {
+            const imgElement = document.querySelector('.lightbox-image') as HTMLImageElement
+            const rect = imgElement?.getBoundingClientRect()
+            if (!rect) return null
+            
+            return (
+              <div
+                key={tag.id}
+                className="fixed pointer-events-none z-50"
+                style={{
+                  left: rect.left + (tag.x_percent / 100) * rect.width,
+                  top: rect.top + (tag.y_percent / 100) * rect.height,
+                  width: (tag.width_percent / 100) * rect.width,
+                  height: (tag.height_percent / 100) * rect.height,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <div className="relative w-full h-full">
+                  <div className="absolute inset-0 border-2 border-white rounded shadow-lg" />
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap">
+                    {tag.person_name}
+                    {canEdit && (
+                      <button
+                        className="ml-2 pointer-events-auto hover:text-red-400"
+                        onClick={() => handleDeleteTag(tag.id)}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {/* Navigation Buttons */}
           {hasPrev && (
