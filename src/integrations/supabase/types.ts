@@ -2875,17 +2875,17 @@ export type Database = {
       }
       guestbook_entries: {
         Row: {
-          audio_recording_id: string | null
-          auto_approved: boolean | null
-          content: string
-          created_at: string | null
-          family_id: string
-          featured_at: string | null
-          featured_by: string | null
+          author_email: string | null
+          author_name: string | null
+          author_user: string | null
+          content: string | null
+          created_at: string
           featured_order: number | null
           id: string
-          is_anonymous: boolean | null
           is_featured: boolean | null
+          is_pinned: boolean | null
+          media_url: string | null
+          message: string
           moderated_at: string | null
           moderated_by: string | null
           moderation_reason: string | null
@@ -2893,22 +2893,22 @@ export type Database = {
           person_id: string
           profile_id: string | null
           status: string
-          updated_at: string | null
-          visitor_email: string | null
+          updated_at: string
+          visibility: string
           visitor_name: string | null
         }
         Insert: {
-          audio_recording_id?: string | null
-          auto_approved?: boolean | null
-          content: string
-          created_at?: string | null
-          family_id: string
-          featured_at?: string | null
-          featured_by?: string | null
+          author_email?: string | null
+          author_name?: string | null
+          author_user?: string | null
+          content?: string | null
+          created_at?: string
           featured_order?: number | null
           id?: string
-          is_anonymous?: boolean | null
           is_featured?: boolean | null
+          is_pinned?: boolean | null
+          media_url?: string | null
+          message: string
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_reason?: string | null
@@ -2916,22 +2916,22 @@ export type Database = {
           person_id: string
           profile_id?: string | null
           status?: string
-          updated_at?: string | null
-          visitor_email?: string | null
+          updated_at?: string
+          visibility?: string
           visitor_name?: string | null
         }
         Update: {
-          audio_recording_id?: string | null
-          auto_approved?: boolean | null
-          content?: string
-          created_at?: string | null
-          family_id?: string
-          featured_at?: string | null
-          featured_by?: string | null
+          author_email?: string | null
+          author_name?: string | null
+          author_user?: string | null
+          content?: string | null
+          created_at?: string
           featured_order?: number | null
           id?: string
-          is_anonymous?: boolean | null
           is_featured?: boolean | null
+          is_pinned?: boolean | null
+          media_url?: string | null
+          message?: string
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_reason?: string | null
@@ -2939,25 +2939,11 @@ export type Database = {
           person_id?: string
           profile_id?: string | null
           status?: string
-          updated_at?: string | null
-          visitor_email?: string | null
+          updated_at?: string
+          visibility?: string
           visitor_name?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "guestbook_entries_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "guestbook_entries_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "v_my_roles"
-            referencedColumns: ["family_id"]
-          },
           {
             foreignKeyName: "guestbook_entries_person_id_fkey"
             columns: ["person_id"]
