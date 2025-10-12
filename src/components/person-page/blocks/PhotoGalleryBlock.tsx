@@ -34,38 +34,47 @@ export default function PhotoGalleryBlock({
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
       
-      // Get all stories with media linked to this person
-      const { data: stories, error: storiesError } = await supabase
-        .from('stories')
+      // Get all media for stories linked to this person
+      const { data: media, error: mediaError } = await supabase
+        .from('media')
         .select(`
           id,
-          title,
+          file_path,
+          mime_type,
           created_at,
-          occurred_on,
-          media!media_story_id_fkey(
+          caption,
+          story_id,
+          stories!story_id(
             id,
-            file_path,
-            mime_type,
+            title,
+            occurred_on,
             created_at,
-            caption
+            person_story_links!inner(person_id)
           )
         `)
         .eq('family_id', familyId)
-        .contains('tagged_people', [personId])
+        .eq('stories.person_story_links.person_id', personId)
+        .ilike('mime_type', 'image/%')
 
-      if (storiesError) throw storiesError
+      if (mediaError) {
+        console.error('Media query error:', mediaError)
+        throw mediaError
+      }
 
-      // Flatten media from stories (visibility check will be added when privacy field is confirmed)
-      const allMedia = stories?.flatMap(story => 
-        (story.media || [])
-          .filter((m: any) => m.mime_type?.startsWith('image/'))
-          .map((m: any) => ({
-            ...m,
-            story_title: story.title,
-            story_id: story.id,
-            date: story.occurred_on || story.created_at
-          }))
-      ) || []
+      // Format the media with story info
+      const allMedia = (media || []).map((m: any) => {
+        const story = m.stories
+        return {
+          id: m.id,
+          file_path: m.file_path,
+          mime_type: m.mime_type,
+          created_at: m.created_at,
+          caption: m.caption,
+          story_id: m.story_id,
+          story_title: story?.title,
+          date: story?.occurred_on || story?.created_at || m.created_at
+        }
+      })
 
       return allMedia
     }
