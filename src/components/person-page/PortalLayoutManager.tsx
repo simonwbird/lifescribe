@@ -65,19 +65,45 @@ export function PortalLayoutManager({
   // Get the current layout configuration
   const currentLayout = layoutMap[breakpoint]
 
-  // Distribute block IDs into main and rail
-  const mainBlockIds = useMemo(() => {
-    const placedIds = new Set([...currentLayout.main, ...currentLayout.rail])
-    const unplacedIds = blocks
-      .filter(block => !placedIds.has(block.id))
-      .map(block => block.id)
+  // Distribute block IDs into main and rail with logical DOM order
+  // Priority: Content blocks first (Hero, Bio, Timeline...), then widgets
+  // This ensures screen readers encounter content in a logical reading order
+  const logicalOrder = useMemo(() => {
+    const contentBlocks = blocks
+      .filter(block => {
+        const metadata = getBlockMetadata(block.id)
+        return metadata?.category === 'content'
+      })
+      .map(b => b.id)
     
-    return [...currentLayout.main, ...unplacedIds]
-  }, [currentLayout.main, currentLayout.rail, blocks])
+    const widgetBlocks = blocks
+      .filter(block => {
+        const metadata = getBlockMetadata(block.id)
+        return metadata?.category === 'widget' || metadata?.category === 'navigation'
+      })
+      .map(b => b.id)
+    
+    return [...contentBlocks, ...widgetBlocks]
+  }, [blocks])
+
+  const mainBlockIds = useMemo(() => {
+    // Get all blocks that should be in main based on layout
+    const mainIds = currentLayout.main.filter(id => 
+      blocks.some(b => b.id === id)
+    )
+    
+    // Add any unplaced blocks to main
+    const placedIds = new Set([...currentLayout.main, ...currentLayout.rail])
+    const unplacedIds = logicalOrder.filter(blockId => !placedIds.has(blockId))
+    
+    return [...mainIds, ...unplacedIds]
+  }, [currentLayout.main, currentLayout.rail, logicalOrder, blocks])
 
   const railBlockIds = useMemo(() => {
-    return currentLayout.rail
-  }, [currentLayout.rail])
+    return currentLayout.rail.filter(id => 
+      blocks.some(b => b.id === id)
+    )
+  }, [currentLayout.rail, blocks])
 
   // Create portal containers
   useEffect(() => {
@@ -90,7 +116,7 @@ export function PortalLayoutManager({
   }, [])
 
   /**
-   * Render a block with singleton validation
+   * Render a block with singleton validation and semantic HTML
    */
   const renderBlock = (blockId: string) => {
     const component = blockMap.get(blockId)
@@ -105,41 +131,50 @@ export function PortalLayoutManager({
     validatorRef.current.registerBlock(blockId)
 
     const metadata = getBlockMetadata(blockId)
+    const anchorId = metadata?.anchorId || blockId.toLowerCase().replace(/\s+/g, '-')
     
     return (
-      <div 
-        key={blockId} 
+      <section
+        key={blockId}
+        id={anchorId}
         data-block-id={blockId}
         data-block-singleton={metadata?.singleton}
         data-block-category={metadata?.category}
+        aria-label={metadata?.ariaLabel || metadata?.displayName}
+        className="scroll-mt-20" // Offset for fixed header when jumping to anchor
       >
         {component}
-      </div>
+      </section>
     )
   }
 
   return (
     <div className={cn('lg:grid lg:grid-cols-12 lg:gap-6', className)}>
-      {/* Main content column */}
-      <div 
+      {/* Main content column - semantic main landmark */}
+      <main 
         id="portal-main" 
         className="lg:col-span-8 space-y-6"
         data-portal-container="main"
+        role="main"
+        aria-label="Main content"
+        tabIndex={-1}
       >
         {mainBlockIds.map(blockId => renderBlock(blockId))}
-      </div>
+      </main>
 
-      {/* Right rail column */}
-      <div 
+      {/* Right rail column - complementary landmark */}
+      <aside 
         id="portal-rail"
         className={cn(
           'lg:col-span-4 space-y-4',
           railBlockIds.length === 0 && 'hidden'
         )}
         data-portal-container="rail"
+        role="complementary"
+        aria-label="Sidebar widgets"
       >
         {railBlockIds.map(blockId => renderBlock(blockId))}
-      </div>
+      </aside>
     </div>
   )
 }

@@ -550,7 +550,7 @@ export default function PersonPage() {
     <ThemeProvider theme={currentTheme}>
       <div className="min-h-screen bg-background">
         {/* Skip to content link for accessibility */}
-        <SkipLink href="#main-content">Skip to main content</SkipLink>
+        <SkipLink href="#portal-main">Skip to main content</SkipLink>
 
         {/* SEO meta tags and structured data */}
         <Helmet>

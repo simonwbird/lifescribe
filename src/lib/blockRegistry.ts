@@ -9,6 +9,8 @@ export interface BlockMetadata {
   singleton: boolean
   displayName: string
   category: 'content' | 'widget' | 'navigation'
+  anchorId?: string // Stable anchor ID for jump links
+  ariaLabel?: string // Screen reader label
 }
 
 export const BLOCK_REGISTRY: Record<string, BlockMetadata> = {
@@ -18,70 +20,90 @@ export const BLOCK_REGISTRY: Record<string, BlockMetadata> = {
     type: 'hero',
     singleton: false,
     displayName: 'Hero',
-    category: 'content'
+    category: 'content',
+    anchorId: 'hero',
+    ariaLabel: 'Hero section'
   },
   Bio: {
     id: 'Bio',
     type: 'bio',
     singleton: false,
     displayName: 'Biography',
-    category: 'content'
+    category: 'content',
+    anchorId: 'bio',
+    ariaLabel: 'Biography section'
   },
   Timeline: {
     id: 'Timeline',
     type: 'timeline',
     singleton: false,
     displayName: 'Timeline',
-    category: 'content'
+    category: 'content',
+    anchorId: 'timeline',
+    ariaLabel: 'Life timeline'
   },
   Stories: {
     id: 'Stories',
     type: 'stories',
     singleton: false,
     displayName: 'Stories',
-    category: 'content'
+    category: 'content',
+    anchorId: 'stories',
+    ariaLabel: 'Stories and memories'
   },
   Photos: {
     id: 'Photos',
     type: 'photos',
     singleton: false,
     displayName: 'Photos',
-    category: 'content'
+    category: 'content',
+    anchorId: 'photos',
+    ariaLabel: 'Photo gallery'
   },
   Audio: {
     id: 'Audio',
     type: 'audio',
     singleton: false,
     displayName: 'Audio',
-    category: 'content'
+    category: 'content',
+    anchorId: 'audio',
+    ariaLabel: 'Audio recordings'
   },
   Relationships: {
     id: 'Relationships',
     type: 'relationships',
     singleton: false,
     displayName: 'Relationships',
-    category: 'content'
+    category: 'content',
+    anchorId: 'relationships',
+    ariaLabel: 'Family relationships'
   },
   Guestbook: {
     id: 'Guestbook',
     type: 'guestbook',
     singleton: false,
     displayName: 'Guestbook',
-    category: 'content'
+    category: 'content',
+    anchorId: 'guestbook',
+    ariaLabel: 'Guestbook messages'
   },
   Services: {
     id: 'Services',
     type: 'services',
     singleton: false,
     displayName: 'Services',
-    category: 'content'
+    category: 'content',
+    anchorId: 'services',
+    ariaLabel: 'Service events'
   },
   Places: {
     id: 'Places',
     type: 'places',
     singleton: false,
     displayName: 'Places',
-    category: 'content'
+    category: 'content',
+    anchorId: 'places',
+    ariaLabel: 'Significant places'
   },
 
   // Widget blocks (singletons)
@@ -90,77 +112,99 @@ export const BLOCK_REGISTRY: Record<string, BlockMetadata> = {
     type: 'quick_facts',
     singleton: true,
     displayName: 'Quick Facts',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'quick-facts',
+    ariaLabel: 'Quick facts sidebar'
   },
   PinnedHighlights: {
     id: 'PinnedHighlights',
     type: 'pinned_highlights',
     singleton: true,
     displayName: 'Pinned Highlights',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'highlights',
+    ariaLabel: 'Pinned highlights'
   },
   TOC: {
     id: 'TOC',
     type: 'toc',
     singleton: true,
     displayName: 'Table of Contents',
-    category: 'navigation'
+    category: 'navigation',
+    anchorId: 'toc',
+    ariaLabel: 'Table of contents navigation'
   },
   ContributeCTA: {
     id: 'ContributeCTA',
     type: 'contribute_cta',
     singleton: true,
     displayName: 'Contribute CTA',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'contribute',
+    ariaLabel: 'Contribute call to action'
   },
   Anniversaries: {
     id: 'Anniversaries',
     type: 'anniversaries',
     singleton: true,
     displayName: 'Anniversaries',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'anniversaries',
+    ariaLabel: 'Upcoming anniversaries'
   },
   VisibilitySearch: {
     id: 'VisibilitySearch',
     type: 'visibility_search',
     singleton: true,
     displayName: 'Visibility & Search',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'visibility-search',
+    ariaLabel: 'Visibility and search settings'
   },
   MiniMap: {
     id: 'MiniMap',
     type: 'mini_map',
     singleton: true,
     displayName: 'Mini Map',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'map',
+    ariaLabel: 'Location mini map'
   },
   MediaCounters: {
     id: 'MediaCounters',
     type: 'media_counters',
     singleton: true,
     displayName: 'Media Counters',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'media-counters',
+    ariaLabel: 'Media statistics'
   },
   FavoritesQuirks: {
     id: 'FavoritesQuirks',
     type: 'favorites_quirks',
     singleton: true,
     displayName: 'Favorites & Quirks',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'favorites',
+    ariaLabel: 'Favorites and quirks'
   },
   Causes: {
     id: 'Causes',
     type: 'causes',
     singleton: true,
     displayName: 'Causes',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'causes',
+    ariaLabel: 'Supported causes'
   },
   ShareExport: {
     id: 'ShareExport',
     type: 'share_export',
     singleton: true,
     displayName: 'Share & Export',
-    category: 'widget'
+    category: 'widget',
+    anchorId: 'share',
+    ariaLabel: 'Share and export options'
   }
 }
 
@@ -243,4 +287,35 @@ export function isSingletonBlock(blockId: string): boolean {
  */
 export function getSingletonBlocks(): string[] {
   return Object.keys(BLOCK_REGISTRY).filter(key => BLOCK_REGISTRY[key].singleton)
+}
+
+/**
+ * Get anchor ID for a block (for jump links and TOC)
+ */
+export function getBlockAnchorId(blockId: string): string {
+  const metadata = BLOCK_REGISTRY[blockId]
+  return metadata?.anchorId || blockId.toLowerCase().replace(/\s+/g, '-')
+}
+
+/**
+ * Get all content blocks in logical reading order
+ */
+export function getContentBlocksInOrder(): BlockMetadata[] {
+  const contentOrder = [
+    'Hero', 'Bio', 'Timeline', 'Stories', 
+    'Photos', 'Audio', 'Relationships', 'Guestbook',
+    'Services', 'Places'
+  ]
+  
+  return contentOrder
+    .map(id => BLOCK_REGISTRY[id])
+    .filter((block): block is BlockMetadata => block !== undefined && block.category === 'content')
+}
+
+/**
+ * Get all widget blocks
+ */
+export function getWidgetBlocks(): BlockMetadata[] {
+  return Object.values(BLOCK_REGISTRY)
+    .filter(block => block.category === 'widget' || block.category === 'navigation')
 }
