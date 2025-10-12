@@ -26,9 +26,10 @@ interface ExtendedMedia extends Media {
 
 interface StoryCardProps {
   story: ExtendedStory & { profiles: Profile }
+  showFullScreenInteractions?: boolean
 }
 
-export default function StoryCard({ story }: StoryCardProps) {
+export default function StoryCard({ story, showFullScreenInteractions = false }: StoryCardProps) {
   const [media, setMedia] = useState<ExtendedMedia[]>([])
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
   const [linkedPeople, setLinkedPeople] = useState<any[]>([])
@@ -252,6 +253,7 @@ export default function StoryCard({ story }: StoryCardProps) {
               }
               mediaItems={media.filter(m => m.mime_type.startsWith('image/'))}
               familyId={story.family_id}
+              storyId={showFullScreenInteractions ? story.id : undefined}
             />
           </div>
         )}

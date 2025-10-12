@@ -19,10 +19,11 @@ interface StoryImageGalleryProps {
   images: StoryImage[];
   mediaItems?: MediaItem[];
   familyId?: string;
+  storyId?: string;
   className?: string;
 }
 
-export function StoryImageGallery({ images, mediaItems, familyId, className }: StoryImageGalleryProps) {
+export function StoryImageGallery({ images, mediaItems, familyId, storyId, className }: StoryImageGalleryProps) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
@@ -150,6 +151,9 @@ export function StoryImageGallery({ images, mediaItems, familyId, className }: S
         imageUrl={images[viewerIndex]?.url || ''}
         imageAlt={images[viewerIndex]?.alt}
         title={`Image ${viewerIndex + 1} of ${images.length}`}
+        mediaId={mediaItems?.[viewerIndex]?.id}
+        familyId={familyId}
+        storyId={storyId}
       />
     </>
   );

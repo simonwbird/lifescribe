@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
@@ -97,7 +97,10 @@ export default function StoryDetail() {
             </Button>
           </div>
           
-          <StoryCard story={story} />
+          <StoryCard 
+            story={story} 
+            showFullScreenInteractions={true}
+          />
           
           {/* Comments Section */}
           <div className="mt-6">
