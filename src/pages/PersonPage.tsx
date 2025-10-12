@@ -100,126 +100,105 @@ function buildBlocksArray(
   handleRemoveBlock: (blockId: string) => void
 ): BlockItem[] {
   const blockItems: BlockItem[] = []
+  const addedIds = new Set<string>() // Track added block IDs to prevent duplicates
+
+  // Helper to safely add a block
+  const addBlock = (id: string, component: JSX.Element) => {
+    if (!addedIds.has(id)) {
+      blockItems.push({ id, component })
+      addedIds.add(id)
+    }
+  }
 
   // Add rail widgets
-  blockItems.push({
-    id: 'QuickFacts',
-    component: <QuickFactsWidget person={{
-      ...person,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    } as Person} />
-  })
+  addBlock('QuickFacts', <QuickFactsWidget person={{
+    ...person,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  } as Person} />)
 
-  blockItems.push({
-    id: 'PinnedHighlights',
-    component: <div key="pinned-highlights" /> // Placeholder
-  })
+  addBlock('PinnedHighlights', <div key="pinned-highlights" />)
 
-  blockItems.push({
-    id: 'TOC',
-    component: <TOCWidget />
-  })
+  addBlock('TOC', <TOCWidget />)
 
-  blockItems.push({
-    id: 'ContributeCTA',
-    component: (
-      <ContributeCTAWidget
-        personId={widgetProps.personId}
-        familyId={widgetProps.familyId}
-        preset={widgetProps.preset}
-        visibility={widgetProps.visibility}
-      />
-    )
-  })
+  addBlock('ContributeCTA', (
+    <ContributeCTAWidget
+      personId={widgetProps.personId}
+      familyId={widgetProps.familyId}
+      preset={widgetProps.preset}
+      visibility={widgetProps.visibility}
+    />
+  ))
 
-  blockItems.push({
-    id: 'Anniversaries',
-    component: (
-      <AnniversariesWidgetWrapper
-        person={{
-          ...person,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as Person}
-        preset={widgetProps.preset}
-        canEdit={widgetProps.canEdit}
-      />
-    )
-  })
+  addBlock('Anniversaries', (
+    <AnniversariesWidgetWrapper
+      person={{
+        ...person,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as Person}
+      preset={widgetProps.preset}
+      canEdit={widgetProps.canEdit}
+    />
+  ))
 
-  blockItems.push({
-    id: 'VisibilitySearch',
-    component: (
-      <VisibilitySearchWidget
-        personId={widgetProps.personId}
-        visibility={widgetProps.visibility}
-        indexability={widgetProps.indexability}
-        canEdit={widgetProps.canEdit}
-        onUpdate={widgetProps.onUpdate}
-      />
-    )
-  })
+  addBlock('VisibilitySearch', (
+    <VisibilitySearchWidget
+      personId={widgetProps.personId}
+      visibility={widgetProps.visibility}
+      indexability={widgetProps.indexability}
+      canEdit={widgetProps.canEdit}
+      onUpdate={widgetProps.onUpdate}
+    />
+  ))
 
-  blockItems.push({
-    id: 'MiniMap',
-    component: <MiniMapWidget personId={widgetProps.personId} familyId={widgetProps.familyId} />
-  })
+  addBlock('MiniMap', <MiniMapWidget personId={widgetProps.personId} familyId={widgetProps.familyId} />)
 
-  blockItems.push({
-    id: 'MediaCounters',
-    component: <MediaCountersWidget personId={widgetProps.personId} familyId={widgetProps.familyId} />
-  })
+  addBlock('MediaCounters', <MediaCountersWidget personId={widgetProps.personId} familyId={widgetProps.familyId} />)
 
-  blockItems.push({
-    id: 'FavoritesQuirks',
-    component: (
-      <FavoritesQuirksWidget
-        personId={widgetProps.personId}
-        familyId={widgetProps.familyId}
-        canEdit={widgetProps.canEdit}
-        onUpdate={widgetProps.onUpdate}
-      />
-    )
-  })
+  addBlock('FavoritesQuirks', (
+    <FavoritesQuirksWidget
+      personId={widgetProps.personId}
+      familyId={widgetProps.familyId}
+      canEdit={widgetProps.canEdit}
+      onUpdate={widgetProps.onUpdate}
+    />
+  ))
 
-  blockItems.push({
-    id: 'Causes',
-    component: (
-      <CausesWidget
-        personId={widgetProps.personId}
-        familyId={widgetProps.familyId}
-        canEdit={widgetProps.canEdit}
-        onUpdate={widgetProps.onUpdate}
-      />
-    )
-  })
+  addBlock('Causes', (
+    <CausesWidget
+      personId={widgetProps.personId}
+      familyId={widgetProps.familyId}
+      canEdit={widgetProps.canEdit}
+      onUpdate={widgetProps.onUpdate}
+    />
+  ))
 
-  blockItems.push({
-    id: 'ShareExport',
-    component: (
-      <ShareExportWidget
-        personId={widgetProps.personId}
-        familyId={widgetProps.familyId}
-        person={{
-          ...person,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as Person}
-        preset={widgetProps.preset}
-        canEdit={widgetProps.canEdit}
-      />
-    )
-  })
+  addBlock('ShareExport', (
+    <ShareExportWidget
+      personId={widgetProps.personId}
+      familyId={widgetProps.familyId}
+      person={{
+        ...person,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as Person}
+      preset={widgetProps.preset}
+      canEdit={widgetProps.canEdit}
+    />
+  ))
 
   // Add content blocks
   blocks.forEach((block) => {
     const blockLayoutId = getBlockLayoutId(block.type)
     const actualIndex = blocks.findIndex(b => b.id === block.id)
     
-    blockItems.push({
-      id: blockLayoutId,
-      component: (
+    // Skip if this layout ID is already added (prevents duplicate singletons)
+    if (addedIds.has(blockLayoutId)) {
+      return
+    }
+    
+    addBlock(blockLayoutId, (
         <Draggable 
           key={block.id} 
           draggableId={block.id} 
@@ -261,8 +240,7 @@ function buildBlocksArray(
             </div>
           )}
         </Draggable>
-      )
-    })
+      ))
   })
 
   return blockItems
