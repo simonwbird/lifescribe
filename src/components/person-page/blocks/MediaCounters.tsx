@@ -29,43 +29,28 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
 
   const fetchCounts = async () => {
     try {
-      // Fetch stories linked to this person via entity_links
+      // 1) Get all story links for this person
       const { data: storyLinks, error: storyLinksError } = await supabase
-        .from('entity_links')
-        .select('source_id')
-        .eq('entity_type', 'person')
-        .eq('entity_id', personId)
-        .eq('source_type', 'story')
+        .from('person_story_links')
+        .select('story_id')
+        .eq('person_id', personId)
         .eq('family_id', familyId)
 
       if (storyLinksError) {
         console.error('Story links error:', storyLinksError)
       }
 
-      const storiesCount = storyLinks?.length || 0
+      const storyIds = Array.from(new Set((storyLinks || []).map((l: any) => l.story_id)))
+      const storiesCount = storyIds.length
 
-      // Fetch photos linked to this person via entity_links
-      const { data: mediaLinks, error: mediaLinksError } = await supabase
-        .from('entity_links')
-        .select('source_id')
-        .eq('entity_type', 'person')
-        .eq('entity_id', personId)
-        .eq('source_type', 'media')
-        .eq('family_id', familyId)
-
-      if (mediaLinksError) {
-        console.error('Media links error:', mediaLinksError)
-      }
-
-      // Filter for photos only
-      const mediaIds = mediaLinks?.map(link => link.source_id) || []
+      // 2) Photos: media tied to those stories only (images)
       let photosCount = 0
-      
-      if (mediaIds.length > 0) {
+      if (storyIds.length > 0) {
         const { count, error: photosError } = await supabase
           .from('media')
           .select('*', { count: 'exact', head: true })
-          .in('id', mediaIds)
+          .eq('family_id', familyId)
+          .in('story_id', storyIds)
           .like('mime_type', 'image/%')
 
         if (photosError) {
@@ -74,17 +59,23 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
         photosCount = count || 0
       }
 
-      // Fetch audio count
-      const { count: audioCount, error: audioError } = await supabase
-        .from('audio_recordings')
-        .select('*', { count: 'exact', head: true })
-        .eq('family_id', familyId)
-        .eq('status', 'completed')
-        .eq('is_draft', false)
+      // 3) Audio: recordings tied to those stories only
+      let audioCount = 0
+      if (storyIds.length > 0) {
+        const { count, error: audioError } = await supabase
+          .from('audio_recordings')
+          .select('*', { count: 'exact', head: true })
+          .eq('family_id', familyId)
+          .eq('status', 'completed')
+          .eq('is_draft', false)
+          .in('story_id', storyIds)
 
-      if (audioError) {
-        console.error('Audio count error:', audioError)
+        if (audioError) {
+          console.error('Audio count error:', audioError)
+        }
+        audioCount = count || 0
       }
+
 
       // Fetch relationships count (both directions)
       const { count: relationsFromCount, error: relFromError } = await supabase
