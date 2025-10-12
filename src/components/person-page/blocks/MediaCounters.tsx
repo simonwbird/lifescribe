@@ -59,21 +59,16 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
         photosCount = count || 0
       }
 
-      // 3) Audio: recordings tied to those stories only
-      let audioCount = 0
-      if (storyIds.length > 0) {
-        const { count, error: audioError } = await supabase
-          .from('audio_recordings')
-          .select('*', { count: 'exact', head: true })
-          .eq('family_id', familyId)
-          .eq('status', 'completed')
-          .eq('is_draft', false)
-          .in('story_id', storyIds)
+      // 3) Audio: all completed audio remembrances for the family
+      const { count: audioCount, error: audioError } = await supabase
+        .from('audio_recordings')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', familyId)
+        .eq('status', 'completed')
+        .eq('is_draft', false)
 
-        if (audioError) {
-          console.error('Audio count error:', audioError)
-        }
-        audioCount = count || 0
+      if (audioError) {
+        console.error('Audio count error:', audioError)
       }
 
 
