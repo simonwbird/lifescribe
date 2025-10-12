@@ -24,6 +24,21 @@ export default function AudioRemembrancesBlock({
 }: AudioRemembrancesBlockProps) {
   const [showRecording, setShowRecording] = useState(false)
 
+  // Fetch person data
+  const { data: person } = useQuery({
+    queryKey: ['person', personId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('people')
+        .select('id, given_name, surname, avatar_url')
+        .eq('id', personId)
+        .single()
+
+      if (error) throw error
+      return data
+    }
+  })
+
   // Fetch audio remembrances
   const { data: recordings, isLoading, refetch } = useQuery({
     queryKey: ['audio-remembrances', personId],
@@ -115,6 +130,7 @@ export default function AudioRemembrancesBlock({
           <AudioCard
             key={recording.id}
             recording={recording}
+            person={person}
             canEdit={canEdit}
             onUpdate={() => {
               refetch()

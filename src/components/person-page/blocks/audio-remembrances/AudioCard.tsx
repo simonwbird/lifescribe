@@ -21,11 +21,12 @@ import {
 
 interface AudioCardProps {
   recording: any
+  person?: any
   canEdit: boolean
   onUpdate: () => void
 }
 
-export function AudioCard({ recording, canEdit, onUpdate }: AudioCardProps) {
+export function AudioCard({ recording, person, canEdit, onUpdate }: AudioCardProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -134,9 +135,9 @@ export function AudioCard({ recording, canEdit, onUpdate }: AudioCardProps) {
         <div className="flex items-start gap-4 p-4">
           {/* Avatar */}
           <Avatar className="h-12 w-12 shrink-0">
-            <AvatarImage src={recording.profiles?.avatar_url} />
+            <AvatarImage src={person?.avatar_url} />
             <AvatarFallback>
-              {recording.profiles?.full_name?.[0]}
+              {person?.given_name?.[0] || person?.surname?.[0] || 'P'}
             </AvatarFallback>
           </Avatar>
 
