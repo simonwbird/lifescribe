@@ -34,7 +34,8 @@ export function usePerformanceBudget(customBudget?: Partial<PerformanceBudget>) 
   const [budgetStatus, setBudgetStatus] = useState<BudgetStatus[]>([])
   const [overallHealth, setOverallHealth] = useState<'healthy' | 'warning' | 'critical'>('healthy')
 
-  const budget = { ...DEFAULT_BUDGET, ...customBudget }
+  // Memoize budget to prevent infinite loop
+  const budget = useState(() => ({ ...DEFAULT_BUDGET, ...customBudget }))[0]
 
   useEffect(() => {
     const statuses: BudgetStatus[] = []

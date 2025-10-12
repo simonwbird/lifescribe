@@ -25,6 +25,21 @@ import { SuggestChangeButton } from '@/components/person-page/SuggestChangeButto
 import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
 import { VisibilityChips } from '@/components/person-page/VisibilityChips'
 import { RightRail } from '@/components/person-page/RightRail'
+import { PageLayoutManager, BlockItem } from '@/components/person-page/PageLayoutManager'
+import { DEFAULT_LAYOUT_MAP, getBlockLayoutId } from '@/config/personPageLayouts'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import {
+  QuickFactsWidget,
+  TOCWidget,
+  ContributeCTAWidget,
+  AnniversariesWidgetWrapper,
+  VisibilitySearchWidget,
+  MiniMapWidget,
+  MediaCountersWidget,
+  FavoritesQuirksWidget,
+  CausesWidget,
+  ShareExportWidget
+} from '@/components/person-page/RailWidgets'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
@@ -63,9 +78,197 @@ const getSectionId = (blockType: string): string => {
   return typeMap[blockType] || blockType
 }
 
+// Helper function to build blocks array for PageLayoutManager
+function buildBlocksArray(
+  blocks: BlockData[],
+  person: Person,
+  widgetProps: {
+    personId: string
+    familyId: string
+    preset: 'life' | 'tribute'
+    visibility: string
+    indexability: string
+    canEdit: boolean
+    onUpdate: () => void
+  },
+  canEdit: boolean,
+  currentUserId: string | null,
+  handleVisibilityChange: (blockId: string, visibility: string) => void,
+  handleRemoveBlock: (blockId: string) => void
+): BlockItem[] {
+  const blockItems: BlockItem[] = []
+
+  // Add rail widgets
+  blockItems.push({
+    id: 'QuickFacts',
+    component: <QuickFactsWidget person={{
+      ...person,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Person} />
+  })
+
+  blockItems.push({
+    id: 'PinnedHighlights',
+    component: <div key="pinned-highlights" /> // Placeholder
+  })
+
+  blockItems.push({
+    id: 'TOC',
+    component: <TOCWidget />
+  })
+
+  blockItems.push({
+    id: 'ContributeCTA',
+    component: (
+      <ContributeCTAWidget
+        personId={widgetProps.personId}
+        familyId={widgetProps.familyId}
+        preset={widgetProps.preset}
+        visibility={widgetProps.visibility}
+      />
+    )
+  })
+
+  blockItems.push({
+    id: 'Anniversaries',
+    component: (
+      <AnniversariesWidgetWrapper
+        person={{
+          ...person,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as Person}
+        preset={widgetProps.preset}
+        canEdit={widgetProps.canEdit}
+      />
+    )
+  })
+
+  blockItems.push({
+    id: 'VisibilitySearch',
+    component: (
+      <VisibilitySearchWidget
+        personId={widgetProps.personId}
+        visibility={widgetProps.visibility}
+        indexability={widgetProps.indexability}
+        canEdit={widgetProps.canEdit}
+        onUpdate={widgetProps.onUpdate}
+      />
+    )
+  })
+
+  blockItems.push({
+    id: 'MiniMap',
+    component: <MiniMapWidget personId={widgetProps.personId} familyId={widgetProps.familyId} />
+  })
+
+  blockItems.push({
+    id: 'MediaCounters',
+    component: <MediaCountersWidget personId={widgetProps.personId} familyId={widgetProps.familyId} />
+  })
+
+  blockItems.push({
+    id: 'FavoritesQuirks',
+    component: (
+      <FavoritesQuirksWidget
+        personId={widgetProps.personId}
+        familyId={widgetProps.familyId}
+        canEdit={widgetProps.canEdit}
+        onUpdate={widgetProps.onUpdate}
+      />
+    )
+  })
+
+  blockItems.push({
+    id: 'Causes',
+    component: (
+      <CausesWidget
+        personId={widgetProps.personId}
+        familyId={widgetProps.familyId}
+        canEdit={widgetProps.canEdit}
+        onUpdate={widgetProps.onUpdate}
+      />
+    )
+  })
+
+  blockItems.push({
+    id: 'ShareExport',
+    component: (
+      <ShareExportWidget
+        personId={widgetProps.personId}
+        familyId={widgetProps.familyId}
+        person={{
+          ...person,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as Person}
+        preset={widgetProps.preset}
+        canEdit={widgetProps.canEdit}
+      />
+    )
+  })
+
+  // Add content blocks
+  blocks.forEach((block) => {
+    const blockLayoutId = getBlockLayoutId(block.type)
+    const actualIndex = blocks.findIndex(b => b.id === block.id)
+    
+    blockItems.push({
+      id: blockLayoutId,
+      component: (
+        <Draggable 
+          key={block.id} 
+          draggableId={block.id} 
+          index={actualIndex}
+          isDragDisabled={!canEdit}
+        >
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.draggableProps}
+              id={getSectionId(block.type)}
+              className={cn(
+                snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
+              )}
+            >
+              <PersonPageBlock
+                block={block}
+                canEdit={canEdit}
+                onVisibilityChange={(visibility) => 
+                  handleVisibilityChange(block.id, visibility)
+                }
+                onRemove={() => handleRemoveBlock(block.id)}
+                dragHandleProps={provided.dragHandleProps}
+              >
+                <BlockRenderer 
+                  block={block} 
+                  person={{
+                    ...person,
+                    family_id: widgetProps.familyId,
+                    status: widgetProps.preset === 'life' ? 'living' : 'passed'
+                  }}
+                  currentUserId={currentUserId}
+                  canEdit={canEdit}
+                  onUpdate={() => {
+                    window.location.reload()
+                  }}
+                />
+              </PersonPageBlock>
+            </div>
+          )}
+        </Draggable>
+      )
+    })
+  })
+
+  return blockItems
+}
+
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const breakpoint = useBreakpoint() // Detect current breakpoint
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showBlockLibrary, setShowBlockLibrary] = useState(false)
   const [showCustomizer, setShowCustomizer] = useState(false)
@@ -518,7 +721,7 @@ export default function PersonPage() {
           )}
         </div>
 
-        {/* Blocks with Layout and RightRail */}
+        {/* Blocks with PageLayoutManager */}
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="blocks">
             {(provided) => (
@@ -526,7 +729,6 @@ export default function PersonPage() {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="lg:grid lg:grid-cols-12 lg:gap-6"
                 >
                   {blocks.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg col-span-full">
@@ -541,97 +743,31 @@ export default function PersonPage() {
                       )}
                     </div>
                   ) : (
-                    <>
-                      {/* Main content column */}
-                      <div className="lg:col-span-8 space-y-6">
-                        {blocks
-                          .filter(block => block.type !== 'quick_facts')
-                          .map((block, index) => {
-                            // Get actual index in original blocks array for drag and drop
-                            const actualIndex = blocks.findIndex(b => b.id === block.id)
-                            const isBioBlock = block.type === 'bio' || block.type === 'bio_overview'
-                            return (
-                              <Draggable 
-                                key={block.id} 
-                                draggableId={block.id} 
-                                index={actualIndex}
-                                isDragDisabled={!canEdit}
-                              >
-                                {(provided, snapshot) => (
-                                   <div
-                                     ref={provided.innerRef}
-                                     {...provided.draggableProps}
-                                     id={getSectionId(block.type)}
-                                     className={cn(
-                                       snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
-                                     )}
-                                   >
-                                    <PersonPageBlock
-                                      block={block}
-                                      canEdit={!!canEdit}
-                                      onVisibilityChange={(visibility) => 
-                                        handleVisibilityChange(block.id, visibility)
-                                      }
-                                      onRemove={() => handleRemoveBlock(block.id)}
-                                      dragHandleProps={provided.dragHandleProps}
-                                    >
-                                      <BlockRenderer 
-                                        block={block} 
-                                        person={{
-                                          ...person,
-                                          family_id: person.family_id || ''
-                                        }}
-                                        currentUserId={currentUserId}
-                                        canEdit={!!canEdit}
-                                        onUpdate={() => {
-                                          window.location.reload()
-                                        }}
-                                       />
-                                    </PersonPageBlock>
-                                    
-                                    {/* Mobile: Show RightRail under Bio */}
-                                    {isBioBlock && (
-                                      <RightRail
-                                        person_id={person.id}
-                                        person={{
-                                          ...person,
-                                          created_at: new Date().toISOString(),
-                                          updated_at: new Date().toISOString()
-                                        } as Person}
-                                         preset={isLiving ? 'life' : 'tribute'}
-                                         viewer_role={data.permission?.role || null}
-                                         visibility={visibility}
-                                         indexability={indexability}
-                                         canEdit={canEdit}
-                                         onUpdate={() => window.location.reload()}
-                                       />
+                    <PageLayoutManager
+                      blocks={buildBlocksArray(
+                        blocks,
+                        {
+                          ...person,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString()
+                        } as Person,
+                        {
+                          personId: person.id,
+                          familyId: person.family_id || '',
+                          preset: isLiving ? 'life' : 'tribute',
+                          visibility,
+                          indexability,
+                          canEdit: canEdit || false,
+                          onUpdate: () => window.location.reload()
+                        },
+                        canEdit || false,
+                        currentUserId,
+                        handleVisibilityChange,
+                        handleRemoveBlock
                       )}
-                                  </div>
-                                )}
-                              </Draggable>
-                            )
-                          })}
-                      </div>
-
-                      {/* Right Rail column (desktop only) */}
-                      <div className="lg:col-span-4">
-                        <RightRail
-                          person_id={person.id}
-                          person={{
-                            ...person,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                          } as Person}
-                          preset={isLiving ? 'life' : 'tribute'}
-                          viewer_role={data.permission?.role || null}
-                          visibility={visibility}
-                          indexability={indexability}
-                          className="w-full"
-                          canEdit={canEdit}
-                          onUpdate={() => window.location.reload()}
-                        />
-                      </div>
-                    </>
+                      layoutMap={DEFAULT_LAYOUT_MAP}
+                      breakpoint={breakpoint}
+                    />
                   )}
                   {provided.placeholder}
                 </div>
