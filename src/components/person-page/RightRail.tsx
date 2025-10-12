@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import TOCBlock from './blocks/TOCBlock'
 import { 
   Info, 
   Pin, 
@@ -105,30 +106,9 @@ const PinnedHighlightsSlot = ({ personId, familyId, canEdit, onUpdate }: {
   </Card>
 )
 
-const TOCSlot = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <List className="h-4 w-4" />
-        Table of Contents
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-2 text-sm">
-      <a href="#hero" className="block text-foreground hover:text-primary transition-colors">
-        Hero
-      </a>
-      <a href="#bio" className="block text-foreground hover:text-primary transition-colors">
-        Biography
-      </a>
-      <a href="#timeline" className="block text-foreground hover:text-primary transition-colors">
-        Timeline
-      </a>
-      <a href="#stories" className="block text-foreground hover:text-primary transition-colors">
-        Stories
-      </a>
-    </CardContent>
-  </Card>
-)
+const TOCSlot = () => {
+  return <TOCBlock />
+}
 
 const ContributeCTASlot = ({ preset }: { preset: 'life' | 'tribute' }) => (
   <Card className="bg-primary/5 border-primary/20">

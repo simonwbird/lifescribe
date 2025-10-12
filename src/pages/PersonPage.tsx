@@ -36,6 +36,32 @@ import { PerformanceBudgetMonitor, SkipLink } from '@/components/performance'
 import { prefetchVisibleLinks, enableHoverPrefetch } from '@/utils/linkPrefetch'
 import { cn } from '@/lib/utils'
 
+// Helper function to map block types to section IDs for TOC
+const getSectionId = (blockType: string): string => {
+  const typeMap: Record<string, string> = {
+    'hero': 'hero',
+    'hero_memorial': 'hero',
+    'bio_overview': 'bio',
+    'bio': 'bio',
+    'pinned_highlights': 'highlights',
+    'timeline': 'timeline',
+    'life_arc_timeline': 'timeline',
+    'story_roll': 'stories',
+    'story_collage': 'stories',
+    'stories': 'stories',
+    'audio_remembrances': 'audio',
+    'photos': 'photos',
+    'gallery': 'photos',
+    'people_web': 'relationships',
+    'relationships': 'relationships',
+    'guestbook_live': 'guestbook',
+    'guestbook_tribute': 'guestbook',
+    'service_events': 'services',
+    'objects_places': 'places'
+  }
+  return typeMap[blockType] || blockType
+}
+
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -510,13 +536,14 @@ export default function PersonPage() {
                                 isDragDisabled={!canEdit}
                               >
                                 {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    className={cn(
-                                      snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
-                                    )}
-                                  >
+                                   <div
+                                     ref={provided.innerRef}
+                                     {...provided.draggableProps}
+                                     id={getSectionId(block.type)}
+                                     className={cn(
+                                       snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
+                                     )}
+                                   >
                                     <PersonPageBlock
                                       block={block}
                                       canEdit={!!canEdit}
