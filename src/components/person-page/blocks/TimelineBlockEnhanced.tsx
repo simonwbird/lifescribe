@@ -6,7 +6,8 @@ import {
   Plus,
   Filter,
   Sparkles,
-  Layers
+  Layers,
+  Volume2
 } from 'lucide-react'
 import { usePersonTimeline } from '@/hooks/usePersonTimeline'
 import {
@@ -31,6 +32,7 @@ import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd'
 import { PinnedHighlightCard } from './timeline/PinnedHighlightCard'
 import { ChapterSection } from './timeline/ChapterSection'
+import { AudioTimelineTile } from './timeline/AudioTimelineTile'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 
@@ -56,6 +58,56 @@ export default function TimelineBlockEnhanced({
 }: TimelineBlockEnhancedProps) {
   const { items, isLoading, filters, setFilters, togglePin } = usePersonTimeline(personId, familyId)
   const navigate = useNavigate()
+  
+  // Fetch audio recordings for this person
+  const [audioRecordings, setAudioRecordings] = React.useState<any[]>([])
+  
+  React.useEffect(() => {
+    const loadAudioRecordings = async () => {
+      const { data, error } = await supabase
+        .from('audio_recordings')
+        .select(`
+          *,
+          creator:created_by(id, full_name, avatar_url)
+        `)
+        .eq('family_id', familyId)
+        .eq('is_draft', false)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+      
+      if (!error && data) {
+        // Filter for this person by checking draft_data
+        const personRecordings = data.filter(rec => {
+          const draftData = rec.draft_data as any
+          return draftData?.person_id === personId
+        }).map(rec => ({
+          ...rec,
+          creator: rec.creator
+        }))
+        setAudioRecordings(personRecordings)
+      }
+    }
+    
+    loadAudioRecordings()
+    
+    // Subscribe to changes
+    const channel = supabase
+      .channel('audio-changes')
+      .on(
+        'postgres_changes' as any,
+        {
+          event: '*',
+          schema: 'public',
+          table: 'audio_recordings'
+        },
+        () => loadAudioRecordings()
+      )
+      .subscribe()
+    
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [personId, familyId])
   
   // Chapter management
   const [chapters, setChapters] = useState<Chapter[]>([
@@ -524,6 +576,30 @@ export default function TimelineBlockEnhanced({
                 canEdit={canEdit}
                 onUnpin={() => togglePin(item.item_id, item.item_type, true)}
                 onClick={() => handleItemClick(item)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Audio Remembrances */}
+      {audioRecordings.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Volume2 className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold">Audio Remembrances</h3>
+            <Badge variant="secondary">{audioRecordings.length}</Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {audioRecordings.map(recording => (
+              <AudioTimelineTile
+                key={recording.id}
+                recording={recording}
+                onClick={() => {
+                  // Could open a modal or navigate to audio details
+                  console.log('Audio clicked:', recording.id)
+                }}
               />
             ))}
           </div>

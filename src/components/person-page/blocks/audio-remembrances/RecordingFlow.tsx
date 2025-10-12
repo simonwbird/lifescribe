@@ -54,32 +54,60 @@ export function RecordingFlow({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
 
   // Check for saved draft on mount
   useEffect(() => {
-    const draftKey = `audio-draft-${familyId}-${personId}`
-    const savedDraft = localStorage.getItem(draftKey)
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft)
-        // TODO: Restore draft state
-        toast({
-          title: "Draft found",
-          description: "Would you like to continue your previous recording?",
-        })
-      } catch (error) {
-        console.error('Error loading draft:', error)
+    const loadDraft = async () => {
+      const draftKey = `audio-draft-${familyId}-${personId}`
+      const savedDraft = localStorage.getItem(draftKey)
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft)
+          
+          // Fetch the draft recording from database
+          const { data: draftRecording, error } = await supabase
+            .from('audio_recordings')
+            .select('*')
+            .eq('id', draft.recordingId)
+            .eq('is_draft', true)
+            .single()
+          
+          if (!error && draftRecording) {
+            setRecordingId(draft.recordingId)
+            setTranscript(draftRecording.transcript || '')
+            setAudioUrl(draftRecording.audio_url)
+            setDuration(draftRecording.duration_seconds)
+            setState('review')
+            
+            toast({
+              title: "Draft restored",
+              description: "Your previous recording has been loaded",
+            })
+          } else {
+            // Clean up invalid draft
+            localStorage.removeItem(draftKey)
+          }
+        } catch (error) {
+          console.error('Error loading draft:', error)
+          localStorage.removeItem(draftKey)
+        }
       }
     }
+    
+    loadDraft()
   }, [familyId, personId])
 
   // Save draft to localStorage
   const saveDraft = () => {
-    if (audioBlob && transcript) {
+    if (recordingId) {
       const draftKey = `audio-draft-${familyId}-${personId}`
       const draft = {
         timestamp: Date.now(),
-        transcript,
+        recordingId,
         duration,
       }
       localStorage.setItem(draftKey, JSON.stringify(draft))
@@ -91,6 +119,8 @@ export function RecordingFlow({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
       if (audioUrl) URL.revokeObjectURL(audioUrl)
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      if (audioContextRef.current) audioContextRef.current.close()
     }
   }, [audioUrl])
 
@@ -135,6 +165,52 @@ export function RecordingFlow({
         }
       })
 
+      // Set up audio analysis for waveform
+      const audioContext = new AudioContext()
+      const analyser = audioContext.createAnalyser()
+      const source = audioContext.createMediaStreamSource(stream)
+      source.connect(analyser)
+      
+      analyser.fftSize = 256
+      const bufferLength = analyser.frequencyBinCount
+      const dataArray = new Uint8Array(bufferLength)
+      
+      audioContextRef.current = audioContext
+      analyserRef.current = analyser
+
+      // Start waveform animation
+      const drawWaveform = () => {
+        if (!canvasRef.current || !analyserRef.current) return
+        
+        analyserRef.current.getByteFrequencyData(dataArray)
+        
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        
+        const width = canvas.width
+        const height = canvas.height
+        
+        ctx.clearRect(0, 0, width, height)
+        
+        const barCount = 40
+        const barWidth = width / barCount
+        
+        for (let i = 0; i < barCount; i++) {
+          const dataIndex = Math.floor((i / barCount) * bufferLength)
+          const barHeight = (dataArray[dataIndex] / 255) * height * 0.8
+          const x = i * barWidth
+          const y = (height - barHeight) / 2
+          
+          ctx.fillStyle = 'hsl(var(--destructive))'
+          ctx.fillRect(x, y, barWidth - 2, barHeight)
+        }
+        
+        animationFrameRef.current = requestAnimationFrame(drawWaveform)
+      }
+      
+      drawWaveform()
+
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
       })
@@ -150,6 +226,8 @@ export function RecordingFlow({
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop())
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+        if (audioContextRef.current) audioContextRef.current.close()
         
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
         setAudioBlob(blob)
@@ -381,6 +459,16 @@ export function RecordingFlow({
               <p className="text-sm text-muted-foreground mt-1">
                 Max: {Math.floor(MAX_DURATION / 60)}:{(MAX_DURATION % 60).toString().padStart(2, '0')}
               </p>
+            </div>
+
+            {/* Real-time Waveform */}
+            <div className="relative">
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={80}
+                className="w-full h-20 rounded-lg bg-muted"
+              />
             </div>
 
             <Progress value={progress} className="h-2" />
