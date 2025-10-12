@@ -11,12 +11,26 @@ import {
   Download,
   MoveHorizontal,
   Tag,
-  Users
+  Users,
+  Search
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface FaceTag {
   id: string
@@ -59,6 +73,9 @@ export function PhotoLightbox({
   const [faceTags, setFaceTags] = useState<FaceTag[]>([])
   const [showTagOverlay, setShowTagOverlay] = useState(false)
   const [familyMembers, setFamilyMembers] = useState<any[]>([])
+  const [showPersonSelector, setShowPersonSelector] = useState(false)
+  const [pendingTag, setPendingTag] = useState<{ x: number, y: number } | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   
   const currentPhoto = photos[currentIndex]
   const hasPrev = currentIndex > 0
@@ -139,9 +156,13 @@ export function PhotoLightbox({
     const x_percent = ((e.clientX - rect.left) / rect.width) * 100
     const y_percent = ((e.clientY - rect.top) / rect.height) * 100
 
-    // Show person selector
-    const personId = prompt('Enter person ID to tag (we\'ll improve this UI later):')
-    if (!personId) return
+    // Store the click coordinates and show person selector
+    setPendingTag({ x: x_percent, y: y_percent })
+    setShowPersonSelector(true)
+  }
+
+  const handleSelectPerson = async (selectedPersonId: string) => {
+    if (!pendingTag) return
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -151,11 +172,11 @@ export function PhotoLightbox({
         .from('face_tags')
         .insert({
           media_id: currentPhoto.id,
-          person_id: personId,
+          person_id: selectedPersonId,
           family_id: familyId,
           created_by: user.id,
-          x_percent,
-          y_percent,
+          x_percent: pendingTag.x,
+          y_percent: pendingTag.y,
           width_percent: 10,
           height_percent: 10
         })
@@ -163,12 +184,20 @@ export function PhotoLightbox({
       if (error) throw error
       
       toast.success('Person tagged!')
+      setShowPersonSelector(false)
+      setPendingTag(null)
+      setSearchQuery('')
       loadFaceTags()
     } catch (error) {
       console.error('Error creating face tag:', error)
       toast.error('Failed to tag person')
     }
   }
+
+  const filteredMembers = familyMembers.filter(member => {
+    const fullName = `${member.given_name} ${member.surname || ''}`.toLowerCase()
+    return fullName.includes(searchQuery.toLowerCase())
+  })
 
   const handleDeleteTag = async (tagId: string) => {
     try {
@@ -394,12 +423,73 @@ export function PhotoLightbox({
           </div>
         )}
 
-        {/* Keyboard hints */}
+          {/* Keyboard hints */}
         <div className="absolute bottom-4 right-4 text-xs text-white/60 space-y-1">
           <div>← → to navigate</div>
           <div>C to toggle caption</div>
           <div>ESC to close</div>
         </div>
+
+        {/* Person Selector Dialog */}
+        {showPersonSelector && (
+          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-background rounded-lg shadow-xl w-full max-w-md mx-4">
+              <div className="p-4 border-b">
+                <h3 className="text-lg font-semibold">Tag Person</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Select a family member or search for a name
+                </p>
+              </div>
+              <div className="p-4">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search family members..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-[300px] overflow-y-auto space-y-1">
+                  {filteredMembers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No family members found
+                    </p>
+                  ) : (
+                    filteredMembers.map((member) => (
+                      <button
+                        key={member.id}
+                        onClick={() => handleSelectPerson(member.id)}
+                        className="w-full text-left px-4 py-3 rounded-md hover:bg-accent transition-colors flex items-center gap-3"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                          {member.given_name[0]}{member.surname?.[0] || ''}
+                        </div>
+                        <span className="font-medium">
+                          {member.given_name} {member.surname || ''}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="p-4 border-t flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPersonSelector(false)
+                    setPendingTag(null)
+                    setSearchQuery('')
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
