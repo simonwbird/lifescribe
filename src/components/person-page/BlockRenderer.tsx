@@ -11,6 +11,7 @@ import StoryCollageBlock from './blocks/StoryCollageBlock'
 import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
 import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
 import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
+import GuestbookLiveBlock from './blocks/GuestbookLiveBlock'
 import NowNextBlock from './blocks/NowNextBlock'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
@@ -133,6 +134,15 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'guestbook_live':
+      return (
+        <GuestbookLiveBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          canModerate={canEdit}
+          pageVisibility={block.content_json?.visibility || 'private'}
+        />
+      )
+
     case 'guestbook_tribute':
       return (
         <GuestbookTributeBlock
