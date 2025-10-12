@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import TOCBlock from './blocks/TOCBlock'
 import { ContributeCTA } from './blocks/ContributeCTA'
 import { AnniversariesWidget } from './blocks/AnniversariesWidget'
+import { VisibilitySearchStatus } from './blocks/VisibilitySearchStatus'
 import { 
   Info, 
   Pin, 
@@ -150,25 +151,29 @@ const AnniversariesSlot = ({
   />
 )
 
-const VisibilitySearchSlot = ({ visibility, indexability }: { visibility: string; indexability: string }) => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <Search className="h-4 w-4" />
-        Visibility & Discovery
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-2 text-sm">
-      <div>
-        <span className="text-muted-foreground">Visibility:</span>{' '}
-        <Badge variant="outline" className="ml-1">{visibility}</Badge>
-      </div>
-      <div>
-        <span className="text-muted-foreground">Indexability:</span>{' '}
-        <Badge variant="outline" className="ml-1">{indexability}</Badge>
-      </div>
-    </CardContent>
-  </Card>
+const VisibilitySearchSlot = ({ 
+  personId,
+  visibility, 
+  indexability,
+  canEdit,
+  lastIndexedAt,
+  onUpdate
+}: { 
+  personId: string
+  visibility: string
+  indexability: string
+  canEdit?: boolean
+  lastIndexedAt?: Date | null
+  onUpdate?: () => void
+}) => (
+  <VisibilitySearchStatus
+    personId={personId}
+    visibility={visibility}
+    indexability={indexability}
+    canEdit={canEdit}
+    lastIndexedAt={lastIndexedAt}
+    onUpdate={onUpdate}
+  />
 )
 
 const MiniMapSlot = () => (
@@ -309,7 +314,15 @@ export function RightRail({
             canManageReminders={canEdit}
           />
         )}
-        {config.visibilitySearch && <VisibilitySearchSlot visibility={visibility} indexability={indexability} />}
+        {config.visibilitySearch && (
+          <VisibilitySearchSlot 
+            personId={person_id}
+            visibility={visibility} 
+            indexability={indexability}
+            canEdit={canEdit}
+            onUpdate={onUpdate}
+          />
+        )}
         {config.miniMap && <MiniMapSlot />}
         {config.mediaCounters && <MediaCountersSlot />}
         {config.favoritesQuirks && <FavoritesQuirksSlot />}

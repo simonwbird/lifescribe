@@ -4350,6 +4350,7 @@ export type Database = {
           id: string
           indexability: string
           is_living: boolean | null
+          last_indexed_at: string | null
           middle_name: string | null
           notes: string | null
           og_description: string | null
@@ -4364,6 +4365,7 @@ export type Database = {
           surname: string | null
           theme_id: string | null
           updated_at: string | null
+          visibility: string | null
         }
         Insert: {
           alt_names?: string[] | null
@@ -4386,6 +4388,7 @@ export type Database = {
           id?: string
           indexability?: string
           is_living?: boolean | null
+          last_indexed_at?: string | null
           middle_name?: string | null
           notes?: string | null
           og_description?: string | null
@@ -4400,6 +4403,7 @@ export type Database = {
           surname?: string | null
           theme_id?: string | null
           updated_at?: string | null
+          visibility?: string | null
         }
         Update: {
           alt_names?: string[] | null
@@ -4422,6 +4426,7 @@ export type Database = {
           id?: string
           indexability?: string
           is_living?: boolean | null
+          last_indexed_at?: string | null
           middle_name?: string | null
           notes?: string | null
           og_description?: string | null
@@ -4436,6 +4441,7 @@ export type Database = {
           surname?: string | null
           theme_id?: string | null
           updated_at?: string | null
+          visibility?: string | null
         }
         Relationships: [
           {

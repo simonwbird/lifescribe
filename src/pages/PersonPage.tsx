@@ -29,6 +29,7 @@ import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
 import { usePrivacyAnalytics } from '@/hooks/usePrivacyAnalytics'
 import { usePersonPageShortcuts } from '@/hooks/usePersonPageShortcuts'
+import { usePersonSEOMeta } from '@/hooks/usePersonSEOMeta'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { Person } from '@/utils/personUtils'
 import { toast } from '@/components/ui/use-toast'
@@ -312,8 +313,23 @@ export default function PersonPage() {
   const { person, blocks } = data
   const isLiving = person.status === 'living'
 
-  // Get SEO fields (will be present in data but not yet in types)
+  // Get SEO fields from person data
   const personWithSEO = person as any
+  const visibility = personWithSEO.visibility || 'private'
+  const indexability = personWithSEO.indexability || 'noindex'
+  const preset = person.status === 'living' ? 'life' : 'tribute'
+
+  // Use SEO hook for meta tags and structured data
+  const { SEOHelmet } = usePersonSEOMeta({
+    person: {
+      ...person,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Person,
+    visibility,
+    indexability,
+    preset
+  })
 
   return (
     <ThemeProvider theme={currentTheme}>
@@ -321,13 +337,9 @@ export default function PersonPage() {
         {/* Skip to content link for accessibility */}
         <SkipLink href="#main-content">Skip to main content</SkipLink>
 
-        <PersonPageSEO
-          person={person}
-          indexability={personWithSEO.indexability || 'private'}
-          ogTitle={personWithSEO.og_title}
-          ogDescription={personWithSEO.og_description}
-          ogImageUrl={personWithSEO.og_image_url}
-        />
+        {/* SEO meta tags and structured data */}
+        <SEOHelmet />
+        
         <Header />
 
         {/* Performance budget monitor (dev only) */}
@@ -349,8 +361,8 @@ export default function PersonPage() {
             {/* Visibility Chips */}
             <VisibilityChips
               personId={id!}
-              currentVisibility={personWithSEO.visibility || 'private'}
-              currentIndexability={personWithSEO.indexability || 'private'}
+              currentVisibility={visibility}
+              currentIndexability={indexability}
               canEdit={canEdit}
               onUpdate={async () => {
                 // Refresh page data
@@ -576,13 +588,13 @@ export default function PersonPage() {
                                           created_at: new Date().toISOString(),
                                           updated_at: new Date().toISOString()
                                         } as Person}
-                                        preset={isLiving ? 'life' : 'tribute'}
-                          viewer_role={data.permission?.role || null}
-                          visibility={personWithSEO.visibility || 'private'}
-                          indexability={personWithSEO.indexability || 'private'}
-                          canEdit={canEdit}
-                          onUpdate={() => window.location.reload()}
-                        />
+                                         preset={isLiving ? 'life' : 'tribute'}
+                                         viewer_role={data.permission?.role || null}
+                                         visibility={visibility}
+                                         indexability={indexability}
+                                         canEdit={canEdit}
+                                         onUpdate={() => window.location.reload()}
+                                       />
                       )}
                                   </div>
                                 )}
@@ -602,8 +614,8 @@ export default function PersonPage() {
                           } as Person}
                           preset={isLiving ? 'life' : 'tribute'}
                           viewer_role={data.permission?.role || null}
-                          visibility={personWithSEO.visibility || 'private'}
-                          indexability={personWithSEO.indexability || 'private'}
+                          visibility={visibility}
+                          indexability={indexability}
                           className="w-full"
                           canEdit={canEdit}
                           onUpdate={() => window.location.reload()}
