@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { Share2, Link2, QrCode, FileDown, Loader2 } from 'lucide-react'
+import { Share2, Link2, QrCode as QrCodeIcon, FileDown, Loader2 } from 'lucide-react'
 import html2pdf from 'html2pdf.js'
+import QRCode from 'qrcode'
 
 interface ShareExportProps {
   personId: string
@@ -59,11 +60,10 @@ export function ShareExport({
     setIsGeneratingQR(true)
     try {
       const url = getCanonicalURL()
-      const qrCode = require('qrcode')
       
       // Create canvas and generate QR code
       const canvas = document.createElement('canvas')
-      await qrCode.toCanvas(canvas, url, {
+      await QRCode.toCanvas(canvas, url, {
         width: 512,
         margin: 2,
         color: {
@@ -114,7 +114,17 @@ export function ShareExport({
         .eq('id', personId)
         .single()
 
-      if (personError) throw personError
+      if (personError) {
+        console.error('Error fetching person:', personError)
+        throw new Error('Failed to fetch person data')
+      }
+
+      // Generate QR code as data URL first (before any async operations)
+      const qrDataUrl = await QRCode.toDataURL(getCanonicalURL(), {
+        width: 200,
+        margin: 1,
+        errorCorrectionLevel: 'M'
+      })
 
       // Fetch top 6 photos
       const { data: photos, error: photosError } = await supabase
@@ -125,38 +135,52 @@ export function ShareExport({
         .order('created_at', { ascending: false })
         .limit(6)
 
-      if (photosError) throw photosError
+      if (photosError) {
+        console.error('Error fetching photos:', photosError)
+        // Continue without photos
+      }
 
-      // Generate signed URLs for images
-      const photoUrls = await Promise.all(
-        (photos || []).map(async (photo) => {
-          const { data } = await supabase.storage
-            .from('media')
-            .createSignedUrl(photo.file_path, 3600)
-          return data?.signedUrl || ''
-        })
-      )
+      // Generate signed URLs for images with error handling
+      const photoUrls: string[] = []
+      if (photos && photos.length > 0) {
+        for (const photo of photos) {
+          try {
+            const { data, error } = await supabase.storage
+              .from('media')
+              .createSignedUrl(photo.file_path, 3600)
+            
+            if (data?.signedUrl && !error) {
+              photoUrls.push(data.signedUrl)
+            }
+          } catch (err) {
+            console.error('Error creating signed URL:', err)
+          }
+        }
+      }
 
       // Get avatar image URL
       let avatarUrl = ''
       if (person.avatar_url) {
-        const { data } = await supabase.storage
-          .from('media')
-          .createSignedUrl(person.avatar_url, 3600)
-        avatarUrl = data?.signedUrl || ''
+        try {
+          const { data, error } = await supabase.storage
+            .from('media')
+            .createSignedUrl(person.avatar_url, 3600)
+          
+          if (data?.signedUrl && !error) {
+            avatarUrl = data.signedUrl
+          }
+        } catch (err) {
+          console.error('Error creating avatar signed URL:', err)
+        }
       }
 
-      // Generate QR code as data URL
-      const qrCode = require('qrcode')
-      const qrDataUrl = await qrCode.toDataURL(getCanonicalURL(), {
-        width: 200,
-        margin: 1
-      })
+      // Escape HTML in bio text
+      const escapedBio = person.bio ? person.bio.replace(/[<>]/g, '') : ''
 
-      // Create PDF content
+      // Create PDF content with better error handling
       const pdfContent = `
         <div style="font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto;">
-          ${avatarUrl ? `<img src="${avatarUrl}" style="width: 100%; max-height: 400px; object-fit: cover; margin-bottom: 30px;" />` : ''}
+          ${avatarUrl ? `<img src="${avatarUrl}" style="width: 100%; max-height: 400px; object-fit: cover; margin-bottom: 30px;" crossorigin="anonymous" />` : ''}
           
           <h1 style="font-size: 36px; margin-bottom: 10px; color: #1a1a1a;">
             ${person.given_name}${person.surname ? ` ${person.surname}` : ''}
@@ -168,10 +192,10 @@ export function ShareExport({
             </p>
           ` : ''}
           
-          ${person.bio ? `
+          ${escapedBio ? `
             <div style="font-size: 16px; line-height: 1.6; color: #333; margin-bottom: 30px; page-break-inside: avoid;">
               <h2 style="font-size: 20px; margin-bottom: 15px; color: #1a1a1a;">Biography</h2>
-              <p>${person.bio}</p>
+              <p>${escapedBio}</p>
             </div>
           ` : ''}
           
@@ -179,9 +203,9 @@ export function ShareExport({
             <div style="margin-top: 30px; page-break-before: always;">
               <h2 style="font-size: 20px; margin-bottom: 20px; color: #1a1a1a;">Highlights</h2>
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                ${photoUrls.filter(url => url).map(url => `
+                ${photoUrls.map(url => `
                   <div style="page-break-inside: avoid;">
-                    <img src="${url}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;" />
+                    <img src="${url}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;" crossorigin="anonymous" />
                   </div>
                 `).join('')}
               </div>
@@ -196,29 +220,39 @@ export function ShareExport({
         </div>
       `
 
-      // Generate PDF
+      // Generate PDF with error handling
       const element = document.createElement('div')
       element.innerHTML = pdfContent
+      document.body.appendChild(element)
       
-      const opt = {
-        margin: 10,
-        filename: `${personName.replace(/\s+/g, '-')}-Memorial.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.85 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      try {
+        const opt = {
+          margin: 10,
+          filename: `${personName.replace(/\s+/g, '-')}-Memorial.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.85 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+            allowTaint: true
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        }
+
+        await html2pdf().set(opt).from(element).save()
+        
+        toast({
+          title: "PDF exported",
+          description: "Memorial PDF downloaded successfully"
+        })
+      } finally {
+        document.body.removeChild(element)
       }
-
-      await html2pdf().set(opt).from(element).save()
-
-      toast({
-        title: "PDF exported",
-        description: "Memorial PDF downloaded successfully"
-      })
     } catch (error) {
       console.error('PDF export error:', error)
       toast({
         title: "Export failed",
-        description: "Could not generate PDF",
+        description: error instanceof Error ? error.message : "Could not generate PDF. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -255,7 +289,7 @@ export function ShareExport({
           {isGeneratingQR ? (
             <Loader2 className="h-3 w-3 mr-2 animate-spin" />
           ) : (
-            <QrCode className="h-3 w-3 mr-2" />
+            <QrCodeIcon className="h-3 w-3 mr-2" />
           )}
           Create QR Code
         </Button>
