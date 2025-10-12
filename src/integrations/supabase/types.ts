@@ -7573,6 +7573,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          family_id: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          metadata: Json | null
+          revoked_at: string | null
+          revoked_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          metadata?: Json | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          metadata?: Json | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       user_streaks: {
         Row: {
           created_at: string
@@ -8098,6 +8155,13 @@ export type Database = {
         Args: { p_person_id: string; p_user_id: string }
         Returns: string
       }
+      has_app_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_person_role: {
         Args: {
           p_person_id: string
@@ -8306,6 +8370,7 @@ export type Database = {
     }
     Enums: {
       address_visibility: "exact" | "street_hidden" | "city_only"
+      app_role: "super_admin" | "admin" | "moderator" | "user"
       audit_action_type:
         | "LOGIN"
         | "LOGOUT"
@@ -8627,6 +8692,7 @@ export const Constants = {
   public: {
     Enums: {
       address_visibility: ["exact", "street_hidden", "city_only"],
+      app_role: ["super_admin", "admin", "moderator", "user"],
       audit_action_type: [
         "LOGIN",
         "LOGOUT",

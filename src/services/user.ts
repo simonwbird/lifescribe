@@ -204,23 +204,26 @@ export async function getOnboardingState(
 }
 
 /**
- * Check if user is super admin
+ * Check if user is super admin using secure server-side function
  */
 export async function isSuperAdmin(
   userId: string,
   signal?: AbortSignal
 ): Promise<AuthResponse<boolean>> {
   try {
-    const { data: profile } = await getProfile(userId, signal)
-    
-    if (!profile) {
-      return { data: false, error: null }
+    const { data, error } = await supabase.rpc('is_super_admin', {
+      _user_id: userId
+    })
+
+    if (error) {
+      return {
+        data: false,
+        error: mapAuthError(error)
+      }
     }
 
-    const isAdmin = profile.settings?.role === 'super_admin'
-    
     return {
-      data: isAdmin,
+      data: data || false,
       error: null
     }
   } catch (error) {

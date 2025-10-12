@@ -193,7 +193,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Computed properties
   const isAuthenticated = !!(session && user)
-  const isSuperAdmin = profile?.settings?.role === 'super_admin'
+  // Note: isSuperAdmin should be checked server-side via isSuperAdmin() function
+  // This client-side flag is for UI convenience only and should not be trusted for security
+  const isSuperAdmin = false // Always validate on server side
   const needsOnboarding = onboarding ? !onboarding.isComplete : false
 
   const value: AuthState = {

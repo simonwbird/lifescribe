@@ -79,8 +79,8 @@ export default function ProfileDebug() {
             <span>{user.email}</span>
             
             <span className="font-medium">System Role:</span>
-            <Badge variant={profile?.settings?.role === 'super_admin' ? 'destructive' : 'default'}>
-              {profile?.settings?.role || 'member'}
+            <Badge variant="outline">
+              Use server-side isSuperAdmin() to check
             </Badge>
             
             {profile?.settings?.bootstrap_admin && (

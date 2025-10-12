@@ -48,8 +48,11 @@ export default function ProfileDropdown() {
         const labsFlags = settings.labs_flags || {}
         setEnableMultiSpaces(settings.labs_enabled && labsFlags.multiSpaces)
         
-        // Check if user is super admin
-        setIsSuperAdmin(settings.role === 'super_admin')
+        // Check if user is super admin via secure server-side function
+        const { data: isSuperAdminFlag } = await supabase.rpc('is_super_admin', {
+          _user_id: user.id
+        })
+        setIsSuperAdmin(isSuperAdminFlag || false)
         
         // Get default family name
         if (profileData?.default_space_id) {
@@ -169,8 +172,11 @@ export default function ProfileDropdown() {
         
         if (profileData) {
           setProfile(profileData)
-          const settings = (profileData?.settings as any) || {}
-          setIsSuperAdmin(settings.role === 'super_admin')
+          // Check super admin via secure server-side function
+          const { data: isSuperAdminFlag } = await supabase.rpc('is_super_admin', {
+            _user_id: user.id
+          })
+          setIsSuperAdmin(isSuperAdminFlag || false)
         }
       }
     }

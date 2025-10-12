@@ -63,9 +63,13 @@ export function useSecureRoles() {
           console.error('Error fetching family roles:', familyError)
         }
 
-        // Parse settings safely
+        // Check super admin status via secure server-side function
+        const { data: isSuperAdminFlag } = await supabase.rpc('is_super_admin', {
+          _user_id: user.id
+        })
+        
         const settings = profileData?.settings as any || {}
-        const systemRole = settings?.role === 'super_admin' ? 'super_admin' : 'member'
+        const systemRole = isSuperAdminFlag ? 'super_admin' : 'member'
         const isBootstrapAdmin = settings?.bootstrap_admin === true
 
         return {

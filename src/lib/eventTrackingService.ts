@@ -66,8 +66,13 @@ class EventTrackingService {
       
       // Determine actor role
       let actorRole: BaseEventData['actor_role'] = 'member'
-      const settings = profile?.settings as any
-      if (settings?.role === 'super_admin') {
+      
+      // Check super admin via secure server-side function
+      const { data: isSuperAdminFlag } = await supabase.rpc('is_super_admin', {
+        _user_id: user.id
+      })
+      
+      if (isSuperAdminFlag) {
         actorRole = 'super_admin'
       } else if (familyId) {
         // Check if user is admin of current family
