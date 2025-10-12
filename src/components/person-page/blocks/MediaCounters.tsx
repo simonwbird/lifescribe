@@ -30,38 +30,75 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
   const fetchCounts = async () => {
     try {
       // Fetch stories count
-      const { count: storiesCount } = await supabase
+      const { count: storiesCount, error: storiesError } = await supabase
         .from('stories')
         .select('*', { count: 'exact', head: true })
         .contains('linked_people', [personId])
         .eq('family_id', familyId)
 
+      if (storiesError) {
+        console.error('Stories count error:', storiesError)
+      }
+
       // Fetch photos count (media with image mime types)
-      const { count: photosCount } = await supabase
+      const { count: photosCount, error: photosError } = await supabase
         .from('media')
         .select('*', { count: 'exact', head: true })
         .contains('linked_people', [personId])
         .eq('family_id', familyId)
         .like('mime_type', 'image/%')
 
-      // Fetch audio count
-      const { count: audioCount } = await supabase
+      if (photosError) {
+        console.error('Photos count error:', photosError)
+      }
+
+      // Fetch audio count - checking for any audio linked to stories for this person
+      const { data: personStories } = await supabase
+        .from('stories')
+        .select('id')
+        .contains('linked_people', [personId])
+        .eq('family_id', familyId)
+
+      const storyIds = personStories?.map(s => s.id) || []
+      
+      const { count: audioCount, error: audioError } = await supabase
         .from('audio_recordings')
         .select('*', { count: 'exact', head: true })
         .eq('family_id', familyId)
         .eq('status', 'completed')
-        .not('story_id', 'is', null)
+        .in('story_id', storyIds.length > 0 ? storyIds : ['00000000-0000-0000-0000-000000000000'])
+
+      if (audioError) {
+        console.error('Audio count error:', audioError)
+      }
 
       // Fetch relationships count (both directions)
-      const { count: relationsFromCount } = await supabase
+      const { count: relationsFromCount, error: relFromError } = await supabase
         .from('relationships')
         .select('*', { count: 'exact', head: true })
         .eq('from_person_id', personId)
 
-      const { count: relationsToCount } = await supabase
+      if (relFromError) {
+        console.error('Relations from error:', relFromError)
+      }
+
+      const { count: relationsToCount, error: relToError } = await supabase
         .from('relationships')
         .select('*', { count: 'exact', head: true })
         .eq('to_person_id', personId)
+
+      if (relToError) {
+        console.error('Relations to error:', relToError)
+      }
+
+      console.log('📊 Media Stats:', {
+        stories: storiesCount || 0,
+        photos: photosCount || 0,
+        audio: audioCount || 0,
+        relations: (relationsFromCount || 0) + (relationsToCount || 0),
+        personId,
+        familyId
+      })
 
       setCounts({
         stories: storiesCount || 0,
