@@ -66,9 +66,6 @@ export function PortalLayoutManager({
   // Get the current layout configuration (fallback to defaults if missing)
   const currentLayout = layoutMap[breakpoint] || DEFAULT_LAYOUT_MAP[breakpoint]
 
-  // Reset singleton validator for this render cycle to avoid stale duplicate warnings causing disappearing rail
-  validatorRef.current.reset()
-
   // Distribute block IDs into main and rail with logical DOM order
   // Priority: Content blocks first (Hero, Bio, Timeline...), then widgets
   // This ensures screen readers encounter content in a logical reading order

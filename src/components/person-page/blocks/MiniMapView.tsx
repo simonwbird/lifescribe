@@ -119,10 +119,21 @@ export default function MiniMapView({ places, onPlaceClick }: MiniMapViewProps) 
 
     // Cleanup
     return () => {
-      markers.current.forEach(marker => marker.remove())
-      markers.current = []
-      map.current?.remove()
-      map.current = null
+      try {
+        markers.current.forEach(marker => marker.remove())
+        markers.current = []
+        if (map.current) {
+          // Guard against Mapbox internal AbortError during teardown
+          try {
+            map.current.remove()
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.debug('[MiniMapView] map.remove() suppressed error', e)
+          }
+        }
+      } finally {
+        map.current = null
+      }
     }
   }, [places, onPlaceClick])
 
