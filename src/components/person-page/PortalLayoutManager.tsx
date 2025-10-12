@@ -137,7 +137,7 @@ export function PortalLayoutManager({
     try {
       // Avoid noisy logs in production; this is harmless during debugging
       // eslint-disable-next-line no-console
-      console.debug('[PortalLayoutManager] Debug', {
+      console.info('[PortalLayoutManager] Debug', {
         breakpoint,
         providedLayout: layoutMap[breakpoint],
         currentLayout,
@@ -205,20 +205,18 @@ export function PortalLayoutManager({
         {mainBlockIds.map(blockId => renderBlock(blockId))}
       </main>
 
-      {/* Right rail column - complementary landmark */}
-      {railBlockIds.length > 0 && (
-        <aside 
-          id="portal-rail"
-          className={cn(
-            'lg:col-span-4 space-y-4'
-          )}
-          data-portal-container="rail"
-          role="complementary"
-          aria-label="Sidebar widgets"
-        >
-          {railBlockIds.map(blockId => renderBlock(blockId))}
-        </aside>
-      )}
+      {/* Right rail column - complementary landmark (always rendered on desktop for portal target) */}
+      <aside 
+        id="portal-rail"
+        className={cn(
+          'hidden lg:block lg:col-span-4 space-y-4'
+        )}
+        data-portal-container="rail"
+        role="complementary"
+        aria-label="Sidebar widgets"
+      >
+        {railBlockIds.map(blockId => renderBlock(blockId))}
+      </aside>
     </div>
   )
 }
