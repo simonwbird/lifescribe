@@ -96,7 +96,9 @@ function buildBlocksArray(
   canEdit: boolean,
   currentUserId: string | null,
   handleVisibilityChange: (blockId: string, visibility: string) => void,
-  handleRemoveBlock: (blockId: string) => void
+  handleUnlockDateChange: (blockId: string, unlockDate: string | null) => void,
+  handleRemoveBlock: (blockId: string) => void,
+  viewerRole?: string
 ): BlockItem[] {
   const blockItems: BlockItem[] = []
   const addedIds = new Set<string>() // Track added block IDs to prevent duplicates
@@ -219,8 +221,12 @@ function buildBlocksArray(
                 onVisibilityChange={(visibility) => 
                   handleVisibilityChange(block.id, visibility)
                 }
+                onUnlockDateChange={(unlockDate) =>
+                  handleUnlockDateChange(block.id, unlockDate)
+                }
                 onRemove={() => handleRemoveBlock(block.id)}
                 dragHandleProps={provided.dragHandleProps}
+                viewerRole={viewerRole}
               >
                 <BlockRenderer 
                   block={block} 
@@ -264,6 +270,7 @@ export default function PersonPage() {
     error,
     updateBlockOrder,
     updateBlockVisibility,
+    updateBlockUnlockDate,
     addBlock,
     removeBlock
   } = usePersonPageData(id!, currentUserId)
@@ -454,6 +461,24 @@ export default function PersonPage() {
       toast({
         title: 'Error',
         description: 'Failed to update visibility',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handleUnlockDateChange = async (blockId: string, unlockDate: string | null) => {
+    try {
+      await updateBlockUnlockDate(blockId, unlockDate)
+      toast({
+        title: 'Unlock date updated',
+        description: unlockDate 
+          ? `Block will unlock on ${new Date(unlockDate).toLocaleDateString()}`
+          : 'Unlock date removed'
+      })
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update unlock date',
         variant: 'destructive'
       })
     }
@@ -774,7 +799,9 @@ export default function PersonPage() {
                           canEdit || false,
                           currentUserId,
                           handleVisibilityChange,
-                          handleRemoveBlock
+                          handleUnlockDateChange,
+                          handleRemoveBlock,
+                          data.permission?.role
                         )}
                         layoutMap={layoutMap}
                         breakpoint={breakpoint}

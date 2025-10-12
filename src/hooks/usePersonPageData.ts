@@ -157,6 +157,27 @@ export function usePersonPageData(personId: string, viewerUserId: string | null)
     }
   }
 
+  const updateBlockUnlockDate = async (blockId: string, unlockDate: string | null) => {
+    try {
+      await supabase
+        .from('person_page_blocks')
+        .update({ unlock_at: unlockDate })
+        .eq('id', blockId)
+
+      if (data) {
+        setData({
+          ...data,
+          blocks: data.blocks.map(b => 
+            b.id === blockId ? { ...b, unlock_at: unlockDate || undefined } : b
+          )
+        })
+      }
+    } catch (err) {
+      console.error('Error updating block unlock date:', err)
+      throw err
+    }
+  }
+
   const addBlock = async (type: PersonPageBlock['type']) => {
     try {
       const maxOrder = Math.max(...(data?.blocks.map(b => b.block_order) || [0]), 0)
@@ -213,6 +234,7 @@ export function usePersonPageData(personId: string, viewerUserId: string | null)
     error,
     updateBlockOrder,
     updateBlockVisibility,
+    updateBlockUnlockDate,
     addBlock,
     removeBlock
   }

@@ -4696,6 +4696,7 @@ export type Database = {
           is_enabled: boolean | null
           person_id: string
           type: string
+          unlock_at: string | null
           updated_at: string
           visibility: string
         }
@@ -4708,6 +4709,7 @@ export type Database = {
           is_enabled?: boolean | null
           person_id: string
           type: string
+          unlock_at?: string | null
           updated_at?: string
           visibility?: string
         }
@@ -4720,6 +4722,7 @@ export type Database = {
           is_enabled?: boolean | null
           person_id?: string
           type?: string
+          unlock_at?: string | null
           updated_at?: string
           visibility?: string
         }

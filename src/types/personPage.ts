@@ -31,6 +31,7 @@ export interface PersonPageBlock {
   block_order: number
   visibility: 'only_me' | 'inner_circle' | 'family' | 'public'
   is_enabled: boolean
+  unlock_at?: string
   created_by?: string
   created_at?: string
   updated_at?: string
