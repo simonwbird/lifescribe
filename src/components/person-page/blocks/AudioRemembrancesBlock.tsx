@@ -39,7 +39,7 @@ export default function AudioRemembrancesBlock({
     }
   })
 
-  // Fetch audio remembrances
+  // Fetch audio remembrances for this specific person
   const { data: recordings, isLoading, refetch } = useQuery({
     queryKey: ['audio-remembrances', personId],
     queryFn: async () => {
@@ -54,6 +54,7 @@ export default function AudioRemembrancesBlock({
           )
         `)
         .eq('family_id', familyId)
+        .eq('tribute_id', personId)
         .eq('is_draft', false)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
@@ -131,6 +132,7 @@ export default function AudioRemembrancesBlock({
             key={recording.id}
             recording={recording}
             person={person}
+            familyId={familyId}
             canEdit={canEdit}
             onUpdate={() => {
               refetch()

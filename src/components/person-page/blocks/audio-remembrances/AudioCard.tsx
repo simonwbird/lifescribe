@@ -9,7 +9,9 @@ import {
   Volume2, 
   FileText,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  UserCircle,
+  Check
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
@@ -18,15 +20,27 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { supabase } from '@/integrations/supabase/client'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 interface AudioCardProps {
   recording: any
   person?: any
+  familyId: string
   canEdit: boolean
   onUpdate: () => void
 }
 
-export function AudioCard({ recording, person, canEdit, onUpdate }: AudioCardProps) {
+export function AudioCard({ recording, person, familyId, canEdit, onUpdate }: AudioCardProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -34,6 +48,40 @@ export function AudioCard({ recording, person, canEdit, onUpdate }: AudioCardPro
   const audioRef = useRef<HTMLAudioElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>()
+
+  // Fetch family members for person selector
+  const { data: familyMembers } = useQuery({
+    queryKey: ['family-members', familyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('people')
+        .select('id, given_name, surname, avatar_url')
+        .eq('family_id', familyId)
+        .order('given_name')
+
+      if (error) throw error
+      return data || []
+    },
+    enabled: canEdit
+  })
+
+  const handleChangePerson = async (newPersonId: string) => {
+    try {
+      // Update the audio recording's tribute_id to link to the new person
+      const { error } = await supabase
+        .from('audio_recordings')
+        .update({ tribute_id: newPersonId })
+        .eq('id', recording.id)
+
+      if (error) throw error
+
+      toast.success('Audio memory reassigned successfully')
+      onUpdate()
+    } catch (error) {
+      console.error('Error changing person:', error)
+      toast.error('Failed to reassign audio memory')
+    }
+  }
 
   useEffect(() => {
     const audio = audioRef.current
@@ -146,9 +194,49 @@ export function AudioCard({ recording, person, canEdit, onUpdate }: AudioCardPro
             {/* Header */}
             <div className="flex items-start justify-between gap-2 mb-3">
               <div className="flex-1">
-                <p className="font-semibold">
-                  {recording.profiles?.full_name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">
+                    {recording.profiles?.full_name}
+                  </p>
+                  {canEdit && familyMembers && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 gap-1 text-xs"
+                        >
+                          <UserCircle className="h-3 w-3" />
+                          Change Person
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <DropdownMenuLabel>Assign to Person</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {familyMembers.map((member) => (
+                          <DropdownMenuItem
+                            key={member.id}
+                            onClick={() => handleChangePerson(member.id)}
+                            className="gap-2"
+                          >
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={member.avatar_url} />
+                              <AvatarFallback className="text-xs">
+                                {member.given_name?.[0]}{member.surname?.[0] || ''}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="flex-1">
+                              {member.given_name} {member.surname || ''}
+                            </span>
+                            {person?.id === member.id && (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {format(new Date(recording.created_at), 'MMM d, yyyy')}
                 </p>
