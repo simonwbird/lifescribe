@@ -87,33 +87,50 @@ export function PortalLayoutManager({
     return [...contentBlocks, ...widgetBlocks]
   }, [blocks])
 
-  const mainBlockIds = useMemo(() => {
-    // Determine effective rail IDs (fallback to defaults if rail config is empty)
-    const effectiveRail = currentLayout.rail.length === 0
+  // Identify widget/navigation blocks present
+  const widgetIds = useMemo(() => {
+    return blocks
+      .filter(block => {
+        const metadata = getBlockMetadata(block.id)
+        return metadata?.category === 'widget' || metadata?.category === 'navigation'
+      })
+      .map(b => b.id)
+  }, [blocks])
+
+  // Compute effective rail IDs with robust fallbacks
+  const effectiveRailIds = useMemo(() => {
+    const baseRail = currentLayout.rail.length === 0
       ? DEFAULT_LAYOUT_MAP[breakpoint].rail
       : currentLayout.rail
 
+    // Prefer configured rail IDs that exist in the provided blocks
+    const filteredBase = baseRail.filter(id => blocks.some(b => b.id === id))
+    if (filteredBase.length > 0) return filteredBase
+
+    // Fallback: if config yields nothing, place all widgets/navigation in rail (desktop/tablet)
+    if (breakpoint !== 'mobile' && widgetIds.length > 0) {
+      try { console.warn('[PortalLayoutManager] Rail empty; falling back to all widget blocks', { widgetIds }) } catch {}
+      return widgetIds
+    }
+
+    return [] as string[]
+  }, [currentLayout.rail, blocks, breakpoint, widgetIds])
+
+  const mainBlockIds = useMemo(() => {
     // Get all blocks that should be in main based on layout,
     // but never include items that also appear in the rail (prefer rail)
     const mainIds = currentLayout.main
       .filter(id => blocks.some(b => b.id === id))
-      .filter(id => !effectiveRail.includes(id))
+      .filter(id => !effectiveRailIds.includes(id))
     
     // Add any unplaced blocks to main (excluding anything in the rail)
-    const placedIds = new Set([...mainIds, ...effectiveRail])
+    const placedIds = new Set([...mainIds, ...effectiveRailIds])
     const unplacedIds = logicalOrder.filter(blockId => !placedIds.has(blockId))
     
     return [...mainIds, ...unplacedIds]
-  }, [currentLayout.main, currentLayout.rail, logicalOrder, blocks, breakpoint])
+  }, [currentLayout.main, effectiveRailIds, logicalOrder, blocks])
 
-  const railBlockIds = useMemo(() => {
-    const useDefault = currentLayout.rail.length === 0
-    const source = useDefault ? DEFAULT_LAYOUT_MAP[breakpoint].rail : currentLayout.rail
-    if (useDefault) {
-      console.warn('[PortalLayoutManager] Empty rail config detected; falling back to DEFAULT_LAYOUT_MAP for', breakpoint)
-    }
-    return source.filter(id => blocks.some(b => b.id === id))
-  }, [currentLayout.rail, blocks, breakpoint])
+  const railBlockIds = useMemo(() => effectiveRailIds, [effectiveRailIds])
 
   // Debugging: log layout computation to help identify why rail may be empty in preview
   useEffect(() => {
