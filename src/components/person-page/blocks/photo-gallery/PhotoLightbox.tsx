@@ -9,10 +9,24 @@ import {
   Calendar,
   FileText,
   Download,
-  MoveHorizontal
+  MoveHorizontal,
+  Tag,
+  Users
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/integrations/supabase/client'
+import { toast } from 'sonner'
+
+interface FaceTag {
+  id: string
+  person_id: string
+  person_name?: string
+  x_percent: number
+  y_percent: number
+  width_percent: number
+  height_percent: number
+}
 
 interface PhotoLightboxProps {
   photos: any[]
@@ -23,6 +37,8 @@ interface PhotoLightboxProps {
   albums?: any[]
   currentAlbumId?: string
   onMovePhoto?: (photoId: string, targetAlbumId: string) => void
+  familyId: string
+  personId?: string
 }
 
 export function PhotoLightbox({
@@ -33,15 +49,143 @@ export function PhotoLightbox({
   canEdit = false,
   albums = [],
   currentAlbumId = 'all',
-  onMovePhoto
+  onMovePhoto,
+  familyId,
+  personId
 }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [showCaption, setShowCaption] = useState(true)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
+  const [faceTags, setFaceTags] = useState<FaceTag[]>([])
+  const [showTagOverlay, setShowTagOverlay] = useState(false)
+  const [familyMembers, setFamilyMembers] = useState<any[]>([])
   
   const currentPhoto = photos[currentIndex]
   const hasPrev = currentIndex > 0
   const hasNext = currentIndex < photos.length - 1
+
+  // Load face tags for current photo
+  useEffect(() => {
+    loadFaceTags()
+  }, [currentIndex])
+
+  // Load family members for tagging
+  useEffect(() => {
+    loadFamilyMembers()
+  }, [familyId])
+
+  const loadFaceTags = async () => {
+    if (!currentPhoto?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('face_tags')
+        .select('id, person_id, x_percent, y_percent, width_percent, height_percent')
+        .eq('media_id', currentPhoto.id)
+
+      if (error) {
+        console.error('Error loading face tags:', error)
+        return
+      }
+
+      // Get person names separately
+      const personIds = [...new Set(data.map(tag => tag.person_id))]
+      const { data: peopleData } = await supabase
+        .from('people')
+        .select('id, given_name, surname')
+        .in('id', personIds)
+
+      const peopleMap = new Map(
+        peopleData?.map(p => [p.id, `${p.given_name} ${p.surname || ''}`.trim()]) || []
+      )
+
+      const tags = data.map(tag => ({
+        id: tag.id,
+        person_id: tag.person_id,
+        person_name: peopleMap.get(tag.person_id) || 'Unknown',
+        x_percent: tag.x_percent,
+        y_percent: tag.y_percent,
+        width_percent: tag.width_percent,
+        height_percent: tag.height_percent
+      }))
+
+      setFaceTags(tags)
+    } catch (error) {
+      console.error('Failed to load face tags:', error)
+    }
+  }
+
+  const loadFamilyMembers = async () => {
+    if (!familyId) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('people')
+        .select('id, given_name, surname')
+        .eq('family_id', familyId)
+        .order('given_name')
+
+      if (error) throw error
+      setFamilyMembers(data || [])
+    } catch (error) {
+      console.error('Error loading family members:', error)
+    }
+  }
+
+  const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!canEdit || !showTagOverlay) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x_percent = ((e.clientX - rect.left) / rect.width) * 100
+    const y_percent = ((e.clientY - rect.top) / rect.height) * 100
+
+    // Show person selector
+    const personId = prompt('Enter person ID to tag (we\'ll improve this UI later):')
+    if (!personId) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('face_tags')
+        .insert({
+          media_id: currentPhoto.id,
+          person_id: personId,
+          family_id: familyId,
+          created_by: user.id,
+          x_percent,
+          y_percent,
+          width_percent: 10,
+          height_percent: 10
+        })
+
+      if (error) throw error
+      
+      toast.success('Person tagged!')
+      loadFaceTags()
+    } catch (error) {
+      console.error('Error creating face tag:', error)
+      toast.error('Failed to tag person')
+    }
+  }
+
+  const handleDeleteTag = async (tagId: string) => {
+    try {
+      const { error } = await supabase
+        .from('face_tags')
+        .delete()
+        .eq('id', tagId)
+
+      if (error) throw error
+      
+      toast.success('Tag removed')
+      loadFaceTags()
+    } catch (error) {
+      console.error('Error deleting tag:', error)
+      toast.error('Failed to remove tag')
+    }
+  }
 
   // Keyboard navigation
   useEffect(() => {
@@ -110,6 +254,26 @@ export function PhotoLightbox({
               )}
             </div>
             <div className="flex items-center gap-2">
+              {canEdit && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowTagOverlay(!showTagOverlay)}
+                  className={cn(
+                    "text-white hover:bg-white/20",
+                    showTagOverlay && "bg-white/30"
+                  )}
+                  title="Tag people"
+                >
+                  <Tag className="h-5 w-5" />
+                </Button>
+              )}
+              {faceTags.length > 0 && (
+                <Badge variant="secondary" className="bg-white/20 text-white gap-1">
+                  <Users className="h-3 w-3" />
+                  {faceTags.length}
+                </Badge>
+              )}
               {canEdit && albums.length > 0 && onMovePhoto && (
                 <Button
                   size="icon"
@@ -146,8 +310,39 @@ export function PhotoLightbox({
           <img
             src={currentPhoto.url || currentPhoto.file_path}
             alt={currentPhoto.caption || currentPhoto.story_title || 'Photo'}
-            className="max-w-full max-h-full object-contain"
+            className="max-w-full max-h-full object-contain cursor-crosshair"
+            onClick={handleImageClick}
           />
+
+          {/* Face Tags Overlay */}
+          {faceTags.map((tag) => (
+            <div
+              key={tag.id}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${tag.x_percent}%`,
+                top: `${tag.y_percent}%`,
+                width: `${tag.width_percent}%`,
+                height: `${tag.height_percent}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              <div className="relative w-full h-full">
+                <div className="absolute inset-0 border-2 border-white rounded-full shadow-lg" />
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap">
+                  {tag.person_name}
+                  {canEdit && (
+                    <button
+                      className="ml-2 pointer-events-auto hover:text-red-400"
+                      onClick={() => handleDeleteTag(tag.id)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
 
           {/* Navigation Buttons */}
           {hasPrev && (

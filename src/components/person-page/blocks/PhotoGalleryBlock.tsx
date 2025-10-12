@@ -157,6 +157,12 @@ export default function PhotoGalleryBlock({
     return album?.photos || []
   }, [photos, albums, selectedAlbum])
 
+  const handleMovePhoto = async (photoId: string, targetAlbumId: string) => {
+    // TODO: Implement album moving logic when albums are fully implemented
+    console.log('Move photo', photoId, 'to album', targetAlbumId)
+    refetch()
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -225,20 +231,18 @@ export default function PhotoGalleryBlock({
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
-      <PhotoLightbox
-        photos={displayPhotos}
-        initialIndex={lightboxIndex}
-        onClose={() => setLightboxIndex(null)}
-        onNavigate={setLightboxIndex}
-        canEdit={canEdit}
-        albums={albums}
-        currentAlbumId={selectedAlbum}
-        onMovePhoto={(photoId, targetAlbumId) => {
-          // TODO: Implement photo moving logic
-          console.log('Move photo', photoId, 'to', targetAlbumId)
-          refetch()
-        }}
-      />
+        <PhotoLightbox
+          photos={displayPhotos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+          canEdit={canEdit}
+          albums={albums}
+          currentAlbumId={selectedAlbum}
+          onMovePhoto={handleMovePhoto}
+          familyId={familyId}
+          personId={personId}
+        />
       )}
 
       {/* Album Manager */}
