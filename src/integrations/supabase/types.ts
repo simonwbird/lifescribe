@@ -933,6 +933,7 @@ export type Database = {
           created_at: string
           family_id: string
           id: string
+          media_id: string | null
           profile_id: string
           story_id: string | null
           tribute_id: string | null
@@ -944,6 +945,7 @@ export type Database = {
           created_at?: string
           family_id: string
           id?: string
+          media_id?: string | null
           profile_id: string
           story_id?: string | null
           tribute_id?: string | null
@@ -955,6 +957,7 @@ export type Database = {
           created_at?: string
           family_id?: string
           id?: string
+          media_id?: string | null
           profile_id?: string
           story_id?: string | null
           tribute_id?: string | null
@@ -981,6 +984,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_my_roles"
             referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "comments_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "comments_profile_id_fkey"

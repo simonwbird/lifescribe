@@ -12,7 +12,8 @@ import {
   MoveHorizontal,
   Tag,
   Users,
-  Search
+  Search,
+  MessageCircle
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
@@ -31,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { PhotoComments } from './PhotoComments'
 
 interface FaceTag {
   id: string
@@ -80,6 +82,7 @@ export function PhotoLightbox({
   const [dragStart, setDragStart] = useState<{ x: number, y: number } | null>(null)
   const [imageRect, setImageRect] = useState<DOMRect | null>(null)
   const imageRef = useState<HTMLImageElement | null>(null)[0]
+  const [showComments, setShowComments] = useState(false)
   
   const currentPhoto = photos[currentIndex]
   const hasPrev = currentIndex > 0
@@ -367,14 +370,28 @@ export function PhotoLightbox({
                 variant="ghost"
                 onClick={handleDownload}
                 className="text-white hover:bg-white/20"
+                title="Download"
               >
                 <Download className="h-5 w-5" />
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
+                onClick={() => setShowComments(!showComments)}
+                className={cn(
+                  "text-white hover:bg-white/20",
+                  showComments && "bg-white/30"
+                )}
+                title="Comments"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
                 onClick={onClose}
                 className="text-white hover:bg-white/20"
+                title="Close"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -504,6 +521,31 @@ export function PhotoLightbox({
           <div>C to toggle caption</div>
           <div>ESC to close</div>
         </div>
+
+        {/* Comments Panel */}
+        {showComments && (
+          <div className="absolute right-0 top-0 bottom-0 w-full md:w-96 bg-background/95 backdrop-blur-md border-l border-border overflow-y-auto z-[60]">
+            <div className="sticky top-0 bg-background/95 border-b border-border p-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Comments
+              </h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowComments(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <PhotoComments 
+                mediaId={currentPhoto.id} 
+                familyId={familyId}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Person Selector Dialog */}
         {showPersonSelector && (
