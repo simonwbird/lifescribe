@@ -9,6 +9,9 @@ import { LayoutMap, Breakpoint } from '@/components/person-page/PortalLayoutMana
 import { BLOCK_REGISTRY } from '@/lib/blockRegistry'
 import { cn } from '@/lib/utils'
 import { MigrationButton } from './MigrationButton'
+import { validateLayoutMap } from '@/lib/layoutValidator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertTriangle } from 'lucide-react'
 
 interface LayoutEditorProps {
   layoutMap: LayoutMap
@@ -22,6 +25,17 @@ interface LayoutEditorProps {
 export function LayoutEditor({ layoutMap, onSave, onReset, saving, personId, familyId }: LayoutEditorProps) {
   const [workingLayout, setWorkingLayout] = useState<LayoutMap>(layoutMap)
   const [activeBreakpoint, setActiveBreakpoint] = useState<Breakpoint>('desktop')
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+
+  // Validate layout whenever it changes
+  React.useEffect(() => {
+    const result = validateLayoutMap(workingLayout)
+    if (!result.valid) {
+      setValidationErrors(result.errors.map(e => e.message))
+    } else {
+      setValidationErrors([])
+    }
+  }, [workingLayout])
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result
@@ -132,6 +146,23 @@ export function LayoutEditor({ layoutMap, onSave, onReset, saving, personId, fam
 
   return (
     <div className="space-y-6">
+      {validationErrors.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="font-semibold mb-2">Layout Validation Errors:</div>
+            <ul className="list-disc list-inside space-y-1">
+              {validationErrors.map((error, i) => (
+                <li key={i} className="text-sm">{error}</li>
+              ))}
+            </ul>
+            <div className="mt-2 text-sm">
+              Fix these issues before saving the layout.
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Remove Duplicate Blocks</CardTitle>
@@ -153,7 +184,7 @@ export function LayoutEditor({ layoutMap, onSave, onReset, saving, personId, fam
         </div>
         <Button
           onClick={onReset}
-          disabled={saving}
+          disabled={saving || validationErrors.length > 0}
           variant="outline"
           size="sm"
         >
