@@ -305,7 +305,7 @@ export default function PersonPage() {
         {/* Performance budget monitor (dev only) */}
         <PerformanceBudgetMonitor />
       
-      <div className="max-w-4xl mx-auto p-6 space-y-8" id="main-content">
+      <div className="max-w-7xl mx-auto p-6 space-y-8" id="main-content">
         {/* Top Bar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
