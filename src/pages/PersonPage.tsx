@@ -698,6 +698,8 @@ export default function PersonPage() {
                       onSave={saveLayout}
                       onReset={resetToDefaults}
                       saving={layoutSaving}
+                      personId={id!}
+                      familyId={data?.person?.family_id || ''}
                     />
                   </div>
                 </SheetContent>

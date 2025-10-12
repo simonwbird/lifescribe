@@ -8,15 +8,18 @@ import { GripVertical, RotateCcw } from 'lucide-react'
 import { LayoutMap, Breakpoint } from '@/components/person-page/PortalLayoutManager'
 import { BLOCK_REGISTRY } from '@/lib/blockRegistry'
 import { cn } from '@/lib/utils'
+import { MigrationButton } from './MigrationButton'
 
 interface LayoutEditorProps {
   layoutMap: LayoutMap
   onSave: (layoutMap: LayoutMap) => Promise<void>
   onReset: () => Promise<void>
   saving?: boolean
+  personId: string
+  familyId: string
 }
 
-export function LayoutEditor({ layoutMap, onSave, onReset, saving }: LayoutEditorProps) {
+export function LayoutEditor({ layoutMap, onSave, onReset, saving, personId, familyId }: LayoutEditorProps) {
   const [workingLayout, setWorkingLayout] = useState<LayoutMap>(layoutMap)
   const [activeBreakpoint, setActiveBreakpoint] = useState<Breakpoint>('desktop')
 
@@ -129,6 +132,18 @@ export function LayoutEditor({ layoutMap, onSave, onReset, saving }: LayoutEdito
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Remove Duplicate Blocks</CardTitle>
+          <CardDescription>
+            Scan this page for duplicate blocks and safely remove them while keeping the earliest version
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MigrationButton personId={personId} familyId={familyId} />
+        </CardContent>
+      </Card>
+
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Page Layout</h3>
