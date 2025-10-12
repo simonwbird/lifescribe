@@ -71,7 +71,34 @@ export default function StoryCollageBlock({
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return data || []
+      const storiesData = data || []
+
+      // Create signed URLs for primary cover images
+      const paths = storiesData
+        .map((s: any) => s.media?.[0]?.file_path)
+        .filter(Boolean)
+
+      let urlMap = new Map<string, string>()
+      if (paths.length > 0) {
+        const { data: signed, error: signError } = await supabase
+          .storage
+          .from('media')
+          .createSignedUrls(paths, 3600)
+        if (!signError && signed) {
+          signed.forEach((s: any) => {
+            if (s?.path && s?.signedUrl) urlMap.set(s.path, s.signedUrl)
+          })
+        }
+      }
+
+      return storiesData.map((s: any) => {
+        const coverPath = s.media?.[0]?.file_path
+        if (!coverPath) return s
+        const signed = urlMap.get(coverPath)
+        if (signed) return { ...s, cover_url: signed }
+        const { data: pub } = supabase.storage.from('media').getPublicUrl(coverPath)
+        return { ...s, cover_url: pub.publicUrl }
+      })
     }
   })
 
@@ -163,7 +190,7 @@ export default function StoryCollageBlock({
             {hasPhoto && (
               <div className="aspect-video relative overflow-hidden bg-muted">
                 <img 
-                  src={primaryMedia.file_path}
+                  src={story.cover_url || primaryMedia.file_path}
                   alt={story.title}
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                 />
@@ -287,7 +314,7 @@ export default function StoryCollageBlock({
                   >
                     <div className="aspect-video relative overflow-hidden bg-muted">
                       <img 
-                        src={primaryMedia.file_path}
+                        src={story.cover_url || primaryMedia.file_path}
                         alt={story.title}
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
