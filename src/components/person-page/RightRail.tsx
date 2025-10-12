@@ -269,7 +269,7 @@ export function RightRail({
     contributeCTA: true,
     anniversaries: true,
     visibilitySearch: false,
-    miniMap: false,
+    miniMap: true,
     mediaCounters: true,
     favoritesQuirks: false,
     causes: false,
