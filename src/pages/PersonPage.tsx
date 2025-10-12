@@ -23,12 +23,14 @@ import { StewardToolsPanel } from '@/components/steward-tools'
 import { SuggestChangeButton } from '@/components/person-page/SuggestChangeButton'
 import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
 import { VisibilityChips } from '@/components/person-page/VisibilityChips'
+import { RightRail } from '@/components/person-page/RightRail'
 import { usePersonPageData } from '@/hooks/usePersonPageData'
 import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
 import { usePrivacyAnalytics } from '@/hooks/usePrivacyAnalytics'
 import { usePersonPageShortcuts } from '@/hooks/usePersonPageShortcuts'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
+import { Person } from '@/utils/personUtils'
 import { toast } from '@/components/ui/use-toast'
 import { PerformanceBudgetMonitor, SkipLink } from '@/components/performance'
 import { prefetchVisibleLinks, enableHoverPrefetch } from '@/utils/linkPrefetch'
@@ -468,7 +470,7 @@ export default function PersonPage() {
           )}
         </div>
 
-        {/* Blocks with Layout */}
+        {/* Blocks with Layout and RightRail */}
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="blocks">
             {(provided) => (
@@ -476,7 +478,7 @@ export default function PersonPage() {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="lg:grid lg:grid-cols-12 lg:gap-8"
+                  className="lg:grid lg:grid-cols-12 lg:gap-6"
                 >
                   {blocks.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg col-span-full">
@@ -499,6 +501,7 @@ export default function PersonPage() {
                           .map((block, index) => {
                             // Get actual index in original blocks array for drag and drop
                             const actualIndex = blocks.findIndex(b => b.id === block.id)
+                            const isBioBlock = block.type === 'bio' || block.type === 'bio_overview'
                             return (
                               <Draggable 
                                 key={block.id} 
@@ -534,8 +537,24 @@ export default function PersonPage() {
                                         onUpdate={() => {
                                           window.location.reload()
                                         }}
-                                      />
+                                       />
                                     </PersonPageBlock>
+                                    
+                                    {/* Mobile: Show RightRail under Bio */}
+                                    {isBioBlock && (
+                                      <RightRail
+                                        person_id={person.id}
+                                        person={{
+                                          ...person,
+                                          created_at: new Date().toISOString(),
+                                          updated_at: new Date().toISOString()
+                                        } as Person}
+                                        preset={isLiving ? 'life' : 'tribute'}
+                                        viewer_role={data.permission?.role || null}
+                                        visibility={personWithSEO.visibility || 'private'}
+                                        indexability={personWithSEO.indexability || 'private'}
+                                      />
+                                    )}
                                   </div>
                                 )}
                               </Draggable>
@@ -543,75 +562,21 @@ export default function PersonPage() {
                           })}
                       </div>
 
-                      {/* Sidebar column for Quick Facts (desktop only, mobile shows inline) */}
+                      {/* Right Rail column (desktop only) */}
                       <div className="lg:col-span-4">
-                        {blocks
-                          .filter(block => block.type === 'quick_facts')
-                          .map((block, index) => {
-                            const actualIndex = blocks.findIndex(b => b.id === block.id)
-                            return (
-                              <div key={block.id} className="lg:block">
-                                {/* On mobile, show after bio */}
-                                <div className="lg:hidden">
-                                  <Draggable 
-                                    draggableId={block.id} 
-                                    index={actualIndex}
-                                    isDragDisabled={!canEdit}
-                                  >
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        className={cn(
-                                          "mb-6",
-                                          snapshot.isDragging && "opacity-50 scale-105 rotate-2 shadow-2xl"
-                                        )}
-                                      >
-                                        <PersonPageBlock
-                                          block={block}
-                                          canEdit={!!canEdit}
-                                          onVisibilityChange={(visibility) => 
-                                            handleVisibilityChange(block.id, visibility)
-                                          }
-                                          onRemove={() => handleRemoveBlock(block.id)}
-                                          dragHandleProps={provided.dragHandleProps}
-                                        >
-                                          <BlockRenderer 
-                                            block={block} 
-                                            person={{
-                                              ...person,
-                                              family_id: person.family_id || ''
-                                            }}
-                                            currentUserId={currentUserId}
-                                            canEdit={!!canEdit}
-                                            onUpdate={() => {
-                                              window.location.reload()
-                                            }}
-                                          />
-                                        </PersonPageBlock>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                </div>
-                                
-                                {/* On desktop, show in sidebar (no drag, sticky) */}
-                                <div className="hidden lg:block">
-                                  <BlockRenderer 
-                                    block={block} 
-                                    person={{
-                                      ...person,
-                                      family_id: person.family_id || ''
-                                    }}
-                                    currentUserId={currentUserId}
-                                    canEdit={!!canEdit}
-                                    onUpdate={() => {
-                                      window.location.reload()
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          })}
+                        <RightRail
+                          person_id={person.id}
+                          person={{
+                            ...person,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                          } as Person}
+                          preset={isLiving ? 'life' : 'tribute'}
+                          viewer_role={data.permission?.role || null}
+                          visibility={personWithSEO.visibility || 'private'}
+                          indexability={personWithSEO.indexability || 'private'}
+                          className="w-full"
+                        />
                       </div>
                     </>
                   )}
