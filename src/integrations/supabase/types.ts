@@ -4345,10 +4345,13 @@ export type Database = {
           death_place: string | null
           death_year: number | null
           family_id: string
+          favorite_food: string | null
+          favorite_song: string | null
           favorites: Json | null
           full_name: string
           gender: string | null
           given_name: string | null
+          hobbies: string[] | null
           id: string
           indexability: string
           is_living: boolean | null
@@ -4363,6 +4366,7 @@ export type Database = {
           qa_seed: boolean | null
           qa_seed_version: string | null
           short_bio: string | null
+          signature_saying: string | null
           slug: string | null
           surname: string | null
           theme_id: string | null
@@ -4385,10 +4389,13 @@ export type Database = {
           death_place?: string | null
           death_year?: number | null
           family_id: string
+          favorite_food?: string | null
+          favorite_song?: string | null
           favorites?: Json | null
           full_name: string
           gender?: string | null
           given_name?: string | null
+          hobbies?: string[] | null
           id?: string
           indexability?: string
           is_living?: boolean | null
@@ -4403,6 +4410,7 @@ export type Database = {
           qa_seed?: boolean | null
           qa_seed_version?: string | null
           short_bio?: string | null
+          signature_saying?: string | null
           slug?: string | null
           surname?: string | null
           theme_id?: string | null
@@ -4425,10 +4433,13 @@ export type Database = {
           death_place?: string | null
           death_year?: number | null
           family_id?: string
+          favorite_food?: string | null
+          favorite_song?: string | null
           favorites?: Json | null
           full_name?: string
           gender?: string | null
           given_name?: string | null
+          hobbies?: string[] | null
           id?: string
           indexability?: string
           is_living?: boolean | null
@@ -4443,6 +4454,7 @@ export type Database = {
           qa_seed?: boolean | null
           qa_seed_version?: string | null
           short_bio?: string | null
+          signature_saying?: string | null
           slug?: string | null
           surname?: string | null
           theme_id?: string | null

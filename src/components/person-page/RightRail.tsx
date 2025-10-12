@@ -10,6 +10,7 @@ import { AnniversariesWidget } from './blocks/AnniversariesWidget'
 import { VisibilitySearchStatus } from './blocks/VisibilitySearchStatus'
 import { MiniMap } from './blocks/MiniMap'
 import { MediaCounters } from './blocks/MediaCounters'
+import { FavoritesQuirks } from './blocks/FavoritesQuirks'
 import { 
   Info, 
   Pin, 
@@ -214,18 +215,23 @@ const MediaCountersSlot = ({
   <MediaCounters personId={personId} familyId={familyId} />
 )
 
-const FavoritesQuirksSlot = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <Heart className="h-4 w-4" />
-        Favorites & Quirks
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="text-sm text-muted-foreground">
-      <p>Add favorite things and quirks</p>
-    </CardContent>
-  </Card>
+const FavoritesQuirksSlot = ({ 
+  personId, 
+  familyId, 
+  canEdit, 
+  onUpdate 
+}: { 
+  personId: string
+  familyId: string
+  canEdit?: boolean
+  onUpdate?: () => void
+}) => (
+  <FavoritesQuirks 
+    personId={personId} 
+    familyId={familyId}
+    canEdit={canEdit}
+    onUpdate={onUpdate}
+  />
 )
 
 const CausesSlot = () => (
@@ -277,7 +283,7 @@ export function RightRail({
     visibilitySearch: false,
     miniMap: true,
     mediaCounters: true,
-    favoritesQuirks: false,
+    favoritesQuirks: true,
     causes: false,
     shareExport: true
   },
@@ -336,7 +342,14 @@ export function RightRail({
             familyId={person.family_id}
           />
         )}
-        {config.favoritesQuirks && <FavoritesQuirksSlot />}
+        {config.favoritesQuirks && (
+          <FavoritesQuirksSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+            canEdit={canEdit}
+            onUpdate={onUpdate}
+          />
+        )}
         {config.causes && <CausesSlot />}
         {config.shareExport && <ShareExportSlot />}
       </div>
