@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, useEffect, useRef } from 'react'
+import React, { ReactNode, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Breakpoint } from '@/hooks/useBreakpoint'
 import { BlockValidator, getBlockMetadata } from '@/lib/blockRegistry'
@@ -46,13 +46,8 @@ export function PortalLayoutManager({
   breakpoint,
   className
 }: PortalLayoutManagerProps) {
-  // Initialize block validator
-  const validatorRef = useRef<BlockValidator>(new BlockValidator())
-
-  // Reset validator on blocks change
-  useEffect(() => {
-    validatorRef.current.reset()
-  }, [blocks])
+  // Create a fresh validator per render to avoid StrictMode double-render duplicates
+  const validator = useMemo(() => new BlockValidator(), [blocks, breakpoint])
 
   // Create a map of block IDs to components
   const blockMap = useMemo(() => {
@@ -170,12 +165,12 @@ export function PortalLayoutManager({
     if (!component) return null
 
     // Validate singleton rules
-    if (!validatorRef.current.canRender(blockId)) {
+    if (!validator.canRender(blockId)) {
       return null // Drop duplicate singleton
     }
 
     // Register the block as rendered
-    validatorRef.current.registerBlock(blockId)
+    validator.registerBlock(blockId)
 
     const metadata = getBlockMetadata(blockId)
     const anchorId = metadata?.anchorId || blockId.toLowerCase().replace(/\s+/g, '-')

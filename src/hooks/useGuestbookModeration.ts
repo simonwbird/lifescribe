@@ -33,10 +33,7 @@ export function useGuestbookEntries(personId: string, pageType: 'life' | 'tribut
     queryKey: ['guestbook-entries', personId, pageType],
     queryFn: async () => {
       const { data, error } = await table()
-        .select(`
-          *,
-          profile:profile_id(full_name, avatar_url)
-        `)
+        .select('*')
         .eq('person_id', personId)
         .eq('page_type', pageType)
         .order('created_at', { ascending: false });
@@ -52,11 +49,7 @@ export function useGuestbookModerationQueue(familyId: string) {
     queryKey: ['guestbook-moderation-queue', familyId],
     queryFn: async () => {
       const { data, error } = await table()
-        .select(`
-          *,
-          profile:profile_id(full_name, avatar_url),
-          person:person_id(given_name, surname)
-        `)
+        .select('*')
         .eq('family_id', familyId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });

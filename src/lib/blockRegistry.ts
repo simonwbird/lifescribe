@@ -226,16 +226,21 @@ export class BlockValidator {
       return true // Allow unknown blocks
     }
 
-    // Check if it's a singleton and already rendered
     if (metadata.singleton && this.renderedBlocks.has(blockId)) {
-      console.error(
-        `[BlockRegistry] Singleton violation: Block "${metadata.displayName}" (${blockId}) cannot be rendered more than once. Second instance will be dropped.`,
-        {
-          blockId,
-          metadata,
-          existingInstances: Array.from(this.renderedBlocks)
-        }
-      )
+      // Defer logging to avoid React "setState during render" warnings from log collectors
+      setTimeout(() => {
+        try {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[BlockRegistry] Singleton violation: Block "${metadata.displayName}" (${blockId}) cannot be rendered more than once. Second instance will be dropped.`,
+            {
+              blockId,
+              metadata,
+              existingInstances: Array.from(this.renderedBlocks)
+            }
+          )
+        } catch {}
+      }, 0)
       return false
     }
 
