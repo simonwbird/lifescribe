@@ -24,7 +24,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
       setIsLoading(true)
       try {
       const { data: dbChapters, error } = await supabase
-        .from('timeline_chapters')
+        .from('timeline_chapters' as any)
         .select('*')
         .eq('person_id', personId)
         .order('display_order')
@@ -32,7 +32,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
       if (error) throw error
 
       if (dbChapters && dbChapters.length > 0) {
-        const loadedChapters: TimelineChapter[] = dbChapters.map((ch) => ({
+        const loadedChapters: TimelineChapter[] = (dbChapters as any[]).map((ch: any) => ({
             id: ch.id,
             title: ch.title,
             description: ch.description || undefined,
@@ -49,13 +49,13 @@ export function useTimelineChapters(personId: string, familyId: string) {
 
       // Load chapter assignments
       const { data: assignments } = await supabase
-        .from('timeline_chapter_assignments')
+        .from('timeline_chapter_assignments' as any)
         .select('*')
         .eq('person_id', personId)
 
       if (assignments) {
         const assignmentMap: Record<string, string> = {}
-        assignments.forEach((a) => {
+        ;(assignments as any[]).forEach((a: any) => {
             assignmentMap[`${a.item_type}-${a.item_id}`] = a.chapter_id
           })
           setItemChapters(assignmentMap)
@@ -77,7 +77,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
       const order = chapters.length - 1 // Before "Unorganized"
       
       const { data, error } = await supabase
-        .from('timeline_chapters')
+        .from('timeline_chapters' as any)
         .insert({
           person_id: personId,
           family_id: familyId,
@@ -88,7 +88,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
           created_by: (await supabase.auth.getUser()).data.user?.id
         })
         .select()
-        .single()
+        .single() as any
 
       if (error) throw error
 
@@ -118,7 +118,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
 
     try {
       const { error } = await supabase
-        .from('timeline_chapters')
+        .from('timeline_chapters' as any)
         .update({ title: newTitle })
         .eq('id', chapterId)
 
@@ -137,7 +137,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
     try {
       // Delete old assignment if exists
       await supabase
-        .from('timeline_chapter_assignments')
+        .from('timeline_chapter_assignments' as any)
         .delete()
         .eq('person_id', personId)
         .eq('item_id', itemId)
@@ -146,7 +146,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
       // Create new assignment if not moving to unorganized
       if (chapterId !== 'unorganized') {
         const { error } = await supabase
-          .from('timeline_chapter_assignments')
+          .from('timeline_chapter_assignments' as any)
           .insert({
             person_id: personId,
             chapter_id: chapterId,
@@ -174,7 +174,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
         const [itemType, itemId] = key.split('-')
         
         return supabase
-          .from('timeline_chapter_assignments')
+          .from('timeline_chapter_assignments' as any)
           .delete()
           .eq('person_id', personId)
           .eq('item_id', itemId)
@@ -203,7 +203,7 @@ export function useTimelineChapters(personId: string, familyId: string) {
       // Execute inserts
       if (insertData.length > 0) {
         const { error } = await supabase
-          .from('timeline_chapter_assignments')
+          .from('timeline_chapter_assignments' as any)
           .insert(insertData)
 
         if (error) throw error
