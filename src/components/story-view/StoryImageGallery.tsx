@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ImageViewer } from '@/components/ui/image-viewer';
-import { PhotoTagger } from '@/components/media/PhotoTagger';
+import { VisualPhotoTagger } from '@/components/media/VisualPhotoTagger';
 
 interface StoryImage {
   id: string;
@@ -128,18 +128,24 @@ export function StoryImageGallery({ images, mediaItems, familyId, storyId, class
         
         {/* Photo Tagging - show under gallery if we have the data */}
         {mediaItems && familyId && mediaItems.length > 0 && (
-          <div className="space-y-3">
-            {mediaItems.map((mediaItem, index) => (
-              <div key={mediaItem.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-                <div className="text-sm font-medium text-muted-foreground shrink-0">
-                  Photo {index + 1}
+          <div className="space-y-6">
+            {mediaItems.map((mediaItem, index) => {
+              const imageUrl = images.find(img => img.id === mediaItem.id)?.url
+              if (!imageUrl) return null
+              
+              return (
+                <div key={mediaItem.id} className="space-y-2">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Photo {index + 1} - {mediaItem.file_name}
+                  </div>
+                  <VisualPhotoTagger
+                    mediaId={mediaItem.id}
+                    familyId={familyId}
+                    imageUrl={imageUrl}
+                  />
                 </div>
-                <PhotoTagger
-                  mediaId={mediaItem.id}
-                  familyId={familyId}
-                />
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

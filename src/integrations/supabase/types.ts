@@ -1582,6 +1582,10 @@ export type Database = {
           family_id: string
           id: string
           link_strength: number | null
+          position_height: number | null
+          position_width: number | null
+          position_x: number | null
+          position_y: number | null
           source_id: string
           source_type: string
         }
@@ -1593,6 +1597,10 @@ export type Database = {
           family_id: string
           id?: string
           link_strength?: number | null
+          position_height?: number | null
+          position_width?: number | null
+          position_x?: number | null
+          position_y?: number | null
           source_id: string
           source_type: string
         }
@@ -1604,6 +1612,10 @@ export type Database = {
           family_id?: string
           id?: string
           link_strength?: number | null
+          position_height?: number | null
+          position_width?: number | null
+          position_x?: number | null
+          position_y?: number | null
           source_id?: string
           source_type?: string
         }

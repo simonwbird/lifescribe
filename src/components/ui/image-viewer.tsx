@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { X, ZoomIn, ZoomOut, RotateCw, Download, MessageCircle, Tag, Send, Loader2 } from 'lucide-react'
+import { X, ZoomIn, ZoomOut, RotateCw, Download, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
-import { PhotoTagger } from '@/components/media/PhotoTagger'
+import { VisualPhotoTagger } from '@/components/media/VisualPhotoTagger'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/integrations/supabase/client'
@@ -250,15 +250,14 @@ export function ImageViewer({ isOpen, onClose, imageUrl, imageAlt, title, mediaI
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-6">
                 {/* Photo Tagging Section */}
-                {mediaId && familyId && (
+                {mediaId && familyId && imageUrl && (
                   <div>
-                    <h3 className="font-semibold mb-3 flex items-center gap-2">
-                      <Tag className="h-4 w-4" />
-                      Tag People
-                    </h3>
-                    <PhotoTagger
+                    <h3 className="font-semibold mb-3">Tag People</h3>
+                    <VisualPhotoTagger
                       mediaId={mediaId}
                       familyId={familyId}
+                      imageUrl={imageUrl}
+                      className="max-h-[60vh]"
                     />
                   </div>
                 )}
