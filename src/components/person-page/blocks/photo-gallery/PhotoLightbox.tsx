@@ -412,7 +412,7 @@ export function PhotoLightbox({
               }}
             >
               <div className="relative w-full h-full">
-                <div className="absolute inset-0 border-2 border-white rounded-full shadow-lg" />
+                <div className="absolute inset-0 border-2 border-white rounded shadow-lg" />
                 <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap">
                   {tag.person_name}
                   {canEdit && (
