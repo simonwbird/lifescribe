@@ -99,6 +99,7 @@ export function getBlockLayoutId(blockType: string): string {
     
     // Audio blocks
     'audio_remembrances': 'Audio',
+    'voice_notes': 'Voice Notes',
     
     // Relationship blocks
     'people_web': 'Relationships',
@@ -106,6 +107,7 @@ export function getBlockLayoutId(blockType: string): string {
     
     // Guestbook blocks
     'guestbook_live': 'Guestbook',
+    'notes_from_friends': 'Notes from Friends',
     'guestbook_tribute': 'Guestbook',
     
     // Service blocks

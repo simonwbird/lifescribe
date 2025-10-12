@@ -19,19 +19,19 @@ import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-interface GuestbookLiveBlockProps {
+interface NotesFromFriendsBlockProps {
   personId: string;
   familyId: string;
   canModerate: boolean;
   pageVisibility?: 'public' | 'private' | 'unlisted';
 }
 
-export default function GuestbookLiveBlock({ 
+export default function NotesFromFriendsBlock({ 
   personId, 
   familyId, 
   canModerate,
   pageVisibility = 'private'
-}: GuestbookLiveBlockProps) {
+}: NotesFromFriendsBlockProps) {
   const [user, setUser] = useState<any>(null);
   const [content, setContent] = useState('');
   const [visitorName, setVisitorName] = useState('');
@@ -216,7 +216,7 @@ export default function GuestbookLiveBlock({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Guestbook
+            Notes from Friends
           </CardTitle>
           <CardDescription>
             Sign in to view and leave messages.
@@ -237,11 +237,11 @@ export default function GuestbookLiveBlock({
   }
 
   return (
-    <Card id="guestbook">
+    <Card id="notes-from-friends">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5" />
-          Guestbook
+          Notes from Friends
         </CardTitle>
         <CardDescription>
           Leave a note, share encouragement, or drop a quick hello.

@@ -70,13 +70,15 @@ export function usePersonPagePresets(
         'story_roll': 'story_collage',
         'people_web': 'relationships',
         'guestbook_live': 'guestbook_tribute',
+        'notes_from_friends': 'guestbook_tribute',
+        'voice_notes': 'audio_remembrances',
         // Tribute → Life
         'hero_memorial': 'hero',
         'life_arc_timeline': 'timeline',
         'story_collage': 'story_roll',
-        'audio_remembrances': 'story_roll',
+        'audio_remembrances': 'voice_notes',
         'gallery': 'photos',
-        'guestbook_tribute': 'guestbook_live',
+        'guestbook_tribute': 'notes_from_friends',
         'service_events': 'now_next'
       }
 

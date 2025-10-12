@@ -7,7 +7,7 @@ import { Mic, Volume2 } from 'lucide-react'
 import { RecordingFlow } from './audio-remembrances/RecordingFlow'
 import { AudioCard } from './audio-remembrances/AudioCard'
 
-interface AudioRemembrancesBlockProps {
+interface VoiceNotesBlockProps {
   personId: string
   familyId: string
   blockContent?: any
@@ -15,13 +15,13 @@ interface AudioRemembrancesBlockProps {
   onUpdate?: () => void
 }
 
-export default function AudioRemembrancesBlock({
+export default function VoiceNotesBlock({
   personId,
   familyId,
   blockContent,
   canEdit,
   onUpdate
-}: AudioRemembrancesBlockProps) {
+}: VoiceNotesBlockProps) {
   const [showRecording, setShowRecording] = useState(false)
 
   // Fetch person data
@@ -39,9 +39,9 @@ export default function AudioRemembrancesBlock({
     }
   })
 
-  // Fetch audio remembrances for this specific person
+  // Fetch voice notes for this specific person
   const { data: recordings, isLoading, refetch } = useQuery({
-    queryKey: ['audio-remembrances', personId],
+    queryKey: ['voice-notes', personId],
     queryFn: async () => {
       // 1) Directly assigned recordings via tribute_id
       const { data: direct, error: directErr } = await supabase
@@ -106,7 +106,7 @@ export default function AudioRemembrancesBlock({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-pulse text-muted-foreground">
-          Loading remembrances...
+          Loading notes...
         </div>
       </div>
     )
@@ -117,10 +117,10 @@ export default function AudioRemembrancesBlock({
       <>
         <EmptyState
           icon={<Volume2 className="h-6 w-6" />}
-          title="No audio remembrances yet"
-          description="Record a 60–120s tribute. Speak from the heart."
+          title="No voice notes yet"
+          description="Record a 60–120s note. Share your thoughts."
           action={{
-            label: "Record Memory",
+            label: "Record Voice Note",
             onClick: () => setShowRecording(true),
             variant: "default"
           }}
@@ -147,10 +147,10 @@ export default function AudioRemembrancesBlock({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-serif text-lg font-semibold">
-            Audio Remembrances
+            Voice Notes
           </h3>
           <p className="text-sm text-muted-foreground">
-            {recordings.length} {recordings.length === 1 ? 'memory' : 'memories'} shared
+            {recordings.length} {recordings.length === 1 ? 'note' : 'notes'} shared
           </p>
         </div>
         <Button
@@ -158,7 +158,7 @@ export default function AudioRemembrancesBlock({
           className="gap-2"
         >
           <Mic className="h-4 w-4" />
-          Record Memory
+          Record Voice Note
         </Button>
       </div>
 

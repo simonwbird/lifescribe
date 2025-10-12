@@ -48,6 +48,7 @@ export type BlockType =
   | 'objects_places'
   | 'now_next'
   | 'guestbook_live'
+  | 'notes_from_friends'
   | 'letters_time_capsule'
   | 'favorites_quirks'
   | 'photo_gallery'
@@ -57,6 +58,7 @@ export type BlockType =
   | 'life_arc_timeline'
   | 'story_collage'
   | 'audio_remembrances'
+  | 'voice_notes'
   | 'gallery'
   | 'relationships'
   | 'guestbook_tribute'
@@ -115,12 +117,12 @@ export const LIFE_PRESET: BlockType[] = [
   'story_collage',
   'timeline_enhanced',
   'photo_gallery',
-  'audio_remembrances',
+  'voice_notes',
   'objects_places',
   'people_web',
   'favorites_quirks',
   'letters_time_capsule',
-  'guestbook_live',
+  'notes_from_friends',
 ]
 
 // Anchor map for URL navigation
@@ -140,6 +142,7 @@ export const BLOCK_ANCHORS: Record<BlockType, string> = {
   photos: 'photos',
   gallery: 'photos',
   audio_remembrances: 'audio',
+  voice_notes: 'voice-notes',
   objects_places: 'places',
   people_web: 'people',
   relationships: 'people',
@@ -147,6 +150,7 @@ export const BLOCK_ANCHORS: Record<BlockType, string> = {
   favorites_quirks: 'favorites',
   letters_time_capsule: 'letters',
   guestbook_live: 'guestbook',
+  notes_from_friends: 'notes-from-friends',
   guestbook_tribute: 'guestbook',
   bio: 'bio',
   bio_overview: 'bio',
@@ -206,8 +210,8 @@ export const BLOCK_LIBRARY: Array<{
     presets: ['life']
   },
   {
-    type: 'guestbook_live',
-    label: 'Guestbook',
+    type: 'notes_from_friends',
+    label: 'Notes from Friends',
     description: 'Messages and well-wishes',
     icon: 'MessageSquare',
     defaultContent: { entries: [] },
@@ -287,9 +291,9 @@ export const BLOCK_LIBRARY: Array<{
     presets: ['tribute']
   },
   {
-    type: 'audio_remembrances',
-    label: 'Audio Remembrances',
-    description: 'Recorded memories and messages',
+    type: 'voice_notes',
+    label: 'Voice Notes',
+    description: 'Recorded voice messages',
     icon: 'Mic',
     defaultContent: { recordings: [] },
     presets: ['tribute']

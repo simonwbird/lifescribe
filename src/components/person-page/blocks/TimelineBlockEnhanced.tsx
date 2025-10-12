@@ -576,12 +576,12 @@ export default function TimelineBlockEnhanced({
         </div>
       )}
 
-      {/* Audio Remembrances */}
+      {/* Voice Notes */}
       {audioRecordings.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Volume2 className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-semibold">Audio Remembrances</h3>
+            <h3 className="text-lg font-semibold">Voice Notes</h3>
             <Badge variant="secondary">{audioRecordings.length}</Badge>
           </div>
           

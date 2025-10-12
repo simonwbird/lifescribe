@@ -70,11 +70,13 @@ const getSectionId = (blockType: string): string => {
     'story_collage': 'stories',
     'stories': 'stories',
     'audio_remembrances': 'audio',
+    'voice_notes': 'voice-notes',
     'photos': 'photos',
     'gallery': 'photos',
     'people_web': 'relationships',
     'relationships': 'relationships',
     'guestbook_live': 'guestbook',
+    'notes_from_friends': 'notes-from-friends',
     'guestbook_tribute': 'guestbook',
     'service_events': 'services',
     'objects_places': 'places'

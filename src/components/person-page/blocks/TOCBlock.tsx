@@ -20,10 +20,12 @@ const SECTIONS: Omit<TOCSection, 'element'>[] = [
   { id: 'timeline', label: 'Timeline' },
   { id: 'stories', label: 'Stories' },
   { id: 'audio', label: 'Audio' },
+  { id: 'voice-notes', label: 'Voice Notes' },
   { id: 'photos', label: 'Photos' },
   { id: 'places', label: 'Places' },
   { id: 'relationships', label: 'Relationships' },
   { id: 'guestbook', label: 'Guestbook' },
+  { id: 'notes-from-friends', label: 'Notes from Friends' },
   { id: 'services', label: 'Services' }
 ]
 

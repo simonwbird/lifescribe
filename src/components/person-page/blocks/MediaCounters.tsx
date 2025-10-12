@@ -59,7 +59,7 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
         photosCount = count || 0
       }
 
-      // 3) Audio: all completed audio remembrances for the family
+      // 3) Audio: all completed voice recordings for the family
       const { count: audioCount, error: audioError } = await supabase
         .from('audio_recordings')
         .select('*', { count: 'exact', head: true })

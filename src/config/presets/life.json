@@ -40,10 +40,10 @@
       "label": "Now & Next"
     },
     {
-      "type": "guestbook_live",
+      "type": "notes_from_friends",
       "order": 6,
       "visibility": "family",
-      "label": "Guestbook"
+      "label": "Notes from Friends"
     }
   ],
   "theme": {

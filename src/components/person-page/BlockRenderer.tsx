@@ -8,10 +8,10 @@ import TimelineBlockEnhanced from './blocks/TimelineBlockEnhanced'
 import { ObjectsPlacesBlock } from './blocks/ObjectsPlacesBlock'
 import QuickFactsBlock from './blocks/QuickFactsBlock'
 import StoryCollageBlock from './blocks/StoryCollageBlock'
-import AudioRemembrancesBlock from './blocks/AudioRemembrancesBlock'
+import VoiceNotesBlock from './blocks/VoiceNotesBlock'
 import PhotoGalleryBlock from './blocks/PhotoGalleryBlock'
 import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
-import GuestbookLiveBlock from './blocks/GuestbookLiveBlock'
+import NotesFromFriendsBlock from './blocks/NotesFromFriendsBlock'
 import NowNextBlock from './blocks/NowNextBlock'
 import LettersTimeCapsuleBlock from './blocks/LettersTimeCapsuleBlock'
 import { Button } from '@/components/ui/button'
@@ -124,8 +124,9 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'audio_remembrances':
+    case 'voice_notes':
       return (
-        <AudioRemembrancesBlock
+        <VoiceNotesBlock
           personId={person.id}
           familyId={person.family_id || ''}
           blockContent={block.content_json}
@@ -135,8 +136,9 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
       )
 
     case 'guestbook_live':
+    case 'notes_from_friends':
       return (
-        <GuestbookLiveBlock
+        <NotesFromFriendsBlock
           personId={person.id}
           familyId={person.family_id || ''}
           canModerate={canEdit}
