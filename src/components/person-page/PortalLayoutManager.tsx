@@ -46,8 +46,8 @@ export function PortalLayoutManager({
   breakpoint,
   className
 }: PortalLayoutManagerProps) {
-  // Create a fresh validator per render to avoid StrictMode double-render duplicates
-  const validator = useMemo(() => new BlockValidator(), [blocks, breakpoint])
+  // Create a fresh validator on EVERY render to prevent state persistence
+  const validator = new BlockValidator()
 
   // Create a map of block IDs to components
   const blockMap = useMemo(() => {
