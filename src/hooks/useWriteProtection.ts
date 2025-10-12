@@ -1,6 +1,6 @@
 import { useImpersonation } from '@/contexts/ImpersonationContext'
 import { useAnalytics } from './useAnalytics'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 
 export function useWriteProtection() {
   const { isWriteBlocked } = useImpersonation()

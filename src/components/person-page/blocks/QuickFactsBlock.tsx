@@ -11,7 +11,7 @@ import {
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 
 interface QuickFact {
   icon: React.ElementType

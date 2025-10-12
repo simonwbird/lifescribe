@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Camera, Edit2, Heart, TreePine } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { AvatarService } from '@/lib/avatarService'

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, Heart, Camera, Users, TreePine, ChefHat } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 
 interface FirstActionPromptsProps {

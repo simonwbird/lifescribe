@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { AlertTriangle, Users, Mail, Clock, Shield, CheckCircle, Info } from 'lucide-react'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 import { useEventTracking } from '@/hooks/useEventTracking'
 
 interface ClaimAdminFlowProps {

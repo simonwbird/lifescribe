@@ -1,7 +1,7 @@
-import React, { ReactNode, useMemo, useEffect } from 'react'
+import React, { ReactNode, useMemo, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Breakpoint } from '@/hooks/useBreakpoint'
-import { getBlockMetadata } from '@/lib/blockRegistry'
+import { BlockValidator, getBlockMetadata } from '@/lib/blockRegistry'
 import { cn } from '@/lib/utils'
 import { DEFAULT_LAYOUT_MAP } from '@/config/personPageLayouts'
 
@@ -46,6 +46,13 @@ export function PortalLayoutManager({
   breakpoint,
   className
 }: PortalLayoutManagerProps) {
+  // Stable validator ref that persists across renders
+  const validatorRef = useRef<BlockValidator>(new BlockValidator())
+
+  // Reset validator when blocks change (useEffect to avoid render-phase side effects)
+  useEffect(() => {
+    validatorRef.current = new BlockValidator()
+  }, [blocks.map(b => b.id).join(',')])
 
   // Create a map of block IDs to components
   const blockMap = useMemo(() => {
@@ -156,12 +163,19 @@ export function PortalLayoutManager({
   }, [])
 
   /**
-   * Render a block with semantic HTML
-   * Note: Singleton enforcement is handled by layout logic (each block ID appears once in arrays)
+   * Render a block with singleton validation
    */
   const renderBlock = (blockId: string) => {
     const component = blockMap.get(blockId)
     if (!component) return null
+
+    // Validate singleton rules
+    if (!validatorRef.current.canRender(blockId)) {
+      return null // Drop duplicate singleton
+    }
+
+    // Register the block as rendered
+    validatorRef.current.registerBlock(blockId)
 
     const metadata = getBlockMetadata(blockId)
     const anchorId = metadata?.anchorId || blockId.toLowerCase().replace(/\s+/g, '-')
