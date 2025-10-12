@@ -23,8 +23,8 @@ export default function MiniMapView({ places, onPlaceClick }: MiniMapViewProps) 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
-    // Get Mapbox token from environment or use placeholder
-    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbTVlZTBwdXMwM2FvMmxzYzh6MHBqbGV1In0.placeholder'
+    // Use Mapbox public token
+    const mapboxToken = 'pk.eyJ1Ijoic2ltb253YmlyZCIsImEiOiJjbWduYzczdHkwMG54MmtzY2UydnN3OHZ5In0.vj5fHWpjb7eU8d-a7vKENg'
     
     mapboxgl.accessToken = mapboxToken
 
