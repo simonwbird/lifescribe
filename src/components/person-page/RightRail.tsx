@@ -65,6 +65,22 @@ const QuickFactsSlot = ({ person }: { person: Person }) => (
         <div>
           <span className="text-muted-foreground">Born:</span>{' '}
           <span>{new Date(person.birth_date).toLocaleDateString()}</span>
+          {(person as any).birth_place && (
+            <span className="text-muted-foreground text-xs block ml-0 mt-0.5">
+              {(person as any).birth_place}
+            </span>
+          )}
+        </div>
+      )}
+      {!person.is_living && person.death_date && (
+        <div>
+          <span className="text-muted-foreground">Died:</span>{' '}
+          <span>{new Date(person.death_date).toLocaleDateString()}</span>
+          {(person as any).death_place && (
+            <span className="text-muted-foreground text-xs block ml-0 mt-0.5">
+              {(person as any).death_place}
+            </span>
+          )}
         </div>
       )}
       {person.gender && (

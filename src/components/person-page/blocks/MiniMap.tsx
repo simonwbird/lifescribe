@@ -12,6 +12,11 @@ interface Place {
   longitude?: number
 }
 
+interface PersonLocation {
+  birth_place?: string
+  death_place?: string
+}
+
 interface MiniMapProps {
   personId: string
   familyId: string
@@ -30,23 +35,86 @@ export function MiniMap({ personId, familyId }: MiniMapProps) {
     fetchPlaces()
   }, [personId])
 
+  const geocodeLocation = async (locationString: string): Promise<{ latitude: number, longitude: number } | null> => {
+    if (!locationString) return null
+    
+    try {
+      const mapboxToken = 'pk.eyJ1Ijoic2ltb253YmlyZCIsImEiOiJjbWduYzczdHkwMG54MmtzY2UydnN3OHZ5In0.vj5fHWpjb7eU8d-a7vKENg'
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationString)}.json?access_token=${mapboxToken}&limit=1`
+      )
+      
+      if (!response.ok) return null
+      
+      const data = await response.json()
+      if (data.features && data.features.length > 0) {
+        const [longitude, latitude] = data.features[0].center
+        return { latitude, longitude }
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error)
+    }
+    
+    return null
+  }
+
   const fetchPlaces = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch person data for birth/death locations
+      const { data: personData, error: personError } = await supabase
+        .from('people')
+        .select('birth_place, death_place')
+        .eq('id', personId)
+        .single()
+
+      if (personError) throw personError
+
+      // Fetch places from places table
+      const { data: placesData, error: placesError } = await supabase
         .from('places')
         .select('id, name, place_type, latitude, longitude')
         .eq('family_id', familyId)
         .or(`person_id.eq.${personId},created_by.eq.${personId}`)
         .limit(6)
 
-      if (error) throw error
+      if (placesError) throw placesError
 
       // Filter to key place types
-      const keyPlaces = (data || []).filter(place => 
+      const keyPlaces = (placesData || []).filter(place => 
         ['birth', 'home', 'school', 'burial', 'residence', 'workplace'].includes(place.place_type?.toLowerCase() || '')
       )
 
-      setPlaces(keyPlaces.slice(0, 6))
+      const allPlaces: Place[] = [...keyPlaces]
+
+      // Add birth location if available
+      if (personData?.birth_place) {
+        const coords = await geocodeLocation(personData.birth_place)
+        if (coords) {
+          allPlaces.push({
+            id: `birth-${personId}`,
+            name: personData.birth_place,
+            place_type: 'birth',
+            latitude: coords.latitude,
+            longitude: coords.longitude
+          })
+        }
+      }
+
+      // Add death location if available
+      if (personData?.death_place) {
+        const coords = await geocodeLocation(personData.death_place)
+        if (coords) {
+          allPlaces.push({
+            id: `death-${personId}`,
+            name: personData.death_place,
+            place_type: 'death',
+            latitude: coords.latitude,
+            longitude: coords.longitude
+          })
+        }
+      }
+
+      setPlaces(allPlaces.slice(0, 6))
     } catch (error) {
       console.error('Error fetching places:', error)
     } finally {
