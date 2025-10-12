@@ -41,29 +41,44 @@ export function PageLayoutManager({
     blocks.forEach(block => {
       map.set(block.id, block.component)
     })
+    console.log('📦 PageLayoutManager: Block map created', {
+      blockIds: Array.from(map.keys()),
+      breakpoint
+    })
     return map
-  }, [blocks])
+  }, [blocks, breakpoint])
 
   // Get the current layout configuration
   const currentLayout = layoutMap[breakpoint]
+  
+  console.log('🗺️ PageLayoutManager: Current layout', {
+    breakpoint,
+    mainIds: currentLayout.main,
+    railIds: currentLayout.rail,
+    availableBlocks: Array.from(blockMap.keys())
+  })
 
   // Distribute blocks into main and rail based on layout map
   const mainBlocks = useMemo(() => {
-    return currentLayout.main
+    const blocks = currentLayout.main
       .map(blockId => ({
         id: blockId,
         component: blockMap.get(blockId)
       }))
       .filter(item => item.component !== undefined)
+    console.log('📍 Main blocks:', blocks.map(b => b.id))
+    return blocks
   }, [currentLayout.main, blockMap])
 
   const railBlocks = useMemo(() => {
-    return currentLayout.rail
+    const blocks = currentLayout.rail
       .map(blockId => ({
         id: blockId,
         component: blockMap.get(blockId)
       }))
       .filter(item => item.component !== undefined)
+    console.log('🎯 Rail blocks:', blocks.map(b => b.id))
+    return blocks
   }, [currentLayout.rail, blockMap])
 
   // Handle blocks not in layout map (default to main)
