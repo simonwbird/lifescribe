@@ -24,11 +24,7 @@ import { StewardToolsPanel } from '@/components/steward-tools'
 import { SuggestChangeButton } from '@/components/person-page/SuggestChangeButton'
 import { LastUpdatedInfo } from '@/components/person-page/LastUpdatedInfo'
 import { VisibilityChips } from '@/components/person-page/VisibilityChips'
-import { RightRail } from '@/components/person-page/RightRail'
 import { PageLayoutManager, BlockItem } from '@/components/person-page/PageLayoutManager'
-import { PortalLayoutManager } from '@/components/person-page/PortalLayoutManager'
-import { DEFAULT_LAYOUT_MAP, getBlockLayoutId } from '@/config/personPageLayouts'
-import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import {
   QuickFactsWidget,
@@ -55,6 +51,8 @@ import { toast } from '@/hooks/use-toast'
 import { PerformanceBudgetMonitor, SkipLink } from '@/components/performance'
 import { prefetchVisibleLinks, enableHoverPrefetch } from '@/utils/linkPrefetch'
 import { cn } from '@/lib/utils'
+import { DEFAULT_LAYOUT_MAP, getBlockLayoutId } from '@/config/personPageLayouts'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 // Helper function to map block types to section IDs for TOC
 const getSectionId = (blockType: string): string => {
@@ -756,7 +754,7 @@ export default function PersonPage() {
                     </div>
                   ) : (
                     <ErrorBoundary route={`/people/${id}` as string}>
-                      <PortalLayoutManager
+                      <PageLayoutManager
                         blocks={buildBlocksArray(
                           blocks,
                           {
