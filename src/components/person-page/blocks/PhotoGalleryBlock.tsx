@@ -31,21 +31,11 @@ export default function PhotoGalleryBlock({
   const [showAlbumManager, setShowAlbumManager] = useState(false)
   const [selectedTaggedPerson, setSelectedTaggedPerson] = useState<string | null>(null)
 
-  // Fetch photos from stories and media linked to this person OR tagged in photos
+  // Fetch photos where this person is tagged
   const { data: photos, isLoading, refetch } = useQuery({
     queryKey: ['person-photos', personId, familyId],
     queryFn: async () => {
-      // 1) Find stories this person is linked to
-      const { data: links, error: linksError } = await supabase
-        .from('person_story_links')
-        .select('story_id')
-        .eq('person_id', personId)
-
-      if (linksError) throw linksError
-
-      const storyIds = (links || []).map((l: any) => l.story_id).filter(Boolean)
-      
-      // 2) Also find photos where this person is tagged
+      // Find photos where this person is tagged
       const { data: faceTags, error: faceTagsError } = await supabase
         .from('face_tags')
         .select('media_id')
@@ -56,22 +46,15 @@ export default function PhotoGalleryBlock({
 
       const taggedMediaIds = (faceTags || []).map((t: any) => t.media_id).filter(Boolean)
       
-      if (storyIds.length === 0 && taggedMediaIds.length === 0) return []
+      if (taggedMediaIds.length === 0) return []
 
-      // 3) Fetch media for those stories OR tagged media
-      let query = supabase
+      // Fetch media for tagged photos only
+      const query = supabase
         .from('media')
         .select('id, file_path, mime_type, created_at, story_id, individual_story_id')
         .eq('family_id', familyId)
         .ilike('mime_type', 'image/%')
-
-      if (storyIds.length > 0 && taggedMediaIds.length > 0) {
-        query = query.or(`story_id.in.(${storyIds.join(',')}),individual_story_id.in.(${storyIds.join(',')}),id.in.(${taggedMediaIds.join(',')})`)
-      } else if (storyIds.length > 0) {
-        query = query.or(`story_id.in.(${storyIds.join(',')}),individual_story_id.in.(${storyIds.join(',')})`)
-      } else if (taggedMediaIds.length > 0) {
-        query = query.in('id', taggedMediaIds)
-      }
+        .in('id', taggedMediaIds)
 
       const { data: mediaData, error: mediaError } = await query
 
