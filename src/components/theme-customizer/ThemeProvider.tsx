@@ -25,6 +25,8 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
   useEffect(() => {
     // Use default theme if none provided
     const activeTheme = theme || DEFAULT_THEME
+    
+    console.log('🎨 ThemeProvider: Applying theme', activeTheme)
 
     const root = document.documentElement
     

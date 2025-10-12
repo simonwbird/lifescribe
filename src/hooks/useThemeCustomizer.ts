@@ -115,7 +115,11 @@ export function useThemeCustomizer(personId: string, initialThemeId?: string) {
   }, [currentTheme])
 
   const updatePreview = (updates: Partial<ThemeConfig>) => {
-    setPreviewTheme(prev => prev ? { ...prev, ...updates } : null)
+    // Use current theme as base if previewTheme isn't set yet
+    const baseTheme = previewTheme || currentTheme || defaultTheme
+    const newTheme = { ...baseTheme, ...updates }
+    console.log('🔧 Preview theme update:', { baseTheme, updates, newTheme })
+    setPreviewTheme(newTheme)
     setIsPreviewMode(true)
   }
 

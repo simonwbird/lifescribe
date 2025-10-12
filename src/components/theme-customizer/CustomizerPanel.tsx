@@ -60,6 +60,7 @@ export function CustomizerPanel({ personId, themeId, onClose }: CustomizerPanelP
 
   const handleColorChange = (key: keyof typeof customColors, value: string) => {
     const newColors = { ...customColors, [key]: value }
+    console.log('🎨 Color change:', { key, value, currentPalette: currentTheme.palette })
     setCustomColors(newColors)
     updatePreview({
       palette: {
