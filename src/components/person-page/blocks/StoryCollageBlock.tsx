@@ -47,15 +47,27 @@ export default function StoryCollageBlock({
   const { data: stories, isLoading } = useQuery({
     queryKey: ['person-stories-collage', personId],
     queryFn: async () => {
+      // 1) Get story IDs linked to this person
+      const { data: links, error: linksError } = await supabase
+        .from('person_story_links')
+        .select('story_id')
+        .eq('person_id', personId)
+
+      if (linksError) throw linksError
+
+      const storyIds = (links || []).map((l: any) => l.story_id).filter(Boolean)
+      if (storyIds.length === 0) return []
+
+      // 2) Fetch stories with details
       const { data, error } = await supabase
         .from('stories')
         .select(`
           *,
           profiles:profile_id(id, full_name, avatar_url),
-          media(id, file_path, mime_type)
+          media!media_story_id_fkey(id, file_path, mime_type)
         `)
         .eq('family_id', familyId)
-        .contains('tagged_people', [personId])
+        .in('id', storyIds)
         .order('created_at', { ascending: false })
 
       if (error) throw error
