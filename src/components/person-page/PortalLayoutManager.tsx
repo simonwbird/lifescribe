@@ -1,6 +1,7 @@
-import React, { ReactNode, useMemo, useEffect } from 'react'
+import React, { ReactNode, useMemo, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Breakpoint } from '@/hooks/useBreakpoint'
+import { BlockValidator, getBlockMetadata } from '@/lib/blockRegistry'
 import { cn } from '@/lib/utils'
 
 export interface BlockItem {
@@ -33,6 +34,7 @@ interface PortalLayoutManagerProps {
 /**
  * PortalLayoutManager uses React Portals to teleport blocks between containers
  * Each block is rendered once and mounted into #main or #rail based on breakpoint
+ * Enforces singleton rules via BlockValidator
  */
 export function PortalLayoutManager({
   blocks,
@@ -40,6 +42,14 @@ export function PortalLayoutManager({
   breakpoint,
   className
 }: PortalLayoutManagerProps) {
+  // Initialize block validator
+  const validatorRef = useRef<BlockValidator>(new BlockValidator())
+
+  // Reset validator on blocks change
+  useEffect(() => {
+    validatorRef.current.reset()
+  }, [blocks])
+
   // Create a map of block IDs to components
   const blockMap = useMemo(() => {
     const map = new Map<string, ReactNode>()
@@ -72,9 +82,38 @@ export function PortalLayoutManager({
     const railContainer = document.getElementById('portal-rail')
 
     if (!mainContainer || !railContainer) {
-      console.warn('Portal containers not found')
+      console.warn('[PortalLayoutManager] Portal containers not found')
     }
   }, [])
+
+  /**
+   * Render a block with singleton validation
+   */
+  const renderBlock = (blockId: string) => {
+    const component = blockMap.get(blockId)
+    if (!component) return null
+
+    // Validate singleton rules
+    if (!validatorRef.current.canRender(blockId)) {
+      return null // Drop duplicate singleton
+    }
+
+    // Register the block as rendered
+    validatorRef.current.registerBlock(blockId)
+
+    const metadata = getBlockMetadata(blockId)
+    
+    return (
+      <div 
+        key={blockId} 
+        data-block-id={blockId}
+        data-block-singleton={metadata?.singleton}
+        data-block-category={metadata?.category}
+      >
+        {component}
+      </div>
+    )
+  }
 
   return (
     <div className={cn('lg:grid lg:grid-cols-12 lg:gap-6', className)}>
@@ -84,16 +123,7 @@ export function PortalLayoutManager({
         className="lg:col-span-8 space-y-6"
         data-portal-container="main"
       >
-        {mainBlockIds.map(blockId => {
-          const component = blockMap.get(blockId)
-          if (!component) return null
-          
-          return (
-            <div key={blockId} data-block-id={blockId}>
-              {component}
-            </div>
-          )
-        })}
+        {mainBlockIds.map(blockId => renderBlock(blockId))}
       </div>
 
       {/* Right rail column */}
@@ -105,16 +135,7 @@ export function PortalLayoutManager({
         )}
         data-portal-container="rail"
       >
-        {railBlockIds.map(blockId => {
-          const component = blockMap.get(blockId)
-          if (!component) return null
-          
-          return (
-            <div key={blockId} data-block-id={blockId}>
-              {component}
-            </div>
-          )
-        })}
+        {railBlockIds.map(blockId => renderBlock(blockId))}
       </div>
     </div>
   )
