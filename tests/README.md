@@ -1,112 +1,163 @@
-# E2E Tests for Simple Mode & New Memory FAB
+# Person Page Tests
 
-This directory contains Playwright E2E tests for the Simple Mode story creation flows and the New Memory FAB feature.
+## Overview
 
-## Test Files
-
-### Story Creation Tests
-- **stories_text.spec.ts**: Tests for creating text stories
-- **stories_photo.spec.ts**: Tests for uploading photos and creating photo stories
-- **stories_voice.spec.ts**: Tests for voice recording and audio upload
-- **drafts.spec.ts**: Tests for draft auto-save and recovery
-
-### New Memory FAB Tests
-- **new_memory_fab.spec.ts**: Tests for the floating action button and modal chooser
+This test suite validates the Person Page layout system, ensuring:
+- No duplicate blocks across breakpoints
+- Proper semantic HTML and accessibility
+- Stable anchor IDs for navigation
+- Correct visual placement at each breakpoint
 
 ## Running Tests
 
-### Prerequisites
-
-Make sure you have test fixtures in place:
-- `tests/fixtures/test-image.png` - A small test image
-- `tests/fixtures/test-audio.mp3` - A short test audio file
-- `tests/fixtures/test-file.txt` - A text file for validation testing
-
-### Run all tests
+### All Tests
 ```bash
-npx playwright test
+npm run test:e2e
 ```
 
-### Run specific test file
+### Specific Test File
 ```bash
-npx playwright test stories_text.spec.ts
-npx playwright test new_memory_fab.spec.ts
+npx playwright test tests/person-page-no-duplicates.spec.ts
 ```
 
-### Run tests in headed mode (with browser UI)
+### With UI Mode (Interactive)
 ```bash
-npx playwright test --headed
+npx playwright test --ui
 ```
 
-### Run tests in debug mode
+### Generate Screenshots
 ```bash
-npx playwright test --debug
+npx playwright test --update-snapshots
 ```
 
-### View test report
+## Test Coverage
+
+### 1. Unique Blocks Across Breakpoints
+**File:** `person-page-no-duplicates.spec.ts`
+
+Verifies each block appears exactly once at:
+- Desktop (1440x900)
+- Tablet (768x1024)
+- Mobile (375x667)
+
+**Blocks tested:**
+- Content: Hero, Bio, Timeline, Stories, Photos, Audio, Relationships, Guestbook
+- Widgets: QuickFacts, TOC, ContributeCTA, Anniversaries, VisibilitySearch, MiniMap, MediaCounters, FavoritesQuirks, Causes, ShareExport
+
+### 2. Visual Placement
+Checks that:
+- **Desktop/Tablet:** Rail is visible, QuickFacts appears in sidebar
+- **Mobile:** Rail is hidden, QuickFacts appears after Bio and before Timeline
+
+### 3. Anchor Navigation
+Verifies:
+- TOC links work and jump to correct sections
+- URL hash updates correctly
+- Smooth scrolling functions properly
+
+### 4. Accessibility
+Validates:
+- Main landmark exists with `role="main"`
+- Complementary landmark for sidebar
+- Sections have proper ARIA labels
+- Main element is focusable (`tabindex="-1"`) for skip link
+- Scroll margin offset for fixed header
+
+### 5. Singleton Enforcement
+Confirms widget blocks (marked `singleton: true`) never appear more than once.
+
+## Expected Results
+
+✅ **Pass Criteria:**
+- All blocks appear exactly once per breakpoint
+- Visual placement matches specification
+- Anchor links navigate correctly
+- ARIA landmarks present and correct
+- Zero duplicate IDs in DOM
+
+❌ **Fail Scenarios:**
+- Any block appears more than once
+- QuickFacts not in rail on desktop
+- Rail visible on mobile
+- Missing ARIA landmarks
+- Broken anchor navigation
+
+## Screenshots
+
+Tests automatically generate screenshots in `tests/screenshots/`:
+- `person-page-desktop.png`
+- `person-page-tablet.png`
+- `person-page-mobile.png`
+
+Use these for visual regression testing.
+
+## Debugging
+
+### View Test Results
 ```bash
 npx playwright show-report
 ```
 
-## Test Data Attributes
+### Run in Headed Mode (See Browser)
+```bash
+npx playwright test --headed
+```
 
-### Story Creation Forms
-- `story-title-input` - Story title input field
-- `story-content-input` - Story content textarea
-- `family-select-{id}` - Family picker buttons (when multiple families)
-- `photo-input` - Photo file input
-- `voice-upload-input` - Voice audio file input
-- `publish-button` - Publish story button
-- `save-draft-button` - Save as draft button
-- `story-card` - Story card in feed
-- `photo-preview` - Photo preview thumbnails
+### Debug Specific Test
+```bash
+npx playwright test --debug person-page-no-duplicates
+```
 
-### New Memory FAB
-- `new-memory-fab` - Floating action button on feed
-- `new-memory-modal` - Modal dialog container
-- `new-memory-option-text` - Text story option card
-- `new-memory-option-photo` - Photo story option card
-- `new-memory-option-voice` - Voice story option card
-- `new-memory-family-select` - Family selector dropdown
-- `new-memory-continue` - Continue button on each option
+### Console Logs
+Tests log detailed information:
+```
+[desktop] Block counts: { bio: 1, quick-facts: 1, ... }
+[desktop] ✓ QuickFacts in rail
+[desktop] ✓ Jump to Photos works
+[desktop] ✅ All checks passed
+```
 
-## Test Environment
+## Common Issues
 
-Tests expect:
-- A running development server at `http://localhost:5173`
-- A test user with credentials:
-  - Email: `test@example.com`
-  - Password: `TestPassword123!`
-- At least one family for the test user
+### "Element not found"
+- Page may not have fully loaded. Increase `waitForTimeout` values.
+- Block may not exist for test person. Check person data fixtures.
 
-## Features Tested
+### "Duplicate blocks found"
+- **Root cause:** PortalLayoutManager rendering logic issue
+- **Check:** BlockValidator in `src/lib/blockRegistry.ts`
+- **Debug:** Look for blocks in both `layoutMap.main` and `layoutMap.rail`
 
-### New Memory FAB
-- ✅ FAB visibility on feed page
-- ✅ Modal open/close behavior
-- ✅ ESC key closes modal
-- ✅ Backdrop click closes modal
-- ✅ Family selector for multiple families
-- ✅ Navigation to text/photo/voice creation
-- ✅ URL parameters (type and family_id)
-- ✅ Keyboard navigation (Enter key)
-- ✅ Keyboard shortcuts (T/P/V keys)
-- ✅ LocalStorage persistence for last used family
-- ✅ Mobile-friendly positioning
-- ✅ Validation for family selection
+### "Rail not visible on desktop"
+- **Root cause:** CSS grid not applying correctly
+- **Check:** Viewport size matches breakpoint definition
+- **Debug:** Inspect computed styles on `#portal-rail`
 
-### Story Creation
-- ✅ Text story creation and display in feed
-- ✅ Photo upload with multiple images
-- ✅ Voice audio upload and fallback
-- ✅ Draft auto-save and recovery
-- ✅ Form validation
-- ✅ Error handling
+### "Anchor navigation fails"
+- **Root cause:** Section IDs missing or incorrect
+- **Check:** BlockRegistry anchor IDs match block IDs in DOM
+- **Debug:** Run `console.log(document.querySelectorAll('[id]'))` in browser
 
-## Notes
+## Continuous Integration
 
-- Tests will create real stories in the database during execution
-- Each test run generates unique timestamps to avoid conflicts
-- Tests clean up after themselves where possible
-- Microphone tests may behave differently based on browser permissions
-- The New Memory FAB is designed to be thumb-reachable on mobile devices
+Add to CI pipeline:
+```yaml
+- name: Install Playwright
+  run: npx playwright install --with-deps
+
+- name: Run E2E Tests
+  run: npm run test:e2e
+
+- name: Upload Screenshots
+  if: failure()
+  uses: actions/upload-artifact@v3
+  with:
+    name: playwright-screenshots
+    path: tests/screenshots/
+```
+
+## Related Documentation
+
+- Architecture: `src/components/person-page/ARCHITECTURE.md`
+- Block Registry: `src/lib/blockRegistry.ts`
+- Portal Layout Manager: `src/components/person-page/PortalLayoutManager.tsx`
