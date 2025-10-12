@@ -212,19 +212,19 @@ export default function StoryCollageBlock({
                     {story.profiles?.full_name?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">
+                <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+                  <p className="text-xs font-medium">
                     {story.profiles?.full_name}
                   </p>
                   {story.profile_id && (
-                    <Badge variant="outline" className="text-xs h-5 mt-1">
+                    <Badge variant="outline" className="text-xs h-5 whitespace-nowrap">
                       {getRelationshipBadge(story.profile_id)}
                     </Badge>
                   )}
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {format(new Date(story.created_at), 'MMM d, yyyy')}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {format(new Date(story.created_at), 'MMM d, yyyy')}
-                </span>
               </div>
             </CardContent>
           </Card>
