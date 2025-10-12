@@ -32,45 +32,55 @@ export default function PhotoGalleryBlock({
   const { data: photos, isLoading, refetch } = useQuery({
     queryKey: ['person-photos', personId, familyId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // Get all media for stories linked to this person
-      const { data: media, error: mediaError } = await supabase
+      // 1) Find stories this person is linked to
+      const { data: links, error: linksError } = await supabase
+        .from('person_story_links')
+        .select('story_id')
+        .eq('person_id', personId)
+
+      if (linksError) throw linksError
+
+      const storyIds = (links || []).map((l: any) => l.story_id).filter(Boolean)
+      if (storyIds.length === 0) return []
+
+      // 2) Fetch media for those stories (either group story_id or individual_story_id)
+      const { data: mediaData, error: mediaError } = await supabase
         .from('media')
-        .select(`
-          id,
-          file_path,
-          mime_type,
-          created_at,
-          caption,
-          story_id,
-          stories!story_id(
-            id,
-            title,
-            occurred_on,
-            created_at,
-            person_story_links!inner(person_id)
-          )
-        `)
+        .select('id, file_path, mime_type, created_at, story_id, individual_story_id')
         .eq('family_id', familyId)
-        .eq('stories.person_story_links.person_id', personId)
         .ilike('mime_type', 'image/%')
+        .or(`story_id.in.(${storyIds.join(',')}),individual_story_id.in.(${storyIds.join(',')})`)
 
-      if (mediaError) {
-        console.error('Media query error:', mediaError)
-        throw mediaError
-      }
+      if (mediaError) throw mediaError
 
-      // Format the media with story info
-      const allMedia = (media || []).map((m: any) => {
-        const story = m.stories
+      if (!mediaData || mediaData.length === 0) return []
+
+      // 3) Fetch story metadata for titles/dates
+      const uniqueStoryIds = Array.from(new Set([
+        ...mediaData.map((m: any) => m.story_id).filter(Boolean),
+        ...mediaData.map((m: any) => m.individual_story_id).filter(Boolean)
+      ]))
+
+      const { data: storiesData, error: storiesError } = uniqueStoryIds.length > 0
+        ? await supabase
+            .from('stories')
+            .select('id, title, occurred_on, created_at')
+            .in('id', uniqueStoryIds)
+        : { data: [], error: null } as any
+
+      if (storiesError) throw storiesError
+
+      const storiesMap = new Map<string, any>(((storiesData as any[]) || []).map((s: any) => [s.id, s]))
+
+      // 4) Shape gallery items
+      const allMedia = (mediaData || []).map((m: any) => {
+        const story = storiesMap.get(m.story_id) || storiesMap.get(m.individual_story_id)
         return {
           id: m.id,
           file_path: m.file_path,
           mime_type: m.mime_type,
           created_at: m.created_at,
-          caption: m.caption,
-          story_id: m.story_id,
+          story_id: m.story_id || m.individual_story_id,
           story_title: story?.title,
           date: story?.occurred_on || story?.created_at || m.created_at
         }
