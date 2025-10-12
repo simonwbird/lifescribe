@@ -4368,6 +4368,7 @@ export type Database = {
           pinned_story_ids: string[] | null
           qa_seed: boolean | null
           qa_seed_version: string | null
+          rail_config: Json | null
           short_bio: string | null
           signature_saying: string | null
           slug: string | null
@@ -4415,6 +4416,7 @@ export type Database = {
           pinned_story_ids?: string[] | null
           qa_seed?: boolean | null
           qa_seed_version?: string | null
+          rail_config?: Json | null
           short_bio?: string | null
           signature_saying?: string | null
           slug?: string | null
@@ -4462,6 +4464,7 @@ export type Database = {
           pinned_story_ids?: string[] | null
           qa_seed?: boolean | null
           qa_seed_version?: string | null
+          rail_config?: Json | null
           short_bio?: string | null
           signature_saying?: string | null
           slug?: string | null

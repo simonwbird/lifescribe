@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Person } from '@/utils/personUtils'
+import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -49,7 +50,6 @@ interface RightRailProps {
   viewer_role: string | null
   visibility: string
   indexability: string
-  config?: RightRailConfig
   className?: string
   canEdit?: boolean
   onUpdate?: () => void
@@ -284,7 +284,11 @@ export function RightRail({
   viewer_role,
   visibility,
   indexability,
-  config = {
+  className,
+  canEdit,
+  onUpdate
+}: RightRailProps) {
+  const [config, setConfig] = useState<RightRailConfig>({
     quickFacts: true,
     pinnedHighlights: true,
     toc: true,
@@ -296,11 +300,81 @@ export function RightRail({
     favoritesQuirks: true,
     causes: true,
     shareExport: true
-  },
-  className,
-  canEdit,
-  onUpdate
-}: RightRailProps) {
+  })
+
+  useEffect(() => {
+    fetchRailConfig()
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('person-rail-config')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'people',
+          filter: `id=eq.${person_id}`
+        },
+        (payload: any) => {
+          if (payload.new?.rail_config?.slots) {
+            const dbSlots = payload.new.rail_config.slots
+            setConfig({
+              quickFacts: dbSlots.QuickFacts ?? true,
+              pinnedHighlights: dbSlots.PinnedHighlights ?? true,
+              toc: dbSlots.TOC ?? true,
+              contributeCTA: dbSlots.ContributeCTA ?? true,
+              anniversaries: dbSlots.Anniversaries ?? true,
+              visibilitySearch: dbSlots.VisibilitySearch ?? false,
+              miniMap: dbSlots.MiniMap ?? true,
+              mediaCounters: dbSlots.MediaCounters ?? true,
+              favoritesQuirks: dbSlots.FavoritesQuirks ?? true,
+              causes: dbSlots.Causes ?? true,
+              shareExport: dbSlots.ShareExport ?? true
+            })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [person_id])
+
+  const fetchRailConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('people')
+        .select('rail_config')
+        .eq('id', person_id)
+        .single()
+
+      if (error) throw error
+
+      // Parse database config and map to component config
+      const railConfig = data?.rail_config as { slots?: Record<string, boolean> } | null
+      const dbSlots = railConfig?.slots || {}
+
+      setConfig({
+        quickFacts: dbSlots.QuickFacts ?? true,
+        pinnedHighlights: dbSlots.PinnedHighlights ?? true,
+        toc: dbSlots.TOC ?? true,
+        contributeCTA: dbSlots.ContributeCTA ?? true,
+        anniversaries: dbSlots.Anniversaries ?? true,
+        visibilitySearch: dbSlots.VisibilitySearch ?? false,
+        miniMap: dbSlots.MiniMap ?? true,
+        mediaCounters: dbSlots.MediaCounters ?? true,
+        favoritesQuirks: dbSlots.FavoritesQuirks ?? true,
+        causes: dbSlots.Causes ?? true,
+        shareExport: dbSlots.ShareExport ?? true
+      })
+    } catch (error) {
+      console.error('Error fetching rail config:', error)
+      // Keep default config on error
+    }
+  }
+
   return (
     <div className={cn(className)}>
       {/* Desktop: Sticky rail */}
