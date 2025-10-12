@@ -66,10 +66,7 @@ export default function TimelineBlockEnhanced({
     const loadAudioRecordings = async () => {
       const { data, error } = await supabase
         .from('audio_recordings')
-        .select(`
-          *,
-          creator:profiles!audio_recordings_created_by_fkey(id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('family_id', familyId)
         .eq('is_draft', false)
         .eq('status', 'completed')
@@ -80,10 +77,7 @@ export default function TimelineBlockEnhanced({
         const personRecordings = data.filter(rec => {
           const draftData = rec.draft_data as any
           return draftData?.person_id === personId
-        }).map(rec => ({
-          ...rec,
-          creator: rec.creator
-        }))
+        })
         setAudioRecordings(personRecordings)
       }
     }

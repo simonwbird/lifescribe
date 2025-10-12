@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 // Cast to any since guestbook_entries was just added and types haven't regenerated
-const guestbookTable = (supabase as any).from('guestbook_entries');
+const table = () => (supabase as any).from('guestbook_entries');
 
 interface GuestbookEntry {
   id: string;
@@ -32,7 +32,7 @@ export function useGuestbookEntries(personId: string, pageType: 'life' | 'tribut
   return useQuery({
     queryKey: ['guestbook-entries', personId, pageType],
     queryFn: async () => {
-      const { data, error } = await guestbookTable
+      const { data, error } = await table()
         .select(`
           *,
           profile:profile_id(full_name, avatar_url)
@@ -51,7 +51,7 @@ export function useGuestbookModerationQueue(familyId: string) {
   return useQuery({
     queryKey: ['guestbook-moderation-queue', familyId],
     queryFn: async () => {
-      const { data, error } = await guestbookTable
+      const { data, error } = await table()
         .select(`
           *,
           profile:profile_id(full_name, avatar_url),
@@ -156,7 +156,7 @@ export function useSubmitGuestbookEntry() {
       is_anonymous?: boolean;
       audio_recording_id?: string;
     }) => {
-      const { data, error } = await guestbookTable
+      const { data, error } = await table()
         .insert([entry])
         .select()
         .single();

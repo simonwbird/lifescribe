@@ -30,10 +30,7 @@ export default function AudioRemembrancesBlock({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('audio_recordings')
-        .select(`
-          *,
-          creator:profiles!audio_recordings_created_by_fkey(id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('family_id', familyId)
         .eq('is_draft', false)
         .eq('status', 'completed')
@@ -41,11 +38,7 @@ export default function AudioRemembrancesBlock({
 
       if (error) throw error
       
-      // Map creator to profiles for consistent naming
-      return (data || []).map(rec => ({
-        ...rec,
-        profiles: rec.creator
-      }))
+      return (data || [])
     }
   })
 
