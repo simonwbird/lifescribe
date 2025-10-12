@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Breakpoint } from '@/hooks/useBreakpoint'
 import { BlockValidator, getBlockMetadata } from '@/lib/blockRegistry'
 import { cn } from '@/lib/utils'
+import { DEFAULT_LAYOUT_MAP } from '@/config/personPageLayouts'
 
 export interface BlockItem {
   id: string
@@ -62,8 +63,8 @@ export function PortalLayoutManager({
     return map
   }, [blocks])
 
-  // Get the current layout configuration
-  const currentLayout = layoutMap[breakpoint]
+  // Get the current layout configuration (fallback to defaults if missing)
+  const currentLayout = layoutMap[breakpoint] || DEFAULT_LAYOUT_MAP[breakpoint]
 
   // Distribute block IDs into main and rail with logical DOM order
   // Priority: Content blocks first (Hero, Bio, Timeline...), then widgets
@@ -92,18 +93,26 @@ export function PortalLayoutManager({
       blocks.some(b => b.id === id)
     )
     
+    // Determine effective rail IDs (fallback to defaults if rail config is empty)
+    const fallbackRail = currentLayout.rail.length === 0
+      ? DEFAULT_LAYOUT_MAP[breakpoint].rail
+      : currentLayout.rail
+
     // Add any unplaced blocks to main
-    const placedIds = new Set([...currentLayout.main, ...currentLayout.rail])
+    const placedIds = new Set([...mainIds, ...fallbackRail])
     const unplacedIds = logicalOrder.filter(blockId => !placedIds.has(blockId))
     
     return [...mainIds, ...unplacedIds]
-  }, [currentLayout.main, currentLayout.rail, logicalOrder, blocks])
+  }, [currentLayout.main, currentLayout.rail, logicalOrder, blocks, breakpoint])
 
   const railBlockIds = useMemo(() => {
-    return currentLayout.rail.filter(id => 
-      blocks.some(b => b.id === id)
-    )
-  }, [currentLayout.rail, blocks])
+    const useDefault = currentLayout.rail.length === 0
+    const source = useDefault ? DEFAULT_LAYOUT_MAP[breakpoint].rail : currentLayout.rail
+    if (useDefault) {
+      console.warn('[PortalLayoutManager] Empty rail config detected; falling back to DEFAULT_LAYOUT_MAP for', breakpoint)
+    }
+    return source.filter(id => blocks.some(b => b.id === id))
+  }, [currentLayout.rail, blocks, breakpoint])
 
   // Create portal containers
   useEffect(() => {
