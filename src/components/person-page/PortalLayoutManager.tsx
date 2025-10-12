@@ -136,6 +136,11 @@ export function PortalLayoutManager({
     }
   }, [currentLayout.main, effectiveRailIds, logicalOrder, blocks])
 
+  // Reset singleton validator on layout changes to avoid false duplicate warnings
+  useEffect(() => {
+    validatorRef.current.reset()
+  }, [breakpoint, currentLayout, blocks, mainBlockIds, railBlockIds])
+
   // Debugging: log layout computation to help identify why rail may be empty in preview
   useEffect(() => {
     try {
