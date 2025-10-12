@@ -29,6 +29,7 @@ import { PageLayoutManager, BlockItem } from '@/components/person-page/PageLayou
 import { PortalLayoutManager } from '@/components/person-page/PortalLayoutManager'
 import { DEFAULT_LAYOUT_MAP, getBlockLayoutId } from '@/config/personPageLayouts'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import {
   QuickFactsWidget,
   TOCWidget,
@@ -754,31 +755,33 @@ export default function PersonPage() {
                       )}
                     </div>
                   ) : (
-                    <PortalLayoutManager
-                      blocks={buildBlocksArray(
-                        blocks,
-                        {
-                          ...person,
-                          created_at: new Date().toISOString(),
-                          updated_at: new Date().toISOString()
-                        } as Person,
-                        {
-                          personId: person.id,
-                          familyId: person.family_id || '',
-                          preset: isLiving ? 'life' : 'tribute',
-                          visibility,
-                          indexability,
-                          canEdit: canEdit || false,
-                          onUpdate: () => window.location.reload()
-                        },
-                        canEdit || false,
-                        currentUserId,
-                        handleVisibilityChange,
-                        handleRemoveBlock
-                      )}
-                      layoutMap={layoutMap}
-                      breakpoint={breakpoint}
-                    />
+                    <ErrorBoundary route={`/people/${id}` as string}>
+                      <PortalLayoutManager
+                        blocks={buildBlocksArray(
+                          blocks,
+                          {
+                            ...person,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                          } as Person,
+                          {
+                            personId: person.id,
+                            familyId: person.family_id || '',
+                            preset: isLiving ? 'life' : 'tribute',
+                            visibility,
+                            indexability,
+                            canEdit: canEdit || false,
+                            onUpdate: () => window.location.reload()
+                          },
+                          canEdit || false,
+                          currentUserId,
+                          handleVisibilityChange,
+                          handleRemoveBlock
+                        )}
+                        layoutMap={layoutMap}
+                        breakpoint={breakpoint}
+                      />
+                    </ErrorBoundary>
                   )}
                   {provided.placeholder}
                 </div>
