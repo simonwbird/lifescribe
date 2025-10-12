@@ -97,10 +97,19 @@ export function AnniversariesWidget({
     })
   }
 
-  const getDaysText = (days: number) => {
-    if (days === 0) return 'Today'
-    if (days === 1) return 'Tomorrow'
-    return `${days} days`
+  const getAnniversaryText = (anniversary: Anniversary) => {
+    if (anniversary.type === 'birthday') {
+      const days = anniversary.daysUntil
+      if (days === 0) return 'Birthday today'
+      if (days === 1) return 'Birthday tomorrow'
+      return `Birthday in ${days} days`
+    } else {
+      const years = anniversary.yearsAgo || 0
+      if (anniversary.daysUntil === 0) {
+        return `${years} ${years === 1 ? 'year' : 'years'} since their passing`
+      }
+      return `${years} ${years === 1 ? 'year' : 'years'} since their passing`
+    }
   }
 
   return (
@@ -115,28 +124,13 @@ export function AnniversariesWidget({
         <CardContent className="space-y-4">
           {anniversaries.map((anniversary, index) => (
             <div key={index} className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <Badge 
-                    variant="outline" 
-                    className="mb-1"
-                  >
-                    {anniversary.type === 'birthday' ? 'Birthday' : 'Memorial'}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(anniversary.nextOccurrence)}
-                    {anniversary.yearsAgo && (
-                      <span className="ml-1">
-                        ({anniversary.yearsAgo} {anniversary.yearsAgo === 1 ? 'year' : 'years'})
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    {getDaysText(anniversary.daysUntil)}
-                  </p>
-                </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium">
+                  {getAnniversaryText(anniversary)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(anniversary.nextOccurrence)}
+                </p>
               </div>
 
               <div className="flex gap-2">

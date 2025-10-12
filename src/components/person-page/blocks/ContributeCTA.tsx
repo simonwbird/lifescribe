@@ -56,10 +56,6 @@ export function ContributeCTA({
     setIsAudioModalOpen(true)
   }
 
-  const copyText = preset === 'tribute' 
-    ? 'Share one moment—one laugh, one lesson.'
-    : 'Add your memories and photos to their story.'
-
   return (
     <>
       <Card className="bg-primary/5 border-primary/20">
@@ -72,7 +68,7 @@ export function ContributeCTA({
                   {preset === 'tribute' ? 'Share a Memory' : 'Add to Their Story'}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  {copyText}
+                  Your words keep this story alive.
                 </p>
               </div>
 

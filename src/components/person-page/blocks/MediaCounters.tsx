@@ -166,12 +166,13 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
       color: 'text-primary'
     },
     {
-      label: counts.audio === 0 ? 'Record first tribute' : 'Audio',
-      count: counts.audio === 0 ? null : counts.audio,
+      label: 'Audio',
+      count: counts.audio,
       icon: Mic,
       anchor: 'audio',
       color: 'text-primary',
-      isSpecial: counts.audio === 0
+      isEmpty: counts.audio === 0,
+      emptyText: 'No audio yet — record a 60–120s tribute.'
     },
     {
       label: 'Relations',
@@ -215,19 +216,20 @@ export function MediaCounters({ personId, familyId, className }: MediaCountersPr
         {counters.map((counter) => {
           const Icon = counter.icon
           
-          if (counter.isSpecial) {
+          if (counter.isEmpty) {
             return (
-              <Button
+              <button
                 key={counter.anchor}
-                variant="ghost"
-                className="h-auto flex flex-col items-center justify-center p-3 hover:bg-accent"
                 onClick={() => handleCountClick(counter.anchor)}
+                className="col-span-2 text-left hover:bg-accent rounded-md p-3 transition-colors"
               >
-                <Icon className={cn('h-4 w-4 mb-2', counter.color)} />
-                <div className="text-xs text-muted-foreground text-center leading-tight">
-                  {counter.label}
+                <div className="flex items-start gap-2">
+                  <Icon className={cn('h-4 w-4 mt-0.5', counter.color)} />
+                  <div className="text-xs text-muted-foreground leading-tight">
+                    {counter.emptyText}
+                  </div>
                 </div>
-              </Button>
+              </button>
             )
           }
 

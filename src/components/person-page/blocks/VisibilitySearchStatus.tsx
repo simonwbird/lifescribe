@@ -187,6 +187,11 @@ export function VisibilitySearchStatus({
               ? 'Appears in search results'
               : 'Hidden from search engines'}
           </p>
+          {(visibility === 'private' || visibility === 'unlisted') && (
+            <p className="text-xs text-muted-foreground italic">
+              Hidden from search engines.
+            </p>
+          )}
         </div>
 
         {indexability === 'indexable' && visibility === 'public' && lastIndexedAt && (
