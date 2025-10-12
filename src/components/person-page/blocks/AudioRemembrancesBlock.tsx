@@ -43,7 +43,8 @@ export default function AudioRemembrancesBlock({
   const { data: recordings, isLoading, refetch } = useQuery({
     queryKey: ['audio-remembrances', personId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1) Directly assigned recordings via tribute_id
+      const { data: direct, error: directErr } = await supabase
         .from('audio_recordings')
         .select(`
           *,
@@ -59,9 +60,45 @@ export default function AudioRemembrancesBlock({
         .in('status', ['completed', 'ready', 'processing'])
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      
-      return (data || [])
+      if (directErr) throw directErr
+
+      // 2) Recordings linked via stories -> person_story_links
+      const { data: storyLinks, error: linkErr } = await supabase
+        .from('person_story_links')
+        .select('story_id')
+        .eq('person_id', personId)
+
+      if (linkErr) throw linkErr
+
+      let byStory: typeof direct = []
+      const storyIds = (storyLinks || []).map((l: any) => l.story_id).filter(Boolean)
+
+      if (storyIds.length > 0) {
+        const { data, error } = await supabase
+          .from('audio_recordings')
+          .select(`
+            *,
+            profiles:created_by (
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('family_id', familyId)
+          .in('story_id', storyIds)
+          .eq('is_draft', false)
+          .in('status', ['completed', 'ready', 'processing'])
+          .order('created_at', { ascending: false })
+        if (error) throw error
+        byStory = data || []
+      }
+
+      // Merge + dedupe
+      const map = new Map<string, any>()
+      for (const r of [...(direct || []), ...byStory]) {
+        map.set(r.id, r)
+      }
+      return Array.from(map.values())
     }
   })
 
