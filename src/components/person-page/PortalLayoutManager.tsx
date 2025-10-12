@@ -116,21 +116,25 @@ export function PortalLayoutManager({
     return [] as string[]
   }, [currentLayout.rail, blocks, breakpoint, widgetIds])
 
-  const mainBlockIds = useMemo(() => {
-    // Get all blocks that should be in main based on layout,
-    // but never include items that also appear in the rail (prefer rail)
+  // Compute main and rail block IDs ensuring NO OVERLAP
+  const { mainBlockIds, railBlockIds } = useMemo(() => {
+    // Start with rail blocks (widgets/navigation by default)
+    const railIds = effectiveRailIds
+    
+    // Main gets configured main blocks that aren't in rail
     const mainIds = currentLayout.main
       .filter(id => blocks.some(b => b.id === id))
-      .filter(id => !effectiveRailIds.includes(id))
+      .filter(id => !railIds.includes(id))
     
-    // Add any unplaced blocks to main (excluding anything in the rail)
-    const placedIds = new Set([...mainIds, ...effectiveRailIds])
+    // Add any unplaced blocks to main (excluding anything already in rail)
+    const placedIds = new Set([...mainIds, ...railIds])
     const unplacedIds = logicalOrder.filter(blockId => !placedIds.has(blockId))
     
-    return [...mainIds, ...unplacedIds]
+    return {
+      mainBlockIds: [...mainIds, ...unplacedIds],
+      railBlockIds: railIds
+    }
   }, [currentLayout.main, effectiveRailIds, logicalOrder, blocks])
-
-  const railBlockIds = useMemo(() => effectiveRailIds, [effectiveRailIds])
 
   // Debugging: log layout computation to help identify why rail may be empty in preview
   useEffect(() => {
