@@ -663,30 +663,6 @@ export default function PersonPage() {
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const newPreset = currentPreset === 'life' ? 'tribute' : 'life'
-                    await switchPreset(newPreset)
-                    toast({
-                      title: 'Preset switched',
-                      description: `Switched to ${newPreset === 'life' ? 'Life' : 'Tribute'} preset`
-                    })
-                    window.location.reload() // Reload to show new blocks
-                  } catch (err) {
-                    toast({
-                      title: 'Error',
-                      description: 'Failed to switch preset',
-                      variant: 'destructive'
-                    })
-                  }
-                }}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Switch to {currentPreset === 'life' ? 'Tribute' : 'Life'}
-              </Button>
               <Sheet open={showCustomizer} onOpenChange={setShowCustomizer}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm">
