@@ -287,7 +287,7 @@ export function GuestbookTributeBlock({
           ) : (
             <>
               <Textarea
-                placeholder="Share your memories and tribute..."
+                placeholder="Share one memory—one moment, one laugh, one lesson."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={6}
@@ -335,7 +335,7 @@ export function GuestbookTributeBlock({
             </div>
           ) : regularEntries.length === 0 && featuredEntries.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              No tributes yet. Be the first to share a memory.
+              Share one memory—one moment, one laugh, one lesson.
             </p>
           ) : (
             <div className="space-y-3">

@@ -65,7 +65,7 @@ export default function AudioRemembrancesBlock({
         <EmptyState
           icon={<Volume2 className="h-6 w-6" />}
           title="No audio remembrances yet"
-          description="Share your memories in your own voice - a personal way to honor and remember"
+          description="Record a 60–120s tribute. Speak from the heart."
           action={{
             label: "Record Memory",
             onClick: () => setShowRecording(true),
