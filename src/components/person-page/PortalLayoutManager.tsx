@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, useEffect } from 'react'
+import React, { ReactNode, useMemo, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Breakpoint } from '@/hooks/useBreakpoint'
 import { BlockValidator, getBlockMetadata } from '@/lib/blockRegistry'
@@ -46,8 +46,20 @@ export function PortalLayoutManager({
   breakpoint,
   className
 }: PortalLayoutManagerProps) {
-  // Create a fresh validator on EVERY render to prevent state persistence
-  const validator = new BlockValidator()
+  // Use ref to persist validator across renders, reset when blocks change
+  const validatorRef = useRef<BlockValidator | null>(null)
+  const blocksKeyRef = useRef<string>('')
+  
+  // Create a stable key from block IDs to detect changes
+  const blocksKey = blocks.map(b => b.id).sort().join(',')
+  
+  // Reset validator when blocks change
+  if (blocksKey !== blocksKeyRef.current) {
+    validatorRef.current = new BlockValidator()
+    blocksKeyRef.current = blocksKey
+  }
+  
+  const validator = validatorRef.current!
 
   // Create a map of block IDs to components
   const blockMap = useMemo(() => {
