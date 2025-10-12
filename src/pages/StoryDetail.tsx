@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import StoryCard from '@/components/StoryCard'
@@ -11,6 +11,7 @@ import { AttachToEntityModal } from '@/components/entity/AttachToEntityModal'
 
 export default function StoryDetail() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [story, setStory] = useState<(Story & { profiles: Profile }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [attachModalOpen, setAttachModalOpen] = useState(false)
@@ -81,11 +82,9 @@ export default function StoryDetail() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-6 flex items-center justify-between">
-            <Button variant="ghost" asChild>
-              <Link to="/feed">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Feed
-              </Link>
+            <Button variant="ghost" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
             
             <Button 
