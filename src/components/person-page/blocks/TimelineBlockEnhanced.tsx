@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +32,7 @@ import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd'
 import { PinnedHighlightCard } from './timeline/PinnedHighlightCard'
 import { ChapterSection } from './timeline/ChapterSection'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/integrations/supabase/client'
 
 interface TimelineBlockEnhancedProps {
   personId: string
@@ -66,6 +67,58 @@ export default function TimelineBlockEnhanced({
   const [itemChapters, setItemChapters] = useState<Record<string, string>>({})
   const [showChapterDialog, setShowChapterDialog] = useState(false)
   const [newChapterTitle, setNewChapterTitle] = useState('')
+  const [isLoadingChapters, setIsLoadingChapters] = useState(true)
+
+  // Load chapters from database
+  useEffect(() => {
+    const loadChapters = async () => {
+      try {
+        const { data: dbChapters, error } = await supabase
+          .from('timeline_chapters' as any)
+          .select('*')
+          .eq('person_id', personId)
+          .order('display_order')
+
+        if (error) throw error
+
+        if (dbChapters && dbChapters.length > 0) {
+          const loadedChapters: Chapter[] = (dbChapters as any[]).map((ch: any) => ({
+            id: ch.id,
+            title: ch.title,
+            description: ch.description || undefined,
+            startYear: ch.start_year || undefined,
+            endYear: ch.end_year || undefined,
+            order: ch.display_order
+          }))
+
+          setChapters([
+            ...loadedChapters,
+            { id: 'unorganized', title: 'Unorganized', order: 999 }
+          ])
+
+          // Load chapter assignments
+          const { data: assignments } = await supabase
+            .from('timeline_chapter_assignments' as any)
+            .select('*')
+            .eq('person_id', personId)
+
+          if (assignments) {
+            const assignmentMap: Record<string, string> = {}
+            ;(assignments as any[]).forEach((a: any) => {
+              assignmentMap[`${a.item_type}-${a.item_id}`] = a.chapter_id
+            })
+            setItemChapters(assignmentMap)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading chapters:', error)
+      } finally {
+        setIsLoadingChapters(false)
+      }
+    }
+
+    loadChapters()
+  }, [personId])
 
   // Get pinned items (max 5)
   const pinnedItems = useMemo(() => 
@@ -177,35 +230,83 @@ export default function TimelineBlockEnhanced({
     })
   }
 
-  const handleAddChapter = () => {
+  const handleAddChapter = async () => {
     if (!newChapterTitle.trim()) return
 
-    const newChapter: Chapter = {
-      id: `chapter-${Date.now()}`,
-      title: newChapterTitle.trim(),
-      order: chapters.length - 1 // Before "Unorganized"
+    try {
+      const order = chapters.length - 1 // Before "Unorganized"
+      
+      const { data, error } = await supabase
+        .from('timeline_chapters' as any)
+        .insert({
+          person_id: personId,
+          family_id: familyId,
+          title: newChapterTitle.trim(),
+          display_order: order,
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single() as any
+
+      if (error) throw error
+
+      const newChapter: Chapter = {
+        id: data.id,
+        title: data.title,
+        order: data.display_order
+      }
+
+      setChapters(prev => {
+        const sorted = [...prev.filter(c => c.id !== 'unorganized'), newChapter]
+          .sort((a, b) => a.order - b.order)
+        return [...sorted, prev.find(c => c.id === 'unorganized')!]
+      })
+
+      setExpandedChapters(prev => new Set([...prev, newChapter.id]))
+      setNewChapterTitle('')
+      setShowChapterDialog(false)
+
+      toast({
+        title: 'Chapter added',
+        description: `"${newChapter.title}" chapter created`
+      })
+    } catch (error) {
+      console.error('Error adding chapter:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to create chapter',
+        variant: 'destructive'
+      })
     }
-
-    setChapters(prev => {
-      const sorted = [...prev.filter(c => c.id !== 'unorganized'), newChapter]
-        .sort((a, b) => a.order - b.order)
-      return [...sorted, prev.find(c => c.id === 'unorganized')!]
-    })
-
-    setExpandedChapters(prev => new Set([...prev, newChapter.id]))
-    setNewChapterTitle('')
-    setShowChapterDialog(false)
-
-    toast({
-      title: 'Chapter added',
-      description: `"${newChapter.title}" chapter created`
-    })
   }
 
-  const handleRenameChapter = (chapterId: string, newTitle: string) => {
-    setChapters(prev => prev.map(c =>
-      c.id === chapterId ? { ...c, title: newTitle } : c
-    ))
+  const handleRenameChapter = async (chapterId: string, newTitle: string) => {
+    if (chapterId === 'unorganized') return
+
+    try {
+      const { error } = await supabase
+        .from('timeline_chapters' as any)
+        .update({ title: newTitle })
+        .eq('id', chapterId)
+
+      if (error) throw error
+
+      setChapters(prev => prev.map(c =>
+        c.id === chapterId ? { ...c, title: newTitle } : c
+      ))
+
+      toast({
+        title: 'Chapter renamed',
+        description: `Chapter renamed to "${newTitle}"`
+      })
+    } catch (error) {
+      console.error('Error renaming chapter:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to rename chapter',
+        variant: 'destructive'
+      })
+    }
   }
 
   const toggleChapterExpand = (chapterId: string) => {
@@ -220,22 +321,55 @@ export default function TimelineBlockEnhanced({
     })
   }
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return
 
     const { source, destination, draggableId } = result
 
     // Moving between chapters
     if (source.droppableId !== destination.droppableId) {
-      setItemChapters(prev => ({
-        ...prev,
-        [draggableId]: destination.droppableId
-      }))
+      const [itemType, itemId] = draggableId.split('-')
+      
+      try {
+        // Delete old assignment if exists
+        await supabase
+          .from('timeline_chapter_assignments' as any)
+          .delete()
+          .eq('person_id', personId)
+          .eq('item_id', itemId)
+          .eq('item_type', itemType)
 
-      toast({
-        title: 'Item moved',
-        description: 'Timeline item moved to new chapter'
-      })
+        // Create new assignment if not moving to unorganized
+        if (destination.droppableId !== 'unorganized') {
+          const { error } = await supabase
+            .from('timeline_chapter_assignments' as any)
+            .insert({
+              person_id: personId,
+              chapter_id: destination.droppableId,
+              item_id: itemId,
+              item_type: itemType
+            })
+
+          if (error) throw error
+        }
+
+        setItemChapters(prev => ({
+          ...prev,
+          [draggableId]: destination.droppableId
+        }))
+
+        toast({
+          title: 'Item moved',
+          description: 'Timeline item moved to new chapter'
+        })
+      } catch (error) {
+        console.error('Error moving item:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to move item',
+          variant: 'destructive'
+        })
+      }
     }
   }
 
@@ -251,7 +385,7 @@ export default function TimelineBlockEnhanced({
 
   const availableTags = Array.from(new Set(items.flatMap(item => item.tags || [])))
 
-  if (isLoading) {
+  if (isLoading || isLoadingChapters) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
