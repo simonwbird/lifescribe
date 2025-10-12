@@ -133,7 +133,7 @@ export function useThemeCustomizer(personId: string, initialThemeId?: string) {
       palette: preset.palette,
       fontScale: preset.fontScale,
       shape: preset.shape,
-      layout: preset.layout,
+      layout: 'magazine', // Always use magazine layout as default
       highContrastMode: preset.highContrastMode
     })
   }
