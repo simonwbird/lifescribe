@@ -174,11 +174,11 @@ export function PortalLayoutManager({
   }
 
   return (
-    <div className={cn('md:grid md:grid-cols-12 md:gap-6', className)}>
+    <div className={cn('sm:grid sm:grid-cols-12 sm:gap-6', className)}>
       {/* Main content column - semantic main landmark */}
       <main 
         id="portal-main" 
-        className="md:col-span-8 space-y-6"
+        className="sm:col-span-8 space-y-6"
         data-portal-container="main"
         role="main"
         aria-label="Main content"
