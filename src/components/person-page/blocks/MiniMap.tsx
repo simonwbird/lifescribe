@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { useEffect, useState } from 'react'
+import MapView from './MiniMapView'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Map, MapPin, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -22,8 +23,7 @@ interface MiniMapProps {
   familyId: string
 }
 
-// Lazy load the actual map component
-const MapView = lazy(() => import('./MiniMapView'))
+// MapView imported directly
 
 export function MiniMap({ personId, familyId }: MiniMapProps) {
   const [places, setPlaces] = useState<Place[]>([])
@@ -166,13 +166,7 @@ export function MiniMap({ personId, familyId }: MiniMapProps) {
             <p className="text-sm text-muted-foreground">Click to view map</p>
           </div>
         ) : (
-          <Suspense fallback={
-            <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          }>
-            <MapView places={places} onPlaceClick={handlePlaceClick} />
-          </Suspense>
+          <MapView places={places} onPlaceClick={handlePlaceClick} />
         )}
 
         {/* Place list */}
