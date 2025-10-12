@@ -364,6 +364,7 @@ export function RecordingFlow({
         .from('audio_recordings')
         .update({
           is_draft: false,
+          tribute_id: personId,
           transcript,
           updated_at: new Date().toISOString()
         })
