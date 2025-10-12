@@ -16,6 +16,7 @@ import PersonPageBlock from '@/components/person-page/PersonPageBlock'
 import BlockLibraryDialog from '@/components/person-page/BlockLibraryDialog'
 import BlockRenderer from '@/components/person-page/BlockRenderer'
 import { PersonPageSEO } from '@/components/seo'
+import { Helmet } from 'react-helmet-async'
 import { CustomizerPanel, ThemeProvider } from '@/components/theme-customizer'
 import { LayoutRenderer } from '@/components/theme-customizer/LayoutRenderer'
 import { ExportDialog, ImportDialog } from '@/components/import-export'
@@ -29,7 +30,6 @@ import { usePersonPagePresets } from '@/hooks/usePersonPagePresets'
 import { useThemeCustomizer } from '@/hooks/useThemeCustomizer'
 import { usePrivacyAnalytics } from '@/hooks/usePrivacyAnalytics'
 import { usePersonPageShortcuts } from '@/hooks/usePersonPageShortcuts'
-import { usePersonSEOMeta } from '@/hooks/usePersonSEOMeta'
 import { PersonPageBlock as BlockData } from '@/types/personPage'
 import { Person } from '@/utils/personUtils'
 import { toast } from '@/components/ui/use-toast'
@@ -318,18 +318,17 @@ export default function PersonPage() {
   const visibility = personWithSEO.visibility || 'private'
   const indexability = personWithSEO.indexability || 'noindex'
   const preset = person.status === 'living' ? 'life' : 'tribute'
-
-  // Use SEO hook for meta tags and structured data
-  const { SEOHelmet } = usePersonSEOMeta({
-    person: {
-      ...person,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    } as Person,
-    visibility,
-    indexability,
-    preset
-  })
+  
+  // Prepare SEO data
+  const shouldIndex = visibility === 'public' && indexability === 'indexable'
+  const robotsMeta = shouldIndex ? 'index,follow' : 'noindex,nofollow'
+  const fullName = person.full_name || person.preferred_name || 'Unknown'
+  const pageTitle = preset === 'tribute' 
+    ? `${fullName} - In Loving Memory`
+    : `${fullName} - Life Story`
+  const pageDescription = person.birth_date
+    ? `${fullName}, born ${new Date(person.birth_date).toLocaleDateString()}`
+    : fullName
 
   return (
     <ThemeProvider theme={currentTheme}>
@@ -338,7 +337,18 @@ export default function PersonPage() {
         <SkipLink href="#main-content">Skip to main content</SkipLink>
 
         {/* SEO meta tags and structured data */}
-        <SEOHelmet />
+        <Helmet>
+          <title>{pageTitle}</title>
+          <meta name="description" content={pageDescription} />
+          <meta name="robots" content={robotsMeta} />
+          <meta property="og:type" content="profile" />
+          <meta property="og:title" content={pageTitle} />
+          <meta property="og:description" content={pageDescription} />
+          <meta name="twitter:card" content="summary" />
+          <meta name="twitter:title" content={pageTitle} />
+          <meta name="twitter:description" content={pageDescription} />
+          <link rel="canonical" href={window.location.href} />
+        </Helmet>
         
         <Header />
 
