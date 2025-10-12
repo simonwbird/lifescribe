@@ -12,6 +12,7 @@ import { MiniMap } from './blocks/MiniMap'
 import { MediaCounters } from './blocks/MediaCounters'
 import { FavoritesQuirks } from './blocks/FavoritesQuirks'
 import { CausesBlock } from './blocks/CausesBlock'
+import { ShareExport } from './blocks/ShareExport'
 import { 
   Info, 
   Pin, 
@@ -254,23 +255,26 @@ const CausesSlot = ({
   />
 )
 
-const ShareExportSlot = () => (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-sm flex items-center gap-2">
-        <Share2 className="h-4 w-4" />
-        Share & Export
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-2">
-      <Button variant="outline" size="sm" className="w-full">
-        Share Page
-      </Button>
-      <Button variant="outline" size="sm" className="w-full">
-        Export PDF
-      </Button>
-    </CardContent>
-  </Card>
+const ShareExportSlot = ({ 
+  personId, 
+  familyId,
+  personName,
+  isMemorialized,
+  canExportPDF 
+}: { 
+  personId: string
+  familyId: string
+  personName: string
+  isMemorialized: boolean
+  canExportPDF?: boolean
+}) => (
+  <ShareExport 
+    personId={personId} 
+    familyId={familyId}
+    personName={personName}
+    isMemorialized={isMemorialized}
+    canExportPDF={canExportPDF}
+  />
 )
 
 export function RightRail({
@@ -364,7 +368,15 @@ export function RightRail({
             onUpdate={onUpdate}
           />
         )}
-        {config.shareExport && <ShareExportSlot />}
+        {config.shareExport && (
+          <ShareExportSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+            personName={`${person.given_name}${person.surname ? ` ${person.surname}` : ''}`}
+            isMemorialized={!person.is_living}
+            canExportPDF={canEdit}
+          />
+        )}
       </div>
 
       {/* Mobile: Stacks under Bio */}
@@ -392,7 +404,15 @@ export function RightRail({
             familyId={person.family_id}
           />
         )}
-        {config.shareExport && <ShareExportSlot />}
+        {config.shareExport && (
+          <ShareExportSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+            personName={`${person.given_name}${person.surname ? ` ${person.surname}` : ''}`}
+            isMemorialized={!person.is_living}
+            canExportPDF={canEdit}
+          />
+        )}
       </div>
     </div>
   )
