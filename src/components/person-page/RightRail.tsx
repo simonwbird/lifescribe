@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import TOCBlock from './blocks/TOCBlock'
+import { ContributeCTA } from './blocks/ContributeCTA'
 import { 
   Info, 
   Pin, 
@@ -110,27 +111,26 @@ const TOCSlot = () => {
   return <TOCBlock />
 }
 
-const ContributeCTASlot = ({ preset }: { preset: 'life' | 'tribute' }) => (
-  <Card className="bg-primary/5 border-primary/20">
-    <CardContent className="pt-6 space-y-3">
-      <div className="flex items-start gap-3">
-        <Plus className="h-5 w-5 text-primary mt-0.5" />
-        <div>
-          <h3 className="font-medium text-sm mb-1">
-            {preset === 'tribute' ? 'Share a Memory' : 'Add to Their Story'}
-          </h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            {preset === 'tribute' 
-              ? 'Honor their memory with your stories and photos'
-              : 'Help build their life story with photos and memories'}
-          </p>
-          <Button size="sm" className="w-full">
-            Contribute
-          </Button>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+const ContributeCTASlot = ({ 
+  personId, 
+  familyId, 
+  preset, 
+  visibility,
+  canContribute 
+}: { 
+  personId: string
+  familyId: string
+  preset: 'life' | 'tribute'
+  visibility: string
+  canContribute?: boolean
+}) => (
+  <ContributeCTA
+    personId={personId}
+    familyId={familyId}
+    preset={preset}
+    visibility={visibility}
+    canContribute={canContribute}
+  />
 )
 
 const AnniversariesSlot = ({ person, preset }: { person: Person; preset: 'life' | 'tribute' }) => (
@@ -305,7 +305,15 @@ export function RightRail({
           />
         )}
         {config.toc && <TOCSlot />}
-        {config.contributeCTA && <ContributeCTASlot preset={preset} />}
+        {config.contributeCTA && (
+          <ContributeCTASlot 
+            personId={person_id}
+            familyId={person.family_id}
+            preset={preset}
+            visibility={visibility}
+            canContribute={canEdit}
+          />
+        )}
         {config.anniversaries && <AnniversariesSlot person={person} preset={preset} />}
         {config.visibilitySearch && <VisibilitySearchSlot visibility={visibility} indexability={indexability} />}
         {config.miniMap && <MiniMapSlot />}
@@ -318,7 +326,15 @@ export function RightRail({
       {/* Mobile: Stacks under Bio */}
       <div className="lg:hidden space-y-4 mt-6">
         {config.quickFacts && <QuickFactsSlot person={person} />}
-        {config.contributeCTA && <ContributeCTASlot preset={preset} />}
+        {config.contributeCTA && (
+          <ContributeCTASlot 
+            personId={person_id}
+            familyId={person.family_id}
+            preset={preset}
+            visibility={visibility}
+            canContribute={canEdit}
+          />
+        )}
         {config.anniversaries && <AnniversariesSlot person={person} preset={preset} />}
         {config.mediaCounters && <MediaCountersSlot />}
         {config.shareExport && <ShareExportSlot />}
