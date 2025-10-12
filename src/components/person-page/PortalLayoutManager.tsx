@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Breakpoint } from '@/hooks/useBreakpoint'
-import { BlockValidator, getBlockMetadata } from '@/lib/blockRegistry'
+import { getBlockMetadata } from '@/lib/blockRegistry'
 import { cn } from '@/lib/utils'
 import { DEFAULT_LAYOUT_MAP } from '@/config/personPageLayouts'
 
@@ -36,9 +36,8 @@ interface PortalLayoutManagerProps {
 }
 
 /**
- * PortalLayoutManager uses React Portals to teleport blocks between containers
- * Each block is rendered once and mounted into #main or #rail based on breakpoint
- * Enforces singleton rules via BlockValidator
+ * PortalLayoutManager uses React to place blocks into main and rail columns
+ * Each block is rendered once based on breakpoint-aware layout config
  */
 export function PortalLayoutManager({
   blocks,
@@ -46,9 +45,6 @@ export function PortalLayoutManager({
   breakpoint,
   className
 }: PortalLayoutManagerProps) {
-  // Create a fresh validator instance per render (StrictMode-safe)
-  const validator = new BlockValidator()
-
   // Create a map of block IDs to components
   const blockMap = useMemo(() => {
     const map = new Map<string, ReactNode>()
@@ -158,19 +154,11 @@ export function PortalLayoutManager({
   }, [])
 
   /**
-   * Render a block with singleton validation
+   * Render a block with semantic HTML only (no runtime singleton enforcement)
    */
   const renderBlock = (blockId: string) => {
     const component = blockMap.get(blockId)
     if (!component) return null
-
-    // Validate singleton rules
-    if (!validator.canRender(blockId)) {
-      return null // Drop duplicate singleton
-    }
-
-    // Register the block as rendered
-    validator.registerBlock(blockId)
 
     const metadata = getBlockMetadata(blockId)
     const anchorId = metadata?.anchorId || blockId.toLowerCase().replace(/\s+/g, '-')
@@ -183,7 +171,7 @@ export function PortalLayoutManager({
         data-block-singleton={metadata?.singleton}
         data-block-category={metadata?.category}
         aria-label={metadata?.ariaLabel || metadata?.displayName}
-        className="scroll-mt-20" // Offset for fixed header when jumping to anchor
+        className="scroll-mt-20"
       >
         {component}
       </section>
