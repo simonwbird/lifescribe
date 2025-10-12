@@ -8,6 +8,10 @@ import { Separator } from '@/components/ui/separator'
 import TOCBlock from './blocks/TOCBlock'
 import { ContributeCTA } from './blocks/ContributeCTA'
 import { AnniversariesWidget } from './blocks/AnniversariesWidget'
+import { StreaksWidget } from './blocks/StreaksWidget'
+import { QuestsWidget } from './blocks/QuestsWidget'
+import { UpcomingDatesWidget } from './blocks/UpcomingDatesWidget'
+import { FromOthersAboutMeWidget } from './blocks/FromOthersAboutMeWidget'
 import { VisibilitySearchStatus } from './blocks/VisibilitySearchStatus'
 import { MiniMap } from './blocks/MiniMap'
 import { MediaCounters } from './blocks/MediaCounters'
@@ -35,6 +39,10 @@ interface RightRailConfig {
   toc?: boolean
   contributeCTA?: boolean
   anniversaries?: boolean
+  streaks?: boolean
+  quests?: boolean
+  upcomingDates?: boolean
+  fromOthers?: boolean
   visibilitySearch?: boolean
   miniMap?: boolean
   mediaCounters?: boolean
@@ -172,6 +180,46 @@ const AnniversariesSlot = ({
   />
 )
 
+const StreaksSlot = ({ 
+  personId, 
+  familyId 
+}: { 
+  personId: string
+  familyId: string
+}) => (
+  <StreaksWidget personId={personId} familyId={familyId} />
+)
+
+const QuestsSlot = ({ 
+  personId, 
+  familyId 
+}: { 
+  personId: string
+  familyId: string
+}) => (
+  <QuestsWidget personId={personId} familyId={familyId} />
+)
+
+const UpcomingDatesSlot = ({ 
+  personId, 
+  familyId 
+}: { 
+  personId: string
+  familyId: string
+}) => (
+  <UpcomingDatesWidget personId={personId} familyId={familyId} />
+)
+
+const FromOthersSlot = ({ 
+  personId, 
+  familyId 
+}: { 
+  personId: string
+  familyId: string
+}) => (
+  <FromOthersAboutMeWidget personId={personId} familyId={familyId} />
+)
+
 const VisibilitySearchSlot = ({ 
   personId,
   visibility, 
@@ -294,6 +342,10 @@ export function RightRail({
     toc: true,
     contributeCTA: true,
     anniversaries: true,
+    streaks: true,
+    quests: true,
+    upcomingDates: true,
+    fromOthers: true,
     visibilitySearch: false,
     miniMap: true,
     mediaCounters: true,
@@ -325,6 +377,10 @@ export function RightRail({
               toc: dbSlots.TOC ?? true,
               contributeCTA: dbSlots.ContributeCTA ?? true,
               anniversaries: dbSlots.Anniversaries ?? true,
+              streaks: dbSlots.Streaks ?? true,
+              quests: dbSlots.Quests ?? true,
+              upcomingDates: dbSlots.UpcomingDates ?? true,
+              fromOthers: dbSlots.FromOthers ?? true,
               visibilitySearch: dbSlots.VisibilitySearch ?? false,
               miniMap: dbSlots.MiniMap ?? true,
               mediaCounters: dbSlots.MediaCounters ?? true,
@@ -362,6 +418,10 @@ export function RightRail({
         toc: dbSlots.TOC ?? true,
         contributeCTA: dbSlots.ContributeCTA ?? true,
         anniversaries: dbSlots.Anniversaries ?? true,
+        streaks: dbSlots.Streaks ?? true,
+        quests: dbSlots.Quests ?? true,
+        upcomingDates: dbSlots.UpcomingDates ?? true,
+        fromOthers: dbSlots.FromOthers ?? true,
         visibilitySearch: dbSlots.VisibilitySearch ?? false,
         miniMap: dbSlots.MiniMap ?? true,
         mediaCounters: dbSlots.MediaCounters ?? true,
@@ -403,6 +463,30 @@ export function RightRail({
             person={person} 
             preset={preset}
             canManageReminders={canEdit}
+          />
+        )}
+        {preset === 'life' && config.streaks && (
+          <StreaksSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
+        {preset === 'life' && config.quests && (
+          <QuestsSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
+        {preset === 'life' && config.upcomingDates && (
+          <UpcomingDatesSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
+        {config.fromOthers && (
+          <FromOthersSlot 
+            personId={person_id} 
+            familyId={person.family_id}
           />
         )}
         {config.visibilitySearch && (
@@ -470,6 +554,18 @@ export function RightRail({
             person={person} 
             preset={preset}
             canManageReminders={canEdit}
+          />
+        )}
+        {preset === 'life' && config.upcomingDates && (
+          <UpcomingDatesSlot 
+            personId={person_id} 
+            familyId={person.family_id}
+          />
+        )}
+        {config.fromOthers && (
+          <FromOthersSlot 
+            personId={person_id} 
+            familyId={person.family_id}
           />
         )}
         {config.mediaCounters && (
