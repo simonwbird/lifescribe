@@ -150,6 +150,8 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
     case 'quick_facts':
       return (
         <QuickFactsBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
           person={person}
           blockContent={block.content_json}
           canEdit={canEdit}
