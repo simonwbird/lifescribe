@@ -92,23 +92,34 @@ export function PageLayoutManager({
       }))
   }, [blocks, currentLayout, blockMap])
 
+  const hasMainContent = ([...mainBlocks, ...unplacedBlocks]).length > 0
+  const hasRailContent = railBlocks.length > 0
+
   return (
-    <div className={cn('lg:grid lg:grid-cols-12 lg:gap-6', className)}>
+    <div className={cn(
+      hasMainContent && hasRailContent ? 'lg:grid lg:grid-cols-12 lg:gap-6' : '',
+      className
+    )}>
       {/* Main content column */}
-      <div className="lg:col-span-8 space-y-6">
-        {[...mainBlocks, ...unplacedBlocks].map(block => (
-          <div key={block.id}>
-            {block.component}
-          </div>
-        ))}
-      </div>
+      {hasMainContent && (
+        <div className={cn('space-y-6', hasRailContent ? 'lg:col-span-8' : 'lg:col-span-12')}>
+          {[...mainBlocks, ...unplacedBlocks].map(block => (
+            <div key={block.id}>
+              {block.component}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Right rail column (hidden on mobile if empty) */}
-      {railBlocks.length > 0 && (
-        <div className={cn(
-          'lg:col-span-4 space-y-4',
-          breakpoint === 'mobile' && 'hidden'
-        )}>
+      {hasRailContent && (
+        <div
+          className={cn(
+            'space-y-4',
+            hasMainContent ? 'lg:col-span-4' : 'lg:col-span-12',
+            breakpoint === 'mobile' && 'hidden'
+          )}
+        >
           {railBlocks.map(block => (
             <div key={block.id}>
               {block.component}
