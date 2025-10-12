@@ -66,10 +66,25 @@ export function useThemeCustomizer(personId: string, initialThemeId?: string) {
   const [previewTheme, setPreviewTheme] = useState<ThemeConfig | null>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
 
+  // Default theme that matches the design system
+  const defaultTheme: ThemeConfig = {
+    palette: {
+      primary: '160 25% 35%',      // Heritage forest green
+      secondary: '45 35% 92%',     // Heritage cream
+      accent: '42 85% 55%',        // Heritage gold
+      background: '45 35% 92%',    // Heritage cream
+      foreground: '210 25% 15%'    // Neutral 900
+    },
+    fontScale: 1.0,
+    shape: 'rounded',
+    layout: 'magazine',
+    highContrastMode: false
+  }
+
   const { data: currentTheme, isLoading } = useQuery({
     queryKey: ['person-theme', personId, initialThemeId],
     queryFn: async () => {
-      if (!initialThemeId) return null
+      if (!initialThemeId) return defaultTheme
 
       const { data, error } = await supabase
         .from('person_page_themes' as any)
@@ -89,8 +104,7 @@ export function useThemeCustomizer(personId: string, initialThemeId?: string) {
         highContrastMode: data.high_contrast_mode || false,
         customCss: data.custom_css || {}
       } as ThemeConfig
-    },
-    enabled: !!initialThemeId
+    }
   })
 
   // Initialize preview with current theme

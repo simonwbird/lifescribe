@@ -43,9 +43,9 @@ export function CustomizerPanel({ personId, themeId, onClose }: CustomizerPanelP
   const { data: presets, isLoading: presetsLoading } = useThemePresets()
   
   const [customColors, setCustomColors] = useState({
-    primary: currentTheme?.palette.primary || '222 47 11',
-    secondary: currentTheme?.palette.secondary || '217 91 4',
-    accent: currentTheme?.palette.accent || '26 47 88'
+    primary: currentTheme?.palette.primary || '160 25% 35%',
+    secondary: currentTheme?.palette.secondary || '45 35% 92%',
+    accent: currentTheme?.palette.accent || '42 85% 55%'
   })
 
   if (isLoading || !currentTheme) {

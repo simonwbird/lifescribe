@@ -6,22 +6,38 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
+// Default theme values that match the index.css design system
+const DEFAULT_THEME: ThemeConfig = {
+  palette: {
+    primary: '160 25% 35%',      // Heritage forest green
+    secondary: '45 35% 92%',     // Heritage cream
+    accent: '42 85% 55%',        // Heritage gold
+    background: '45 35% 92%',    // Heritage cream
+    foreground: '210 25% 15%'    // Neutral 900
+  },
+  fontScale: 1.0,
+  shape: 'rounded',
+  layout: 'magazine',
+  highContrastMode: false
+}
+
 export function ThemeProvider({ theme, children }: ThemeProviderProps) {
   useEffect(() => {
-    if (!theme) return
+    // Use default theme if none provided
+    const activeTheme = theme || DEFAULT_THEME
 
     const root = document.documentElement
     
     // Apply color palette
-    root.style.setProperty('--primary', theme.palette.primary)
-    root.style.setProperty('--secondary', theme.palette.secondary)
-    root.style.setProperty('--accent', theme.palette.accent)
-    root.style.setProperty('--background', theme.palette.background)
-    root.style.setProperty('--foreground', theme.palette.foreground)
+    root.style.setProperty('--primary', activeTheme.palette.primary)
+    root.style.setProperty('--secondary', activeTheme.palette.secondary)
+    root.style.setProperty('--accent', activeTheme.palette.accent)
+    root.style.setProperty('--background', activeTheme.palette.background)
+    root.style.setProperty('--foreground', activeTheme.palette.foreground)
     
     // Apply font scale
-    const baseFontSize = 16 * theme.fontScale
-    root.style.setProperty('--font-scale', theme.fontScale.toString())
+    const baseFontSize = 16 * activeTheme.fontScale
+    root.style.setProperty('--font-scale', activeTheme.fontScale.toString())
     root.style.fontSize = `${baseFontSize}px`
     
     // Apply shape language
@@ -46,7 +62,7 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
       }
     }
     
-    const radii = borderRadius[theme.shape]
+    const radii = borderRadius[activeTheme.shape]
     root.style.setProperty('--radius-sm', radii.sm)
     root.style.setProperty('--radius-md', radii.md)
     root.style.setProperty('--radius-lg', radii.lg)
@@ -54,7 +70,7 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
     root.style.setProperty('--radius', radii.md) // default
     
     // Apply high contrast mode
-    if (theme.highContrastMode) {
+    if (activeTheme.highContrastMode) {
       root.classList.add('high-contrast')
       
       // Enhance contrast for text and UI elements
@@ -66,11 +82,11 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
     }
     
     // Apply layout class
-    root.setAttribute('data-layout', theme.layout)
+    root.setAttribute('data-layout', activeTheme.layout)
     
     // Apply custom CSS if provided
-    if (theme.customCss && Object.keys(theme.customCss).length > 0) {
-      Object.entries(theme.customCss).forEach(([property, value]) => {
+    if (activeTheme.customCss && Object.keys(activeTheme.customCss).length > 0) {
+      Object.entries(activeTheme.customCss).forEach(([property, value]) => {
         root.style.setProperty(property, value as string)
       })
     }
