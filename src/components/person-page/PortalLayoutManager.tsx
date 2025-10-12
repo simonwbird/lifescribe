@@ -105,15 +105,15 @@ export function PortalLayoutManager({
 
     // Prefer configured rail IDs that exist in the provided blocks
     const filteredBase = baseRail.filter(id => blocks.some(b => b.id === id))
-    if (filteredBase.length > 0) return filteredBase
 
-    // Fallback: if config yields nothing, place all widgets/navigation in rail (desktop/tablet)
-    if (breakpoint !== 'mobile' && widgetIds.length > 0) {
-      try { console.warn('[PortalLayoutManager] Rail empty; falling back to all widget blocks', { widgetIds }) } catch {}
-      return widgetIds
+    // On desktop/tablet, ensure ALL widget/navigation blocks go to rail
+    if (breakpoint !== 'mobile') {
+      const withAllWidgets = Array.from(new Set([...(filteredBase.length > 0 ? filteredBase : []), ...widgetIds]))
+      return withAllWidgets
     }
 
-    return [] as string[]
+    // Mobile: return filtered config (usually empty)
+    return filteredBase
   }, [currentLayout.rail, blocks, breakpoint, widgetIds])
 
   // Compute main and rail block IDs ensuring NO OVERLAP
