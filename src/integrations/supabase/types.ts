@@ -4335,12 +4335,14 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           birth_date_precision: string | null
+          birth_place: string | null
           birth_year: number | null
           claimed_by_profile_id: string | null
           created_at: string | null
           created_by: string | null
           death_date: string | null
           death_date_precision: string | null
+          death_place: string | null
           death_year: number | null
           family_id: string
           favorites: Json | null
@@ -4373,12 +4375,14 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           birth_date_precision?: string | null
+          birth_place?: string | null
           birth_year?: number | null
           claimed_by_profile_id?: string | null
           created_at?: string | null
           created_by?: string | null
           death_date?: string | null
           death_date_precision?: string | null
+          death_place?: string | null
           death_year?: number | null
           family_id: string
           favorites?: Json | null
@@ -4411,12 +4415,14 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           birth_date_precision?: string | null
+          birth_place?: string | null
           birth_year?: number | null
           claimed_by_profile_id?: string | null
           created_at?: string | null
           created_by?: string | null
           death_date?: string | null
           death_date_precision?: string | null
+          death_place?: string | null
           death_year?: number | null
           family_id?: string
           favorites?: Json | null

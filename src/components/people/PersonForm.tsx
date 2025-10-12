@@ -27,8 +27,10 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
     alt_names: [] as string[],
     birth_date: '',
     birth_date_precision: 'ymd',
+    birth_place: '',
     death_date: '',
     death_date_precision: 'ymd',
+    death_place: '',
     is_living: true,
     gender: '',
     notes: '',
@@ -48,8 +50,10 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
         alt_names: person.alt_names || [],
         birth_date: person.birth_date || '',
         birth_date_precision: person.birth_date_precision || 'ymd',
+        birth_place: (person as any).birth_place || '',
         death_date: person.death_date || '',
         death_date_precision: person.death_date_precision || 'ymd',
+        death_place: (person as any).death_place || '',
         is_living: person.is_living !== false,
         gender: person.gender || '',
         notes: person.notes || '',
@@ -107,7 +111,9 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
         ...formData,
         family_id: familyId,
         birth_date: formData.birth_date || null,
+        birth_place: formData.birth_place || null,
         death_date: formData.death_date || null,
+        death_place: formData.death_place || null,
         created_by: user.id
       }
 
@@ -307,6 +313,32 @@ export default function PersonForm({ person, familyId, onSuccess, onCancel }: Pe
                     <SelectItem value="unknown">Unknown</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="birth_place">Birth Place</Label>
+              <Input
+                id="birth_place"
+                value={formData.birth_place}
+                onChange={(e) => setFormData(prev => ({ ...prev, birth_place: e.target.value }))}
+                placeholder="City, State/Country"
+                maxLength={200}
+              />
+            </div>
+
+            {!formData.is_living && (
+              <div>
+                <Label htmlFor="death_place">Death Place</Label>
+                <Input
+                  id="death_place"
+                  value={formData.death_place}
+                  onChange={(e) => setFormData(prev => ({ ...prev, death_place: e.target.value }))}
+                  placeholder="City, State/Country"
+                  maxLength={200}
+                />
               </div>
             )}
           </div>
