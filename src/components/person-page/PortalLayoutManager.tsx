@@ -136,11 +136,6 @@ export function PortalLayoutManager({
     }
   }, [currentLayout.main, effectiveRailIds, logicalOrder, blocks])
 
-  // Reset singleton validator on layout changes to avoid false duplicate warnings
-  useEffect(() => {
-    validatorRef.current.reset()
-  }, [breakpoint, currentLayout, blocks, mainBlockIds, railBlockIds])
-
   // Debugging: log layout computation to help identify why rail may be empty in preview
   useEffect(() => {
     try {
@@ -214,23 +209,17 @@ export function PortalLayoutManager({
         {mainBlockIds.map(blockId => renderBlock(blockId))}
       </main>
 
-      {/* Right rail column - complementary landmark (always rendered on desktop for portal target) */}
+      {/* Right rail column - complementary landmark */}
       <aside 
         id="portal-rail"
         className={cn(
-          'hidden lg:block lg:col-span-4 space-y-4 bg-accent/10 border border-accent/20 rounded-lg p-4 min-h-[200px]'
+          'hidden lg:block lg:col-span-4 space-y-4'
         )}
         data-portal-container="rail"
         role="complementary"
         aria-label="Sidebar widgets"
       >
-        {railBlockIds.length === 0 ? (
-          <div className="text-muted-foreground text-sm">
-            Rail Container (Empty - blocks: {blocks.length}, breakpoint: {breakpoint})
-          </div>
-        ) : (
-          railBlockIds.map(blockId => renderBlock(blockId))
-        )}
+        {railBlockIds.map(blockId => renderBlock(blockId))}
       </aside>
     </div>
   )
