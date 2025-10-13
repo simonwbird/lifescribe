@@ -120,7 +120,7 @@ export default function VoiceNotesBlock({
           title="No voice notes yet"
           description="Record a 60–120s note. Share your thoughts."
           action={{
-            label: "Record Voice Note",
+            label: "Record Note",
             onClick: () => setShowRecording(true),
             variant: "default"
           }}
@@ -158,7 +158,7 @@ export default function VoiceNotesBlock({
           className="gap-2"
         >
           <Mic className="h-4 w-4" />
-          Record Voice Note
+          Record Note
         </Button>
       </div>
 
