@@ -125,6 +125,7 @@ import EventJoin from './pages/EventJoin';
 import AdminLabs from './pages/admin/AdminLabs';
 import AdminDebugRoles from './pages/admin/AdminDebugRoles';
 import ProfileDebug from './pages/ProfileDebug';
+import Portfolio from './pages/Portfolio';
 
 const queryClient = new QueryClient();
 
@@ -207,6 +208,7 @@ function AppContent() {
        <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
        <Route path="/labs/spaces" element={<AuthGate><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthGate>} />
+       <Route path="/portfolio" element={<AuthGate><Portfolio /></AuthGate>} />
       <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
       <Route path="/collections/:tab" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
       {/* Backward compatibility */}

@@ -6083,6 +6083,201 @@ export type Database = {
           },
         ]
       }
+      portfolio_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          portfolio_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          portfolio_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          portfolio_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_attachments_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_reports: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          end_date: string
+          family_id: string
+          id: string
+          person_id: string
+          report_data: Json | null
+          report_name: string
+          skills_covered: string[] | null
+          start_date: string
+          subjects: Database["public"]["Enums"]["portfolio_subject"][] | null
+          total_items: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          end_date: string
+          family_id: string
+          id?: string
+          person_id: string
+          report_data?: Json | null
+          report_name: string
+          skills_covered?: string[] | null
+          start_date: string
+          subjects?: Database["public"]["Enums"]["portfolio_subject"][] | null
+          total_items?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          end_date?: string
+          family_id?: string
+          id?: string
+          person_id?: string
+          report_data?: Json | null
+          report_name?: string
+          skills_covered?: string[] | null
+          start_date?: string
+          subjects?: Database["public"]["Enums"]["portfolio_subject"][] | null
+          total_items?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_reports_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_reports_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "portfolio_reports_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_reports_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolios: {
+        Row: {
+          completed_at: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          family_id: string
+          id: string
+          is_highlight: boolean | null
+          learning_objectives: string | null
+          person_id: string
+          reflection: string | null
+          skills: string[] | null
+          subject: Database["public"]["Enums"]["portfolio_subject"]
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          family_id: string
+          id?: string
+          is_highlight?: boolean | null
+          learning_objectives?: string | null
+          person_id: string
+          reflection?: string | null
+          skills?: string[] | null
+          subject: Database["public"]["Enums"]["portfolio_subject"]
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          family_id?: string
+          id?: string
+          is_highlight?: boolean | null
+          learning_objectives?: string | null
+          person_id?: string
+          reflection?: string | null
+          skills?: string[] | null
+          subject?: Database["public"]["Enums"]["portfolio_subject"]
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolios_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolios_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "portfolios_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolios_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -8755,6 +8950,16 @@ export type Database = {
         Args: { p_given_name: string; p_person_id: string; p_surname: string }
         Returns: string
       }
+      generate_portfolio_report: {
+        Args: {
+          p_end_date: string
+          p_family_id: string
+          p_person_id: string
+          p_start_date: string
+          p_subjects?: Database["public"]["Enums"]["portfolio_subject"][]
+        }
+        Returns: Json
+      }
       get_all_family_invites_masked: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -9214,6 +9419,19 @@ export type Database = {
         | "steward"
         | "contributor"
         | "viewer"
+      portfolio_subject:
+        | "Math"
+        | "Science"
+        | "English"
+        | "History"
+        | "Geography"
+        | "Art"
+        | "Music"
+        | "Physical Education"
+        | "Technology"
+        | "Foreign Language"
+        | "Life Skills"
+        | "Other"
       prompt_instance_status:
         | "open"
         | "in_progress"
@@ -9552,6 +9770,20 @@ export const Constants = {
         "steward",
         "contributor",
         "viewer",
+      ],
+      portfolio_subject: [
+        "Math",
+        "Science",
+        "English",
+        "History",
+        "Geography",
+        "Art",
+        "Music",
+        "Physical Education",
+        "Technology",
+        "Foreign Language",
+        "Life Skills",
+        "Other",
       ],
       prompt_instance_status: [
         "open",
