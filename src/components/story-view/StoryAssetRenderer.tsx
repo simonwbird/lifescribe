@@ -21,6 +21,7 @@ interface StoryAssetRendererProps {
 export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendererProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
+  const [showVideo, setShowVideo] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -46,6 +47,12 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       // ignore
     }
   }, [asset])
+
+  useEffect(() => {
+    if (showVideo && videoRef.current) {
+      videoRef.current.play().catch(() => {})
+    }
+  }, [showVideo])
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -151,6 +158,29 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
             <p className="mt-2 text-sm text-muted-foreground">
               This video format isn’t supported by your browser.
             </p>
+          </div>
+        )
+      }
+
+      if (!showVideo && asset.thumbnail_url) {
+        return (
+          <div
+            className="relative rounded-lg overflow-hidden cursor-pointer"
+            onClick={() => setShowVideo(true)}
+            role="button"
+            aria-label="Play video"
+          >
+            <img
+              src={asset.thumbnail_url}
+              alt="Video thumbnail"
+              className="w-full rounded-lg max-h-[600px] object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+              <div className="bg-background rounded-full p-4 shadow-sm">
+                <Play className="h-8 w-8 text-primary" fill="currentColor" />
+              </div>
+            </div>
           </div>
         )
       }
