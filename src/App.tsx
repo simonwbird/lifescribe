@@ -31,6 +31,7 @@ const PersonProfile = () => <LazyRoute factory={() => import("./pages/PersonProf
 const PersonPage = () => <LazyRoute factory={() => import("./pages/PersonPage")} />
 const ModerationQueue = () => <LazyRoute factory={() => import("./pages/StewardTools/ModerationQueue")} />
 const AnalyticsPage = () => <LazyRoute factory={() => import("./pages/AnalyticsPage")} />
+const StoryAnalytics = () => <LazyRoute factory={() => import("./pages/StoryAnalytics")} />
 const Collections = () => <LazyRoute factory={() => import("./pages/Collections")} />
 const Media = () => <LazyRoute factory={() => import("./pages/Media")} />
 const SearchPage = () => <LazyRoute factory={() => import("./pages/Search")} />
@@ -185,6 +186,7 @@ function AppContent() {
       <Route path="/people/:id/legacy" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
       <Route path="/analytics" element={<AuthGate><AnalyticsPage /></AuthGate>} />
+      <Route path="/analytics/stories" element={<AuthGate><StoryAnalytics /></AuthGate>} />
        <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
        <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
        <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />

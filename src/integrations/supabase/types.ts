@@ -8517,6 +8517,14 @@ export type Database = {
         Args: { user_role: Database["public"]["Enums"]["role_type"] }
         Returns: Json
       }
+      get_story_creation_analytics: {
+        Args: {
+          p_end_date?: string
+          p_family_id: string
+          p_start_date?: string
+        }
+        Returns: Json
+      }
       get_user_family_ids: {
         Args: { user_id: string }
         Returns: string[]

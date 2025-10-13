@@ -16,6 +16,7 @@ import { VideoPanel } from './VideoPanel'
 import { MixedPanel } from './MixedPanel'
 import { useStoryAutosave } from '@/hooks/useStoryAutosave'
 import { AutosaveIndicator } from '@/components/story-wizard/AutosaveIndicator'
+import { useStoryAnalytics } from '@/hooks/useStoryAnalytics'
 
 interface UniversalComposerProps {
   familyId: string
@@ -30,6 +31,9 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
   const [showPromptBanner, setShowPromptBanner] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | undefined>()
   const [defaultPrivacy, setDefaultPrivacy] = useState<StoryPrivacy>('private')
+
+  // Analytics tracking
+  const analytics = useStoryAnalytics(familyId)
 
   const { state, updateState, switchMode, clearState, hasContent } = useComposerState(
     (searchParams.get('type') as ComposerMode) || 'text'
@@ -128,6 +132,12 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
     loadUser()
     loadFamilyDefaults()
   }, [familyId])
+
+  // Track composer opened on mount
+  useEffect(() => {
+    const promptId = searchParams.get('prompt_id')
+    analytics.trackComposerOpened(state.mode, promptId || undefined, promptTitle || undefined)
+  }, [])
 
   // Load prompt if prompt_id in URL
   useEffect(() => {
@@ -256,6 +266,7 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
           const file = state.photos[i]
           const { path, error: uploadError } = await uploadMediaFile(file, familyId, user.id)
           if (!uploadError && path) {
+            analytics.trackAssetUploaded('photo', file.size)
             // Create media record (legacy)
             await supabase.from('media').insert({
               story_id: story.id,
@@ -290,6 +301,7 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
         const { path, error: uploadError } = await uploadMediaFile(audioFile, familyId, user.id)
         
         if (!uploadError && path) {
+          analytics.trackAssetUploaded('audio', audioFile.size)
           // Create audio_recordings record (legacy)
           await supabase.from('audio_recordings').insert({
             story_id: story.id,
@@ -322,6 +334,7 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
         const { path, error: uploadError } = await uploadMediaFile(videoFile, familyId, user.id)
         
         if (!uploadError && path) {
+          analytics.trackAssetUploaded('video', videoFile.size)
           // Upload thumbnail
           let thumbUrl = null
           if (state.videoThumbnail) {
@@ -465,6 +478,8 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
 
       // Create person-story links with roles
       if (state.peopleTags.length > 0) {
+        analytics.trackPeopleTagged(state.peopleTags.length)
+        
         const personLinks = state.peopleTags.map(tag => ({
           person_id: tag.personId,
           story_id: story.id,
@@ -488,6 +503,11 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
           .update({ status: 'completed' })
           .eq('prompt_id', state.promptId)
           .eq('family_id', familyId)
+      }
+
+      // Track publish event
+      if (!asDraft) {
+        analytics.trackPublished(story.id, state.promptId || undefined, state.mode)
       }
 
       toast({
@@ -545,7 +565,10 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
 
         <Tabs
           value={state.mode}
-          onValueChange={(value) => switchMode(value as ComposerMode)}
+          onValueChange={(value) => {
+            switchMode(value as ComposerMode)
+            analytics.trackModeSelected(value)
+          }}
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-5 mb-6">
