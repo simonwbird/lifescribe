@@ -49,6 +49,7 @@ export default function BioOverviewBlock({
   const [justGenerated, setJustGenerated] = useState(false)
 
   const handleGenerateFromStories = async () => {
+    console.log('[BioOverview] Start generation via generate-bio', { personId, familyId, tone: formData.tone })
     setIsGenerating(true)
     try {
       const { data, error } = await supabase.functions.invoke('generate-bio', {
@@ -58,6 +59,8 @@ export default function BioOverviewBlock({
           tone: formData.tone || 'warm'
         }
       })
+
+      console.log('[BioOverview] Generation response', { hasData: !!data, hasError: !!error, data })
 
       if (error) {
         console.error('Function error:', error)
@@ -158,9 +161,9 @@ export default function BioOverviewBlock({
           <Button variant="outline" onClick={() => {
             setIsEditing(true)
             handleGenerateFromStories()
-          }}>
+          }} disabled={isGenerating}>
             <Sparkles className="h-4 w-4 mr-2" />
-            Generate from stories
+            {isGenerating ? 'Generating…' : 'Generate from stories'}
           </Button>
         </div>
       </div>
