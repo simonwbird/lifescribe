@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client'
 import { VoiceReplyButton } from './VoiceReplyButton'
 import { useToast } from '@/hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
+import { PrivacyChip } from '@/components/privacy/PrivacyChip'
+import { useContentVisibility } from '@/hooks/useContentVisibility'
 
 interface FeedItemData {
   id: string
@@ -17,6 +19,7 @@ interface FeedItemData {
   created_at: string
   profile_id: string
   family_id: string
+  visibility?: 'family' | 'private' | 'public' | 'circle'
   profiles?: {
     full_name?: string
     avatar_url?: string
@@ -39,7 +42,20 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
   const [comments, setComments] = useState<any[]>([])
   const [isLiked, setIsLiked] = useState(item.user_has_liked || false)
   const [likeCount, setLikeCount] = useState(item.reactions_count || 0)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const { toast } = useToast()
+  
+  const { visibility, updateVisibility } = useContentVisibility({
+    contentType: 'story',
+    contentId: item.id,
+    initialVisibility: item.visibility || 'family'
+  })
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null)
+    })
+  }, [])
 
   useEffect(() => {
     loadComments()
@@ -98,6 +114,12 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
               {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
             </p>
           </div>
+          <PrivacyChip
+            currentVisibility={visibility}
+            isOwner={currentUserId === item.profile_id}
+            onVisibilityChange={updateVisibility}
+            size="sm"
+          />
         </div>
 
         {/* Title */}
