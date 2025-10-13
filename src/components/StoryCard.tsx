@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import ReactionBar from './ReactionBar'
 import CommentThread from './CommentThread'
 import { StoryImageGallery } from './story-view/StoryImageGallery'
+import { StoryAssetRenderer } from './story-view/StoryAssetRenderer'
 import { Link } from 'react-router-dom'
 import { Calendar, MapPin, Users, MessageSquare, Mic2 } from 'lucide-react'
 import type { Story, Profile, Media } from '@/lib/types'
@@ -32,6 +33,7 @@ interface StoryCardProps {
 export default function StoryCard({ story, showFullScreenInteractions = false }: StoryCardProps) {
   const [media, setMedia] = useState<ExtendedMedia[]>([])
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
+  const [storyAssets, setStoryAssets] = useState<any[]>([])
   const [linkedPeople, setLinkedPeople] = useState<any[]>([])
   const [property, setProperty] = useState<any>(null)
   const [transcript, setTranscript] = useState<string | null>(null)
@@ -50,7 +52,18 @@ export default function StoryCard({ story, showFullScreenInteractions = false }:
         setProfileAvatarUrl(story.profiles.avatar_url)
       }
 
-      // Load media
+      // Load story assets (new system)
+      const { data: assetsData } = await supabase
+        .from('story_assets')
+        .select('*')
+        .eq('story_id', story.id)
+        .order('position')
+
+      if (assetsData) {
+        setStoryAssets(assetsData)
+      }
+
+      // Load media (legacy system)
       const { data: mediaData } = await supabase
         .from('media')
         .select('*')
@@ -215,9 +228,24 @@ export default function StoryCard({ story, showFullScreenInteractions = false }:
           )}
         </div>
 
-        <div className="prose max-w-none">
-          <p className="whitespace-pre-wrap">{story.content}</p>
-        </div>
+        {/* Show story assets if available (new system) */}
+        {storyAssets.length > 0 ? (
+          <div className="space-y-3">
+            {storyAssets.slice(0, 3).map((asset) => (
+              <StoryAssetRenderer key={asset.id} asset={asset} compact={true} />
+            ))}
+            {storyAssets.length > 3 && (
+              <Link to={`/stories/${story.id}`} className="text-sm text-primary hover:underline">
+                View all content →
+              </Link>
+            )}
+          </div>
+        ) : (
+          /* Show legacy content if no story assets */
+          <div className="prose max-w-none">
+            <p className="whitespace-pre-wrap">{story.content}</p>
+          </div>
+        )}
 
         {transcript && (
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
