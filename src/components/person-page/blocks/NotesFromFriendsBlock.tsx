@@ -216,7 +216,7 @@ export default function NotesFromFriendsBlock({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Notes from Friends
+            Notes from Family and Friends
           </CardTitle>
           <CardDescription>
             Sign in to view and leave messages.
@@ -241,10 +241,10 @@ export default function NotesFromFriendsBlock({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5" />
-          Notes from Friends
+          Notes from Family and Friends
         </CardTitle>
         <CardDescription>
-          Leave a note, share encouragement, or drop a quick hello.
+          Leave a note, share encouragement, or say hello.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -285,7 +285,7 @@ export default function NotesFromFriendsBlock({
           ) : (
             <>
               <Textarea
-                placeholder="Share a message, encouragement, or quick hello..."
+                placeholder="Leave a note, share encouragement, or say hello."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={4}
