@@ -37,10 +37,10 @@ export function useTodaysPrompt(familyId: string) {
       return data as PromptInstance | null
     },
     enabled: !!familyId,
-    staleTime: 5 * 60 * 1000, // 5 minutes - prompts don't change often
+    staleTime: 0, // Always refetch to get latest prompt after completion
     gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false
+    refetchOnWindowFocus: true, // Refetch when user returns to page
+    refetchOnMount: true // Refetch when component mounts
   })
 }
 

@@ -180,6 +180,9 @@ export function SimpleHeader({
 
   const handleShuffle = async () => {
     try {
+      // Refetch to get the latest available prompts
+      await refetch()
+      
       // Get all open prompts for shuffling
       const { data: openPrompts, error } = await supabase
         .from('prompt_instances')
@@ -203,6 +206,14 @@ export function SimpleHeader({
 
       if (error) throw error
       
+      if (openPrompts && openPrompts.length === 0) {
+        toast({
+          title: "All prompts completed! 🎉",
+          description: "You've answered all available prompts. Great work!",
+        })
+        return
+      }
+      
       if (openPrompts && openPrompts.length > 1) {
         // Get a random prompt that's different from the current one
         const availablePrompts = openPrompts.filter(p => p.id !== todaysPrompt?.id)
@@ -212,10 +223,32 @@ export function SimpleHeader({
           
           // Update the query cache to show the new prompt
           queryClient.setQueryData(['todays-prompt', spaceId], selectedPrompt)
+          
+          toast({
+            title: "New prompt loaded!",
+            description: "Here's a fresh prompt for you.",
+          })
+        } else {
+          toast({
+            title: "This is the only prompt available",
+            description: "Complete it to unlock more!",
+          })
         }
+      } else if (openPrompts && openPrompts.length === 1) {
+        // Only one prompt left, refetch to show it
+        await refetch()
+        toast({
+          title: "This is the last available prompt",
+          description: "Complete it to finish all prompts!",
+        })
       }
     } catch (error) {
       console.error('Error shuffling prompt:', error)
+      toast({
+        title: "Couldn't shuffle",
+        description: "Please try again.",
+        variant: "destructive"
+      })
     }
   }
 
