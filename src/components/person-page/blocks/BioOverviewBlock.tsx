@@ -50,9 +50,10 @@ export default function BioOverviewBlock({
   const handleGenerateFromStories = async () => {
     setIsGenerating(true)
     try {
-      const { data, error } = await supabase.functions.invoke('generate-bio-from-stories', {
+      const { data, error } = await supabase.functions.invoke('generate-bio', {
         body: { 
-          personId, 
+          personId,
+          familyId,
           tone: formData.tone || 'warm'
         }
       })
