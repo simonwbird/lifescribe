@@ -23,6 +23,15 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
+  const getMimeFromUrl = (u?: string | null) => {
+    if (!u) return undefined
+    const l = u.toLowerCase()
+    if (l.endsWith('.mp4')) return 'video/mp4'
+    if (l.endsWith('.webm')) return 'video/webm'
+    if (l.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl'
+    return undefined
+  }
+
   const handlePlayPause = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -107,14 +116,24 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
         <div className="relative rounded-lg overflow-hidden">
           <video
             ref={videoRef}
-            src={asset.transcoded_url || asset.url}
             poster={asset.thumbnail_url || undefined}
             controls
             preload="metadata"
+            playsInline
             className="w-full rounded-lg max-h-[600px]"
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-          />
+            onError={(e) => console.error('Video playback error', e)}
+          >
+            {asset.transcoded_url && (
+              <source src={asset.transcoded_url} type={getMimeFromUrl(asset.transcoded_url)} />
+            )}
+            <source
+              src={asset.url}
+              type={asset.metadata?.mime_type || getMimeFromUrl(asset.url)}
+            />
+            Your browser does not support the video tag.
+          </video>
         </div>
       )
 
