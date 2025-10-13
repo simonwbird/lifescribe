@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ChevronDown, BookHeart, FileText, Users, GitBranch, Plus, PenTool, Mic, Camera, Archive, Calendar } from 'lucide-react'
+import { ChevronDown, BookHeart, FileText, Users, GitBranch, Plus, PenTool, Mic, Camera, Archive, Calendar, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import GlobalSearch from '@/components/search/GlobalSearch'
+import CommandPalette from '@/components/search/CommandPalette'
 import NotificationsBell from '@/components/navigation/NotificationsBell'
 import ProfileDropdown from '@/components/navigation/ProfileDropdown'
 import QuickAddSheet from '@/components/home/QuickAddSheet'
@@ -24,6 +24,7 @@ export function AppHeader() {
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
   const [showQuickAdd, setShowQuickAdd] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -80,7 +81,17 @@ export function AppHeader() {
         {/* Center: Search */}
         <div className="flex-1 flex justify-center px-4">
           <div className="w-full max-w-md">
-            <GlobalSearch />
+            <Button
+              variant="outline"
+              className="w-full justify-start text-muted-foreground hover:text-foreground"
+              onClick={() => setShowSearch(true)}
+            >
+              <Search className="h-4 w-4 mr-2" />
+              <span>Search or type a command...</span>
+              <kbd className="pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                <span className="text-xs">⌘K</span>
+              </kbd>
+            </Button>
           </div>
         </div>
 
@@ -167,6 +178,7 @@ export function AppHeader() {
       </div>
 
       <QuickAddSheet open={showQuickAdd} onOpenChange={setShowQuickAdd} />
+      <CommandPalette isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </header>
   )
 }
