@@ -24,6 +24,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const [isPlaying, setIsPlaying] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const [showVideo, setShowVideo] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
@@ -332,9 +333,15 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       )
 
     case 'video':
-      if (compact) {
+      if (compact && !expanded) {
         return (
-          <div className="relative rounded-lg overflow-hidden cursor-pointer group">
+          <div 
+            className="relative rounded-lg overflow-hidden cursor-pointer group"
+            onClick={(e) => {
+              e.stopPropagation()
+              setExpanded(true)
+            }}
+          >
             {signedThumb ? (
               <img
                 src={signedThumb}
