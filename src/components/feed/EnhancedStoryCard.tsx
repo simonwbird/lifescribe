@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { PrivacyBadge } from '@/components/ui/privacy-badge'
 import { StoryImageGallery } from '@/components/story-view/StoryImageGallery'
+import { StoryAssetRenderer } from '@/components/story-view/StoryAssetRenderer'
 
 interface Story {
   id: string
@@ -41,8 +42,21 @@ interface EnhancedStoryCardProps {
 export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isLiking, setIsLiking] = useState(false)
+  const [assets, setAssets] = useState<any[]>([])
   const navigate = useNavigate()
 
+  // Load story_assets for mixed content stories
+  useEffect(() => {
+    const loadAssets = async () => {
+      const { data } = await supabase
+        .from('story_assets')
+        .select('id,type,url,thumbnail_url,transcoded_url,position,processing_state,metadata')
+        .eq('story_id', story.id)
+        .order('position')
+      if (data) setAssets(data)
+    }
+    loadAssets()
+  }, [story.id])
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (isLiking) return
@@ -100,9 +114,13 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
     }
   }
 
-  const handleCardClick = () => {
+const handleCardClick = () => {
     navigate(`/stories/${story.id}`)
   }
+
+  const textExcerpt = (story.content && story.content.trim().length > 0)
+    ? story.content
+    : (assets.find(a => a.type === 'text')?.metadata?.content || '')
 
   return (
     <Card 
@@ -143,11 +161,17 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
         {/* Content */}
         <div className="mb-4">
           <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-heritage-gray-dark">{story.title}</h3>
-          <p className="text-heritage-gray line-clamp-3">{story.content}</p>
+          <p className="text-heritage-gray line-clamp-3">{textExcerpt || ''}</p>
         </div>
 
         {/* Media Preview */}
-        {story.media && story.media.length > 0 && (
+        {assets.length > 0 ? (
+          <div className="mb-4 space-y-3">
+            {assets.slice(0, 3).map((asset) => (
+              <StoryAssetRenderer key={asset.id} asset={asset} compact />
+            ))}
+          </div>
+        ) : story.media && story.media.length > 0 ? (
           <div className="mb-4">
             <StoryImageGallery 
               images={story.media
@@ -159,7 +183,6 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
                 }))
               }
             />
-            
             {/* Audio indicator */}
             {story.media.some(m => m.mime_type.startsWith('audio/')) && (
               <div className="mt-2 p-3 bg-primary/5 rounded-lg flex items-center gap-2">
@@ -170,7 +193,7 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Always Visible Actions */}
         <div className="flex items-center justify-between pt-3 border-t">

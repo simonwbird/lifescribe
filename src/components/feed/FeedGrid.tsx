@@ -75,7 +75,7 @@ export function FeedGrid({ familyId, currentUserId }: FeedGridProps) {
           created_at,
           profile_id,
           family_id,
-          media!inner (
+          media (
             id,
             file_path,
             mime_type
