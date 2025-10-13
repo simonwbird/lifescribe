@@ -1,6 +1,8 @@
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import VoiceRecorderPanel from '@/components/story-create/VoiceRecorderPanel'
+import { SaveStatusBadge } from './SaveStatusBadge'
+import { useSaveStatus } from '@/hooks/useSaveStatus'
 
 interface VoicePanelProps {
   title: string
@@ -21,8 +23,15 @@ export function VoicePanel({
   onContentChange,
   onRecordingReady
 }: VoicePanelProps) {
+  const saveStatus = useSaveStatus([title, content, audioBlob !== null], 500)
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Voice Story</h2>
+        <SaveStatusBadge status={saveStatus} />
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2">
           Voice Recording <span className="text-destructive">*</span>

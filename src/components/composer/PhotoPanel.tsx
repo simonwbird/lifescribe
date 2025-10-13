@@ -3,6 +3,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { MultiImageLayout } from '@/components/story-create/MultiImageLayout'
 import { useToast } from '@/hooks/use-toast'
+import { SaveStatusBadge } from './SaveStatusBadge'
+import { useSaveStatus } from '@/hooks/useSaveStatus'
 
 interface PhotoPanelProps {
   title: string
@@ -23,6 +25,7 @@ export function PhotoPanel({
 }: PhotoPanelProps) {
   const { toast } = useToast()
   const [imageData, setImageData] = useState<Array<{ id: string; url: string; file: File }>>([])
+  const saveStatus = useSaveStatus([title, content, photos.length], 500)
 
   function generateId() {
     return Math.random().toString(36).substr(2, 9)
@@ -86,6 +89,11 @@ export function PhotoPanel({
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Photo Story</h2>
+        <SaveStatusBadge status={saveStatus} />
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2">
           Photos <span className="text-destructive">*</span>

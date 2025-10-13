@@ -1,5 +1,7 @@
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { SaveStatusBadge } from './SaveStatusBadge'
+import { useSaveStatus } from '@/hooks/useSaveStatus'
 
 interface TextPanelProps {
   title: string
@@ -14,8 +16,15 @@ export function TextPanel({
   onTitleChange,
   onContentChange
 }: TextPanelProps) {
+  const saveStatus = useSaveStatus([title, content], 500)
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Write Your Story</h2>
+        <SaveStatusBadge status={saveStatus} />
+      </div>
+
       <div>
         <label htmlFor="title" className="block text-sm font-medium mb-2">
           Title <span className="text-destructive">*</span>
