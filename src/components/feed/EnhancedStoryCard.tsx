@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { PrivacyBadge } from '@/components/ui/privacy-badge'
 import { StoryImageGallery } from '@/components/story-view/StoryImageGallery'
 import { StoryAssetRenderer } from '@/components/story-view/StoryAssetRenderer'
+import { getSignedMediaUrl } from '@/lib/media'
 
 interface Story {
   id: string
@@ -43,6 +44,7 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
   const [isHovered, setIsHovered] = useState(false)
   const [isLiking, setIsLiking] = useState(false)
   const [assets, setAssets] = useState<any[]>([])
+  const [legacyVideo, setLegacyVideo] = useState<any | null>(null)
   const navigate = useNavigate()
 
   // Load story_assets for mixed content stories
@@ -57,6 +59,40 @@ export function EnhancedStoryCard({ story, onInteraction }: EnhancedStoryCardPro
     }
     loadAssets()
   }, [story.id])
+
+  // Legacy media array support: embed first video inline (signed URL)
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      const media = story.media || []
+      const vid = media.find((m: any) => m.mime_type && m.mime_type.startsWith('video/'))
+      if (!vid) { setLegacyVideo(null); return }
+      try {
+        let url = await getSignedMediaUrl(vid.file_path, story.family_id)
+        if (!url) {
+          const { data } = supabase.storage.from('media').getPublicUrl(vid.file_path)
+          url = data.publicUrl
+        }
+        if (!cancelled) {
+          setLegacyVideo({
+            id: vid.id,
+            type: 'video',
+            url,
+            thumbnail_url: null,
+            transcoded_url: null,
+            position: 0,
+            processing_state: null,
+            metadata: { mime_type: vid.mime_type }
+          })
+        }
+      } catch {
+        if (!cancelled) setLegacyVideo(null)
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }, [story.media, story.family_id])
+
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (isLiking) return
@@ -166,13 +202,32 @@ const handleCardClick = () => {
 
         {/* Media Preview */}
         {assets.length > 0 ? (
-          <div className="mb-4 space-y-3">
-            {assets.slice(0, 3).map((asset) => (
-              <StoryAssetRenderer key={asset.id} asset={asset} compact />
-            ))}
+          <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            {(() => {
+              const firstVideo = assets.find((a: any) => a.type === 'video')
+              if (firstVideo) {
+                return (
+                  <>
+                    <StoryAssetRenderer key={firstVideo.id} asset={firstVideo} />
+                    {assets
+                      .filter((a: any) => a.id !== firstVideo.id)
+                      .slice(0, 2)
+                      .map((asset: any) => (
+                        <StoryAssetRenderer key={asset.id} asset={asset} compact />
+                      ))}
+                  </>
+                )
+              }
+              return assets.slice(0, 3).map((asset: any) => (
+                <StoryAssetRenderer key={asset.id} asset={asset} compact />
+              ))
+            })()}
           </div>
         ) : story.media && story.media.length > 0 ? (
-          <div className="mb-4">
+          <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            {legacyVideo ? (
+              <StoryAssetRenderer asset={legacyVideo} />
+            ) : null}
             <StoryImageGallery 
               images={story.media
                 .filter(m => m.mime_type.startsWith('image/'))
