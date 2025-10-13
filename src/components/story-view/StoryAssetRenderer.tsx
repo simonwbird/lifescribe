@@ -1,6 +1,7 @@
-import { Play, Pause, Volume2 } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Slider } from '@/components/ui/slider'
 
 interface StoryAsset {
   id: string
@@ -22,6 +23,10 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const [isPlaying, setIsPlaying] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const [showVideo, setShowVideo] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(1)
+  const [isMuted, setIsMuted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -71,6 +76,58 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       }
       setIsPlaying(!isPlaying)
     }
+  }
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime)
+    }
+  }
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration)
+    }
+  }
+
+  const handleSeek = (value: number[]) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = value[0]
+      setCurrentTime(value[0])
+    }
+  }
+
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0]
+    setVolume(newVolume)
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume
+    }
+    setIsMuted(newVolume === 0)
+  }
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      const newMuted = !isMuted
+      setIsMuted(newMuted)
+      videoRef.current.muted = newMuted
+    }
+  }
+
+  const toggleFullscreen = () => {
+    if (videoRef.current) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen()
+      } else {
+        videoRef.current.requestFullscreen()
+      }
+    }
+  }
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
   if (asset.processing_state === 'processing') {
@@ -162,84 +219,110 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
         )
       }
 
-      if (asset.thumbnail_url) {
-        return (
-          <div className="relative rounded-lg overflow-hidden">
+      // Custom video player
+      const candidates = [
+        asset.transcoded_url ? { url: asset.transcoded_url, type: getMimeFromUrl(asset.transcoded_url) } : null,
+        { url: asset.url, type: asset.metadata?.mime_type || getMimeFromUrl(asset.url) }
+      ].filter(Boolean) as { url: string; type?: string }[]
+      const tester = document.createElement('video')
+      const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
+      const playableUrl = playable.url
+
+      return (
+        <div className="bg-secondary/50 rounded-lg overflow-hidden">
+          <div className="relative aspect-video bg-black">
             <video
               ref={videoRef}
+              src={playableUrl}
               poster={asset.thumbnail_url || undefined}
-              controls
               preload="metadata"
               playsInline
-              className="w-full rounded-lg max-h-[600px]"
-              onPlay={() => { setIsPlaying(true); setShowVideo(true) }}
+              className="w-full h-full object-contain"
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onError={(e) => console.error('Video playback error', e)}
-            >
-              {asset.transcoded_url && (
-                <source src={asset.transcoded_url} type={getMimeFromUrl(asset.transcoded_url)} />
-              )}
-              <source
-                src={asset.url}
-                type={asset.metadata?.mime_type || getMimeFromUrl(asset.url)}
-              />
-              Your browser does not support the video tag.
-            </video>
-
-            {!isPlaying && (
+            />
+            {!isPlaying && asset.thumbnail_url && (
               <button
                 type="button"
-                className="absolute inset-0 bg-black/30 flex items-center justify-center"
-                onClick={() => { videoRef.current?.play().catch(() => {}); setShowVideo(true) }}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center hover:bg-black/50 transition-colors"
+                onClick={handlePlayPause}
                 aria-label="Play video"
               >
-                <div className="bg-background rounded-full p-4 shadow-sm">
+                <div className="bg-background rounded-full p-4 shadow-lg">
                   <Play className="h-8 w-8 text-primary" fill="currentColor" />
                 </div>
               </button>
             )}
           </div>
-        )
-      }
+          
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={handlePlayPause}
+              >
+                {isPlaying ? (
+                  <Pause className="h-5 w-5" />
+                ) : (
+                  <Play className="h-5 w-5" />
+                )}
+              </Button>
+              
+              <div className="flex-1 space-y-1">
+                <Slider
+                  value={[currentTime]}
+                  max={duration || 100}
+                  step={0.1}
+                  onValueChange={handleSeek}
+                  className="cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
 
-      {
-        const candidates = [
-          asset.transcoded_url ? { url: asset.transcoded_url, type: getMimeFromUrl(asset.transcoded_url) } : null,
-          { url: asset.url, type: asset.metadata?.mime_type || getMimeFromUrl(asset.url) }
-        ].filter(Boolean) as { url: string; type?: string }[]
-        const tester = document.createElement('video')
-        const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
-        const playableUrl = playable.url
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={toggleMute}
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="h-5 w-5" />
+                ) : (
+                  <Volume2 className="h-5 w-5" />
+                )}
+              </Button>
 
-        return (
-          <div className="relative rounded-lg overflow-hidden">
-            <video
-              ref={videoRef}
-              src={playableUrl}
-              poster={asset.thumbnail_url || undefined}
-              controls
-              preload="metadata"
-              playsInline
-              crossOrigin="anonymous"
-              className="w-full rounded-lg max-h-[600px]"
-              onClick={() => {
-                if (!videoRef.current) return
-                if (videoRef.current.paused) videoRef.current.play().catch(() => {})
-                else videoRef.current.pause()
-              }}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onError={(e) => console.error('Video playback error', e)}
-            >
-              {asset.transcoded_url && (
-                <source src={asset.transcoded_url} type={getMimeFromUrl(asset.transcoded_url)} />
-              )}
-              <source src={asset.url} type={asset.metadata?.mime_type || getMimeFromUrl(asset.url)} />
-              Your browser does not support the video tag.
-            </video>
+              <div className="w-24">
+                <Slider
+                  value={[isMuted ? 0 : volume]}
+                  max={1}
+                  step={0.1}
+                  onValueChange={handleVolumeChange}
+                  className="cursor-pointer"
+                />
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={toggleFullscreen}
+              >
+                <Maximize className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-        )
-      }
+        </div>
+      )
+
 
     case 'audio':
       if (compact) {
