@@ -1,5 +1,5 @@
 import { Play, Pause, Volume2 } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
 interface StoryAsset {
@@ -20,6 +20,7 @@ interface StoryAssetRendererProps {
 
 export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendererProps) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [unsupported, setUnsupported] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -31,6 +32,20 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     if (l.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl'
     return undefined
   }
+
+  useEffect(() => {
+    if (asset.type !== 'video') return
+    try {
+      const tester = document.createElement('video')
+      const type = (asset as any).metadata?.mime_type || getMimeFromUrl(asset.transcoded_url || asset.url)
+      if (type && tester.canPlayType) {
+        const res = tester.canPlayType(type)
+        setUnsupported(res === '')
+      }
+    } catch (_) {
+      // ignore
+    }
+  }, [asset])
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -108,6 +123,34 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
                 <Play className="h-8 w-8 text-primary" fill="currentColor" />
               </div>
             </div>
+          </div>
+        )
+      }
+
+      if (unsupported) {
+        return (
+          <div className="relative rounded-lg overflow-hidden">
+            {asset.thumbnail_url ? (
+              <img
+                src={asset.thumbnail_url}
+                alt="Video thumbnail"
+                className="w-full rounded-lg max-h-[600px] object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="aspect-video w-full rounded-lg bg-muted" />
+            )}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Button
+                variant="secondary"
+                onClick={() => window.open(asset.transcoded_url || asset.url, '_blank')}
+              >
+                Open video
+              </Button>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This video format isn’t supported by your browser.
+            </p>
           </div>
         )
       }
