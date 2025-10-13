@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { tributeCopy } from '@/copy/tribute'
 
 interface CaptureMemoryModalProps {
   isOpen: boolean
@@ -337,7 +338,7 @@ export function CaptureMemoryModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Share a memory of {firstName}</DialogTitle>
+          <DialogTitle>{tributeCopy.captureModal.title(firstName)}</DialogTitle>
           <DialogDescription className="text-base pt-2 font-medium">
             {prompt}
           </DialogDescription>
@@ -347,15 +348,15 @@ export function CaptureMemoryModal({
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="text" className="flex items-center gap-2">
               <Pencil className="h-4 w-4" />
-              Write
+              {tributeCopy.memoryCard.captureButtons.write}
             </TabsTrigger>
             <TabsTrigger value="voice" className="flex items-center gap-2">
               <Mic className="h-4 w-4" />
-              Voice
+              {tributeCopy.memoryCard.captureButtons.voice}
             </TabsTrigger>
             <TabsTrigger value="photo" className="flex items-center gap-2">
               <Camera className="h-4 w-4" />
-              Photo
+              {tributeCopy.memoryCard.captureButtons.photo}
             </TabsTrigger>
           </TabsList>
 
@@ -371,12 +372,17 @@ export function CaptureMemoryModal({
                 className="mt-2"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Add a year or place if you remember
+                {tributeCopy.memoryCard.helper}
               </p>
             </div>
           </TabsContent>
 
           <TabsContent value="voice" className="space-y-4 mt-4">
+            <div className="rounded-lg bg-muted/50 p-4 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {tributeCopy.captureModal.voiceHelper}
+              </p>
+            </div>
             <VoiceRecorderPanel
               onTranscriptReady={handleTranscriptReady}
               className="border-0 p-0"
@@ -459,7 +465,7 @@ export function CaptureMemoryModal({
                 onClick={() => setShowYearField(true)}
                 className="text-sm px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors"
               >
-                + Add year?
+                {tributeCopy.enrichment.addYear}
               </button>
             )}
             {!showPlaceField && !placeText && (
@@ -468,7 +474,7 @@ export function CaptureMemoryModal({
                 onClick={() => setShowPlaceField(true)}
                 className="text-sm px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors"
               >
-                + Add place?
+                {tributeCopy.enrichment.addPlace}
               </button>
             )}
           </div>
@@ -477,27 +483,27 @@ export function CaptureMemoryModal({
             <div className="grid grid-cols-2 gap-4">
               {(showYearField || yearApprox) && (
                 <div>
-                  <Label htmlFor="year" className="text-xs">When was this?</Label>
+                  <Label htmlFor="year" className="text-xs">{tributeCopy.enrichment.yearLabel}</Label>
                   <Input
                     id="year"
                     type="text"
                     value={yearApprox}
                     onChange={(e) => setYearApprox(e.target.value)}
-                    placeholder="e.g., 1995 or early 2000s"
+                    placeholder={tributeCopy.enrichment.yearPlaceholder}
                     className="mt-1"
                   />
                 </div>
               )}
               {(showPlaceField || placeText) && (
                 <div>
-                  <Label htmlFor="place" className="text-xs">Where was this?</Label>
+                  <Label htmlFor="place" className="text-xs">{tributeCopy.enrichment.placeLabel}</Label>
                   <div className="relative mt-1">
                     <Input
                       id="place"
                       type="text"
                       value={placeText}
                       onChange={(e) => setPlaceText(e.target.value)}
-                      placeholder="Type a place name..."
+                      placeholder={tributeCopy.enrichment.placePlaceholder}
                       className="pr-2"
                       list="places-list"
                     />
@@ -511,7 +517,7 @@ export function CaptureMemoryModal({
                   </div>
                   {existingPlaces.length > 0 && !placeText && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Start typing to see suggestions
+                      {tributeCopy.enrichment.placeSuggestion}
                     </p>
                   )}
                 </div>
@@ -524,7 +530,7 @@ export function CaptureMemoryModal({
         <div className="pt-4 border-t space-y-4">
           <div className="space-y-2">
             <Label htmlFor="visibility" className="text-sm font-medium">
-              Who can see this memory? <span className="text-destructive">*</span>
+              {tributeCopy.captureModal.visibilityLabel} <span className="text-destructive">*</span>
             </Label>
             <Select value={visibility} onValueChange={(v: any) => setVisibility(v)}>
               <SelectTrigger id="visibility" className="w-full">
@@ -554,10 +560,10 @@ export function CaptureMemoryModal({
                 htmlFor="first-hand"
                 className="text-sm font-normal leading-tight cursor-pointer"
               >
-                This is my own memory (I experienced it first-hand)
+                {tributeCopy.captureModal.firstHandLabel}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Uncheck if you heard this story from someone else
+                {tributeCopy.captureModal.firstHandHelper}
               </p>
             </div>
           </div>
@@ -566,7 +572,7 @@ export function CaptureMemoryModal({
         {/* Action buttons */}
         <div className="flex justify-between pt-4 border-t">
           <Button variant="outline" onClick={handleClose} disabled={isSaving}>
-            Save Draft & Close
+            {tributeCopy.captureModal.saveDraftButton}
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
@@ -577,14 +583,14 @@ export function CaptureMemoryModal({
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Submit Memory
+                {tributeCopy.captureModal.submitButton}
               </>
             )}
           </Button>
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          Your draft is automatically saved as you type
+          {tributeCopy.captureModal.draftSaved}
         </p>
       </DialogContent>
     </Dialog>

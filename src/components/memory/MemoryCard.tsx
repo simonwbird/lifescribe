@@ -19,6 +19,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { tributeCopy } from '@/copy/tribute'
 
 interface Memory {
   id: string
@@ -86,8 +87,8 @@ export function MemoryCard({ memory, canModerate = false, onUpdate }: MemoryCard
       }
 
       toast({
-        title: newStatus === 'approved' ? 'Memory approved' : 'Memory hidden',
-        description: `The memory has been ${newStatus}.`
+        title: newStatus === 'approved' ? tributeCopy.moderation.approved : tributeCopy.moderation.hidden,
+        description: newStatus === 'approved' ? tributeCopy.moderation.approvedDescription : tributeCopy.moderation.hiddenDescription
       })
 
       onUpdate?.()

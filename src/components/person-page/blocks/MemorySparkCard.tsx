@@ -8,6 +8,7 @@ import { RecentMemoriesStrip } from '@/components/memory/RecentMemoriesStrip'
 import { useAuth } from '@/contexts/AuthProvider'
 import { supabase } from '@/integrations/supabase/client'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { tributeCopy } from '@/copy/tribute'
 
 interface MemorySparkCardProps {
   person: {
@@ -177,7 +178,7 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
       <Card className="border-2 bg-background p-6" data-block="memory_spark">
         <div className="space-y-4">
           <div className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Share a memory of {firstName}
+            {tributeCopy.memoryCard.title(firstName)}
           </div>
           
           <div className="text-xl font-medium leading-relaxed text-foreground">
@@ -192,7 +193,7 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
               className="flex items-center gap-2"
             >
               <Pencil className="w-4 h-4" />
-              Write
+              {tributeCopy.memoryCard.captureButtons.write}
             </Button>
             
             <Button
@@ -202,7 +203,7 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
               className="flex items-center gap-2"
             >
               <Mic className="w-4 h-4" />
-              Record voice
+              {tributeCopy.memoryCard.captureButtons.voice}
             </Button>
             
             <Button
@@ -212,7 +213,7 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
               className="flex items-center gap-2"
             >
               <Camera className="w-4 h-4" />
-              Add photo
+              {tributeCopy.memoryCard.captureButtons.photo}
             </Button>
             
             <Button
@@ -222,12 +223,12 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
               className="ml-auto text-xs opacity-70 hover:opacity-100"
             >
               <Shuffle className="w-3 h-3 mr-1" />
-              Show another spark
+              {tributeCopy.memoryCard.shuffle}
             </Button>
           </div>
 
           <p className="text-xs text-muted-foreground">
-            A few sentences is perfect. Add a year or place if you remember.
+            {tributeCopy.memoryCard.helper}
           </p>
 
           {/* Recent memories strip */}
