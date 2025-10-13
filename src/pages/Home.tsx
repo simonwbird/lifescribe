@@ -54,6 +54,7 @@ interface ActivityItem {
   snippet?: string;
   time: string;
   unread: boolean;
+  created_at?: string;
 }
 interface DraftItem {
   id: string;
@@ -230,7 +231,8 @@ export default function Home() {
             target: story.title,
             snippet: story.content?.substring(0, 150) + '...',
             time: getRelativeTime(story.created_at),
-            unread: isRecent(story.created_at)
+            unread: isRecent(story.created_at),
+            created_at: story.created_at
           });
         });
       }
@@ -262,16 +264,17 @@ export default function Home() {
             target: comment.stories?.title || 'a story',
             snippet: comment.content?.substring(0, 100),
             time: getRelativeTime(comment.created_at),
-            unread: isRecent(comment.created_at)
+            unread: isRecent(comment.created_at),
+            created_at: comment.created_at
           });
         });
       }
 
-      // Sort by time - most recent first (descending order by timestamp)
+      // Sort by actual timestamp - most recent first (descending order)
       activities.sort((a, b) => {
-        const timeA = new Date(a.time.includes('ago') ? Date.now() - parseTimeAgo(a.time) : a.time).getTime();
-        const timeB = new Date(b.time.includes('ago') ? Date.now() - parseTimeAgo(b.time) : b.time).getTime();
-        return timeB - timeA; // Descending: newer timestamps (larger numbers) first
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return timeB - timeA; // Descending: newer timestamps first
       });
 
       // Only add sample activities on initial load to prevent layout shifts
