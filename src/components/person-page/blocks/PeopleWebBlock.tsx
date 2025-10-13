@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Lock, ExternalLink, Heart, TreePine } from 'lucide-react'
@@ -167,7 +167,12 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium truncate">{rel.person_name}</p>
+                    <Link 
+                      to={`/people/${rel.person_id}`}
+                      className="font-medium truncate hover:underline text-foreground"
+                    >
+                      {rel.person_name}
+                    </Link>
                     {rel.person_status === 'passed' && (
                       <Badge 
                         variant="secondary" 
