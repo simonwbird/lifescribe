@@ -41,12 +41,14 @@ export function PeopleTagger({ familyId, tags, onChange, currentUserId }: People
 
   useEffect(() => {
     loadPeople()
-    
-    // Add current user as author by default if not already tagged
+  }, [familyId])
+
+  // Auto-tag current user on mount if not already tagged
+  useEffect(() => {
     if (currentUserId && safeTags.length === 0) {
       loadCurrentUserPerson()
     }
-  }, [familyId])
+  }, [currentUserId])
 
   async function loadPeople() {
     try {
