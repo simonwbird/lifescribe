@@ -12,6 +12,7 @@ interface MultiImageLayoutProps {
   images: ImageData[];
   onReorder: (images: ImageData[]) => void;
   onRemove: (id: string) => void;
+  onImageClick?: (id: string) => void;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function MultiImageLayout({
   images, 
   onReorder, 
   onRemove,
+  onImageClick,
   className 
 }: MultiImageLayoutProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -114,13 +116,14 @@ export function MultiImageLayout({
           onDragOver={(e) => handleDragOver(e, index)}
           onDragEnd={handleDragEnd}
           onDragLeave={handleDragLeave}
-          className={cn(
-            'relative aspect-square rounded-lg overflow-hidden border-2 transition-all',
-            getImageClasses(index),
-            draggedIndex === index && 'opacity-50',
-            dragOverIndex === index && 'ring-2 ring-primary',
-            'cursor-move hover:border-primary'
-          )}
+            className={cn(
+              'relative aspect-square rounded-lg overflow-hidden border-2 transition-all',
+              getImageClasses(index),
+              draggedIndex === index && 'opacity-50',
+              dragOverIndex === index && 'ring-2 ring-primary',
+              onImageClick ? 'cursor-pointer hover:border-primary' : 'cursor-move hover:border-primary'
+            )}
+            onClick={() => onImageClick?.(image.id)}
           data-test="image-thumb"
         >
           {/* Drag Handle */}

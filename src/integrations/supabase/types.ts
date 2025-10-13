@@ -5557,6 +5557,118 @@ export type Database = {
           },
         ]
       }
+      photo_comments: {
+        Row: {
+          asset_id: string
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          mentions: Json | null
+          region_id: string | null
+        }
+        Insert: {
+          asset_id: string
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          mentions?: Json | null
+          region_id?: string | null
+        }
+        Update: {
+          asset_id?: string
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          mentions?: Json | null
+          region_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_comments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "story_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_comments_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "photo_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_regions: {
+        Row: {
+          asset_id: string
+          created_at: string
+          created_by: string
+          height: number
+          id: string
+          label: string | null
+          person_id: string | null
+          role: string
+          updated_at: string
+          width: number
+          x: number
+          y: number
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          created_by: string
+          height: number
+          id?: string
+          label?: string | null
+          person_id?: string | null
+          role?: string
+          updated_at?: string
+          width: number
+          x: number
+          y: number
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          created_by?: string
+          height?: number
+          id?: string
+          label?: string | null
+          person_id?: string | null
+          role?: string
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_regions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "story_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_regions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_regions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       place_person_links: {
         Row: {
           created_at: string

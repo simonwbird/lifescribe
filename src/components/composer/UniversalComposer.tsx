@@ -334,6 +334,8 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
                       onTitleChange={(value) => updateState({ title: value })}
                       onContentChange={(value) => updateState({ content: value })}
                       onPhotosChange={(files) => updateState({ photos: files })}
+                      onDateChange={(date) => updateState({ dateValue: { date, precision: 'exact', yearOnly: false } })}
+                      familyId={familyId}
                     />
                   </TabsContent>
 
