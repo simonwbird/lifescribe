@@ -7501,6 +7501,36 @@ export type Database = {
           },
         ]
       }
+      tribute_sparks: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          relationship_targets: string[] | null
+          seasonal_tags: string[] | null
+          text: string
+          weight: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          relationship_targets?: string[] | null
+          seasonal_tags?: string[] | null
+          text: string
+          weight?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          relationship_targets?: string[] | null
+          seasonal_tags?: string[] | null
+          text?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       tributes: {
         Row: {
           anniversary_date: string | null
