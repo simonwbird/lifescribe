@@ -73,6 +73,8 @@ import PropertyEdit from "./pages/PropertyEdit";
 import StoryEdit from "./pages/StoryEdit";
 import Capture from "./pages/Capture";
 import Events from "./pages/Events";
+import EventDetail from "./pages/EventDetail";
+import EventUploadPage from "./pages/EventUploadPage";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
@@ -194,6 +196,8 @@ function AppContent() {
        <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
        <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
        <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
+       <Route path="/event/:eventId" element={<AuthGate><EventDetail /></AuthGate>} />
+       <Route path="/event/:eventId/upload" element={<EventUploadPage />} />
        <Route path="/safebox" element={<AuthGate><SafeBox /></AuthGate>} />
        <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
