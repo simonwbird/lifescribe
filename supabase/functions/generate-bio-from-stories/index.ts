@@ -1,172 +1,141 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { personId, tone = 'warm' } = await req.json();
+    const { personId, tone = 'warm' } = await req.json()
 
-    if (!personId) {
-      return new Response(
-        JSON.stringify({ error: "personId is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    )
 
     // Fetch person details
-    const { data: person, error: personError } = await supabase
+    const { data: person, error: personError } = await supabaseClient
       .from('people')
-      .select('full_name, birth_date, death_date, birth_place, status')
+      .select('first_name, last_name, birth_date, death_date')
       .eq('id', personId)
-      .single();
+      .single()
 
-    if (personError || !person) {
-      return new Response(
-        JSON.stringify({ error: "Person not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (personError) throw personError
 
-    // Fetch latest timeline items (stories, milestones, etc.)
-    const { data: timelineItems } = await supabase
-      .from('timeline_items')
-      .select('title, description, happened_on, item_type')
-      .eq('person_id', personId)
-      .order('happened_on', { ascending: false })
-      .limit(10);
-
-    // Fetch stories about this person
-    const { data: stories } = await supabase
+    // Fetch stories for this person
+    const { data: stories, error: storiesError } = await supabaseClient
       .from('stories')
-      .select('title, content')
-      .contains('tagged_people', [personId])
+      .select('id, title, content')
+      .eq('person_id', personId)
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(10)
 
-    // Build context for AI
-    const context = {
-      person: {
-        name: person.full_name,
-        birth: person.birth_date,
-        death: person.death_date,
-        birthPlace: person.birth_place,
-        status: person.status,
-      },
-      timelineItems: timelineItems || [],
-      stories: stories || [],
-    };
+    if (storiesError) throw storiesError
 
-    // Call Lovable AI to generate bio
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!stories || stories.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No stories found for this person. Add some stories first.' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
-    const systemPrompt = `You are a compassionate biography writer. Create a ${tone}, engaging biography from the provided life events and stories. The bio should:
-- Be 120-180 words for the long version
-- Have a 40-160 character short version suitable for SEO
-- Capture the person's essence and impact
-- Use natural, conversational language
-- Focus on what made them special
-- Include specific details that bring them to life
+    // Prepare prompt for AI
+    const personName = `${person.first_name} ${person.last_name}`
+    const lifeYears = person.birth_date && person.death_date 
+      ? `(${new Date(person.birth_date).getFullYear()}-${new Date(person.death_date).getFullYear()})`
+      : person.birth_date 
+      ? `(born ${new Date(person.birth_date).getFullYear()})`
+      : ''
 
-Return ONLY a JSON object with this structure:
-{
-  "short_bio": "...",
-  "long_bio": "..."
-}`;
+    const storiesText = stories.map(s => `"${s.title}": ${s.content}`).join('\n\n')
 
-    const userPrompt = `Generate a biography for ${person.full_name}.
+    const toneInstructions = {
+      classic: 'Write in a formal, respectful tone suitable for an obituary or memorial.',
+      warm: 'Write in a warm, personal tone that celebrates their life and personality.',
+      vivid: 'Write in a vivid, storytelling tone that brings their character to life.'
+    }
 
-Context:
-- Born: ${person.birth_date || 'Unknown'} ${person.birth_place ? `in ${person.birth_place}` : ''}
-- Status: ${person.status}
-${person.death_date ? `- Passed: ${person.death_date}` : ''}
+    const prompt = `Based on these stories about ${personName} ${lifeYears}, write two biographies:
 
-Timeline Events:
-${timelineItems?.map(item => `- ${item.title}: ${item.description || ''}`).join('\n') || 'None'}
+1. A SHORT_BIO (40-160 characters): A brief, compelling summary for search engines and social media.
+2. A LONG_BIO (2-4 paragraphs): A detailed biography that captures who they were, what they loved, and how they lived.
+
+${toneInstructions[tone as keyof typeof toneInstructions]}
 
 Stories:
-${stories?.map(story => `${story.title}\n${story.content}`).join('\n\n') || 'None'}`;
+${storiesText}
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
+Return ONLY a JSON object with this exact structure:
+{
+  "short_bio": "...",
+  "long_bio": "...",
+  "sources": [${stories.slice(0, 5).map(s => `{"type": "story", "id": "${s.id}", "title": "${s.title}"}`).join(', ')}]
+}`
+
+    // Call OpenAI API
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: 'gpt-4o-mini',
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          {
+            role: 'system',
+            content: 'You are a professional biographer who writes touching, accurate life stories. Always return valid JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
         ],
-        response_format: { type: "json_object" },
+        temperature: 0.7,
+        response_format: { type: "json_object" }
       }),
-    });
+    })
 
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits depleted. Please add funds to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const errorText = await aiResponse.text();
-      console.error("AI gateway error:", aiResponse.status, errorText);
-      return new Response(
-        JSON.stringify({ error: "Failed to generate biography" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!openAIResponse.ok) {
+      const errorText = await openAIResponse.text()
+      console.error('OpenAI API error:', errorText)
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`)
     }
 
-    const aiResult = await aiResponse.json();
-    const generatedText = aiResult.choices[0].message.content;
-    const bioData = JSON.parse(generatedText);
+    const openAIData = await openAIResponse.json()
+    const generatedContent = JSON.parse(openAIData.choices[0].message.content)
 
     return new Response(
-      JSON.stringify({
-        short_bio: bioData.short_bio,
-        long_bio: bioData.long_bio,
-        sources: [
-          ...(timelineItems?.map(item => ({
-            type: 'timeline_item' as const,
-            id: item.id,
-            title: item.title,
-          })) || []),
-          ...(stories?.map(story => ({
-            type: 'story' as const,
-            id: story.id,
-            title: story.title,
-          })) || []),
-        ],
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      JSON.stringify(generatedContent),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
   } catch (error) {
-    console.error("Error generating bio:", error);
+    console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
-});
+})
