@@ -34,10 +34,16 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
 
   const getMimeFromUrl = (u?: string | null) => {
     if (!u) return undefined
-    const l = u.toLowerCase()
-    if (l.endsWith('.mp4')) return 'video/mp4'
-    if (l.endsWith('.webm')) return 'video/webm'
-    if (l.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl'
+    // Use pathname without query/hash for extension detection
+    let p = ''
+    try {
+      p = new URL(u).pathname.toLowerCase()
+    } catch {
+      p = u.split('?')[0].split('#')[0].toLowerCase()
+    }
+    if (p.endsWith('.mp4')) return 'video/mp4'
+    if (p.endsWith('.webm')) return 'video/webm'
+    if (p.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl'
     return undefined
   }
 
@@ -67,7 +73,9 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     if (!videoEl || asset.type !== 'video') return
 
     const src = (asset.transcoded_url || asset.url) || ''
-    const isHls = src.endsWith('.m3u8')
+    let srcPath = ''
+    try { srcPath = new URL(src).pathname.toLowerCase() } catch { srcPath = src.split('?')[0].split('#')[0].toLowerCase() }
+    const isHls = srcPath.endsWith('.m3u8') || ((asset as any).metadata?.mime_type === 'application/vnd.apple.mpegurl')
 
     // Clean up any existing hls instance
     if (hlsInstanceRef.current) {
@@ -304,16 +312,19 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       const tester = document.createElement('video')
       const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
       const playableUrl = playable.url
-      const isHls = playableUrl.endsWith('.m3u8')
+      let playablePath = ''
+      try { playablePath = new URL(playableUrl).pathname.toLowerCase() } catch { playablePath = playableUrl.split('?')[0].split('#')[0].toLowerCase() }
+      const isHls = (playable.type === 'application/vnd.apple.mpegurl') || playablePath.endsWith('.m3u8')
 
       return (
         <div className="bg-secondary/50 rounded-lg overflow-hidden">
           <div className="relative aspect-video bg-black">
             <video
               key={isHls ? 'hls' : playableUrl}
-              ref={videoRef}
-              src={isHls ? undefined : playableUrl}
-              poster={asset.thumbnail_url || undefined}
+               ref={videoRef}
+               src={isHls ? undefined : playableUrl}
+               crossOrigin="anonymous"
+               poster={asset.thumbnail_url || undefined}
               preload="metadata"
               playsInline
               className="w-full h-full object-contain"
