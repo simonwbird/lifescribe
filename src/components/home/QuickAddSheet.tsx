@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Sheet,
@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import { useUnifiedDraftManager } from '@/hooks/useUnifiedDraftManager'
 import { useToast } from '@/hooks/use-toast'
+import QuickAddConfirm from './QuickAddConfirm'
+import { supabase } from '@/integrations/supabase/client'
 
 interface QuickAddSheetProps {
   open: boolean
@@ -41,7 +43,33 @@ export default function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps
   const navigate = useNavigate()
   const { toast } = useToast()
   const draftManager = useUnifiedDraftManager('quick_add')
-  const [isCapturing, setIsCapturing] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [selectedType, setSelectedType] = useState<string>('')
+  const [familyId, setFamilyId] = useState<string>('')
+  const [userId, setUserId] = useState<string>('')
+
+  // Load user family and ID
+  useEffect(() => {
+    const loadUserContext = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        
+        // Get user's primary family
+        const { data: members } = await supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .limit(1)
+          .single()
+        
+        if (members) {
+          setFamilyId(members.family_id)
+        }
+      }
+    }
+    loadUserContext()
+  }, [])
 
   const handleStartCapture = (option: CaptureOption) => {
     if (option.action) {
@@ -49,6 +77,15 @@ export default function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps
       return
     }
 
+    // For voice, text, and photo - show confirm dialog
+    if (['voice', 'text', 'photos'].includes(option.id)) {
+      setSelectedType(option.id)
+      setShowConfirm(true)
+      onOpenChange(false)
+      return
+    }
+
+    // For other types, navigate directly
     if (option.route) {
       onOpenChange(false)
       navigate(option.route)
@@ -194,6 +231,21 @@ export default function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps
           </div>
         </div>
       </SheetContent>
+
+      <QuickAddConfirm
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        contentType={selectedType}
+        familyId={familyId}
+        userId={userId}
+        onSuccess={() => {
+          setShowConfirm(false)
+          toast({
+            title: "Success!",
+            description: "Your content has been published",
+          })
+        }}
+      />
     </Sheet>
   )
 }
