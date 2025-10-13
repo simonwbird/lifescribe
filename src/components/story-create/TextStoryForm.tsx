@@ -121,6 +121,22 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
         if (error) throw error
       }
 
+      // If this story was created from a prompt, mark it completed
+      const promptInstanceId = searchParams.get('prompt_id')
+      if (promptInstanceId) {
+        try {
+          await supabase
+            .from('prompt_instances')
+            .update({ 
+              status: 'completed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', promptInstanceId)
+        } catch (e) {
+          console.warn('Failed to mark prompt as completed', e)
+        }
+      }
+
       toast({
         title: 'Story published!',
         description: 'Your story is now live.'

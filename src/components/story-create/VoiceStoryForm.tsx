@@ -209,6 +209,22 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
         }
       }
 
+      // If this story was created from a prompt, mark it completed
+      const promptInstanceId = searchParams.get('prompt_id')
+      if (!asDraft && promptInstanceId) {
+        try {
+          await supabase
+            .from('prompt_instances')
+            .update({ 
+              status: 'completed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', promptInstanceId)
+        } catch (e) {
+          console.warn('Failed to mark prompt as completed', e)
+        }
+      }
+
       toast({
         title: asDraft ? 'Draft saved!' : 'Story published!',
         description: asDraft ? 'Your draft has been saved.' : 'Your voice story is now live.'
