@@ -181,6 +181,11 @@ export function SimpleHeader({
 
   const handleShuffle = async () => {
     try {
+      // If a prompt is showing, mark it completed so the next one becomes default
+      if (todaysPrompt?.id) {
+        await markCompleted(todaysPrompt.id)
+      }
+
       // Refetch to get the latest available prompts
       await refetch()
       
@@ -209,37 +214,16 @@ export function SimpleHeader({
       
       if (openPrompts && openPrompts.length === 0) {
         toast({
-          title: "All prompts completed! 🎉",
-          description: "You've answered all available prompts. Great work!",
+          title: "Marked as completed",
+          description: "All prompts done for now. 🎉",
         })
         return
       }
       
-      if (openPrompts && openPrompts.length > 1) {
-        // Get a random prompt that's different from the current one
-        const availablePrompts = openPrompts.filter(p => p.id !== todaysPrompt?.id)
-        if (availablePrompts.length > 0) {
-          const randomIndex = Math.floor(Math.random() * availablePrompts.length)
-          const selectedPrompt = availablePrompts[randomIndex]
-          
-          // Update the query cache to show the new prompt
-          queryClient.setQueryData(['todays-prompt', spaceId], selectedPrompt)
-          
-          toast({
-            title: "New prompt loaded!",
-            description: "Here's a fresh prompt for you.",
-          })
-        } else {
-          toast({
-            title: "This is the only prompt available",
-            description: "Complete it to unlock more!",
-          })
-        }
-      } else if (openPrompts && openPrompts.length === 1 && todaysPrompt?.id) {
-        // Only one prompt left and it's the same one showing.
-        // If user is asking to shuffle, treat it as completed to move on.
-        await markCompleted(todaysPrompt.id)
-        await refetch()
+      if (openPrompts && openPrompts.length > 0) {
+        // Pick the first open (oldest) as the new default
+        const next = openPrompts[0]
+        queryClient.setQueryData(['todays-prompt', spaceId], next)
         toast({
           title: "Marked as completed",
           description: "Loaded your next prompt.",
