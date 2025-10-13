@@ -36,14 +36,27 @@ export function usePersonPagePresets(
 
     try {
       // Create default blocks from preset
-      const blocksToCreate = presetConfig.defaultBlocks.map((block) => ({
-        person_id: personId,
-        type: block.type,
-        content_json: {},
-        block_order: block.order,
-        visibility: block.visibility,
-        is_enabled: true
-      }))
+      const blocksToCreate = presetConfig.defaultBlocks.map((block) => {
+        // Set special defaults for specific blocks
+        let content_json = {}
+        let pinned = false
+        
+        if (block.type === 'about_me') {
+          pinned = true
+        } else if (block.type === 'photo_gallery') {
+          content_json = { showRecent: true }
+        }
+        
+        return {
+          person_id: personId,
+          type: block.type,
+          content_json,
+          block_order: block.order,
+          visibility: block.visibility,
+          is_enabled: true,
+          pinned
+        }
+      })
 
       const { error } = await supabase
         .from('person_page_blocks')
@@ -103,14 +116,27 @@ export function usePersonPagePresets(
 
       if (missingBlocks.length > 0) {
         const maxOrder = Math.max(...existingBlocks.map(b => b.block_order), 0)
-        const blocksToCreate = missingBlocks.map((block, index) => ({
-          person_id: personId,
-          type: block.type,
-          content_json: {},
-          block_order: maxOrder + index + 1,
-          visibility: block.visibility,
-          is_enabled: true
-        }))
+        const blocksToCreate = missingBlocks.map((block, index) => {
+          // Set special defaults for specific blocks
+          let content_json = {}
+          let pinned = false
+          
+          if (block.type === 'about_me') {
+            pinned = true
+          } else if (block.type === 'photo_gallery') {
+            content_json = { showRecent: true }
+          }
+          
+          return {
+            person_id: personId,
+            type: block.type,
+            content_json,
+            block_order: maxOrder + index + 1,
+            visibility: block.visibility,
+            is_enabled: true,
+            pinned
+          }
+        })
 
         await supabase
           .from('person_page_blocks')
