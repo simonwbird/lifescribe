@@ -5,6 +5,7 @@ import { TopBar } from '@/components/home/TopBar'
 import { HeroStrip } from '@/components/home/HeroStrip'
 import { SmartFeed } from '@/components/home/SmartFeed'
 import { VoiceCapture } from '@/components/home/VoiceCapture'
+import RightRail from '@/components/home/RightRail'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Mic } from 'lucide-react'
@@ -99,31 +100,43 @@ export default function HomeV2() {
       <TopBar familyId={familyId} userId={userId} />
       <HeroStrip familyId={familyId} userId={userId} />
 
-      {/* Smart Feed with Voice Capture */}
-      <div className="container px-4 py-6 max-w-2xl mx-auto space-y-4">
-        {/* Voice Capture Toggle */}
-        {!showVoiceCapture && (
-          <Button 
-            onClick={() => setShowVoiceCapture(true)}
-            variant="outline"
-            className="w-full gap-2 border-dashed"
-          >
-            <Mic className="h-4 w-4" />
-            Record Voice Note
-          </Button>
-        )}
+      {/* Two-column layout: Feed + Right Rail */}
+      <div className="container px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 max-w-7xl mx-auto">
+          {/* Left: Main Feed */}
+          <div className="space-y-4">
+            {/* Voice Capture Toggle */}
+            {!showVoiceCapture && (
+              <Button 
+                onClick={() => setShowVoiceCapture(true)}
+                variant="outline"
+                className="w-full gap-2 border-dashed"
+              >
+                <Mic className="h-4 w-4" />
+                Record Voice Note
+              </Button>
+            )}
 
-        {/* Inline Voice Capture */}
-        {showVoiceCapture && (
-          <VoiceCapture
-            familyId={familyId}
-            userId={userId}
-            onPublished={() => setShowVoiceCapture(false)}
-            onCancel={() => setShowVoiceCapture(false)}
-          />
-        )}
+            {/* Inline Voice Capture */}
+            {showVoiceCapture && (
+              <VoiceCapture
+                familyId={familyId}
+                userId={userId}
+                onPublished={() => setShowVoiceCapture(false)}
+                onCancel={() => setShowVoiceCapture(false)}
+              />
+            )}
 
-        <SmartFeed familyId={familyId} userId={userId} />
+            <SmartFeed familyId={familyId} userId={userId} />
+          </div>
+
+          {/* Right: Widgets Rail */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-20">
+              <RightRail />
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   )
