@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { EnhancedGlobalSearch } from '@/components/search/EnhancedGlobalSearch';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
+import { QuickAddButton } from '@/components/quick-add/QuickAddButton';
 
 interface UserData {
   profile: { full_name: string; avatar_url: string } | null;
@@ -168,34 +169,7 @@ export default function LifeScribeHeader() {
           <NotificationsDropdown />
 
           {/* Quick Add */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                aria-label="Quick add content"
-              >
-                <Plus className="h-5 w-5" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-background">
-              <DropdownMenuLabel>Quick Add</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/stories/new')}>
-                New Story
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/capture')}>
-                Capture Media
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/people/new')}>
-                Add Person
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/events/new')}>
-                Create Event
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <QuickAddButton />
 
           {/* Help */}
           <Button

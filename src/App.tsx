@@ -82,6 +82,13 @@ import Vault from "./pages/Vault";
 import Help from "./pages/Help";
 import Inbox from "./pages/Inbox";
 import Labs from "./pages/Labs";
+import ComposeVoice from "./pages/compose/ComposeVoice";
+import ComposeText from "./pages/compose/ComposeText";
+import ComposePhotos from "./pages/compose/ComposePhotos";
+import ComposeScan from "./pages/compose/ComposeScan";
+import ComposeVideo from "./pages/compose/ComposeVideo";
+import ComposeMixed from "./pages/compose/ComposeMixed";
+import NoteNew from "./pages/notes/NoteNew";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
 import NotFound from "./pages/NotFound";
@@ -215,6 +222,13 @@ function AppContent() {
        <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
        <Route path="/help" element={<AuthGate><Help /></AuthGate>} />
        <Route path="/inbox" element={<AuthGate><Inbox /></AuthGate>} />
+       <Route path="/compose/voice" element={<AuthGate><ComposeVoice /></AuthGate>} />
+       <Route path="/compose/text" element={<AuthGate><ComposeText /></AuthGate>} />
+       <Route path="/compose/photos" element={<AuthGate><ComposePhotos /></AuthGate>} />
+       <Route path="/compose/scan" element={<AuthGate><ComposeScan /></AuthGate>} />
+       <Route path="/compose/video" element={<AuthGate><ComposeVideo /></AuthGate>} />
+       <Route path="/compose/mixed" element={<AuthGate><ComposeMixed /></AuthGate>} />
+       <Route path="/notes/new" element={<AuthGate><NoteNew /></AuthGate>} />
        <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
        <Route path="/event/:eventId" element={<AuthGate><EventDetail /></AuthGate>} />
        <Route path="/event/:eventId/upload" element={<EventUploadPage />} />
