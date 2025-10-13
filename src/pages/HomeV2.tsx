@@ -102,9 +102,9 @@ export default function HomeV2() {
 
       {/* Two-column layout: Feed + Right Rail */}
       <div className="container px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
           {/* Left: Main Feed */}
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {/* Voice Capture Toggle */}
             {!showVoiceCapture && (
               <Button 
