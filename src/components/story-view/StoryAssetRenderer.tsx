@@ -202,30 +202,44 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
         )
       }
 
-      return (
-        <div className="relative rounded-lg overflow-hidden">
-          <video
-            ref={videoRef}
-            poster={asset.thumbnail_url || undefined}
-            controls
-            preload="metadata"
-            playsInline
-            className="w-full rounded-lg max-h-[600px]"
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onError={(e) => console.error('Video playback error', e)}
-          >
-            {asset.transcoded_url && (
-              <source src={asset.transcoded_url} type={getMimeFromUrl(asset.transcoded_url)} />
-            )}
-            <source
-              src={asset.url}
-              type={asset.metadata?.mime_type || getMimeFromUrl(asset.url)}
-            />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      )
+      {
+        const candidates = [
+          asset.transcoded_url ? { url: asset.transcoded_url, type: getMimeFromUrl(asset.transcoded_url) } : null,
+          { url: asset.url, type: asset.metadata?.mime_type || getMimeFromUrl(asset.url) }
+        ].filter(Boolean) as { url: string; type?: string }[]
+        const tester = document.createElement('video')
+        const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
+        const playableUrl = playable.url
+
+        return (
+          <div className="relative rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              src={playableUrl}
+              poster={asset.thumbnail_url || undefined}
+              controls
+              preload="metadata"
+              playsInline
+              crossOrigin="anonymous"
+              className="w-full rounded-lg max-h-[600px]"
+              onClick={() => {
+                if (!videoRef.current) return
+                if (videoRef.current.paused) videoRef.current.play().catch(() => {})
+                else videoRef.current.pause()
+              }}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onError={(e) => console.error('Video playback error', e)}
+            >
+              {asset.transcoded_url && (
+                <source src={asset.transcoded_url} type={getMimeFromUrl(asset.transcoded_url)} />
+              )}
+              <source src={asset.url} type={asset.metadata?.mime_type || getMimeFromUrl(asset.url)} />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )
+      }
 
     case 'audio':
       if (compact) {
