@@ -136,27 +136,41 @@ export default function Home() {
   }, [spaceId]);
   // Debounced loading function
   const loadHomeData = useCallback(async () => {
+    console.log('🔄 loadHomeData: Starting...')
     try {
       const {
         data: {
           user
         }
       } = await supabase.auth.getUser();
-      if (!user) return;
+      console.log('👤 loadHomeData: Got user', user?.id)
+      if (!user) {
+        console.log('❌ loadHomeData: No user found')
+        return
+      }
       setProfileId(user.id);
 
       // Get user's profile and family
+      console.log('📊 loadHomeData: Fetching profile and members...')
       const [profileResult, memberResult] = await Promise.all([
         supabase.from('profiles').select('simple_mode').eq('id', user.id).single(),
         supabase.from('members').select('family_id').eq('profile_id', user.id).limit(1)
       ])
+      console.log('📊 loadHomeData: Profile result', profileResult)
+      console.log('📊 loadHomeData: Member result', memberResult)
+      
       if (profileResult.data) {
         setIsSimpleMode(profileResult.data.simple_mode ?? true)
         // Default persona - could be fetched from a persona column if it exists
         setUserPersona('elder')
       }
       const firstMembership = Array.isArray(memberResult.data) ? memberResult.data[0] : null
-      if (!firstMembership) return
+      console.log('👥 loadHomeData: First membership', firstMembership)
+      if (!firstMembership) {
+        console.log('❌ loadHomeData: No family membership found')
+        return
+      }
+      console.log('🏠 loadHomeData: Setting spaceId', firstMembership.family_id)
       setSpaceId(firstMembership.family_id)
 
       // Check if family has other members
@@ -164,21 +178,26 @@ export default function Home() {
         data: memberCount
       } = await supabase.from('members').select('id').eq('family_id', firstMembership.family_id)
       setHasOtherMembers((memberCount?.length || 0) > 1)
+      
+      console.log('📖 loadHomeData: Loading activities and drafts...')
       await Promise.all([
         loadActivities(firstMembership.family_id),
         loadDrafts(user.id, firstMembership.family_id)
       ])
+      console.log('✅ loadHomeData: Complete!')
     } catch (error) {
-      console.error('Error loading home data:', error);
+      console.error('❌ loadHomeData: Error', error);
     } finally {
       setLoading(false);
     }
   }, []) // Empty dependency array - only load once
   const loadActivities = async (familyId: string) => {
+    console.log('📚 loadActivities: Starting for familyId', familyId)
     try {
       const activities: ActivityItem[] = [];
 
       // Get recent stories (excluding deleted ones)
+      console.log('📚 loadActivities: Fetching stories...')
       const {
         data: stories
       } = await supabase.from('stories').select(`
@@ -190,6 +209,8 @@ export default function Home() {
           `).eq('family_id', familyId).neq('title', '[Deleted by admin]').order('created_at', {
         ascending: false
       }).limit(15);
+      
+      console.log('📚 loadActivities: Got stories', stories?.length || 0)
 
       // Fetch author profiles separately
       if (stories?.length) {
@@ -276,9 +297,10 @@ export default function Home() {
         }];
         activities.push(...sampleActivities);
       }
+      console.log('✅ loadActivities: Setting activities', activities.length)
       setActivities(activities);
     } catch (error) {
-      console.error('Error loading activities:', error);
+      console.error('❌ loadActivities: Error', error);
       setActivities([]);
     }
   };
