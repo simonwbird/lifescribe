@@ -37,7 +37,7 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
   const [recentMemories, setRecentMemories] = useState<any[]>([])
   const [loadingMemories, setLoadingMemories] = useState(true)
   
-  const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || 'them'
+  const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || person.full_name || 'this person'
 
   // Fetch recent approved memories
   useEffect(() => {

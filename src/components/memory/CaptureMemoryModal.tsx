@@ -90,7 +90,7 @@ export function CaptureMemoryModal({
   const [isFirstHand, setIsFirstHand] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   
-  const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || 'them'
+  const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || person.full_name || 'this person'
   const draftKey = `memory-draft-${person.id}-${viewer?.id || 'anon'}`
 
   // Load draft from localStorage and fetch existing places
