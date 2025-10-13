@@ -20,6 +20,7 @@ import SitemapXML from "./pages/SitemapXML";
 
 // Lazy load heavy pages for better initial load performance
 const Home = () => <LazyRoute factory={() => import("./pages/Home")} />
+const HomeV2 = () => <LazyRoute factory={() => import("./pages/HomeV2")} />
 const FeedPage = () => <LazyRoute factory={() => import("./pages/FeedPage")} />
 const NewStory = () => <LazyRoute factory={() => import("./pages/NewStory")} />
 const DraftsPage = () => <LazyRoute factory={() => import("./pages/DraftsPage")} />
@@ -161,6 +162,7 @@ function AppContent() {
       {/* Onboarding (auth required) */}
       <Route path="/onboarding" element={<AuthGate><OnboardingWizard /></AuthGate>} />
        <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
+       <Route path="/home-v2" element={<AuthGate><HomeV2 /></AuthGate>} />
         <Route path="/prompts/wow" element={<AuthGate><PromptsWow /></AuthGate>} />
         
         {/* Redirect /feed to /home */}
