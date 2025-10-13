@@ -110,6 +110,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
             src={asset.transcoded_url || asset.url}
             poster={asset.thumbnail_url || undefined}
             controls
+            preload="metadata"
             className="w-full rounded-lg max-h-[600px]"
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
