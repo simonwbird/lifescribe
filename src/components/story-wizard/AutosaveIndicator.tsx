@@ -46,12 +46,17 @@ export function AutosaveIndicator({ status, className = "" }: AutosaveIndicatorP
   const { icon, text, className: statusClassName } = getStatusDisplay()
 
   return (
-    <div className={`
-      flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium
-      transition-all duration-300 ease-in-out
-      ${statusClassName}
-      ${className}
-    `}>
+    <div 
+      className={`
+        flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium
+        transition-all duration-300 ease-in-out
+        ${statusClassName}
+        ${className}
+      `}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {icon}
       <span>{text}</span>
     </div>

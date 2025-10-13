@@ -52,8 +52,8 @@ export const SUPPORTED_FILE_TYPES = {
 // Size limits (in bytes)
 export const SIZE_LIMITS = {
   image: 10 * 1024 * 1024, // 10MB
-  video: 100 * 1024 * 1024, // 100MB  
-  audio: 25 * 1024 * 1024, // 25MB
+  video: 500 * 1024 * 1024, // 500MB - increased for large videos
+  audio: 50 * 1024 * 1024, // 50MB
   default: 50 * 1024 * 1024 // 50MB fallback
 }
 

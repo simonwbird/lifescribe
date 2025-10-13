@@ -189,7 +189,7 @@ export function PhotoPanel({
 
       <div>
         <label htmlFor="title" className="block text-sm font-medium mb-2">
-          Title <span className="text-destructive">*</span>
+          Title <span className="text-destructive" aria-label="required">*</span>
         </label>
         <Input
           id="title"
@@ -197,7 +197,13 @@ export function PhotoPanel({
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           maxLength={200}
+          aria-required="true"
+          aria-invalid={!title.trim()}
+          aria-describedby="photo-title-hint"
         />
+        <span id="photo-title-hint" className="sr-only">
+          Enter a title for your photo story, up to 200 characters
+        </span>
       </div>
 
       <div>
@@ -211,7 +217,11 @@ export function PhotoPanel({
           onChange={(e) => onContentChange(e.target.value)}
           rows={10}
           className="resize-none"
+          aria-describedby="photo-content-hint"
         />
+        <span id="photo-content-hint" className="sr-only">
+          Optional description for your photos
+        </span>
       </div>
 
       {selectedImage && (

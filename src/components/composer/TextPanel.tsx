@@ -32,7 +32,7 @@ export function TextPanel({
 
       <div>
         <label htmlFor="title" className="block text-sm font-medium mb-2">
-          Title <span className="text-destructive">*</span>
+          Title <span className="text-destructive" aria-label="required">*</span>
         </label>
         <Input
           ref={titleRef}
@@ -43,12 +43,18 @@ export function TextPanel({
           onBlur={onBlur}
           maxLength={200}
           className="text-lg"
+          aria-required="true"
+          aria-invalid={!title.trim()}
+          aria-describedby="title-hint"
         />
+        <span id="title-hint" className="sr-only">
+          Enter a title for your story, up to 200 characters
+        </span>
       </div>
 
       <div>
         <label htmlFor="content" className="block text-sm font-medium mb-2">
-          Story <span className="text-destructive">*</span>
+          Story <span className="text-destructive" aria-label="required">*</span>
         </label>
         <Textarea
           ref={contentRef}
@@ -59,10 +65,18 @@ export function TextPanel({
           onBlur={onBlur}
           rows={20}
           className="resize-none"
+          aria-required="true"
+          aria-invalid={!content.trim()}
+          aria-describedby="content-hint content-count"
         />
-        <p className="text-sm text-muted-foreground mt-2">
-          {content.length} characters
-        </p>
+        <div className="flex justify-between items-center mt-2">
+          <span id="content-hint" className="sr-only">
+            Write your story content
+          </span>
+          <p id="content-count" className="text-sm text-muted-foreground" aria-live="polite">
+            {content.length} characters
+          </p>
+        </div>
       </div>
     </div>
   )

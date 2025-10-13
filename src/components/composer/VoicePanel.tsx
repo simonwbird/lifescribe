@@ -79,7 +79,7 @@ export function VoicePanel({
 
       <div>
         <label htmlFor="title" className="block text-sm font-medium mb-2">
-          Title <span className="text-destructive">*</span>
+          Title <span className="text-destructive" aria-label="required">*</span>
         </label>
         <Input
           id="title"
@@ -87,7 +87,13 @@ export function VoicePanel({
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           maxLength={200}
+          aria-required="true"
+          aria-invalid={!title.trim()}
+          aria-describedby="voice-title-hint"
         />
+        <span id="voice-title-hint" className="sr-only">
+          Enter a title for your voice story, up to 200 characters
+        </span>
       </div>
 
       <div>
@@ -101,7 +107,11 @@ export function VoicePanel({
           onChange={(e) => onContentChange(e.target.value)}
           rows={10}
           className="resize-none"
+          aria-describedby="voice-content-hint"
         />
+        <span id="voice-content-hint" className="sr-only">
+          Optional additional notes or edited transcript
+        </span>
       </div>
     </div>
   )
