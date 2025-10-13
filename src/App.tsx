@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 import { ModeProvider } from "@/contexts/ModeContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
@@ -79,6 +79,7 @@ import PrintComposer from "./pages/PrintComposer";
 import DuplicatesPage from "./pages/DuplicatesPage";
 import Portfolio from "./pages/Portfolio";
 import Vault from "./pages/Vault";
+import Help from "./pages/Help";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
@@ -127,18 +128,30 @@ import EventJoin from './pages/EventJoin';
 import AdminLabs from './pages/admin/AdminLabs';
 import AdminDebugRoles from './pages/admin/AdminDebugRoles';
 import ProfileDebug from './pages/ProfileDebug';
+import LifeScribeHeader from './components/layout/LifeScribeHeader';
 
 const queryClient = new QueryClient();
 
 function AppContent() {
   // Apply mobile optimizations globally
   useMobileOptimizations()
+  const location = useLocation();
+  
+  // Routes that should not show the header
+  const noHeaderRoutes = [
+    '/login', '/landing', '/auth/login', '/auth/signup', 
+    '/auth/verify', '/auth/reset', '/privacy', '/terms'
+  ];
+  const shouldShowHeader = !noHeaderRoutes.some(route => location.pathname.startsWith(route));
   
   return (
     <FocusManager>
       {/* Skip links for keyboard navigation */}
       <SkipLink href="#main-content">Skip to main content</SkipLink>
       <SkipLink href="#navigation">Skip to navigation</SkipLink>
+      
+      {/* Global Header */}
+      {shouldShowHeader && <LifeScribeHeader />}
       
       <Routes>
       {/* Public routes */}
@@ -210,6 +223,8 @@ function AppContent() {
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
        <Route path="/labs/spaces" element={<AuthGate><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthGate>} />
        <Route path="/portfolio" element={<AuthGate><Portfolio /></AuthGate>} />
+       <Route path="/vault" element={<AuthGate><Vault /></AuthGate>} />
+       <Route path="/help" element={<Help />} />
       <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
       <Route path="/collections/:tab" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
       {/* Backward compatibility */}
