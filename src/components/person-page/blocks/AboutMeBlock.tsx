@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { User, Edit, X, Plus, ExternalLink, Save } from 'lucide-react'
+import { User, Edit, X, Plus, ExternalLink } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import ReactMarkdown from 'react-markdown'
+import { supabase } from '@/integrations/supabase/client'
+import { useDraftManager } from '@/hooks/useDraftManager'
+import { AutosaveIndicator } from '@/components/story-wizard/AutosaveIndicator'
 
 interface Link {
   label: string
@@ -42,24 +44,57 @@ export default function AboutMeBlock({
   const [newNickname, setNewNickname] = useState('')
   const [newLinkLabel, setNewLinkLabel] = useState('')
   const [newLinkUrl, setNewLinkUrl] = useState('')
+  
+  const { autosaveStatus, startAutosave, stopAutosave } = useDraftManager(`about-me-${personId}`)
 
-  const handleSave = async () => {
+  const saveToDatabase = useCallback(async () => {
     try {
-      // Save logic would go here - update block content
-      setIsEditing(false)
-      toast({
-        title: 'About Me updated',
-        description: 'Your changes have been saved'
-      })
+      const { data: blocks, error: fetchError } = await supabase
+        .from('person_page_blocks')
+        .select('id')
+        .eq('person_id', personId)
+        .eq('type', 'about_me')
+        .single()
+
+      if (fetchError) throw fetchError
+
+      const { error: updateError } = await supabase
+        .from('person_page_blocks')
+        .update({
+          content_json: {
+            bio,
+            pronouns,
+            nicknames,
+            links
+          } as any
+        })
+        .eq('id', blocks.id)
+
+      if (updateError) throw updateError
+
       onUpdate?.()
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update About Me',
-        variant: 'destructive'
-      })
+      console.error('Error saving About Me:', error)
+      throw error
     }
-  }
+  }, [bio, pronouns, nicknames, links, personId, onUpdate])
+
+  useEffect(() => {
+    if (isEditing) {
+      startAutosave(() => ({
+        content: { bio, pronouns, nicknames, links }
+      }))
+      
+      const saveInterval = setInterval(() => {
+        saveToDatabase().catch(console.error)
+      }, 3000)
+
+      return () => {
+        clearInterval(saveInterval)
+        stopAutosave()
+      }
+    }
+  }, [isEditing, bio, pronouns, nicknames, links, startAutosave, stopAutosave, saveToDatabase])
 
   const addNickname = () => {
     if (newNickname.trim()) {
@@ -107,13 +142,21 @@ export default function AboutMeBlock({
     <Card id="about-me" className="col-span-full">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            About Me
-          </CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              About Me
+            </CardTitle>
+            {isEditing && <AutosaveIndicator status={autosaveStatus} />}
+          </div>
           {canEdit && !isEditing && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
               <Edit className="h-4 w-4" />
+            </Button>
+          )}
+          {canEdit && isEditing && (
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
+              Done
             </Button>
           )}
         </div>
@@ -215,16 +258,6 @@ export default function AboutMeBlock({
               </div>
             </div>
 
-            {/* Save/Cancel Buttons */}
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-            </div>
           </>
         ) : (
           <>
