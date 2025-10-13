@@ -12,6 +12,7 @@ import { Mic, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
+import { markCompleted } from '@/services/promptStatusService'
 
 interface SimpleHeaderProps {
   profileId: string
@@ -234,12 +235,14 @@ export function SimpleHeader({
             description: "Complete it to unlock more!",
           })
         }
-      } else if (openPrompts && openPrompts.length === 1) {
-        // Only one prompt left, refetch to show it
+      } else if (openPrompts && openPrompts.length === 1 && todaysPrompt?.id) {
+        // Only one prompt left and it's the same one showing.
+        // If user is asking to shuffle, treat it as completed to move on.
+        await markCompleted(todaysPrompt.id)
         await refetch()
         toast({
-          title: "This is the last available prompt",
-          description: "Complete it to finish all prompts!",
+          title: "Marked as completed",
+          description: "Loaded your next prompt.",
         })
       }
     } catch (error) {

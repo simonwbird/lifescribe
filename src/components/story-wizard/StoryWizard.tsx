@@ -518,8 +518,8 @@ export default function StoryWizard() {
         })
       }
 
-      // Mark prompt instance as completed if from starter pack
-      if (promptInstanceId && isStarterPrompt) {
+      // Mark prompt instance as completed when publishing if we came from a prompt
+      if (promptInstanceId) {
         await supabase
           .from('prompt_instances')
           .update({ 
