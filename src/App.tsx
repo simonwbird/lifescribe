@@ -127,7 +127,6 @@ import EventJoin from './pages/EventJoin';
 import AdminLabs from './pages/admin/AdminLabs';
 import AdminDebugRoles from './pages/admin/AdminDebugRoles';
 import ProfileDebug from './pages/ProfileDebug';
-import Portfolio from './pages/Portfolio';
 
 const queryClient = new QueryClient();
 
