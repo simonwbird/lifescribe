@@ -149,14 +149,9 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg border transition-colors",
                   rel.has_page_access 
-                    ? "hover:bg-accent cursor-pointer" 
+                    ? "hover:bg-accent" 
                     : "bg-muted/50"
                 )}
-                onClick={() => {
-                  if (rel.has_page_access) {
-                    navigate(`/people/${rel.person_id}/page`)
-                  }
-                }}
               >
                 <Avatar className="h-12 w-12 shrink-0">
                   <AvatarImage src={resolvedAvatars[rel.person_id] ?? (rel.person_avatar?.startsWith('http') ? rel.person_avatar : '')} alt={rel.person_name} />
@@ -167,12 +162,16 @@ export default function PeopleWebBlock({ personId, currentUserId, familyId }: Pe
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Link 
-                      to={`/people/${rel.person_id}`}
-                      className="font-medium truncate hover:underline text-foreground"
-                    >
-                      {rel.person_name}
-                    </Link>
+                    {rel.has_page_access ? (
+                      <Link 
+                        to={`/people/${rel.person_id}`}
+                        className="font-medium truncate hover:underline text-foreground"
+                      >
+                        {rel.person_name}
+                      </Link>
+                    ) : (
+                      <p className="font-medium truncate text-muted-foreground">{rel.person_name}</p>
+                    )}
                     {rel.person_status === 'passed' && (
                       <Badge 
                         variant="secondary" 
