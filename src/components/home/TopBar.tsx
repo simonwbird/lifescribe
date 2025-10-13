@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from 'react-router-dom'
-import { CommandDialog } from '@/components/ui/command'
+import CommandPalette from '@/components/search/CommandPalette'
 
 interface TopBarProps {
   familyId: string
@@ -155,12 +155,11 @@ export function TopBar({ familyId, userId }: TopBarProps) {
         </div>
       </div>
 
-      {/* Search Command Dialog */}
-      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <div className="p-4">
-          <p className="text-sm text-muted-foreground">Search functionality coming soon...</p>
-        </div>
-      </CommandDialog>
+      {/* Search Command Palette */}
+      <CommandPalette 
+        isOpen={searchOpen} 
+        onClose={() => setSearchOpen(false)} 
+      />
     </>
   )
 }
