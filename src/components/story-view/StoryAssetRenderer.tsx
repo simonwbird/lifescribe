@@ -2,6 +2,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
+import { getSignedMediaUrl } from '@/lib/media'
 
 interface StoryAsset {
   id: string
@@ -31,6 +32,31 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsInstanceRef = useRef<any | null>(null)
   const [canPlay, setCanPlay] = useState(false)
+  const [signedSrc, setSignedSrc] = useState<string | null>(null)
+  const [signedThumb, setSignedThumb] = useState<string | null>(null)
+
+  // Extract bucket file path and familyId from a Supabase storage URL
+  const toStoragePath = (u?: string | null): { filePath: string | null; familyId: string | null } => {
+    if (!u) return { filePath: null, familyId: null }
+    try {
+      const url = new URL(u)
+      const parts = url.pathname.split('/').filter(Boolean)
+      const mediaIdx = parts.indexOf('media')
+      if (mediaIdx === -1) return { filePath: null, familyId: null }
+      const rest = parts.slice(mediaIdx + 1)
+      const filePath = rest.join('/') || null
+      const familyId = rest[0] || null
+      return { filePath, familyId }
+    } catch {
+      const path = u.split('?')[0].split('#')[0]
+      const marker = '/media/'
+      const idx = path.indexOf(marker)
+      if (idx === -1) return { filePath: null, familyId: null }
+      const rest = path.substring(idx + marker.length)
+      const segs = rest.split('/').filter(Boolean)
+      return { filePath: segs.join('/'), familyId: segs[0] || null }
+    }
+  }
 
   const getMimeFromUrl = (u?: string | null) => {
     if (!u) return undefined
@@ -51,6 +77,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const playback = useMemo(() => {
     if (asset.type !== 'video') return null as null | { url: string; type?: string; isHls: boolean }
     const candidates = [
+      signedSrc ? { url: signedSrc, type: getMimeFromUrl(signedSrc) } : null,
       asset.transcoded_url ? { url: asset.transcoded_url, type: getMimeFromUrl(asset.transcoded_url) } : null,
       { url: asset.url, type: asset.metadata?.mime_type || getMimeFromUrl(asset.url) }
     ].filter(Boolean) as { url: string; type?: string }[]
@@ -62,7 +89,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     try { path = new URL(url).pathname.toLowerCase() } catch { path = url.split('?')[0].split('#')[0].toLowerCase() }
     const isHls = (playable.type === 'application/vnd.apple.mpegurl') || path.endsWith('.m3u8')
     return { url, type: playable.type, isHls }
-  }, [asset.type, asset.url, asset.transcoded_url, asset.metadata?.mime_type])
+  }, [asset.type, asset.url, asset.transcoded_url, asset.metadata?.mime_type, signedSrc])
 
   useEffect(() => {
     if (asset.type !== 'video') return
@@ -83,6 +110,43 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       videoRef.current.play().catch(() => {})
     }
   }, [showVideo])
+
+  // Resolve signed URLs for private media (video/image/audio + thumbnail)
+  useEffect(() => {
+    let cancelled = false
+    const resolve = async () => {
+      const primary = asset.transcoded_url || asset.url
+      const { filePath, familyId } = toStoragePath(primary)
+      if (filePath && familyId) {
+        try {
+          const signed = await getSignedMediaUrl(filePath, familyId)
+          if (!cancelled) setSignedSrc(signed || primary)
+        } catch {
+          if (!cancelled) setSignedSrc(primary)
+        }
+      } else {
+        setSignedSrc(primary)
+      }
+
+      if (asset.thumbnail_url) {
+        const { filePath: tPath, familyId: tFam } = toStoragePath(asset.thumbnail_url)
+        if (tPath && tFam) {
+          try {
+            const signedT = await getSignedMediaUrl(tPath, tFam)
+            if (!cancelled) setSignedThumb(signedT || asset.thumbnail_url)
+          } catch {
+            if (!cancelled) setSignedThumb(asset.thumbnail_url)
+          }
+        } else {
+          setSignedThumb(asset.thumbnail_url)
+        }
+      } else {
+        setSignedThumb(null)
+      }
+    }
+    resolve()
+    return () => { cancelled = true }
+  }, [asset.url, asset.transcoded_url, asset.thumbnail_url])
 
   // HLS setup for m3u8 playback
   useEffect(() => {
@@ -260,7 +324,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     case 'image':
       return (
         <img
-          src={asset.url}
+          src={signedSrc || asset.url}
           alt={asset.metadata?.file_name || 'Story image'}
           className="rounded-lg w-full object-cover max-h-[600px]"
           loading="lazy"
@@ -271,15 +335,15 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       if (compact) {
         return (
           <div className="relative rounded-lg overflow-hidden cursor-pointer group">
-            {asset.thumbnail_url ? (
+            {signedThumb ? (
               <img
-                src={asset.thumbnail_url}
+                src={signedThumb}
                 alt="Video thumbnail"
                 className="w-full h-48 object-cover"
               />
             ) : (
               <video
-                src={asset.transcoded_url || asset.url}
+                src={(signedSrc || asset.transcoded_url || asset.url)}
                 className="w-full h-48 object-cover"
                 preload="metadata"
               />
@@ -296,9 +360,9 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       if (unsupported) {
         return (
           <div className="relative rounded-lg overflow-hidden">
-            {asset.thumbnail_url ? (
+            {signedThumb ? (
               <img
-                src={asset.thumbnail_url}
+                src={signedThumb}
                 alt="Video thumbnail"
                 className="w-full rounded-lg max-h-[600px] object-cover"
                 loading="lazy"
@@ -309,7 +373,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
             <div className="absolute inset-0 flex items-center justify-center">
               <Button
                 variant="secondary"
-                onClick={() => window.open(asset.transcoded_url || asset.url, '_blank')}
+                onClick={() => window.open((signedSrc || asset.transcoded_url || asset.url), '_blank')}
               >
                 Open video
               </Button>
@@ -334,7 +398,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
                ref={videoRef}
                src={isHls ? undefined : playableUrl}
                crossOrigin="anonymous"
-               poster={asset.thumbnail_url || undefined}
+               poster={signedThumb || undefined}
               preload="metadata"
               playsInline
               className="w-full h-full object-contain"
@@ -450,7 +514,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
               </div>
               <audio
                 ref={audioRef}
-                src={asset.url}
+                src={signedSrc || asset.url}
                 className="hidden"
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
@@ -464,7 +528,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
         <div className="bg-secondary/50 rounded-lg p-6">
           <audio
             ref={audioRef}
-            src={asset.url}
+            src={signedSrc || asset.url}
             controls
             className="w-full"
             onPlay={() => setIsPlaying(true)}
