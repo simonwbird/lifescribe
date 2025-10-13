@@ -16,10 +16,10 @@ export function QuickAddBar({
   onAddMilestone
 }: QuickAddBarProps) {
   const actions = [
-    { label: 'Story', icon: Plus, onClick: onAddStory },
-    { label: 'Photo', icon: ImageIcon, onClick: onAddPhoto },
-    { label: 'Voice', icon: Mic, onClick: onAddVoice },
-    { label: 'Milestone', icon: Calendar, onClick: onAddMilestone }
+    { label: '+ Story', icon: Plus, onClick: onAddStory },
+    { label: '+ Photo', icon: ImageIcon, onClick: onAddPhoto },
+    { label: '+ Voice', icon: Mic, onClick: onAddVoice },
+    { label: '+ Milestone', icon: Calendar, onClick: onAddMilestone }
   ]
 
   return (
@@ -28,7 +28,7 @@ export function QuickAddBar({
         {actions.map(({ label, icon: Icon, onClick }) => (
           <Button
             key={label}
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={onClick}
             className="gap-2"

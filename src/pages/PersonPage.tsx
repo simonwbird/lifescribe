@@ -755,27 +755,19 @@ export default function PersonPage() {
         {mode === 'simple' && canEdit && (
           <QuickAddBar
             onAddStory={() => {
-              toast({
-                title: 'Story creation',
-                description: 'Story wizard would open here'
-              })
+              navigate(`/stories/new?person=${person.id}`)
             }}
             onAddPhoto={() => {
-              toast({
-                title: 'Photo upload',
-                description: 'Photo upload dialog would open here'
-              })
+              navigate(`/capture?person=${person.id}`)
             }}
             onAddVoice={() => {
-              toast({
-                title: 'Voice recording',
-                description: 'Voice recorder would start here'
-              })
+              navigate(`/capture?type=voice&person=${person.id}`)
             }}
             onAddMilestone={() => {
+              // Open timeline block or navigate to a milestone creation flow
               toast({
-                title: 'Milestone creation',
-                description: 'Milestone form would open here'
+                title: 'Add Milestone',
+                description: 'Navigate to timeline to add a milestone event'
               })
             }}
           />
