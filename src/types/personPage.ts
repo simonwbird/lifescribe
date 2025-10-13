@@ -54,6 +54,7 @@ export type BlockType =
   | 'letters_time_capsule'
   | 'favorites_quirks'
   | 'photo_gallery'
+  | 'events'
   // Tribute preset blocks
   | 'hero_memorial'
   | 'bio_overview'
@@ -160,6 +161,7 @@ export const BLOCK_ANCHORS: Record<BlockType, string> = {
   milestones: 'milestones',
   quotes: 'quotes',
   service_events: 'services',
+  events: 'events',
 }
 
 export const BLOCK_LIBRARY: Array<{
@@ -418,6 +420,14 @@ export const BLOCK_LIBRARY: Array<{
       notable_places: [],
       languages: []
     },
+    presets: ['both']
+  },
+  {
+    type: 'events',
+    label: 'Events',
+    description: 'Important dates, gatherings, and special occasions',
+    icon: 'Calendar',
+    defaultContent: { events: [] },
     presets: ['both']
   }
 ]

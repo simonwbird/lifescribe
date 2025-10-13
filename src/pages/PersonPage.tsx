@@ -83,6 +83,7 @@ const getSectionId = (blockType: string): string => {
     'notes_from_friends': 'notes',
     'guestbook_tribute': 'guestbook',
     'service_events': 'services',
+    'events': 'events',
     'objects_places': 'places',
     'now_next': 'now-next',
     'favorites_quirks': 'favorites',

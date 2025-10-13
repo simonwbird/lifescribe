@@ -15,6 +15,7 @@ import { GuestbookTributeBlock } from './blocks/GuestbookTributeBlock'
 import NotesFromFriendsBlock from './blocks/NotesFromFriendsBlock'
 import NowNextBlock from './blocks/NowNextBlock'
 import LettersTimeCapsuleBlock from './blocks/LettersTimeCapsuleBlock'
+import EventsBlock from './blocks/EventsBlock'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 
@@ -199,12 +200,21 @@ export default function BlockRenderer({ block, person, currentUserId, canEdit, o
         />
       )
 
+    case 'service_events':
+    case 'events':
+      return (
+        <EventsBlock
+          personId={person.id}
+          familyId={person.family_id || ''}
+          blockContent={block.content_json}
+          canEdit={canEdit}
+          onUpdate={onUpdate}
+        />
+      )
+
     case 'favorites_quirks':
     case 'favorites':
       return <UnknownBlock type={block.type} />
-
-    case 'service_events':
-      return <UnknownBlock type="service_events" />
 
     case 'quick_facts':
       return (

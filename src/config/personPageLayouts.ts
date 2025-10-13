@@ -113,6 +113,7 @@ export function getBlockLayoutId(blockType: string): string {
     
     // Service blocks
     'service_events': 'Services',
+    'events': 'Events',
     
     // Places blocks
     'objects_places': 'Places'
