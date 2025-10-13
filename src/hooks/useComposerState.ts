@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { DatePrecisionValue } from '@/components/DatePrecisionPicker'
+import { PersonTag } from '@/components/composer/PeopleTagger'
 
 export type ComposerMode = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
 
@@ -15,7 +16,7 @@ export interface ComposerState {
   videoUrl: string | null
   transcript: string
   tags: string[]
-  linkedPeople: string[]
+  peopleTags: PersonTag[]
   linkedPlaces: string[]
   promptId: string | null
 }
@@ -124,7 +125,7 @@ function getDefaultState(mode: ComposerMode): ComposerState {
     videoUrl: null,
     transcript: '',
     tags: [],
-    linkedPeople: [],
+    peopleTags: [],
     linkedPlaces: [],
     promptId: null
   }

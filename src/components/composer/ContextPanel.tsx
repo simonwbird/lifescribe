@@ -1,11 +1,23 @@
 import { DatePrecisionPicker, DatePrecisionValue } from '@/components/DatePrecisionPicker'
+import { PeopleTagger, PersonTag } from './PeopleTagger'
 
 interface ContextPanelProps {
+  familyId: string
   dateValue: DatePrecisionValue
+  peopleTags: PersonTag[]
+  currentUserId?: string
   onDateChange: (value: DatePrecisionValue) => void
+  onPeopleTagsChange: (tags: PersonTag[]) => void
 }
 
-export function ContextPanel({ dateValue, onDateChange }: ContextPanelProps) {
+export function ContextPanel({ 
+  familyId, 
+  dateValue, 
+  peopleTags,
+  currentUserId,
+  onDateChange,
+  onPeopleTagsChange 
+}: ContextPanelProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -32,9 +44,12 @@ export function ContextPanel({ dateValue, onDateChange }: ContextPanelProps) {
         <label className="block text-sm font-medium mb-2">
           People
         </label>
-        <p className="text-sm text-muted-foreground">
-          Coming soon: Tag people in your stories
-        </p>
+        <PeopleTagger
+          familyId={familyId}
+          tags={peopleTags}
+          onChange={onPeopleTagsChange}
+          currentUserId={currentUserId}
+        />
       </div>
 
       <div>

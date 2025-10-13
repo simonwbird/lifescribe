@@ -5148,6 +5148,7 @@ export type Database = {
           family_id: string
           id: string
           person_id: string
+          role: Database["public"]["Enums"]["story_person_role"] | null
           story_id: string
         }
         Insert: {
@@ -5155,6 +5156,7 @@ export type Database = {
           family_id: string
           id?: string
           person_id: string
+          role?: Database["public"]["Enums"]["story_person_role"] | null
           story_id: string
         }
         Update: {
@@ -5162,6 +5164,7 @@ export type Database = {
           family_id?: string
           id?: string
           person_id?: string
+          role?: Database["public"]["Enums"]["story_person_role"] | null
           story_id?: string
         }
         Relationships: [
@@ -8766,6 +8769,13 @@ export type Database = {
         | "cousin"
       role_type: "admin" | "member" | "guest" | "viewer" | "contributor"
       rollout_type: "global" | "cohort" | "family" | "user"
+      story_person_role:
+        | "subject"
+        | "appears"
+        | "mentioned"
+        | "author"
+        | "photographer"
+        | "videographer"
       targeting_type: "role" | "country" | "cohort" | "family_id" | "user_id"
       visit_occasion: "holiday" | "celebration" | "reunion" | "other"
     }
@@ -9101,6 +9111,14 @@ export const Constants = {
       ],
       role_type: ["admin", "member", "guest", "viewer", "contributor"],
       rollout_type: ["global", "cohort", "family", "user"],
+      story_person_role: [
+        "subject",
+        "appears",
+        "mentioned",
+        "author",
+        "photographer",
+        "videographer",
+      ],
       targeting_type: ["role", "country", "cohort", "family_id", "user_id"],
       visit_occasion: ["holiday", "celebration", "reunion", "other"],
     },

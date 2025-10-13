@@ -24,10 +24,20 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [promptTitle, setPromptTitle] = useState<string | null>(null)
   const [showPromptBanner, setShowPromptBanner] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>()
 
   const { state, updateState, switchMode, clearState, hasContent } = useComposerState(
     (searchParams.get('type') as ComposerMode) || 'text'
   )
+
+  // Load current user
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) setCurrentUserId(user.id)
+    }
+    loadUser()
+  }, [])
 
   // Load prompt if prompt_id in URL
   useEffect(() => {
@@ -152,6 +162,24 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
             duration_seconds: 0,
             status: 'completed'
           })
+        }
+      }
+
+      // Create person-story links with roles
+      if (state.peopleTags.length > 0) {
+        const personLinks = state.peopleTags.map(tag => ({
+          person_id: tag.personId,
+          story_id: story.id,
+          family_id: familyId,
+          role: tag.role
+        }))
+
+        const { error: linksError } = await supabase
+          .from('person_story_links')
+          .insert(personLinks)
+
+        if (linksError) {
+          console.error('Failed to create person links:', linksError)
         }
       }
 
@@ -285,8 +313,12 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
               <Card>
                 <CardContent className="pt-6">
                   <ContextPanel
+                    familyId={familyId}
                     dateValue={state.dateValue}
+                    peopleTags={state.peopleTags}
+                    currentUserId={currentUserId}
                     onDateChange={(value) => updateState({ dateValue: value })}
+                    onPeopleTagsChange={(tags) => updateState({ peopleTags: tags })}
                   />
                 </CardContent>
               </Card>
