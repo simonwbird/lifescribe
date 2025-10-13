@@ -132,7 +132,15 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
         ? state.dateValue.date.toISOString().split('T')[0]
         : null
 
-      // Create story
+      // Determine occurred_precision based on dateValue
+      let occurredPrecision: 'day' | 'month' | 'year' = 'day'
+      if (state.dateValue.yearOnly) {
+        occurredPrecision = 'year'
+      } else if (state.dateValue.precision === 'month') {
+        occurredPrecision = 'month'
+      }
+
+      // Create story with content_type
       const { data: story, error: storyError } = await supabase
         .from('stories')
         .insert({
@@ -140,10 +148,13 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
           profile_id: user.id,
           title: state.title.trim(),
           content: state.content.trim() || state.transcript.trim() || null,
+          content_type: state.mode,
           occurred_on: occurredDate,
+          occurred_precision: occurredPrecision,
           is_approx: state.dateValue.precision === 'circa',
           place_text: state.placeText.trim() || null,
           privacy: state.privacy,
+          prompt_id: state.promptId || null,
           status: asDraft ? 'draft' : 'published'
         } as any)
         .select()
@@ -151,11 +162,13 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
 
       if (storyError) throw storyError
 
-      // Handle photos
+      // Handle photos - save to both media and story_assets tables
       if (state.photos.length > 0) {
-        for (const file of state.photos) {
+        for (let i = 0; i < state.photos.length; i++) {
+          const file = state.photos[i]
           const { path, error: uploadError } = await uploadMediaFile(file, familyId, user.id)
           if (!uploadError && path) {
+            // Create media record (legacy)
             await supabase.from('media').insert({
               story_id: story.id,
               profile_id: user.id,
@@ -165,16 +178,31 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
               file_size: file.size,
               mime_type: file.type
             })
+
+            // Create story_asset record
+            const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
+            await supabase.from('story_assets').insert({
+              story_id: story.id,
+              type: 'image',
+              url: fullUrl,
+              position: i,
+              metadata: {
+                file_name: file.name,
+                file_size: file.size,
+                mime_type: file.type
+              }
+            })
           }
         }
       }
 
-      // Handle audio
+      // Handle audio - save to both audio_recordings and story_assets
       if (state.audioBlob && state.audioUrl) {
         const audioFile = new File([state.audioBlob], 'recording.webm', { type: 'audio/webm' })
         const { path, error: uploadError } = await uploadMediaFile(audioFile, familyId, user.id)
         
         if (!uploadError && path) {
+          // Create audio_recordings record (legacy)
           await supabase.from('audio_recordings').insert({
             story_id: story.id,
             family_id: familyId,
@@ -183,6 +211,19 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
             transcript: state.transcript || null,
             duration_seconds: 0,
             status: 'completed'
+          })
+
+          // Create story_asset record
+          const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
+          await supabase.from('story_assets').insert({
+            story_id: story.id,
+            type: 'audio',
+            url: fullUrl,
+            position: 0,
+            metadata: {
+              transcript: state.transcript || null,
+              mime_type: 'audio/webm'
+            }
           })
         }
       }

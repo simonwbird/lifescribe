@@ -6878,6 +6878,7 @@ export type Database = {
       stories: {
         Row: {
           content: string
+          content_type: Database["public"]["Enums"]["content_type"] | null
           created_at: string
           family_id: string
           happened_at_property_id: string | null
@@ -6901,6 +6902,7 @@ export type Database = {
         }
         Insert: {
           content: string
+          content_type?: Database["public"]["Enums"]["content_type"] | null
           created_at?: string
           family_id: string
           happened_at_property_id?: string | null
@@ -6924,6 +6926,7 @@ export type Database = {
         }
         Update: {
           content?: string
+          content_type?: Database["public"]["Enums"]["content_type"] | null
           created_at?: string
           family_id?: string
           happened_at_property_id?: string | null
@@ -6972,6 +6975,53 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_assets: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          id: string
+          metadata: Json | null
+          position: number
+          story_id: string
+          thumbnail_url: string | null
+          type: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          position?: number
+          story_id: string
+          thumbnail_url?: string | null
+          type: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          position?: number
+          story_id?: string
+          thumbnail_url?: string | null
+          type?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_assets_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
             referencedColumns: ["id"]
           },
         ]
@@ -8635,6 +8685,7 @@ export type Database = {
         | "PERSON_UPDATED"
         | "PERSON_MERGED"
         | "PERSON_DELETED"
+      content_type: "text" | "photo" | "voice" | "video" | "mixed"
       date_precision: "day" | "month" | "year"
       feature_flag_status: "draft" | "active" | "inactive" | "archived"
       invite_status: "pending" | "accepted" | "expired"
@@ -8966,6 +9017,7 @@ export const Constants = {
         "PERSON_MERGED",
         "PERSON_DELETED",
       ],
+      content_type: ["text", "photo", "voice", "video", "mixed"],
       date_precision: ["day", "month", "year"],
       feature_flag_status: ["draft", "active", "inactive", "archived"],
       invite_status: ["pending", "accepted", "expired"],
