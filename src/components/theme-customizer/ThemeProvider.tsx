@@ -1,9 +1,10 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import { ThemeConfig } from '@/hooks/useThemeCustomizer'
 
 interface ThemeProviderProps {
   theme: ThemeConfig | null
   children: ReactNode
+  scoped?: boolean // When true, applies theme only to this container
 }
 
 // Default theme values that match the index.css design system
@@ -21,14 +22,17 @@ const DEFAULT_THEME: ThemeConfig = {
   highContrastMode: false
 }
 
-export function ThemeProvider({ theme, children }: ThemeProviderProps) {
+export function ThemeProvider({ theme, children, scoped = false }: ThemeProviderProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     // Use default theme if none provided
     const activeTheme = theme || DEFAULT_THEME
     
-    console.log('🎨 ThemeProvider: Applying theme', activeTheme)
+    console.log('🎨 ThemeProvider: Applying theme', activeTheme, { scoped })
 
-    const root = document.documentElement
+    // Use scoped container if available, otherwise fall back to document root
+    const root = scoped && containerRef.current ? containerRef.current : document.documentElement
     
     // Apply color palette
     root.style.setProperty('--primary', activeTheme.palette.primary)
@@ -93,13 +97,31 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
       })
     }
     
-    // Cleanup function
+    // Cleanup function (only if scoped)
     return () => {
-      root.style.fontSize = ''
-      root.classList.remove('high-contrast')
-      root.removeAttribute('data-layout')
+      if (scoped && containerRef.current === root) {
+        root.style.fontSize = ''
+        root.classList.remove('high-contrast')
+        root.removeAttribute('data-layout')
+      }
     }
-  }, [theme])
+  }, [theme, scoped])
+
+  // If scoped, wrap in a container div
+  if (scoped) {
+    return (
+      <div 
+        ref={containerRef}
+        className="person-page-theme-scope min-h-screen"
+        style={{ 
+          backgroundColor: 'hsl(var(--background))',
+          color: 'hsl(var(--foreground))'
+        }}
+      >
+        {children}
+      </div>
+    )
+  }
 
   return <>{children}</>
 }

@@ -575,7 +575,7 @@ export default function PersonPage() {
     : fullName
 
   return (
-    <ThemeProvider theme={currentTheme}>
+    <ThemeProvider theme={currentTheme} scoped={true}>
       <div className="min-h-screen bg-background">
         {/* Skip to content link for accessibility */}
         <SkipLink href="#portal-main">Skip to main content</SkipLink>
