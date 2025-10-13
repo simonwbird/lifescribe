@@ -1,5 +1,5 @@
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 
@@ -47,6 +47,23 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     return undefined
   }
 
+  // Decide the actual playback source once and reuse everywhere
+  const playback = useMemo(() => {
+    if (asset.type !== 'video') return null as null | { url: string; type?: string; isHls: boolean }
+    const candidates = [
+      asset.transcoded_url ? { url: asset.transcoded_url, type: getMimeFromUrl(asset.transcoded_url) } : null,
+      { url: asset.url, type: asset.metadata?.mime_type || getMimeFromUrl(asset.url) }
+    ].filter(Boolean) as { url: string; type?: string }[]
+
+    const tester = document.createElement('video')
+    const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
+    const url = playable.url
+    let path = ''
+    try { path = new URL(url).pathname.toLowerCase() } catch { path = url.split('?')[0].split('#')[0].toLowerCase() }
+    const isHls = (playable.type === 'application/vnd.apple.mpegurl') || path.endsWith('.m3u8')
+    return { url, type: playable.type, isHls }
+  }, [asset.type, asset.url, asset.transcoded_url, asset.metadata?.mime_type])
+
   useEffect(() => {
     if (asset.type !== 'video') return
     try {
@@ -70,12 +87,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   // HLS setup for m3u8 playback
   useEffect(() => {
     const videoEl = videoRef.current
-    if (!videoEl || asset.type !== 'video') return
-
-    const src = (asset.transcoded_url || asset.url) || ''
-    let srcPath = ''
-    try { srcPath = new URL(src).pathname.toLowerCase() } catch { srcPath = src.split('?')[0].split('#')[0].toLowerCase() }
-    const isHls = srcPath.endsWith('.m3u8') || ((asset as any).metadata?.mime_type === 'application/vnd.apple.mpegurl')
+    if (!videoEl || asset.type !== 'video' || !playback) return
 
     // Clean up any existing hls instance
     if (hlsInstanceRef.current) {
@@ -85,11 +97,16 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
 
     setCanPlay(false)
 
-    if (!isHls) return // nothing to do for MP4/WEBM
+    if (!playback.isHls) {
+      // For MP4/WEBM (non-HLS), assign the source directly
+      videoEl.src = playback.url
+      return
+    }
 
     // Safari (native HLS)
     if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-      videoEl.src = src
+      videoEl.src = playback.url
+      videoEl.load()
       return
     }
 
@@ -102,7 +119,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
           if (cancelled) return
           const hls = new Hls()
           hlsInstanceRef.current = hls
-          hls.loadSource(src)
+          hls.loadSource(playback.url)
           hls.attachMedia(videoEl)
           hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
             console.warn('HLS error', data?.type, data?.details)
@@ -126,7 +143,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
         hlsInstanceRef.current = null
       }
     }
-  }, [asset.url, asset.transcoded_url, asset.type])
+  }, [asset.type, playback])
 
   const handlePlayPause = () => {
     if (asset.type === 'video') {
@@ -305,16 +322,9 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       }
 
       // Custom video player
-      const candidates = [
-        asset.transcoded_url ? { url: asset.transcoded_url, type: getMimeFromUrl(asset.transcoded_url) } : null,
-        { url: asset.url, type: asset.metadata?.mime_type || getMimeFromUrl(asset.url) }
-      ].filter(Boolean) as { url: string; type?: string }[]
-      const tester = document.createElement('video')
-      const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
-      const playableUrl = playable.url
-      let playablePath = ''
-      try { playablePath = new URL(playableUrl).pathname.toLowerCase() } catch { playablePath = playableUrl.split('?')[0].split('#')[0].toLowerCase() }
-      const isHls = (playable.type === 'application/vnd.apple.mpegurl') || playablePath.endsWith('.m3u8')
+      const playable = playback
+      const playableUrl = playable?.url || (asset.transcoded_url || asset.url)
+      const isHls = playable?.isHls || false
 
       return (
         <div className="bg-secondary/50 rounded-lg overflow-hidden">
