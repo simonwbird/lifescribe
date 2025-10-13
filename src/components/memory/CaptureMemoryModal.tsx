@@ -68,6 +68,9 @@ export function CaptureMemoryModal({
   const [body, setBody] = useState('')
   const [yearApprox, setYearApprox] = useState('')
   const [placeText, setPlaceText] = useState('')
+  const [showYearField, setShowYearField] = useState(false)
+  const [showPlaceField, setShowPlaceField] = useState(false)
+  const [existingPlaces, setExistingPlaces] = useState<Array<{ id: string; name: string }>>([])
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const [audioDuration, setAudioDuration] = useState(0)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -77,7 +80,7 @@ export function CaptureMemoryModal({
   const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || 'them'
   const draftKey = `memory-draft-${person.id}-${viewer?.id || 'anon'}`
 
-  // Load draft from localStorage
+  // Load draft from localStorage and fetch existing places
   useEffect(() => {
     if (isOpen) {
       const stored = localStorage.getItem(draftKey)
@@ -89,12 +92,42 @@ export function CaptureMemoryModal({
           setYearApprox(draft.year_approx || '')
           setPlaceText(draft.place_text || '')
           setMode(draft.modality || 'text')
+          // Show fields if they have values
+          if (draft.year_approx) setShowYearField(true)
+          if (draft.place_text) setShowPlaceField(true)
         } catch (error) {
           console.error('Failed to load draft:', error)
         }
       }
+
+      // Fetch existing places for this person's family
+      const fetchPlaces = async () => {
+        try {
+          const { data: personData } = await supabase
+            .from('people')
+            .select('family_id')
+            .eq('id', person.id)
+            .single()
+
+          if (personData?.family_id) {
+            const { data: places } = await supabase
+              .from('places')
+              .select('id, name')
+              .eq('family_id', personData.family_id)
+              .order('name')
+
+            if (places) {
+              setExistingPlaces(places)
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load places:', error)
+        }
+      }
+
+      fetchPlaces()
     }
-  }, [isOpen, draftKey])
+  }, [isOpen, draftKey, person.id])
 
   // Auto-save draft
   useEffect(() => {
@@ -394,30 +427,74 @@ export function CaptureMemoryModal({
           </TabsContent>
         </Tabs>
 
-        {/* Context fields - shown for all modes */}
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-          <div>
-            <Label htmlFor="year">Year (optional)</Label>
-            <Input
-              id="year"
-              type="text"
-              value={yearApprox}
-              onChange={(e) => setYearApprox(e.target.value)}
-              placeholder="e.g., 1995 or early 2000s"
-              className="mt-1"
-            />
+        {/* Optional metadata enrichment chips */}
+        <div className="pt-4 border-t">
+          <div className="flex gap-2 mb-3">
+            {!showYearField && !yearApprox && (
+              <button
+                type="button"
+                onClick={() => setShowYearField(true)}
+                className="text-sm px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors"
+              >
+                + Add year?
+              </button>
+            )}
+            {!showPlaceField && !placeText && (
+              <button
+                type="button"
+                onClick={() => setShowPlaceField(true)}
+                className="text-sm px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors"
+              >
+                + Add place?
+              </button>
+            )}
           </div>
-          <div>
-            <Label htmlFor="place">Place (optional)</Label>
-            <Input
-              id="place"
-              type="text"
-              value={placeText}
-              onChange={(e) => setPlaceText(e.target.value)}
-              placeholder="e.g., grandma's kitchen"
-              className="mt-1"
-            />
-          </div>
+
+          {(showYearField || yearApprox || showPlaceField || placeText) && (
+            <div className="grid grid-cols-2 gap-4">
+              {(showYearField || yearApprox) && (
+                <div>
+                  <Label htmlFor="year" className="text-xs">When was this?</Label>
+                  <Input
+                    id="year"
+                    type="text"
+                    value={yearApprox}
+                    onChange={(e) => setYearApprox(e.target.value)}
+                    placeholder="e.g., 1995 or early 2000s"
+                    className="mt-1"
+                  />
+                </div>
+              )}
+              {(showPlaceField || placeText) && (
+                <div>
+                  <Label htmlFor="place" className="text-xs">Where was this?</Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="place"
+                      type="text"
+                      value={placeText}
+                      onChange={(e) => setPlaceText(e.target.value)}
+                      placeholder="Type a place name..."
+                      className="pr-2"
+                      list="places-list"
+                    />
+                    {existingPlaces.length > 0 && (
+                      <datalist id="places-list">
+                        {existingPlaces.map((place) => (
+                          <option key={place.id} value={place.name} />
+                        ))}
+                      </datalist>
+                    )}
+                  </div>
+                  {existingPlaces.length > 0 && !placeText && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Start typing to see suggestions
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action buttons */}
