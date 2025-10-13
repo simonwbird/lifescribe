@@ -76,6 +76,7 @@ import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import EventUploadPage from "./pages/EventUploadPage";
 import PrintComposer from "./pages/PrintComposer";
+import DuplicatesPage from "./pages/DuplicatesPage";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
@@ -201,6 +202,7 @@ function AppContent() {
        <Route path="/event/:eventId/upload" element={<EventUploadPage />} />
        <Route path="/print" element={<AuthGate><PrintComposer /></AuthGate>} />
        <Route path="/print/event/:eventId" element={<AuthGate><PrintComposer /></AuthGate>} />
+       <Route path="/admin/duplicates" element={<AuthGate><DuplicatesPage /></AuthGate>} />
        <Route path="/safebox" element={<AuthGate><SafeBox /></AuthGate>} />
        <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
        <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
