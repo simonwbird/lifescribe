@@ -162,25 +162,42 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
         )
       }
 
-      if (!showVideo && asset.thumbnail_url) {
+      if (asset.thumbnail_url) {
         return (
-          <div
-            className="relative rounded-lg overflow-hidden cursor-pointer"
-            onClick={() => setShowVideo(true)}
-            role="button"
-            aria-label="Play video"
-          >
-            <img
-              src={asset.thumbnail_url}
-              alt="Video thumbnail"
-              className="w-full rounded-lg max-h-[600px] object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <div className="bg-background rounded-full p-4 shadow-sm">
-                <Play className="h-8 w-8 text-primary" fill="currentColor" />
-              </div>
-            </div>
+          <div className="relative rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              poster={asset.thumbnail_url || undefined}
+              controls
+              preload="metadata"
+              playsInline
+              className="w-full rounded-lg max-h-[600px]"
+              onPlay={() => { setIsPlaying(true); setShowVideo(true) }}
+              onPause={() => setIsPlaying(false)}
+              onError={(e) => console.error('Video playback error', e)}
+            >
+              {asset.transcoded_url && (
+                <source src={asset.transcoded_url} type={getMimeFromUrl(asset.transcoded_url)} />
+              )}
+              <source
+                src={asset.url}
+                type={asset.metadata?.mime_type || getMimeFromUrl(asset.url)}
+              />
+              Your browser does not support the video tag.
+            </video>
+
+            {!isPlaying && (
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/30 flex items-center justify-center"
+                onClick={() => { videoRef.current?.play().catch(() => {}); setShowVideo(true) }}
+                aria-label="Play video"
+              >
+                <div className="bg-background rounded-full p-4 shadow-sm">
+                  <Play className="h-8 w-8 text-primary" fill="currentColor" />
+                </div>
+              </button>
+            )}
           </div>
         )
       }
