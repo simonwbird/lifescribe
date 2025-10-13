@@ -14,6 +14,7 @@ import NotificationsBell from '@/components/navigation/NotificationsBell'
 import ProfileDropdown from '@/components/navigation/ProfileDropdown'
 import QuickAddSheet from '@/components/home/QuickAddSheet'
 import { InviteFamilySheet } from '@/components/invites/InviteFamilySheet'
+import { OfflineSyncBadge } from '@/components/offline/OfflineSyncBadge'
 import { useLabs } from '@/hooks/useLabs'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { supabase } from '@/integrations/supabase/client'
@@ -153,6 +154,9 @@ export function AppHeader() {
 
           {/* Invite Button */}
           {familyId && <InviteFamilySheet familyId={familyId} />}
+
+          {/* Offline Sync Badge */}
+          <OfflineSyncBadge />
 
           {/* Notifications */}
           {labsEnabled && flags.notifications && <NotificationsBell />}

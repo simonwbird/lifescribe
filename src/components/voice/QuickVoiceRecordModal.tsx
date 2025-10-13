@@ -7,18 +7,22 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { useDraftManager } from '@/hooks/useDraftManager'
+import { useOfflineQueue } from '@/hooks/useOfflineQueue'
 import { AutosaveIndicator } from '../story-wizard/AutosaveIndicator'
+import { SyncStatusIndicator } from '@/components/offline/OfflineSyncBadge'
 
 interface QuickVoiceRecordModalProps {
   open: boolean
   onClose: () => void
   onStoryCreated?: (storyId: string) => void
+  preGrantedStream?: MediaStream
 }
 
 export default function QuickVoiceRecordModal({ 
   open, 
   onClose, 
-  onStoryCreated 
+  onStoryCreated,
+  preGrantedStream
 }: QuickVoiceRecordModalProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
@@ -26,6 +30,7 @@ export default function QuickVoiceRecordModal({
   const [recordingTime, setRecordingTime] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [showDraftRecovery, setShowDraftRecovery] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'queued' | 'syncing' | 'synced' | 'failed'>()
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -34,6 +39,7 @@ export default function QuickVoiceRecordModal({
   
   const { track } = useAnalytics()
   const { toast } = useToast()
+  const { addToQueue } = useOfflineQueue()
 
   // Draft management
   const { 
@@ -103,7 +109,8 @@ export default function QuickVoiceRecordModal({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // Use pre-granted stream if available, otherwise request
+      const stream = preGrantedStream || await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
       })
@@ -170,7 +177,30 @@ export default function QuickVoiceRecordModal({
   const uploadAndCreateStory = async () => {
     if (!recordedBlob) return
 
+    // Check if online
+    if (!navigator.onLine) {
+      // Queue for offline sync
+      const queueId = await addToQueue(recordedBlob, {
+        title: `Quick Voice Recording - ${new Date().toLocaleDateString()}`,
+        content: 'Audio story created via quick recording',
+        recordingTime,
+        capturedAt: new Date().toISOString()
+      })
+
+      setSyncStatus('queued')
+      clearDraft()
+      
+      toast({
+        title: 'Recording Queued',
+        description: 'Will sync when you\'re back online',
+      })
+
+      setTimeout(() => onClose(), 2000)
+      return
+    }
+
     setIsUploading(true)
+    setSyncStatus('syncing')
     
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -220,6 +250,7 @@ export default function QuickVoiceRecordModal({
         profile_id: user.id
       })
 
+      setSyncStatus('synced')
       track('voice_story_published')
 
       // Clear draft on successful publish
@@ -235,6 +266,8 @@ export default function QuickVoiceRecordModal({
       
     } catch (error) {
       console.error('Failed to create story:', error)
+      setSyncStatus('failed')
+      
       toast({
         title: 'Upload Failed',
         description: 'Could not save your recording. Please try again.',
@@ -309,7 +342,10 @@ export default function QuickVoiceRecordModal({
               </div>
               Quick Voice Recording
             </div>
-            {recordedBlob && <AutosaveIndicator status={autosaveStatus} />}
+            <div className="flex items-center gap-2">
+              {recordedBlob && <AutosaveIndicator status={autosaveStatus} />}
+              {syncStatus && <SyncStatusIndicator status={syncStatus} />}
+            </div>
           </DialogTitle>
         </DialogHeader>
 
