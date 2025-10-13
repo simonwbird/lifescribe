@@ -25,6 +25,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { EnhancedGlobalSearch } from '@/components/search/EnhancedGlobalSearch';
+import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 
 interface UserData {
   profile: { full_name: string; avatar_url: string } | null;
@@ -62,28 +63,6 @@ export default function LifeScribeHeader() {
     },
   });
 
-  // Fetch unread notifications count - simplified to avoid type issues
-  const { data: notificationCount = 0 } = useQuery({
-    queryKey: ['notification-count'],
-    queryFn: async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return 0;
-
-        // Simple count query
-        const { data, error } = await supabase
-          .from('bug_notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('read_at', null);
-
-        if (error) return 0;
-        return 0; // Placeholder until notifications table is properly set up
-      } catch {
-        return 0;
-      }
-    },
-  });
 
   // Handle scroll for sticky header effect
   useEffect(() => {
@@ -186,24 +165,7 @@ export default function LifeScribeHeader() {
         {/* Right Section: Actions & User Menu */}
         <div className="flex items-center gap-1 md:gap-2">
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-9 w-9"
-            onClick={() => navigate('/notifications')}
-            aria-label={`Notifications${notificationCount ? ` (${notificationCount} unread)` : ''}`}
-          >
-            <Bell className="h-5 w-5" aria-hidden="true" />
-            {notificationCount && notificationCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
-                aria-hidden="true"
-              >
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </Badge>
-            )}
-          </Button>
+          <NotificationsDropdown />
 
           {/* Quick Add */}
           <DropdownMenu>

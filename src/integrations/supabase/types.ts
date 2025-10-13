@@ -4323,9 +4323,11 @@ export type Database = {
           created_by: string | null
           family_id: string | null
           id: string
+          link_label: string | null
           link_url: string | null
           mentioned_person_id: string | null
           message: string
+          metadata: Json | null
           read_at: string | null
           related_entity_id: string | null
           related_entity_type: string | null
@@ -4338,9 +4340,11 @@ export type Database = {
           created_by?: string | null
           family_id?: string | null
           id?: string
+          link_label?: string | null
           link_url?: string | null
           mentioned_person_id?: string | null
           message: string
+          metadata?: Json | null
           read_at?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
@@ -4353,9 +4357,11 @@ export type Database = {
           created_by?: string | null
           family_id?: string | null
           id?: string
+          link_label?: string | null
           link_url?: string | null
           mentioned_person_id?: string | null
           message?: string
+          metadata?: Json | null
           read_at?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
@@ -9626,6 +9632,10 @@ export type Database = {
           p_section_id: string
         }
         Returns: string
+      }
+      mark_all_notifications_read: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       pause_digest_30_days: {
         Args: { p_family_id: string; p_user_id: string }

@@ -80,6 +80,7 @@ import DuplicatesPage from "./pages/DuplicatesPage";
 import Portfolio from "./pages/Portfolio";
 import Vault from "./pages/Vault";
 import Help from "./pages/Help";
+import Inbox from "./pages/Inbox";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";
@@ -212,6 +213,8 @@ function AppContent() {
        <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
        <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
        <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
+       <Route path="/help" element={<AuthGate><Help /></AuthGate>} />
+       <Route path="/inbox" element={<AuthGate><Inbox /></AuthGate>} />
        <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
        <Route path="/event/:eventId" element={<AuthGate><EventDetail /></AuthGate>} />
        <Route path="/event/:eventId/upload" element={<EventUploadPage />} />
