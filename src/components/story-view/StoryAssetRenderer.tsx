@@ -124,7 +124,8 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     if (asset.type === 'video') {
       const v = videoRef.current
       if (!v) return
-      if (!canPlay) {
+      const ready = v.readyState >= 2 || canPlay || !!v.src
+      if (!ready) {
         console.warn('Video not ready to play yet')
         return
       }
@@ -318,6 +319,8 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
               className="w-full h-full object-contain"
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
+              onCanPlay={() => setCanPlay(true)}
+              onLoadedData={() => setCanPlay(true)}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onError={(e) => console.error('Video playback error', e)}
