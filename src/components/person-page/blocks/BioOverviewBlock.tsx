@@ -46,6 +46,7 @@ export default function BioOverviewBlock({
     tone: blockContent.tone || 'warm',
     sources: blockContent.sources || []
   })
+  const [justGenerated, setJustGenerated] = useState(false)
 
   const handleGenerateFromStories = async () => {
     setIsGenerating(true)
@@ -73,6 +74,9 @@ export default function BioOverviewBlock({
         long_bio: data.long_bio || '',
         sources: data.sources || []
       }))
+
+      setJustGenerated(true)
+      setIsEditing(true)
 
       toast({
         title: 'Biography generated',
@@ -204,6 +208,12 @@ export default function BioOverviewBlock({
           <DialogHeader>
             <DialogTitle>Edit Biography</DialogTitle>
           </DialogHeader>
+
+          {justGenerated && (
+            <div className="rounded-md bg-muted p-3 text-sm mb-3">
+              Draft generated from stories — review and adjust, then click Save Biography.
+            </div>
+          )}
 
           <div className="space-y-4">
             <div>
