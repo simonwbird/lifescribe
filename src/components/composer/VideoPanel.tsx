@@ -81,14 +81,19 @@ export function VideoPanel({
 
   const startCamera = async () => {
     try {
+      console.log('Starting camera with facingMode:', facingMode)
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode },
         audio: true
       })
       
+      console.log('Camera stream obtained:', stream.getVideoTracks())
       streamRef.current = stream
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        console.log('Video srcObject set, playing...')
+        await videoRef.current.play()
       }
     } catch (error) {
       console.error('Camera access error:', error)
@@ -325,8 +330,10 @@ export function VideoPanel({
               <video
                 ref={videoRef}
                 autoPlay
+                playsInline
                 muted
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover mirror"
+                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
               />
               <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 px-3 py-1 rounded-full">
                 <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
