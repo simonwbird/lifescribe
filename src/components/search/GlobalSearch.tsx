@@ -1,275 +1,442 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import type { CSSProperties } from 'react'
-import { Search, Loader2 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
-import { SearchService, type SearchSuggestion } from '@/lib/searchService'
-import { supabase } from '@/lib/supabase'
+import { Search, Users, FileText, Image, Video, Mic, Calendar, MapPin, Package, Command } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { supabase } from '@/integrations/supabase/client'
+import { toast } from '@/hooks/use-toast'
 import { useAnalytics } from '@/hooks/useAnalytics'
-import SearchSuggestions from './SearchSuggestions'
+
+type SearchResult = {
+  id: string
+  type: 'person' | 'story' | 'photo' | 'video' | 'audio' | 'event' | 'place' | 'object'
+  title: string
+  subtitle?: string
+  date?: string
+  url: string
+}
+
+type SearchCommand = {
+  id: string
+  label: string
+  description: string
+  action: () => void
+}
 
 export default function GlobalSearch() {
+  const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isCommand, setIsCommand] = useState(false)
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [commands, setCommands] = useState<SearchCommand[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const [familyId, setFamilyId] = useState<string | null>(null)
-  const [activeIndex, setActiveIndex] = useState(-1)
-  const [dropdownStyle, setDropdownStyle] = useState<CSSProperties | undefined>()
-  
-  const inputRef = useRef<HTMLInputElement>(null)
-  const searchRef = useRef<HTMLDivElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout>()
-  
   const navigate = useNavigate()
   const { track } = useAnalytics()
 
-  // Get user's family ID
   useEffect(() => {
-    const getFamilyId = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: member } = await supabase
-          .from('members')
-          .select('family_id')
-          .eq('profile_id', user.id)
-          .maybeSingle()
-        
-        if (member) {
-          setFamilyId(member.family_id)
-        }
-      }
-    }
-    getFamilyId()
+    loadFamilyId()
+    const cleanup = setupKeyboardShortcut()
+    return cleanup
   }, [])
 
-  // Global keyboard shortcut: / to focus search
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        // Don't trigger if user is typing in an input
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-          return
-        }
-        e.preventDefault()
-        inputRef.current?.focus()
-        track('search_focus', { method: 'keyboard_shortcut' })
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [track])
-
-  // Handle search input changes with debouncing
-  useEffect(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-
-    if (query.length >= 2 && familyId) {
-      setIsLoading(true)
-      timeoutRef.current = setTimeout(async () => {
-        try {
-          console.log('Searching for:', query, 'in family:', familyId)
-          const results = await SearchService.getSuggestions(query, familyId)
-          console.log('Search results:', results)
-          setSuggestions(results)
-          setShowSuggestions(true)
-          setActiveIndex(-1)
-          
-          // Only auto-navigate if there's exactly one person match
-          const peopleResults = results.filter(r => r.type === 'person')
-          
-          if (peopleResults.length === 1) {
-            const firstResult = peopleResults[0]
-            const queryLower = query.toLowerCase().trim()
-            const nameLower = firstResult.title.toLowerCase()
-            
-            // Check for exact match or very close match
-            const isExactMatch = nameLower === queryLower
-            const isCloseMatch = nameLower.includes(queryLower) && queryLower.length >= 3
-            const isFirstNameMatch = nameLower.split(' ')[0] === queryLower || 
-                                   nameLower.split(' ').slice(-1)[0] === queryLower
-            
-            // Auto-navigate after a short delay if it's a good match
-            if (isExactMatch || (isCloseMatch && query.length >= 4) || isFirstNameMatch) {
-              setTimeout(() => {
-                // Check if user hasn't changed the query in the meantime
-                if (inputRef.current?.value.toLowerCase().trim() === queryLower) {
-                  track('search_result_click', { 
-                    query: queryLower,
-                    person_name: firstResult.title,
-                    match_type: isExactMatch ? 'exact' : isFirstNameMatch ? 'first_name' : 'partial',
-                    auto_navigate: true
-                  })
-                  navigate(firstResult.url!)
-                  setShowSuggestions(false)
-                  setActiveIndex(-1)
-                  setQuery('')
-                  inputRef.current?.blur()
-                }
-              }, isExactMatch ? 500 : 1000) // Faster for exact matches
-            }
-          }
-        } catch (error) {
-          console.error('Search error:', error)
-        } finally {
-          setIsLoading(false)
-        }
-      }, 250) // Updated to 250ms debounce
+    if (query.startsWith('>')) {
+      setIsCommand(true)
+      filterCommands(query.slice(1))
     } else {
-      setSuggestions([])
-      setShowSuggestions(false)
-      setIsLoading(false)
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      setIsCommand(false)
+      if (query.length >= 2) {
+        performSearch(query)
+      } else {
+        setResults([])
       }
     }
-  }, [query, familyId]) // Removed navigate and track from dependencies
+  }, [query])
 
-  // Handle clicks outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      const clickedInSearch = searchRef.current?.contains(target)
-      const clickedInDropdown = target.closest('#search-suggestions')
-      if (!clickedInSearch && !clickedInDropdown) {
-        setShowSuggestions(false)
-        setActiveIndex(-1)
+  const loadFamilyId = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('members')
+      .select('family_id')
+      .eq('profile_id', user.id)
+      .limit(1)
+      .maybeSingle()
+
+    if (data) {
+      setFamilyId(data.family_id)
+    }
+  }
+
+  const setupKeyboardShortcut = () => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey) {
+        const target = e.target as HTMLElement
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+        
+        e.preventDefault()
+        setOpen(true)
+        track('search_open', { method: 'keyboard_shortcut' })
+      }
+      
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setOpen(true)
+        track('search_open', { method: 'keyboard_shortcut' })
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('keydown', handleKeydown)
+    return () => document.removeEventListener('keydown', handleKeydown)
+  }
 
-  // Keep dropdown anchored to input (avoids clipping/overflow)
-  useEffect(() => {
-    const update = () => {
-      const el = inputRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      setDropdownStyle({ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, zIndex: 1000 })
-    }
-    if (showSuggestions) {
-      update()
-      window.addEventListener('resize', update)
-      window.addEventListener('scroll', update, true)
-    }
-    return () => {
-      window.removeEventListener('resize', update)
-      window.removeEventListener('scroll', update, true)
-    }
-  }, [showSuggestions])
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) {
-      if (e.key === 'Enter' && query.trim()) {
-        handleSearch()
-      }
-      return
-    }
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault()
-        setActiveIndex(prev => Math.min(prev + 1, suggestions.length - 1))
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setActiveIndex(prev => Math.max(prev - 1, -1))
-        break
-      case 'Enter':
-        e.preventDefault()
-        if (activeIndex >= 0) {
-          handleSuggestionClick(suggestions[activeIndex])
-        } else {
-          handleSearch()
+  const filterCommands = (commandQuery: string) => {
+    const allCommands: SearchCommand[] = [
+      {
+        id: 'invite',
+        label: 'Invite Family Member',
+        description: 'Generate magic link invite',
+        action: () => {
+          setOpen(false)
+          toast({ title: "Opening invite sheet..." })
+          // Trigger global event for invite sheet
+          window.dispatchEvent(new CustomEvent('open-invite-sheet'))
         }
-        break
-      case 'Escape':
-        setShowSuggestions(false)
-        setActiveIndex(-1)
-        inputRef.current?.blur()
-        break
+      },
+      {
+        id: 'bulk',
+        label: 'Bulk Import',
+        description: 'Import multiple items at once',
+        action: () => {
+          setOpen(false)
+          navigate('/capture')
+        }
+      },
+      {
+        id: 'merge',
+        label: 'Merge Duplicates',
+        description: 'Find and merge duplicate people',
+        action: () => {
+          setOpen(false)
+          if (familyId) navigate(`/admin/duplicates?family=${familyId}`)
+        }
+      },
+      {
+        id: 'export',
+        label: 'Export Data',
+        description: 'Download family data',
+        action: () => {
+          setOpen(false)
+          toast({ title: "Export feature coming soon" })
+        }
+      },
+      {
+        id: 'event-new',
+        label: 'New Event',
+        description: 'Create a family event',
+        action: () => {
+          setOpen(false)
+          navigate('/events')
+        }
+      },
+      {
+        id: 'elder-mode',
+        label: 'Elder Mode',
+        description: 'Simplified interface',
+        action: () => {
+          setOpen(false)
+          toast({ title: "Elder mode coming soon" })
+        }
+      }
+    ]
+
+    const filtered = commandQuery
+      ? allCommands.filter(cmd => 
+          cmd.label.toLowerCase().includes(commandQuery.toLowerCase()) ||
+          cmd.description.toLowerCase().includes(commandQuery.toLowerCase())
+        )
+      : allCommands
+
+    setCommands(filtered)
+  }
+
+  const performSearch = async (searchQuery: string) => {
+    if (!familyId) return
+    
+    setIsSearching(true)
+    try {
+      const filters = parseSearchFilters(searchQuery)
+      const searchResults: SearchResult[] = []
+
+      // Search people
+      let peopleQuery = supabase
+        .from('people')
+        .select('id, given_name, surname, birth_date, birth_place')
+        .eq('family_id', familyId)
+        .limit(5)
+
+      if (filters.cleanQuery) {
+        peopleQuery = peopleQuery.or(`given_name.ilike.%${filters.cleanQuery}%,surname.ilike.%${filters.cleanQuery}%`)
+      }
+
+      const { data: people } = await peopleQuery
+
+      people?.forEach(person => {
+        searchResults.push({
+          id: person.id,
+          type: 'person',
+          title: `${person.given_name || ''} ${person.surname || ''}`.trim(),
+          subtitle: person.birth_place || undefined,
+          date: person.birth_date || undefined,
+          url: `/people/${person.id}`
+        })
+      })
+
+      // Search stories
+      let storiesQuery = supabase
+        .from('stories')
+        .select('id, title, created_at, occurred_on')
+        .eq('family_id', familyId)
+        .limit(5)
+
+      if (filters.cleanQuery) {
+        storiesQuery = storiesQuery.ilike('title', `%${filters.cleanQuery}%`)
+      }
+      if (filters.year) {
+        storiesQuery = storiesQuery.gte('occurred_on', `${filters.year}-01-01`)
+          .lte('occurred_on', `${filters.year}-12-31`)
+      }
+
+      const { data: stories } = await storiesQuery
+
+      stories?.forEach(story => {
+        searchResults.push({
+          id: story.id,
+          type: 'story',
+          title: story.title,
+          date: story.occurred_on || story.created_at,
+          url: `/stories/${story.id}`
+        })
+      })
+
+      // Search media
+      let mediaQuery = supabase
+        .from('media')
+        .select('id, file_name, mime_type, created_at')
+        .eq('family_id', familyId)
+        .limit(5)
+
+      if (filters.cleanQuery) {
+        mediaQuery = mediaQuery.ilike('file_name', `%${filters.cleanQuery}%`)
+      }
+
+      const { data: media } = await mediaQuery
+
+      media?.forEach(item => {
+        const type = item.mime_type?.startsWith('image/') ? 'photo' 
+          : item.mime_type?.startsWith('video/') ? 'video'
+          : item.mime_type?.startsWith('audio/') ? 'audio'
+          : 'photo'
+
+        searchResults.push({
+          id: item.id,
+          type,
+          title: item.file_name || 'Untitled',
+          date: item.created_at,
+          url: `/media?id=${item.id}`
+        })
+      })
+
+      // Search places if place filter is used
+      if (filters.place) {
+        const { data: places } = await supabase
+          .from('places')
+          .select('id, name, place_type')
+          .eq('family_id', familyId)
+          .ilike('name', `%${filters.place}%`)
+          .limit(5)
+
+        places?.forEach(place => {
+          searchResults.push({
+            id: place.id,
+            type: 'place',
+            title: place.name,
+            subtitle: place.place_type || undefined,
+            url: `/places/${place.id}`
+          })
+        })
+      }
+
+      setResults(searchResults)
+      track('search_performed', { 
+        query: searchQuery,
+        filters,
+        resultCount: searchResults.length
+      })
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      setIsSearching(false)
     }
   }
 
-  const handleSearch = () => {
-    if (!query.trim()) return
-    
-    track('search_submit', { query: query.trim() })
-    navigate(`/search?q=${encodeURIComponent(query.trim())}`)
-    setShowSuggestions(false)
-    setActiveIndex(-1)
-    inputRef.current?.blur()
+  const parseSearchFilters = (query: string) => {
+    const filters: { cleanQuery: string; year?: string; place?: string } = {
+      cleanQuery: query
+    }
+
+    const yearMatch = query.match(/year:(\d{4})/i)
+    if (yearMatch) {
+      filters.year = yearMatch[1]
+      filters.cleanQuery = filters.cleanQuery.replace(/year:\d{4}/gi, '').trim()
+    }
+
+    const placeMatch = query.match(/place:([^\s]+)/i)
+    if (placeMatch) {
+      filters.place = placeMatch[1]
+      filters.cleanQuery = filters.cleanQuery.replace(/place:[^\s]+/gi, '').trim()
+    }
+
+    return filters
   }
 
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    track('search_suggestion_click', { 
-      type: suggestion.type,
-      suggestion_id: suggestion.id
+  const getResultIcon = (type: SearchResult['type']) => {
+    switch (type) {
+      case 'person': return Users
+      case 'story': return FileText
+      case 'photo': return Image
+      case 'video': return Video
+      case 'audio': return Mic
+      case 'event': return Calendar
+      case 'place': return MapPin
+      case 'object': return Package
+      default: return FileText
+    }
+  }
+
+  const groupResults = () => {
+    const grouped: Record<string, SearchResult[]> = {}
+    results.forEach(result => {
+      const key = result.type
+      if (!grouped[key]) grouped[key] = []
+      grouped[key].push(result)
     })
-    
-    if (suggestion.url) {
-      navigate(suggestion.url)
-    }
-    
-    setShowSuggestions(false)
-    setActiveIndex(-1)
-    setQuery('')
-    inputRef.current?.blur()
+    return grouped
   }
 
-  const handleFocus = () => {
-    track('search_focus', { method: 'click' })
-    track('search_open', { source: 'header' })
-    if (suggestions.length > 0) {
-      setShowSuggestions(true)
-    }
+  const handleSelectResult = (result: SearchResult) => {
+    setOpen(false)
+    navigate(result.url)
+    track('search_result_click', {
+      type: result.type,
+      id: result.id
+    })
   }
 
   return (
-    <div ref={searchRef} className="relative w-full z-50">
-      <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-colors group-focus-within:text-foreground" />
-        <Input
-          data-search-input
-          ref={inputRef}
-          type="text"
-          placeholder="People, stories, places…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          className="!pl-16 pr-10 h-10 w-full border border-input bg-background rounded-lg text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-ring transition-all duration-200 sm:w-80 md:w-96"
-          role="combobox"
-          aria-expanded={showSuggestions}
-          aria-autocomplete="list"
-          aria-controls={showSuggestions ? 'search-suggestions' : undefined}
-        />
-        {isLoading && (
-          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-        )}
-      </div>
+    <>
+      <Button
+        variant="outline"
+        className="relative w-full justify-start text-sm text-muted-foreground h-9"
+        onClick={() => setOpen(true)}
+      >
+        <Search className="mr-2 h-4 w-4" />
+        <span className="hidden md:inline-flex">Search...</span>
+        <span className="md:hidden">Search</span>
+        <kbd className="pointer-events-none absolute right-2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+          <span className="text-xs">/</span>
+        </kbd>
+      </Button>
 
-      {showSuggestions && suggestions.length > 0 && typeof document !== 'undefined' &&
-        createPortal(
-          <SearchSuggestions
-            suggestions={suggestions}
-            activeIndex={activeIndex}
-            onSuggestionClick={handleSuggestionClick}
-            onSeeAll={() => handleSearch()}
-            containerStyle={dropdownStyle}
-          />,
-          document.body
-        )
-      }
-    </div>
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandInput 
+          placeholder={isCommand ? "Type a command..." : "Search or type > for commands..."} 
+          value={query}
+          onValueChange={setQuery}
+        />
+        <CommandList>
+          {!isCommand && results.length === 0 && query.length < 2 && (
+            <CommandEmpty>
+              <div className="text-center py-6 text-sm text-muted-foreground">
+                <div className="mb-2">Start typing to search or use:</div>
+                <div className="space-y-1 text-xs">
+                  <div><kbd className="px-1.5 py-0.5 bg-muted rounded">year:1992</kbd> to filter by year</div>
+                  <div><kbd className="px-1.5 py-0.5 bg-muted rounded">place:Melbourne</kbd> to filter by location</div>
+                  <div><kbd className="px-1.5 py-0.5 bg-muted rounded">{">"}</kbd> for quick commands</div>
+                </div>
+              </div>
+            </CommandEmpty>
+          )}
+          
+          {!isCommand && results.length === 0 && query.length >= 2 && !isSearching && (
+            <CommandEmpty>No results found for "{query}"</CommandEmpty>
+          )}
+
+          {isCommand && commands.length === 0 && (
+            <CommandEmpty>No commands found</CommandEmpty>
+          )}
+
+          {isCommand ? (
+            <CommandGroup heading="Commands">
+              {commands.map(cmd => (
+                <CommandItem
+                  key={cmd.id}
+                  onSelect={() => cmd.action()}
+                  className="flex items-center gap-3"
+                >
+                  <Command className="h-4 w-4" />
+                  <div className="flex-1">
+                    <div className="font-medium">{cmd.label}</div>
+                    <div className="text-xs text-muted-foreground">{cmd.description}</div>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : (
+            <>
+              {Object.entries(groupResults()).map(([type, items]) => {
+                const Icon = getResultIcon(type as SearchResult['type'])
+                return (
+                  <CommandGroup 
+                    key={type} 
+                    heading={type.charAt(0).toUpperCase() + type.slice(1) + 's'}
+                  >
+                    {items.map(result => (
+                      <CommandItem
+                        key={result.id}
+                        onSelect={() => handleSelectResult(result)}
+                        className="flex items-center gap-3"
+                      >
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{result.title}</div>
+                          {(result.subtitle || result.date) && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {result.subtitle}
+                              {result.subtitle && result.date && ' · '}
+                              {result.date && new Date(result.date).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )
+              })}
+            </>
+          )}
+        </CommandList>
+      </CommandDialog>
+    </>
   )
 }
