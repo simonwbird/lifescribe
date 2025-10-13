@@ -77,6 +77,8 @@ import EventDetail from "./pages/EventDetail";
 import EventUploadPage from "./pages/EventUploadPage";
 import PrintComposer from "./pages/PrintComposer";
 import DuplicatesPage from "./pages/DuplicatesPage";
+import Portfolio from "./pages/Portfolio";
+import Vault from "./pages/Vault";
 import Labs from "./pages/Labs";
 import LabsSpaces from "./pages/LabsSpaces";
 import LabsGuard from "./components/navigation/LabsGuard";

@@ -8578,6 +8578,420 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_access_conditions: {
+        Row: {
+          condition_type: string
+          created_at: string | null
+          family_id: string
+          id: string
+          is_unlocked: boolean | null
+          section_id: string
+          unlock_date: string | null
+          unlocked_at: string | null
+          unlocked_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          condition_type: string
+          created_at?: string | null
+          family_id: string
+          id?: string
+          is_unlocked?: boolean | null
+          section_id: string
+          unlock_date?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          condition_type?: string
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          is_unlocked?: boolean | null
+          section_id?: string
+          unlock_date?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_access_conditions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_access_conditions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "vault_access_conditions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "vault_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_access_log: {
+        Row: {
+          access_type: string
+          accessed_by: string
+          created_at: string | null
+          family_id: string
+          id: string
+          ip_address: unknown | null
+          item_id: string | null
+          metadata: Json | null
+          section_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          access_type: string
+          accessed_by: string
+          created_at?: string | null
+          family_id: string
+          id?: string
+          ip_address?: unknown | null
+          item_id?: string | null
+          metadata?: Json | null
+          section_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          access_type?: string
+          accessed_by?: string
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          ip_address?: unknown | null
+          item_id?: string | null
+          metadata?: Json | null
+          section_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_access_log_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_access_log_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "vault_access_log_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "vault_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_access_log_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "vault_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_checklist_items: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          checklist_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          description: string | null
+          family_id: string
+          id: string
+          is_completed: boolean | null
+          order_index: number | null
+          priority: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          checklist_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          family_id: string
+          id?: string
+          is_completed?: boolean | null
+          order_index?: number | null
+          priority?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          checklist_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          family_id?: string
+          id?: string
+          is_completed?: boolean | null
+          order_index?: number | null
+          priority?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "vault_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_checklist_items_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_checklist_items_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
+      vault_checklists: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          family_id: string
+          id: string
+          owner_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          family_id: string
+          id?: string
+          owner_id: string
+          title?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          family_id?: string
+          id?: string
+          owner_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_checklists_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_checklists_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
+      vault_delegates: {
+        Row: {
+          access_level: string
+          created_at: string | null
+          delegate_id: string
+          family_id: string
+          granted_by: string
+          id: string
+          is_active: boolean | null
+          section_id: string
+        }
+        Insert: {
+          access_level?: string
+          created_at?: string | null
+          delegate_id: string
+          family_id: string
+          granted_by: string
+          id?: string
+          is_active?: boolean | null
+          section_id: string
+        }
+        Update: {
+          access_level?: string
+          created_at?: string | null
+          delegate_id?: string
+          family_id?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean | null
+          section_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_delegates_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_delegates_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "vault_delegates_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "vault_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_items: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          encrypted_data: Json
+          family_id: string
+          file_path: string | null
+          id: string
+          item_type: string
+          section_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          encrypted_data: Json
+          family_id: string
+          file_path?: string | null
+          id?: string
+          item_type: string
+          section_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          encrypted_data?: Json
+          family_id?: string
+          file_path?: string | null
+          id?: string
+          item_type?: string
+          section_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_items_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_items_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "vault_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "vault_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vault_sections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          family_id: string
+          id: string
+          is_active: boolean | null
+          owner_id: string
+          section_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          family_id: string
+          id?: string
+          is_active?: boolean | null
+          owner_id: string
+          section_type: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          family_id?: string
+          id?: string
+          is_active?: boolean | null
+          owner_id?: string
+          section_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_sections_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vault_sections_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       weekly_digest_logs: {
         Row: {
           created_at: string
@@ -8832,6 +9246,10 @@ export type Database = {
           score: number
         }[]
       }
+      calculate_vault_progress: {
+        Args: { p_family_id: string; p_user_id: string }
+        Returns: Json
+      }
       check_digest_unlock_status: {
         Args: { p_family_id: string }
         Returns: boolean
@@ -8839,6 +9257,10 @@ export type Database = {
       check_snoozed_prompts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      check_vault_access: {
+        Args: { p_section_id: string; p_user_id: string }
+        Returns: boolean
       }
       cleanup_auth_rate_limits: {
         Args: Record<PropertyKey, never>
@@ -9195,6 +9617,15 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      log_vault_access: {
+        Args: {
+          p_access_type: string
+          p_item_id: string
+          p_metadata?: Json
+          p_section_id: string
+        }
+        Returns: string
       }
       pause_digest_30_days: {
         Args: { p_family_id: string; p_user_id: string }

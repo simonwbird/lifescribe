@@ -5,6 +5,7 @@ import Upcoming from './Upcoming'
 import { UncitedStoriesWidget } from '@/components/citations/UncitedStoriesWidget'
 import { DataHealthDashboard } from '@/components/admin/DataHealthDashboard'
 import { supabase } from '@/integrations/supabase/client'
+import VaultProgressMeter from '@/components/vault/VaultProgressMeter'
 
 export default function RightRail() {
   const [familyId, setFamilyId] = useState<string | null>(null)
@@ -33,6 +34,7 @@ export default function RightRail() {
   return (
     <div className="space-y-6">
       <ThisWeeksCaptures />
+      {familyId && <VaultProgressMeter familyId={familyId} />}
       {familyId && isAdmin && <DataHealthDashboard familyId={familyId} />}
       {familyId && <UncitedStoriesWidget familyId={familyId} />}
       <Suggestions />
