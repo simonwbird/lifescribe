@@ -3,6 +3,7 @@ import { Search, Plus, Users, Home, MessageSquare, ChefHat, Heart, MapPin } from
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -182,11 +183,13 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       setIsSearching(true)
       timeoutId = setTimeout(async () => {
         try {
+          console.log('Searching for:', query, 'in family:', familyId)
           const searchResults = await SearchService.search({
             query,
             familyId,
             limit: 8
           })
+          console.log('Search results:', searchResults)
           setResults(searchResults.results)
           setActiveIndex(actions.length) // Start with first search result
         } catch (error) {
@@ -253,6 +256,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent hideClose className="max-w-lg p-0">
+        <DialogTitle className="sr-only">Search and Commands</DialogTitle>
         <div className="border rounded-lg bg-background shadow-lg">
           {/* Search Input */}
           <div className="flex items-center border-b px-4">
