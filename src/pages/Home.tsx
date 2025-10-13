@@ -236,7 +236,7 @@ export default function Home() {
       }
 
       // Sort activities by creation time (most recent first)
-      activities.sort((a, b) => parseTimeAgo(a.time) - parseTimeAgo(b.time));
+      // Note: Will be sorted again after comments are added
       setActivities(activities);
 
       // Get recent comments
@@ -267,11 +267,11 @@ export default function Home() {
         });
       }
 
-      // Sort by time
+      // Sort by time - most recent first (descending order by timestamp)
       activities.sort((a, b) => {
         const timeA = new Date(a.time.includes('ago') ? Date.now() - parseTimeAgo(a.time) : a.time).getTime();
         const timeB = new Date(b.time.includes('ago') ? Date.now() - parseTimeAgo(b.time) : b.time).getTime();
-        return timeB - timeA;
+        return timeB - timeA; // Descending: newer timestamps (larger numbers) first
       });
 
       // Only add sample activities on initial load to prevent layout shifts
