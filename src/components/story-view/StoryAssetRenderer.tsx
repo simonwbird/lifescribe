@@ -29,6 +29,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const [isMuted, setIsMuted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
+  const hlsInstanceRef = useRef<any | null>(null)
 
   const getMimeFromUrl = (u?: string | null) => {
     if (!u) return undefined
@@ -58,6 +59,60 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       videoRef.current.play().catch(() => {})
     }
   }, [showVideo])
+
+  // HLS setup for m3u8 playback
+  useEffect(() => {
+    const videoEl = videoRef.current
+    if (!videoEl || asset.type !== 'video') return
+
+    const src = (asset.transcoded_url || asset.url) || ''
+    const isHls = src.endsWith('.m3u8')
+
+    // Clean up any existing hls instance
+    if (hlsInstanceRef.current) {
+      try { hlsInstanceRef.current.destroy() } catch {}
+      hlsInstanceRef.current = null
+    }
+
+    if (!isHls) return // nothing to do for MP4/WEBM
+
+    // Safari (native HLS)
+    if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+      videoEl.src = src
+      return
+    }
+
+    // Other browsers: use hls.js
+    let cancelled = false
+    ;(async () => {
+      try {
+        const Hls = (await import('hls.js')).default as any
+        if (Hls?.isSupported && Hls.isSupported()) {
+          if (cancelled) return
+          const hls = new Hls()
+          hlsInstanceRef.current = hls
+          hls.loadSource(src)
+          hls.attachMedia(videoEl)
+          hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
+            console.warn('HLS error', data?.type, data?.details)
+          })
+        } else {
+          setUnsupported(true)
+        }
+      } catch (err) {
+        console.error('Failed to initialize HLS', err)
+        setUnsupported(true)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      if (hlsInstanceRef.current) {
+        try { hlsInstanceRef.current.destroy() } catch {}
+        hlsInstanceRef.current = null
+      }
+    }
+  }, [asset.url, asset.transcoded_url, asset.type])
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -227,13 +282,15 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       const tester = document.createElement('video')
       const playable = candidates.find((c) => (c.type ? tester.canPlayType(c.type) !== '' : true)) || candidates[0]
       const playableUrl = playable.url
+      const isHls = playableUrl.endsWith('.m3u8')
 
       return (
         <div className="bg-secondary/50 rounded-lg overflow-hidden">
           <div className="relative aspect-video bg-black">
             <video
+              key={isHls ? 'hls' : playableUrl}
               ref={videoRef}
-              src={playableUrl}
+              src={isHls ? undefined : playableUrl}
               poster={asset.thumbnail_url || undefined}
               preload="metadata"
               playsInline
@@ -244,6 +301,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
               onPause={() => setIsPlaying(false)}
               onError={(e) => console.error('Video playback error', e)}
             />
+
             {!isPlaying && asset.thumbnail_url && (
               <button
                 type="button"

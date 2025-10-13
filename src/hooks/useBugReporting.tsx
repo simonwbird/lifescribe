@@ -236,9 +236,19 @@ export const useBugReporting = () => {
     };
 
     const captureConsoleLog = (level: ConsoleLog['level'], args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-      ).join(' ');
+      const message = args.map(arg => {
+        try {
+          if (arg instanceof Error) return `${arg.name}: ${arg.message}`;
+          if (typeof Element !== 'undefined' && arg instanceof Element) {
+            const tag = arg.tagName?.toLowerCase?.() || 'element';
+            const cls = (arg as HTMLElement).className || '';
+            return `<${tag} class="${cls}">`;
+          }
+          return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
+        } catch {
+          return String(arg);
+        }
+      }).join(' ');
 
       const logEntry: ConsoleLog = {
         level,
