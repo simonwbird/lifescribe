@@ -28,6 +28,7 @@ import { PageLayoutManager, BlockItem } from '@/components/person-page/PageLayou
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { QuickAddBar } from '@/components/person-page/QuickAddBar'
 import { PromptOfTheWeek } from '@/components/person-page/PromptOfTheWeek'
+import MemorySparkCard from '@/components/person-page/blocks/MemorySparkCard'
 import {
   QuickFactsWidget,
   TOCWidget,
@@ -780,18 +781,26 @@ export default function PersonPage() {
           />
         )}
 
-        {/* Simple Mode: Prompt of the Week */}
+        {/* Simple Mode: Prompt of the Week (Living) or Memory Spark (Tribute) */}
         {mode === 'simple' && (
-          <PromptOfTheWeek
-            personId={person.id}
-            onAnswer={(answer) => {
-              toast({
-                title: 'Answer recorded',
-                description: 'Your response has been saved'
-              })
-              console.log('Weekly prompt answer:', answer)
-            }}
-          />
+          <>
+            {person.status === 'living' ? (
+              <PromptOfTheWeek
+                personId={person.id}
+                onAnswer={(answer) => {
+                  toast({
+                    title: 'Answer recorded',
+                    description: 'Your response has been saved'
+                  })
+                  console.log('Weekly prompt answer:', answer)
+                }}
+              />
+            ) : (
+              <MemorySparkCard
+                person={person}
+              />
+            )}
+          </>
         )}
 
         {/* Pinned Blocks */}
