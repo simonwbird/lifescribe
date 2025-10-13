@@ -3849,6 +3849,51 @@ export type Database = {
           },
         ]
       }
+      merge_history: {
+        Row: {
+          canonical_id: string
+          created_at: string
+          duplicate_id: string
+          entity_type: string
+          id: string
+          merged_data: Json
+          performed_at: string
+          performed_by: string
+          reason: string
+          undo_reason: string | null
+          undone_at: string | null
+          undone_by: string | null
+        }
+        Insert: {
+          canonical_id: string
+          created_at?: string
+          duplicate_id: string
+          entity_type: string
+          id?: string
+          merged_data: Json
+          performed_at?: string
+          performed_by: string
+          reason: string
+          undo_reason?: string | null
+          undone_at?: string | null
+          undone_by?: string | null
+        }
+        Update: {
+          canonical_id?: string
+          created_at?: string
+          duplicate_id?: string
+          entity_type?: string
+          id?: string
+          merged_data?: Json
+          performed_at?: string
+          performed_by?: string
+          reason?: string
+          undo_reason?: string | null
+          undone_at?: string | null
+          undone_by?: string | null
+        }
+        Relationships: []
+      }
       merge_proposals: {
         Row: {
           collision_score: number
@@ -4530,6 +4575,7 @@ export type Database = {
           indexability: string
           is_living: boolean | null
           last_indexed_at: string | null
+          merged_into: string | null
           middle_name: string | null
           notes: string | null
           og_description: string | null
@@ -4578,6 +4624,7 @@ export type Database = {
           indexability?: string
           is_living?: boolean | null
           last_indexed_at?: string | null
+          merged_into?: string | null
           middle_name?: string | null
           notes?: string | null
           og_description?: string | null
@@ -4626,6 +4673,7 @@ export type Database = {
           indexability?: string
           is_living?: boolean | null
           last_indexed_at?: string | null
+          merged_into?: string | null
           middle_name?: string | null
           notes?: string | null
           og_description?: string | null
@@ -4658,6 +4706,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_my_roles"
             referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "people_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "people_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "people_theme_id_fkey"

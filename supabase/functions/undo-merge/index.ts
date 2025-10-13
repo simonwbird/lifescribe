@@ -1,167 +1,129 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { mergeId } = await req.json();
-
-    if (!mergeId) {
-      return new Response(JSON.stringify({ error: 'Merge ID required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Use service role for undo operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    // Get merge record
-    const { data: merge, error: fetchError } = await supabaseAdmin
-      .from('person_merges')
+    const { mergeId, undoneBy } = await req.json()
+
+    console.log('Starting undo merge:', { mergeId, undoneBy })
+
+    // Get merge history
+    const { data: mergeHistory, error: historyError } = await supabaseClient
+      .from('merge_history')
       .select('*')
       .eq('id', mergeId)
-      .single();
+      .is('undone_at', null)
+      .single()
 
-    if (fetchError || !merge) {
-      return new Response(JSON.stringify({ error: 'Merge not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (historyError || !mergeHistory) {
+      throw new Error('Merge record not found or already undone')
     }
 
-    // Verify user is admin of the family
-    const { data: membership } = await supabaseClient
-      .from('members')
-      .select('role')
-      .eq('family_id', merge.family_id)
-      .eq('profile_id', user.id)
-      .single();
+    const { canonical_id, duplicate_id, entity_type } = mergeHistory
 
-    if (!membership || membership.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Check if undo is still allowed
-    if (!merge.can_undo || new Date(merge.undo_expires_at) < new Date()) {
-      return new Response(JSON.stringify({ error: 'Undo period has expired' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (merge.undone_at) {
-      return new Response(JSON.stringify({ error: 'Merge already undone' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const mergeData = merge.merge_data;
-
-    // Restore source person
-    const { data: restoredPerson, error: restoreError } = await supabaseAdmin
+    // Restore duplicate record
+    const { error: restoreError } = await supabaseClient
       .from('people')
-      .insert(mergeData.source)
-      .select()
-      .single();
+      .update({ 
+        merged_into: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', duplicate_id)
 
-    if (restoreError) throw restoreError;
+    if (restoreError) {
+      console.error('Restore failed:', restoreError)
+      throw restoreError
+    }
 
-    // Restore target person to original state
-    await supabaseAdmin
-      .from('people')
-      .update(mergeData.target)
-      .eq('id', merge.target_person_id);
+    // Restore entity_links (transfer back)
+    const { error: linksError } = await supabaseClient
+      .from('entity_links')
+      .update({ entity_id: duplicate_id })
+      .eq('entity_id', canonical_id)
+      .gte('created_at', mergeHistory.performed_at)
 
-    // Remove redirect
-    await supabaseAdmin
-      .from('person_redirects')
-      .delete()
-      .eq('merge_id', mergeId);
+    if (linksError) console.warn('Entity links restore warning:', linksError)
+
+    // Restore relationships
+    const { error: relFromError } = await supabaseClient
+      .from('relationships')
+      .update({ from_person_id: duplicate_id })
+      .eq('from_person_id', canonical_id)
+      .gte('created_at', mergeHistory.performed_at)
+
+    if (relFromError) console.warn('Relationships restore warning:', relFromError)
+
+    const { error: relToError } = await supabaseClient
+      .from('relationships')
+      .update({ to_person_id: duplicate_id })
+      .eq('to_person_id', canonical_id)
+      .gte('created_at', mergeHistory.performed_at)
+
+    if (relToError) console.warn('Relationships restore warning:', relToError)
 
     // Mark merge as undone
-    await supabaseAdmin
-      .from('person_merges')
+    const { error: undoError } = await supabaseClient
+      .from('merge_history')
       .update({
         undone_at: new Date().toISOString(),
-        undone_by: user.id,
+        undone_by: undoneBy
       })
-      .eq('id', mergeId);
+      .eq('id', mergeId)
 
-    // Restore duplicate candidate if it exists
-    await supabaseAdmin
+    if (undoError) throw undoError
+
+    // Update duplicate_candidates status
+    const { error: candidateError } = await supabaseClient
       .from('duplicate_candidates')
       .update({ status: 'pending' })
-      .or(`person_a_id.eq.${merge.source_person_id},person_b_id.eq.${merge.source_person_id}`)
-      .eq('family_id', merge.family_id);
+      .or(`person_a_id.eq.${duplicate_id},person_b_id.eq.${duplicate_id}`)
+
+    if (candidateError) console.warn('Candidate restore warning:', candidateError)
 
     // Log audit event
-    await supabaseAdmin.rpc('log_audit_event', {
-      p_actor_id: user.id,
+    const { error: auditError } = await supabaseClient.rpc('log_audit_event', {
+      p_actor_id: undoneBy,
       p_action: 'PERSON_MERGE_UNDO',
-      p_entity_type: 'person_merge',
+      p_entity_type: 'merge_history',
       p_entity_id: mergeId,
-      p_family_id: merge.family_id,
       p_details: {
-        source_id: merge.source_person_id,
-        target_id: merge.target_person_id,
+        canonical_id,
+        duplicate_id
       },
-      p_risk_score: 5,
-    });
+      p_risk_score: 20
+    })
+
+    if (auditError) console.warn('Audit log warning:', auditError)
+
+    console.log('Undo completed successfully')
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        restoredPersonId: restoredPerson.id,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+      JSON.stringify({ success: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
   } catch (error) {
-    console.error('Error undoing merge:', error);
+    console.error('Undo error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    );
+    )
   }
-});
+})

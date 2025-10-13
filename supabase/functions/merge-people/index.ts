@@ -1,210 +1,142 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { 
-      sourcePersonId, 
-      targetPersonId, 
-      familyId, 
-      mergeData,
-      candidateId,
-      confidenceScore,
-      matchReasons
-    } = await req.json();
-
-    if (!sourcePersonId || !targetPersonId || !familyId || !mergeData) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Verify user is admin
-    const { data: membership } = await supabaseClient
-      .from('members')
-      .select('role')
-      .eq('family_id', familyId)
-      .eq('profile_id', user.id)
-      .single();
-
-    if (!membership || membership.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Use service role for merge operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    // Get source and target person data for backup
-    const { data: sourcePerson } = await supabaseAdmin
-      .from('people')
-      .select('*')
-      .eq('id', sourcePersonId)
-      .single();
+    const { canonicalId, duplicateId, mergedData, reason, performedBy } = await req.json()
 
-    const { data: targetPerson } = await supabaseAdmin
-      .from('people')
-      .select('*')
-      .eq('id', targetPersonId)
-      .single();
+    console.log('Starting merge:', { canonicalId, duplicateId, performedBy })
 
-    if (!sourcePerson || !targetPerson) {
-      return new Response(JSON.stringify({ error: 'Person not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Update target person with merged data
-    const { error: updateError } = await supabaseAdmin
-      .from('people')
-      .update(mergeData.targetData)
-      .eq('id', targetPersonId);
-
-    if (updateError) throw updateError;
-
-    // Move relationships from source to target
-    await supabaseAdmin
-      .from('relationships')
-      .update({ from_person_id: targetPersonId })
-      .eq('from_person_id', sourcePersonId);
-
-    await supabaseAdmin
-      .from('relationships')
-      .update({ to_person_id: targetPersonId })
-      .eq('to_person_id', sourcePersonId);
-
-    // Move face tags
-    await supabaseAdmin
-      .from('face_tags')
-      .update({ person_id: targetPersonId })
-      .eq('person_id', sourcePersonId);
-
-    // Move entity links
-    await supabaseAdmin
-      .from('entity_links')
-      .update({ entity_id: targetPersonId })
-      .eq('entity_id', sourcePersonId)
-      .eq('entity_type', 'person');
-
-    // Create merge record
-    const { data: merge, error: mergeError } = await supabaseAdmin
-      .from('person_merges')
+    // Create merge history record
+    const { data: mergeRecord, error: mergeError } = await supabaseClient
+      .from('merge_history')
       .insert({
-        family_id: familyId,
-        source_person_id: sourcePersonId,
-        target_person_id: targetPersonId,
-        merged_by: user.id,
-        merge_data: {
-          source: sourcePerson,
-          target: targetPerson,
-          merged: mergeData,
-        },
-        confidence_score: confidenceScore,
-        merge_reasons: matchReasons,
+        entity_type: 'person',
+        canonical_id: canonicalId,
+        duplicate_id: duplicateId,
+        merged_data: mergedData,
+        reason,
+        performed_by: performedBy
       })
       .select()
-      .single();
+      .single()
 
-    if (mergeError) throw mergeError;
-
-    // Create redirect
-    await supabaseAdmin
-      .from('person_redirects')
-      .insert({
-        old_person_id: sourcePersonId,
-        new_person_id: targetPersonId,
-        family_id: familyId,
-        merge_id: merge.id,
-      });
-
-    // Mark duplicate candidate as merged if provided
-    if (candidateId) {
-      await supabaseAdmin
-        .from('duplicate_candidates')
-        .update({
-          status: 'merged',
-          reviewed_by: user.id,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', candidateId);
+    if (mergeError) {
+      console.error('Merge record creation failed:', mergeError)
+      throw mergeError
     }
 
-    // Delete source person (soft delete via marking)
-    await supabaseAdmin
+    console.log('Merge record created:', mergeRecord.id)
+
+    // Update canonical record with merged data
+    const { error: updateError } = await supabaseClient
       .from('people')
-      .delete()
-      .eq('id', sourcePersonId);
+      .update(mergedData)
+      .eq('id', canonicalId)
 
-    // Log audit event
-    await supabaseAdmin.rpc('log_audit_event', {
-      p_actor_id: user.id,
+    if (updateError) {
+      console.error('Canonical update failed:', updateError)
+      throw updateError
+    }
+
+    // Transfer all entity_links from duplicate to canonical
+    const { error: linksError } = await supabaseClient
+      .from('entity_links')
+      .update({ entity_id: canonicalId })
+      .eq('entity_id', duplicateId)
+      .eq('entity_type', 'person')
+
+    if (linksError) console.warn('Entity links transfer warning:', linksError)
+
+    // Transfer all relationships
+    const { error: relFromError } = await supabaseClient
+      .from('relationships')
+      .update({ from_person_id: canonicalId })
+      .eq('from_person_id', duplicateId)
+
+    if (relFromError) console.warn('Relationships from transfer warning:', relFromError)
+
+    const { error: relToError } = await supabaseClient
+      .from('relationships')
+      .update({ to_person_id: canonicalId })
+      .eq('to_person_id', duplicateId)
+
+    if (relToError) console.warn('Relationships to transfer warning:', relToError)
+
+    // Mark duplicate as merged
+    const { error: deleteError } = await supabaseClient
+      .from('people')
+      .update({ 
+        merged_into: canonicalId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', duplicateId)
+
+    if (deleteError) {
+      console.error('Duplicate marking failed:', deleteError)
+      throw deleteError
+    }
+
+    // Update duplicate_candidates status
+    const { error: candidateError } = await supabaseClient
+      .from('duplicate_candidates')
+      .update({ 
+        status: 'merged',
+        reviewed_by: performedBy,
+        reviewed_at: new Date().toISOString()
+      })
+      .or(`person_a_id.eq.${duplicateId},person_b_id.eq.${duplicateId}`)
+
+    if (candidateError) console.warn('Candidate update warning:', candidateError)
+
+    // Log to audit
+    const { error: auditError } = await supabaseClient.rpc('log_audit_event', {
+      p_actor_id: performedBy,
       p_action: 'PERSON_MERGE',
-      p_entity_type: 'person_merge',
-      p_entity_id: merge.id,
-      p_family_id: familyId,
+      p_entity_type: 'merge_history',
+      p_entity_id: mergeRecord.id,
       p_details: {
-        source_id: sourcePersonId,
-        target_id: targetPersonId,
-        confidence: confidenceScore,
+        canonical_id: canonicalId,
+        duplicate_id: duplicateId,
+        reason
       },
-      p_risk_score: 10,
-    });
+      p_risk_score: 15
+    })
+
+    if (auditError) console.warn('Audit log warning:', auditError)
+
+    console.log('Merge completed successfully:', mergeRecord.id)
 
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         success: true,
-        mergeId: merge.id,
-        targetPersonId,
+        mergeId: mergeRecord.id
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
   } catch (error) {
-    console.error('Error merging people:', error);
+    console.error('Merge error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    );
+    )
   }
-});
+})
