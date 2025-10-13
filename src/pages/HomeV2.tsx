@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { TopBar } from '@/components/home/TopBar'
 import { HeroStrip } from '@/components/home/HeroStrip'
+import { SmartFeed } from '@/components/home/SmartFeed'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function HomeV2() {
@@ -94,11 +95,9 @@ export default function HomeV2() {
       <TopBar familyId={familyId} userId={userId} />
       <HeroStrip familyId={familyId} userId={userId} />
 
-      {/* Feed will go here - out of scope for this task */}
-      <div className="container px-4 py-8">
-        <div className="text-center text-muted-foreground">
-          <p className="text-sm">Family feed coming soon...</p>
-        </div>
+      {/* Smart Feed */}
+      <div className="container px-4 py-6 max-w-2xl mx-auto">
+        <SmartFeed familyId={familyId} userId={userId} />
       </div>
     </div>
   )
