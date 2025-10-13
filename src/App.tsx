@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import LoginPageEnhanced from "./pages/auth/LoginPageEnhanced";
 import Landing from "./pages/Landing";
+import SitemapXML from "./pages/SitemapXML";
 
 // Lazy load heavy pages for better initial load performance
 const Home = () => <LazyRoute factory={() => import("./pages/Home")} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
@@ -15,6 +15,7 @@ import { StoryAssetRenderer } from '@/components/story-view/StoryAssetRenderer'
 import { PersonChips } from '@/components/story-view/PersonChips'
 import { formatForUser } from '@/utils/date'
 import ReactionBar from '@/components/ReactionBar'
+import { StoryPageSEO } from '@/components/seo/StoryPageSEO'
 
 export default function StoryDetail() {
   const { id } = useParams<{ id: string }>()
@@ -27,6 +28,26 @@ export default function StoryDetail() {
   const [loading, setLoading] = useState(true)
   const [attachModalOpen, setAttachModalOpen] = useState(false)
   const [processingState, setProcessingState] = useState<string>('ready')
+  const [familyName, setFamilyName] = useState<string>('')
+
+  // Compute OG image from story assets
+  const ogImage = useMemo(() => {
+    if (!assets.length) return null
+    
+    // Use thumbnail_url if it's a video, otherwise use the first image
+    const firstVisualAsset = assets.find(a => a.type === 'video' || a.type === 'image')
+    if (!firstVisualAsset) return null
+    
+    if (firstVisualAsset.type === 'video' && firstVisualAsset.thumbnail_url) {
+      return firstVisualAsset.thumbnail_url
+    }
+    
+    if (firstVisualAsset.type === 'image' && firstVisualAsset.url) {
+      return firstVisualAsset.url
+    }
+    
+    return null
+  }, [assets])
 
   useEffect(() => {
     const getStory = async () => {
@@ -45,6 +66,19 @@ export default function StoryDetail() {
         if (data) {
           setStory(data)
           setProcessingState((data as any).processing_state || 'ready')
+
+          // Load family name for SEO
+          if ((data as any).family_id) {
+            const { data: familyData } = await supabase
+              .from('families')
+              .select('name')
+              .eq('id', (data as any).family_id)
+              .single()
+            
+            if (familyData) {
+              setFamilyName(familyData.name || '')
+            }
+          }
 
           // Load story assets
           const { data: assetsData } = await supabase
