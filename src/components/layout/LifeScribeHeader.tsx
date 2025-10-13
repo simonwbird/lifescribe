@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Search, 
   Bell, 
   Plus, 
   HelpCircle, 
@@ -21,11 +20,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { EnhancedGlobalSearch } from '@/components/search/EnhancedGlobalSearch';
 
 interface UserData {
   profile: { full_name: string; avatar_url: string } | null;
@@ -36,7 +35,6 @@ export default function LifeScribeHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
 
   // Fetch user and family data
   const { data: userData } = useQuery<UserData | null>({
@@ -97,33 +95,9 @@ export default function LifeScribeHeader() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Global keyboard shortcut for search (/)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault();
-        document.getElementById('global-search')?.focus();
-      }
-      if (e.key === 'Escape' && searchFocused) {
-        document.getElementById('global-search')?.blur();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [searchFocused]);
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/auth/login');
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const searchValue = (e.target as HTMLFormElement).search.value;
-    if (searchValue) {
-      navigate(`/search?q=${encodeURIComponent(searchValue)}`);
-    }
   };
 
   return (
@@ -204,31 +178,10 @@ export default function LifeScribeHeader() {
           )}
         </div>
 
-        {/* Center Section: Search */}
-        <form
-          onSubmit={handleSearch}
-          className="flex-1 max-w-md mx-auto hidden md:block"
-        >
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              id="global-search"
-              name="search"
-              type="search"
-              placeholder="Search stories, people, places... (Press / to focus)"
-              className="pl-10 pr-4 h-9 w-full"
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-              aria-label="Global search"
-            />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden xl:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              /
-            </kbd>
-          </div>
-        </form>
+        {/* Center Section: Enhanced Global Search */}
+        <div className="flex-1 max-w-md mx-auto hidden md:block">
+          <EnhancedGlobalSearch />
+        </div>
 
         {/* Right Section: Actions & User Menu */}
         <div className="flex items-center gap-1 md:gap-2">
@@ -345,21 +298,7 @@ export default function LifeScribeHeader() {
 
       {/* Mobile Search Bar (shows below header on mobile) */}
       <div className="md:hidden border-t px-3 py-2 bg-background">
-        <form onSubmit={handleSearch}>
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              name="search"
-              type="search"
-              placeholder="Search..."
-              className="pl-10 pr-4 h-9 w-full"
-              aria-label="Mobile search"
-            />
-          </div>
-        </form>
+        <EnhancedGlobalSearch />
       </div>
     </header>
   );
