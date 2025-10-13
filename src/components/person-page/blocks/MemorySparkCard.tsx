@@ -1,13 +1,8 @@
-import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Shuffle, Pencil, Mic, Camera } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-
-interface MemorySpark {
-  id: string
-  text: string
-}
+import { useMemorySpark } from '@/hooks/useMemorySpark'
 
 interface MemorySparkCardProps {
   person: {
@@ -15,53 +10,51 @@ interface MemorySparkCardProps {
     first_name?: string
     preferred_name?: string
     full_name?: string
+    birth_date?: string
+    death_date?: string
+  }
+  viewer?: {
+    relationship_to_person?: string
+  }
+  context?: {
+    type?: 'photo' | 'place' | 'date'
+    place?: string
   }
 }
 
-// Sample memory sparks - in production these would come from a database
-const MEMORY_SPARKS: MemorySpark[] = [
-  { id: '1', text: 'Tell us a moment that still makes you smile.' },
-  { id: '2', text: 'Share a time when they made you laugh.' },
-  { id: '3', text: 'What lesson did they teach you that you still carry today?' },
-  { id: '4', text: 'Describe a favorite tradition or ritual you shared.' },
-  { id: '5', text: 'What song, smell, or place reminds you of them?' },
-  { id: '6', text: 'Share a story that captures their spirit.' },
-  { id: '7', text: 'What would you want others to know about them?' },
-  { id: '8', text: 'Tell us about a time they were there for you.' },
-  { id: '9', text: 'What did they love to talk about?' },
-  { id: '10', text: 'Share a memory from a special occasion together.' }
-]
-
-export default function MemorySparkCard({ person }: MemorySparkCardProps) {
-  const [currentSpark, setCurrentSpark] = useState<MemorySpark>(MEMORY_SPARKS[0])
+export default function MemorySparkCard({ person, viewer, context }: MemorySparkCardProps) {
   const navigate = useNavigate()
+  const { currentSpark, interpolatedText, loading, shuffle } = useMemorySpark(person, viewer, context)
   
   const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || 'them'
 
-  useEffect(() => {
-    // Randomly select a memory spark on mount
-    const randomSpark = MEMORY_SPARKS[Math.floor(Math.random() * MEMORY_SPARKS.length)]
-    setCurrentSpark(randomSpark)
-  }, [])
-
-  const handleShuffle = () => {
-    // Pick a different spark
-    let newSpark = currentSpark
-    while (newSpark.id === currentSpark.id && MEMORY_SPARKS.length > 1) {
-      newSpark = MEMORY_SPARKS[Math.floor(Math.random() * MEMORY_SPARKS.length)]
-    }
-    setCurrentSpark(newSpark)
-  }
-
   const handleCapture = (type: 'text' | 'voice' | 'photo') => {
+    if (!interpolatedText) return
+    
     // Navigate to story creation with the memory spark as a prompt
     const params = new URLSearchParams({
       type,
       promptTitle: `Share a memory of ${firstName}`,
-      prompt_text: currentSpark.text,
+      prompt_text: interpolatedText,
       person_id: person.id
     })
     navigate(`/stories/new?${params.toString()}`)
+  }
+
+  if (loading) {
+    return (
+      <Card className="border-2 bg-background p-6" data-block="memory_spark">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-muted rounded w-1/3" />
+          <div className="h-6 bg-muted rounded w-full" />
+          <div className="h-10 bg-muted rounded w-1/4" />
+        </div>
+      </Card>
+    )
+  }
+
+  if (!currentSpark || !interpolatedText) {
+    return null
   }
 
   return (
@@ -72,7 +65,7 @@ export default function MemorySparkCard({ person }: MemorySparkCardProps) {
         </div>
         
         <div className="text-xl font-medium leading-relaxed text-foreground">
-          {currentSpark.text}
+          {interpolatedText}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -109,7 +102,7 @@ export default function MemorySparkCard({ person }: MemorySparkCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleShuffle}
+            onClick={shuffle}
             className="ml-auto text-xs opacity-70 hover:opacity-100"
           >
             <Shuffle className="w-3 h-3 mr-1" />
