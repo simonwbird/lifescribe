@@ -1,19 +1,29 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
-import StoryCard from '@/components/StoryCard'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Link as LinkIcon } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ArrowLeft, Link as LinkIcon, Calendar, MapPin, Lock, Globe, Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Story, Profile } from '@/lib/types'
 import { AttachToEntityModal } from '@/components/entity/AttachToEntityModal'
 import { StoryComments } from '@/components/story/StoryComments'
+import { StoryAssetRenderer } from '@/components/story-view/StoryAssetRenderer'
+import { PersonChips } from '@/components/story-view/PersonChips'
+import { formatForUser } from '@/utils/date'
+import ReactionBar from '@/components/ReactionBar'
 
 export default function StoryDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [story, setStory] = useState<(Story & { profiles: Profile }) | null>(null)
+  const [assets, setAssets] = useState<any[]>([])
+  const [peopleTags, setPeopleTags] = useState<any[]>([])
+  const [prompt, setPrompt] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [attachModalOpen, setAttachModalOpen] = useState(false)
   const [processingState, setProcessingState] = useState<string>('ready')
@@ -35,6 +45,48 @@ export default function StoryDetail() {
         if (data) {
           setStory(data)
           setProcessingState((data as any).processing_state || 'ready')
+
+          // Load story assets
+          const { data: assetsData } = await supabase
+            .from('story_assets' as any)
+            .select('*')
+            .eq('story_id', id)
+            .order('position', { ascending: true })
+
+          if (assetsData) {
+            setAssets(assetsData)
+          }
+
+          // Load people tags
+          const { data: tagsData } = await supabase
+            .from('person_story_links')
+            .select(`
+              person_id,
+              role,
+              people (
+                id,
+                given_name,
+                surname
+              )
+            `)
+            .eq('story_id', id)
+
+          if (tagsData) {
+            setPeopleTags(tagsData)
+          }
+
+          // Load prompt if exists
+          if ((data as any).prompt_id) {
+            const { data: promptData } = await supabase
+              .from('prompts')
+              .select('*')
+              .eq('id', (data as any).prompt_id)
+              .single()
+
+            if (promptData) {
+              setPrompt(promptData)
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching story:', error)
@@ -67,6 +119,33 @@ export default function StoryDetail() {
 
     return () => clearInterval(pollInterval)
   }, [id, processingState])
+
+  const handlePersonClick = (personId: string, personName: string) => {
+    setSearchParams({ person: personId, personName })
+    navigate(`/feed?person=${personId}&personName=${encodeURIComponent(personName)}`)
+  }
+
+  const getPrivacyIcon = (privacy?: string) => {
+    switch (privacy) {
+      case 'public':
+        return <Globe className="h-4 w-4" />
+      case 'link_only':
+        return <Share2 className="h-4 w-4" />
+      default:
+        return <Lock className="h-4 w-4" />
+    }
+  }
+
+  const getPrivacyLabel = (privacy?: string) => {
+    switch (privacy) {
+      case 'public':
+        return 'Public'
+      case 'link_only':
+        return 'Link-only'
+      default:
+        return 'Family only'
+    }
+  }
 
   if (loading) {
     return (
@@ -105,7 +184,7 @@ export default function StoryDetail() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="mb-6 flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -139,18 +218,128 @@ export default function StoryDetail() {
               </p>
             </div>
           )}
-          
-          <StoryCard 
-            story={story} 
-            showFullScreenInteractions={true}
-          />
-          
-          {/* Comments Section */}
-          <div className="mt-6">
-            <StoryComments 
-              storyId={story.id}
-              familyId={story.family_id}
-            />
+
+          <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+            {/* Main Content */}
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="pt-6 space-y-6">
+                  {/* Author */}
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={story.profiles.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {story.profiles.full_name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{story.profiles.full_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(story.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <h1 className="text-2xl md:text-3xl font-bold">{story.title}</h1>
+
+                  {/* Content/Body Text */}
+                  {story.content && (
+                    <div className="prose max-w-none">
+                      <p className="whitespace-pre-wrap text-base leading-relaxed">{story.content}</p>
+                    </div>
+                  )}
+
+                  {/* Story Assets */}
+                  {assets.length > 0 && (
+                    <div className="space-y-4">
+                      {assets.map((asset) => (
+                        <StoryAssetRenderer key={asset.id} asset={asset} />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reactions */}
+                  <ReactionBar 
+                    targetType="story" 
+                    targetId={story.id}
+                    familyId={story.family_id}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Comments */}
+              <StoryComments 
+                storyId={story.id}
+                familyId={story.family_id}
+              />
+            </div>
+
+            {/* Right Rail - Metadata */}
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  {/* People */}
+                  {peopleTags.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">People</h3>
+                      <PersonChips 
+                        tags={peopleTags}
+                        onPersonClick={handlePersonClick}
+                      />
+                    </div>
+                  )}
+
+                  {/* Date */}
+                  {(story as any).occurred_on && (
+                    <div className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Date</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date((story as any).occurred_on).toLocaleDateString()}
+                          {(story as any).is_approx && ' (approx)'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Place */}
+                  {(story as any).place_text && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Place</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(story as any).place_text}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Privacy */}
+                  <div className="flex items-start gap-2">
+                    {getPrivacyIcon((story as any).privacy)}
+                    <div>
+                      <p className="text-sm font-medium">Privacy</p>
+                      <p className="text-sm text-muted-foreground">
+                        {getPrivacyLabel((story as any).privacy)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Prompt */}
+                  {prompt && (
+                    <div className="pt-4 border-t border-border">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Responding to prompt
+                      </p>
+                      <p className="text-sm italic">"{prompt.title}"</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
