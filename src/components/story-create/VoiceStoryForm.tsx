@@ -24,7 +24,7 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: new Date(), yearOnly: false })
+  const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: new Date(), precision: 'exact', yearOnly: false })
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const [duration, setDuration] = useState(0)
   const [draftId, setDraftId] = useState<string | null>(null)

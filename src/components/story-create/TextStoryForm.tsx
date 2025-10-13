@@ -22,7 +22,7 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: null, yearOnly: false })
+  const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: null, precision: 'exact', yearOnly: false })
   
   // Check if loading a draft
   const draftId = searchParams.get('draft')
@@ -53,6 +53,7 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
       if (data.occurred_on) {
         setDateValue({
           date: new Date(data.occurred_on),
+          precision: data.is_approx ? 'circa' : 'exact',
           yearOnly: data.is_approx || false
         })
       }

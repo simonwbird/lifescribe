@@ -2103,6 +2103,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          default_privacy: Database["public"]["Enums"]["story_privacy"] | null
           description: string | null
           id: string
           locale: string | null
@@ -2116,6 +2117,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          default_privacy?: Database["public"]["Enums"]["story_privacy"] | null
           description?: string | null
           id?: string
           locale?: string | null
@@ -2129,6 +2131,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          default_privacy?: Database["public"]["Enums"]["story_privacy"] | null
           description?: string | null
           id?: string
           locale?: string | null
@@ -6884,6 +6887,8 @@ export type Database = {
           occurred_precision:
             | Database["public"]["Enums"]["date_precision"]
             | null
+          place_text: string | null
+          privacy: Database["public"]["Enums"]["story_privacy"] | null
           profile_id: string
           prompt_id: string | null
           prompt_text: string | null
@@ -6905,6 +6910,8 @@ export type Database = {
           occurred_precision?:
             | Database["public"]["Enums"]["date_precision"]
             | null
+          place_text?: string | null
+          privacy?: Database["public"]["Enums"]["story_privacy"] | null
           profile_id: string
           prompt_id?: string | null
           prompt_text?: string | null
@@ -6926,6 +6933,8 @@ export type Database = {
           occurred_precision?:
             | Database["public"]["Enums"]["date_precision"]
             | null
+          place_text?: string | null
+          privacy?: Database["public"]["Enums"]["story_privacy"] | null
           profile_id?: string
           prompt_id?: string | null
           prompt_text?: string | null
@@ -8776,6 +8785,7 @@ export type Database = {
         | "author"
         | "photographer"
         | "videographer"
+      story_privacy: "private" | "link_only" | "public"
       targeting_type: "role" | "country" | "cohort" | "family_id" | "user_id"
       visit_occasion: "holiday" | "celebration" | "reunion" | "other"
     }
@@ -9119,6 +9129,7 @@ export const Constants = {
         "photographer",
         "videographer",
       ],
+      story_privacy: ["private", "link_only", "public"],
       targeting_type: ["role", "country", "cohort", "family_id", "user_id"],
       visit_occasion: ["holiday", "celebration", "reunion", "other"],
     },

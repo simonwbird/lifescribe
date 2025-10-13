@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { uploadMediaFile } from '@/lib/media'
-import { useComposerState, ComposerMode } from '@/hooks/useComposerState'
+import { useComposerState, ComposerMode, StoryPrivacy } from '@/hooks/useComposerState'
 import { PromptBanner } from './PromptBanner'
 import { ComposerFooter } from './ComposerFooter'
 import { ContextPanel } from './ContextPanel'
@@ -25,19 +25,39 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
   const [promptTitle, setPromptTitle] = useState<string | null>(null)
   const [showPromptBanner, setShowPromptBanner] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | undefined>()
+  const [defaultPrivacy, setDefaultPrivacy] = useState<StoryPrivacy>('private')
 
   const { state, updateState, switchMode, clearState, hasContent } = useComposerState(
     (searchParams.get('type') as ComposerMode) || 'text'
   )
 
-  // Load current user
+  // Load current user and family default privacy
   useEffect(() => {
     async function loadUser() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) setCurrentUserId(user.id)
     }
+    
+    async function loadFamilyDefaults() {
+      try {
+        const { data, error } = await supabase
+          .from('families')
+          .select('default_privacy')
+          .eq('id', familyId)
+          .maybeSingle()
+        
+        if (!error && data?.default_privacy) {
+          setDefaultPrivacy(data.default_privacy as StoryPrivacy)
+          updateState({ privacy: data.default_privacy as StoryPrivacy })
+        }
+      } catch (e) {
+        console.error('Failed to load family defaults:', e)
+      }
+    }
+    
     loadUser()
-  }, [])
+    loadFamilyDefaults()
+  }, [familyId])
 
   // Load prompt if prompt_id in URL
   useEffect(() => {
@@ -121,9 +141,11 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
           title: state.title.trim(),
           content: state.content.trim() || state.transcript.trim() || null,
           occurred_on: occurredDate,
-          is_approx: state.dateValue.yearOnly,
+          is_approx: state.dateValue.precision === 'circa',
+          place_text: state.placeText.trim() || null,
+          privacy: state.privacy,
           status: asDraft ? 'draft' : 'published'
-        })
+        } as any)
         .select()
         .single()
 
@@ -315,9 +337,13 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
                   <ContextPanel
                     familyId={familyId}
                     dateValue={state.dateValue}
+                    placeText={state.placeText}
+                    privacy={state.privacy}
                     peopleTags={state.peopleTags}
                     currentUserId={currentUserId}
                     onDateChange={(value) => updateState({ dateValue: value })}
+                    onPlaceChange={(place) => updateState({ placeText: place })}
+                    onPrivacyChange={(privacy) => updateState({ privacy })}
                     onPeopleTagsChange={(tags) => updateState({ peopleTags: tags })}
                   />
                 </CardContent>

@@ -3,12 +3,15 @@ import { DatePrecisionValue } from '@/components/DatePrecisionPicker'
 import { PersonTag } from '@/components/composer/PeopleTagger'
 
 export type ComposerMode = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
+export type StoryPrivacy = 'private' | 'link_only' | 'public'
 
 export interface ComposerState {
   mode: ComposerMode
   title: string
   content: string
   dateValue: DatePrecisionValue
+  placeText: string
+  privacy: StoryPrivacy
   photos: File[]
   audioBlob: Blob | null
   audioUrl: string | null
@@ -117,7 +120,9 @@ function getDefaultState(mode: ComposerMode): ComposerState {
     mode,
     title: '',
     content: '',
-    dateValue: { date: null, yearOnly: false },
+    dateValue: { date: null, precision: 'exact', yearOnly: false },
+    placeText: '',
+    privacy: 'private',
     photos: [],
     audioBlob: null,
     audioUrl: null,

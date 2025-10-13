@@ -38,7 +38,7 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
   const { toast } = useToast()
 
   const [editType, setEditType] = useState<'birth' | 'death' | null>(null)
-  const [dp, setDp] = useState<DatePrecisionValue>({ date: null, yearOnly: false })
+  const [dp, setDp] = useState<DatePrecisionValue>({ date: null, precision: 'exact', yearOnly: false })
   const [saving, setSaving] = useState(false)
   
   // Life events state
@@ -47,7 +47,7 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
   const [editingEvent, setEditingEvent] = useState<LifeEvent | null>(null)
   const [eventTitle, setEventTitle] = useState('')
   const [eventType, setEventType] = useState('')
-  const [eventDate, setEventDate] = useState<DatePrecisionValue>({ date: null, yearOnly: false })
+  const [eventDate, setEventDate] = useState<DatePrecisionValue>({ date: null, precision: 'exact', yearOnly: false })
   const [eventNotes, setEventNotes] = useState('')
   
   const age = computeAge(person.birth_date, person.death_date)
@@ -116,7 +116,7 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
     setEditingEvent(null)
     setEventTitle('')
     setEventType('')
-    setEventDate({ date: null, yearOnly: false })
+    setEventDate({ date: null, precision: 'exact', yearOnly: false })
     setEventNotes('')
     setShowEventDialog(true)
   }
@@ -127,7 +127,8 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
     setEventType(event.type)
     const yearOnly = event.date_precision === 'year' || event.date_precision === 'y'
     setEventDate({ 
-      date: event.event_date ? new Date(event.event_date) : null, 
+      date: event.event_date ? new Date(event.event_date) : null,
+      precision: yearOnly ? 'year' : 'exact',
       yearOnly 
     })
     setEventNotes(event.notes || '')
@@ -210,7 +211,11 @@ export function DatesPanel({ person, userRole, onPersonUpdated }: DatesPanelProp
     // Check if we only have year data
     const precRaw = (type === 'birth' ? (person as any).birth_date_precision : (person as any).death_date_precision) as string | undefined
     const yearOnly = precRaw === 'year' || precRaw === 'y'
-    setDp({ date: d ? new Date(d) : null, yearOnly })
+    setDp({ 
+      date: d ? new Date(d) : null, 
+      precision: yearOnly ? 'year' : 'exact',
+      yearOnly 
+    })
   }
 
   async function saveDate() {

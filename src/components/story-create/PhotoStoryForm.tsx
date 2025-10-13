@@ -23,7 +23,7 @@ export default function PhotoStoryForm({ familyId }: PhotoStoryFormProps) {
   
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: null, yearOnly: false })
+  const [dateValue, setDateValue] = useState<DatePrecisionValue>({ date: null, precision: 'exact', yearOnly: false })
   const [files, setFiles] = useState<File[]>([])
   const [imageData, setImageData] = useState<Array<{ id: string; url: string; file: File }>>([])
 
