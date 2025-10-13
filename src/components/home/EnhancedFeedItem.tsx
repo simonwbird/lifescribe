@@ -69,38 +69,70 @@ export function EnhancedFeedItem({
     toast
   } = useToast();
 
-  // Load media for this story
+  // Load media for this story (supports legacy media table and new story_assets)
   useEffect(() => {
     const loadMedia = async () => {
       if (activity.type !== 'story') return;
-      
       setLoadingMedia(true);
       try {
         const storyId = activity.id.replace('story-', '');
-        const { data: media } = await supabase
+
+        // 1) Legacy media table (images/videos/audio)
+        const { data: legacy } = await supabase
           .from('media')
           .select('*')
           .eq('story_id', storyId)
           .order('created_at')
-          .limit(3); // Limit to first 3 media items for preview
+          .limit(3);
 
-        if (media) {
-          const urls = await Promise.all(
-            media.map(async (item) => {
-              const { data: { signedUrl } } = await supabase.storage
+        const legacyUrls = await Promise.all(
+          (legacy || []).map(async (item) => {
+            try {
+              const { data: signed } = await supabase.storage
                 .from('media')
                 .createSignedUrl(item.file_path, 3600);
-              
+              const url = signed?.signedUrl || '';
               return {
-                url: signedUrl || '',
-                type: item.mime_type?.startsWith('image/') ? 'image' : 
-                      item.mime_type?.startsWith('video/') ? 'video' : 'audio',
+                url,
+                type: item.mime_type?.startsWith('image/') ? 'image' : item.mime_type?.startsWith('video/') ? 'video' : 'audio',
                 mimeType: item.mime_type || ''
               };
-            })
-          );
-          setMediaUrls(urls.filter(u => u.url));
-        }
+            } catch {
+              return { url: '', type: 'image', mimeType: '' } as const;
+            }
+          })
+        );
+
+        // 2) New story_assets table (text/image/video/audio)
+        const { data: assets } = await supabase
+          .from('story_assets')
+          .select('type,url,thumbnail_url,metadata,position')
+          .eq('story_id', storyId)
+          .order('position')
+          .limit(5);
+
+        const assetUrls = (assets || [])
+          .filter(a => a.type === 'image' || a.type === 'video' || a.type === 'audio')
+          .map(a => {
+            const url = a.url;
+            const mimeType = a.type === 'image' ? 'image/jpeg' : a.type === 'video' ? 'video/mp4' : 'audio/mpeg';
+            return { url, type: a.type, mimeType } as { url: string; type: string; mimeType: string };
+          });
+
+        // Merge with preference: show one video first if present, then others; limit to 3
+        const merged = [
+          ...assetUrls.filter(a => a.type === 'video'),
+          ...legacyUrls,
+          ...assetUrls.filter(a => a.type !== 'video')
+        ]
+          .filter(m => m.url)
+          .reduce((acc: Array<{ url: string; type: string; mimeType: string }>, item) => {
+            if (!acc.find(x => x.url === item.url)) acc.push(item);
+            return acc;
+          }, [])
+          .slice(0, 3);
+
+        setMediaUrls(merged);
       } catch (error) {
         console.error('Error loading media:', error);
       } finally {
