@@ -28,6 +28,7 @@ const PromptsSimple = () => <LazyRoute factory={() => import("./pages/PromptsSim
 const FamilyTree = () => <LazyRoute factory={() => import("./pages/FamilyTree")} />
 const PersonProfile = () => <LazyRoute factory={() => import("./pages/PersonProfile")} />
 const PersonPage = () => <LazyRoute factory={() => import("./pages/PersonPage")} />
+const ModerationQueue = () => <LazyRoute factory={() => import("./pages/StewardTools/ModerationQueue")} />
 const AnalyticsPage = () => <LazyRoute factory={() => import("./pages/AnalyticsPage")} />
 const Collections = () => <LazyRoute factory={() => import("./pages/Collections")} />
 const Media = () => <LazyRoute factory={() => import("./pages/Media")} />
@@ -179,6 +180,7 @@ function AppContent() {
       <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />
       <Route path="/people" element={<AuthGate><People /></AuthGate>} />
       <Route path="/people/:id" element={<AuthGate><PersonPage /></AuthGate>} />
+      <Route path="/people/:personId/moderation" element={<AuthGate><ModerationQueue /></AuthGate>} />
       <Route path="/people/:id/legacy" element={<AuthGate><PersonProfile /></AuthGate>} />
       <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
       <Route path="/analytics" element={<AuthGate><AnalyticsPage /></AuthGate>} />
