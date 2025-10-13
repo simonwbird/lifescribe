@@ -60,27 +60,33 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 const getSectionId = (blockType: string): string => {
   const typeMap: Record<string, string> = {
     'hero': 'hero',
+    'hero_life': 'hero',
     'hero_memorial': 'hero',
     'bio_overview': 'bio',
     'bio': 'bio',
-    'about_me': 'about-me',
+    'about_me': 'about',
     'pinned_highlights': 'highlights',
     'timeline': 'timeline',
+    'timeline_enhanced': 'timeline',
     'life_arc_timeline': 'timeline',
     'story_roll': 'stories',
     'story_collage': 'stories',
     'stories': 'stories',
     'audio_remembrances': 'audio',
-    'voice_notes': 'voice-notes',
+    'voice_notes': 'voice',
+    'photo_gallery': 'photos',
     'photos': 'photos',
     'gallery': 'photos',
-    'people_web': 'relationships',
-    'relationships': 'relationships',
+    'people_web': 'people',
+    'relationships': 'people',
     'guestbook_live': 'guestbook',
-    'notes_from_friends': 'notes-from-friends',
+    'notes_from_friends': 'notes',
     'guestbook_tribute': 'guestbook',
     'service_events': 'services',
-    'objects_places': 'places'
+    'objects_places': 'places',
+    'now_next': 'now-next',
+    'favorites_quirks': 'favorites',
+    'favorites': 'favorites'
   }
   return typeMap[blockType] || blockType
 }

@@ -128,9 +128,9 @@ export const LIFE_PRESET: BlockType[] = [
 
 // Anchor map for URL navigation
 export const BLOCK_ANCHORS: Record<BlockType, string> = {
-  hero: 'top',
-  hero_life: 'top',
-  hero_memorial: 'top',
+  hero: 'hero',
+  hero_life: 'hero',
+  hero_memorial: 'hero',
   about_me: 'about',
   quick_facts: 'facts',
   now_next: 'now-next',

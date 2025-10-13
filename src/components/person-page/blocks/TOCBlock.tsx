@@ -14,19 +14,17 @@ interface TOCBlockProps {
 }
 
 const SECTIONS: Omit<TOCSection, 'element'>[] = [
-  { id: 'hero', label: 'Hero' },
-  { id: 'bio', label: 'Biography' },
-  { id: 'highlights', label: 'Highlights' },
-  { id: 'timeline', label: 'Timeline' },
-  { id: 'stories', label: 'Stories' },
-  { id: 'audio', label: 'Audio' },
-  { id: 'voice-notes', label: 'Voice Notes' },
+  { id: 'hero', label: 'Top' },
+  { id: 'about', label: 'About' },
   { id: 'photos', label: 'Photos' },
+  { id: 'now-next', label: 'Now & Next' },
+  { id: 'stories', label: 'Stories' },
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'voice', label: 'Voice Notes' },
+  { id: 'people', label: 'People' },
   { id: 'places', label: 'Places' },
-  { id: 'relationships', label: 'Relationships' },
-  { id: 'guestbook', label: 'Guestbook' },
-  { id: 'notes-from-friends', label: 'Notes from Friends' },
-  { id: 'services', label: 'Services' }
+  { id: 'favorites', label: 'Favorites' },
+  { id: 'notes', label: 'Notes from Friends' }
 ]
 
 export default function TOCBlock({ className }: TOCBlockProps) {
