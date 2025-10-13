@@ -2,13 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import Header from '@/components/Header'
-import TextStoryForm from '@/components/story-create/TextStoryForm'
-import PhotoStoryForm from '@/components/story-create/PhotoStoryForm'
-import VoiceStoryForm from '@/components/story-create/VoiceStoryForm'
 import FamilyPicker from '@/components/story-create/FamilyPicker'
+import { UniversalComposer } from '@/components/composer/UniversalComposer'
 
 export default function NewStory() {
   const [searchParams] = useSearchParams()
@@ -17,12 +14,7 @@ export default function NewStory() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [families, setFamilies] = useState<{ id: string; name: string }[]>([])
   const [needsFamilyPicker, setNeedsFamilyPicker] = useState(false)
-  
-  // Get type and family_id from URL (?type=text|photo|voice&family_id=...)
-  const typeParam = searchParams.get('type')
   const familyIdParam = searchParams.get('family_id')
-  const defaultTab = typeParam === 'photo' || typeParam === 'voice' ? typeParam : 'text'
-  const [activeTab, setActiveTab] = useState(defaultTab)
 
   // Fetch user's families
   useEffect(() => {
@@ -121,30 +113,7 @@ export default function NewStory() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6">Create New Story</h1>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="text">Text</TabsTrigger>
-            <TabsTrigger value="photo">Photo</TabsTrigger>
-            <TabsTrigger value="voice">Voice</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="text">
-            <TextStoryForm familyId={familyId} />
-          </TabsContent>
-          
-          <TabsContent value="photo">
-            <PhotoStoryForm familyId={familyId} />
-          </TabsContent>
-          
-          <TabsContent value="voice">
-            <VoiceStoryForm familyId={familyId} />
-          </TabsContent>
-        </Tabs>
-      </div>
+      <UniversalComposer familyId={familyId} />
     </div>
   )
 }
