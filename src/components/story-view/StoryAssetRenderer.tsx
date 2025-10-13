@@ -78,14 +78,22 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       )
 
     case 'video':
-      if (compact && asset.thumbnail_url) {
+      if (compact) {
         return (
           <div className="relative rounded-lg overflow-hidden cursor-pointer group">
-            <img
-              src={asset.thumbnail_url}
-              alt="Video thumbnail"
-              className="w-full h-48 object-cover"
-            />
+            {asset.thumbnail_url ? (
+              <img
+                src={asset.thumbnail_url}
+                alt="Video thumbnail"
+                className="w-full h-48 object-cover"
+              />
+            ) : (
+              <video
+                src={asset.transcoded_url || asset.url}
+                className="w-full h-48 object-cover"
+                preload="metadata"
+              />
+            )}
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors">
               <div className="bg-white rounded-full p-4">
                 <Play className="h-8 w-8 text-primary" fill="currentColor" />
