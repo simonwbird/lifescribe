@@ -26,7 +26,7 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
   const save = async (data: StoryDraftData) => {
     if (!enabled) return
 
-    // Debounce - wait 5 seconds before saving
+    // Debounce - wait 10 seconds before saving
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
     }
@@ -81,7 +81,66 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
       } finally {
         setIsSaving(false)
       }
-    }, 5000) // 5 seconds
+    }, 10000) // 10 seconds
+  }
+
+  // Force save immediately (for blur events)
+  const forceSave = async (data: StoryDraftData) => {
+    if (!enabled) return
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    const dataStr = JSON.stringify(data)
+    
+    // Only save if data has changed
+    if (dataStr === lastDataRef.current) {
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const storyData = {
+        title: data.title || 'Untitled Draft',
+        content: data.content,
+        family_id: data.familyId,
+        profile_id: user.id,
+        status: 'draft',
+        occurred_on: data.occurred_on,
+        is_approx: data.is_approx
+      }
+
+      // Update existing draft or create new
+      if (storyId) {
+        const { error } = await supabase
+          .from('stories')
+          .update(storyData)
+          .eq('id', storyId)
+
+        if (error) throw error
+      } else {
+        const { data: newStory, error } = await supabase
+          .from('stories')
+          .insert(storyData)
+          .select('id')
+          .single()
+
+        if (error) throw error
+        setStoryId(newStory.id)
+      }
+
+      lastDataRef.current = dataStr
+      setLastSaved(new Date())
+    } catch (error: any) {
+      console.error('Autosave error:', error)
+      // Silent fail - don't interrupt user
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   // Cleanup on unmount
@@ -95,6 +154,7 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
 
   return {
     save,
+    forceSave,
     storyId,
     isSaving,
     lastSaved

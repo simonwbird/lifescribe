@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { SaveStatusBadge } from './SaveStatusBadge'
@@ -8,15 +9,19 @@ interface TextPanelProps {
   content: string
   onTitleChange: (value: string) => void
   onContentChange: (value: string) => void
+  onBlur?: () => void
 }
 
 export function TextPanel({
   title,
   content,
   onTitleChange,
-  onContentChange
+  onContentChange,
+  onBlur
 }: TextPanelProps) {
-  const saveStatus = useSaveStatus([title, content], 500)
+  const saveStatus = useSaveStatus([title, content], 10000)
+  const titleRef = useRef<HTMLInputElement>(null)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
 
   return (
     <div className="space-y-6">
@@ -30,10 +35,12 @@ export function TextPanel({
           Title <span className="text-destructive">*</span>
         </label>
         <Input
+          ref={titleRef}
           id="title"
           placeholder="Give your story a title..."
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
+          onBlur={onBlur}
           maxLength={200}
           className="text-lg"
         />
@@ -44,10 +51,12 @@ export function TextPanel({
           Story <span className="text-destructive">*</span>
         </label>
         <Textarea
+          ref={contentRef}
           id="content"
           placeholder="Tell your story..."
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
+          onBlur={onBlur}
           rows={20}
           className="resize-none"
         />

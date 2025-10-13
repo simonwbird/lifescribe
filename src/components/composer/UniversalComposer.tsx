@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,6 +14,8 @@ import { PhotoPanel } from './PhotoPanel'
 import { VoicePanel } from './VoicePanel'
 import { VideoPanel } from './VideoPanel'
 import { MixedPanel } from './MixedPanel'
+import { useStoryAutosave } from '@/hooks/useStoryAutosave'
+import { AutosaveIndicator } from '@/components/story-wizard/AutosaveIndicator'
 
 interface UniversalComposerProps {
   familyId: string
@@ -32,6 +34,72 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
   const { state, updateState, switchMode, clearState, hasContent } = useComposerState(
     (searchParams.get('type') as ComposerMode) || 'text'
   )
+
+  // Autosave hook for database drafts
+  const { save, forceSave, storyId, isSaving, lastSaved } = useStoryAutosave({ enabled: true })
+  
+  // Autosave whenever state changes (10s debounce)
+  useEffect(() => {
+    if (state.title || state.content || state.photos.length > 0) {
+      save({
+        title: state.title,
+        content: state.content,
+        familyId
+      })
+    }
+  }, [state.title, state.content, state.photos, familyId, save])
+
+  // Handle blur events to force immediate save
+  const handleBlur = useCallback(() => {
+    if (state.title || state.content || state.photos.length > 0) {
+      forceSave({
+        title: state.title,
+        content: state.content,
+        familyId
+      })
+    }
+  }, [state.title, state.content, state.photos, familyId, forceSave])
+
+  // Load existing draft if specified
+  useEffect(() => {
+    const draftId = searchParams.get('draft')
+    if (draftId && storyId !== draftId) {
+      loadDraft(draftId)
+    }
+  }, [searchParams])
+
+  async function loadDraft(draftId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('stories')
+        .select('*')
+        .eq('id', draftId)
+        .eq('status', 'draft')
+        .single()
+
+      if (error) throw error
+      
+      if (data) {
+        updateState({
+          title: data.title || '',
+          content: data.content || '',
+          privacy: (data.privacy as StoryPrivacy) || defaultPrivacy
+        })
+
+        toast({
+          title: 'Draft loaded',
+          description: 'Continue editing your story.'
+        })
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load draft.',
+        variant: 'destructive'
+      })
+    }
+  }
 
   // Load current user and family default privacy
   useEffect(() => {
@@ -429,6 +497,15 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
           : 'Your story has been published successfully.'
       })
 
+      // Clear draft from database if we published
+      if (!asDraft && storyId) {
+        await supabase
+          .from('stories')
+          .delete()
+          .eq('id', storyId)
+          .eq('status', 'draft')
+      }
+
       clearState()
       navigate('/feed')
     } catch (error: any) {
@@ -485,11 +562,23 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
               <Card>
                 <CardContent className="pt-6">
                   <TabsContent value="text" className="mt-0">
+                    {/* Autosave indicator */}
+                    <div className="mb-4">
+                      <AutosaveIndicator 
+                        status={{
+                          status: isSaving ? 'saving' : (lastSaved ? 'saved' : 'idle'),
+                          lastSaved: lastSaved || undefined,
+                          message: isSaving ? 'Saving draft...' : (lastSaved ? 'Draft saved' : 'Auto-saving enabled')
+                        }} 
+                      />
+                    </div>
+                    
                     <TextPanel
                       title={state.title}
                       content={state.content}
                       onTitleChange={(value) => updateState({ title: value })}
                       onContentChange={(value) => updateState({ content: value })}
+                      onBlur={handleBlur}
                     />
                   </TabsContent>
 
