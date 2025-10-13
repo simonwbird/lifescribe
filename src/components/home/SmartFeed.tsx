@@ -11,6 +11,27 @@ interface SmartFeedProps {
   userId: string
 }
 
+interface StoryRecord {
+  id: string
+  title: string
+  content?: string
+  created_at: string
+  profile_id: string
+  family_id: string
+  profiles?: {
+    full_name?: string
+    avatar_url?: string
+  } | null
+}
+
+interface EnhancedStory extends StoryRecord {
+  media_urls: Array<{ url: string; type: string }>
+  reactions_count: number
+  comments_count: number
+  user_has_liked: boolean
+  people: Array<{ id: string; name: string }>
+}
+
 export function SmartFeed({ familyId, userId }: SmartFeedProps) {
   const [activeFilter, setActiveFilter] = useState<FeedFilterType>('all')
   const [feedItems, setFeedItems] = useState<any[]>([])
@@ -31,7 +52,7 @@ export function SmartFeed({ familyId, userId }: SmartFeedProps) {
       .select('role')
       .eq('family_id', familyId)
       .eq('profile_id', userId)
-      .single()
+      .maybeSingle()
     
     setIsAdmin(data?.role === 'admin')
   }
@@ -39,96 +60,24 @@ export function SmartFeed({ familyId, userId }: SmartFeedProps) {
   const loadFeed = async () => {
     setLoading(true)
     try {
-      let query = supabase
+      const { data: storiesData, error } = await supabase
         .from('stories')
-        .select(`
-          id,
-          title,
-          content,
-          created_at,
-          profile_id,
-          family_id,
-          profiles(full_name, avatar_url)
-        `)
+        .select('id, title, content, created_at, profile_id, family_id, profiles(full_name, avatar_url)')
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
         .limit(20)
 
-      // Apply filters
-      if (activeFilter === 'photos') {
-        // Filter stories with images
-        query = query.contains('content', '"image"')
-      } else if (activeFilter === 'voice') {
-        // Filter stories with audio
-        query = query.contains('content', '"audio"')
-      } else if (activeFilter === 'video') {
-        // Filter stories with video
-        query = query.contains('content', '"video"')
-      }
-
-      const { data: stories, error } = await query
-
       if (error) throw error
 
-      // Enhance with media, reactions, comments
       const enhanced = await Promise.all(
-        (stories || []).map(async (story) => {
-          // Get media
-          const { data: assets } = await supabase
-            .from('story_assets')
-            .select('type, url')
-            .eq('story_id', story.id)
-            .order('position')
-            .limit(3)
-
-           // Get reactions count
-           const reactionsResult: any = await supabase
-             .from('reactions')
-             .select('id', { count: 'exact', head: true })
-             .eq('target_type', 'story')
-             .eq('target_id', story.id)
-           
-           const reactionsCount = reactionsResult.count || 0
-
-           // Get comments count
-           const commentsResult: any = await supabase
-             .from('comments')
-             .select('id', { count: 'exact', head: true })
-             .eq('story_id', story.id)
-           
-           const commentsCount = commentsResult.count || 0
-
-          // Check if user liked
-          const userReactionResult: any = await supabase
-            .from('reactions')
-            .select('id')
-            .eq('target_type', 'story')
-            .eq('target_id', story.id)
-            .eq('profile_id', userId)
-            .maybeSingle()
-          
-          const userReaction = userReactionResult.data
-
-          // Get tagged people
-          const { data: peopleLinks } = await supabase
-            .from('person_story_links')
-            .select('people!inner(id, given_name, surname)')
-            .eq('story_id', story.id)
-
-          const people = (peopleLinks || []).map((pl: any) => ({
-            id: pl.people?.id || '',
-            name: `${pl.people?.given_name || ''} ${pl.people?.surname || ''}`.trim()
-          }))
-
-          return {
-            ...story,
-            media_urls: assets?.map(a => ({ url: a.url, type: a.type })) || [],
-            reactions_count: reactionsCount || 0,
-            comments_count: commentsCount || 0,
-            user_has_liked: !!userReaction,
-            people
-          }
-        })
+        (storiesData || []).map(async (story: any) => ({
+          ...story,
+          media_urls: [],
+          reactions_count: 0,
+          comments_count: 0,
+          user_has_liked: false,
+          people: []
+        }))
       )
 
       setFeedItems(enhanced)
