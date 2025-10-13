@@ -10,38 +10,45 @@
       "label": "Hero Section"
     },
     {
-      "type": "timeline",
+      "type": "about_me",
       "order": 1,
+      "visibility": "family",
+      "label": "About Me",
+      "pinned": true
+    },
+    {
+      "type": "timeline",
+      "order": 2,
       "visibility": "family",
       "label": "Life Timeline"
     },
     {
       "type": "story_roll",
-      "order": 2,
+      "order": 3,
       "visibility": "family",
       "label": "Story Roll"
     },
     {
       "type": "people_web",
-      "order": 3,
+      "order": 4,
       "visibility": "family",
       "label": "Family Connections"
     },
     {
       "type": "objects_places",
-      "order": 4,
+      "order": 5,
       "visibility": "family",
       "label": "Favorite Places & Things"
     },
     {
       "type": "now_next",
-      "order": 5,
+      "order": 6,
       "visibility": "family",
       "label": "Now & Next"
     },
     {
       "type": "notes_from_friends",
-      "order": 6,
+      "order": 7,
       "visibility": "family",
       "label": "Notes from Friends"
     }

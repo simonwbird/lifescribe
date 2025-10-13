@@ -4693,6 +4693,7 @@ export type Database = {
           id: string
           is_enabled: boolean | null
           person_id: string
+          pinned: boolean | null
           type: string
           unlock_at: string | null
           updated_at: string
@@ -4706,6 +4707,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean | null
           person_id: string
+          pinned?: boolean | null
           type: string
           unlock_at?: string | null
           updated_at?: string
@@ -4719,6 +4721,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean | null
           person_id?: string
+          pinned?: boolean | null
           type?: string
           unlock_at?: string | null
           updated_at?: string

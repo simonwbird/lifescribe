@@ -83,6 +83,7 @@ export function getBlockLayoutId(blockType: string): string {
     // Bio blocks
     'bio': 'Bio',
     'bio_overview': 'Bio',
+    'about_me': 'About Me',
     
     // Timeline blocks
     'timeline': 'Timeline',

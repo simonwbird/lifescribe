@@ -63,6 +63,7 @@ const getSectionId = (blockType: string): string => {
     'hero_memorial': 'hero',
     'bio_overview': 'bio',
     'bio': 'bio',
+    'about_me': 'about-me',
     'pinned_highlights': 'highlights',
     'timeline': 'timeline',
     'life_arc_timeline': 'timeline',
@@ -794,6 +795,23 @@ export default function PersonPage() {
           />
         )}
 
+        {/* Pinned Blocks */}
+        {blocks.filter(b => b.pinned).map((block) => (
+          <div key={block.id} className="col-span-full">
+            <BlockRenderer
+              block={block}
+              person={{
+                ...person,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              } as any}
+              currentUserId={currentUserId}
+              canEdit={canEdit || false}
+              onUpdate={() => window.location.reload()}
+            />
+          </div>
+        ))}
+
         {/* Blocks with PageLayoutManager */}
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="blocks">
@@ -803,7 +821,7 @@ export default function PersonPage() {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {blocks.length === 0 ? (
+                  {blocks.filter(b => !b.pinned).length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg col-span-full">
                       <p className="text-muted-foreground mb-4">
                         No blocks added yet. Click "Add Block" to get started.
@@ -819,7 +837,7 @@ export default function PersonPage() {
                     <ErrorBoundary route={`/people/${id}` as string}>
                       <PageLayoutManager
                         blocks={buildBlocksArray(
-                          blocks,
+                          blocks.filter(b => !b.pinned),
                           {
                             ...person,
                             created_at: new Date().toISOString(),

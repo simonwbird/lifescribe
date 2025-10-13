@@ -31,6 +31,7 @@ export interface PersonPageBlock {
   block_order: number
   visibility: 'only_me' | 'inner_circle' | 'family' | 'public'
   is_enabled: boolean
+  pinned?: boolean
   unlock_at?: string
   created_by?: string
   created_at?: string
@@ -41,6 +42,7 @@ export type BlockType =
   // Life preset blocks
   | 'hero'
   | 'hero_life'
+  | 'about_me'
   | 'timeline'
   | 'timeline_enhanced'
   | 'story_roll'
@@ -130,6 +132,7 @@ export const BLOCK_ANCHORS: Record<BlockType, string> = {
   hero: 'top',
   hero_life: 'top',
   hero_memorial: 'top',
+  about_me: 'about-me',
   quick_facts: 'facts',
   now_next: 'now-next',
   story_roll: 'stories',
@@ -175,6 +178,14 @@ export const BLOCK_LIBRARY: Array<{
     description: 'Featured introduction and photo',
     icon: 'Star',
     defaultContent: { layout: 'full' },
+    presets: ['life']
+  },
+  {
+    type: 'about_me',
+    label: 'About Me',
+    description: 'Personal bio, pronouns, nicknames, and links',
+    icon: 'User',
+    defaultContent: { bio: '', pronouns: '', nicknames: [], links: [] },
     presets: ['life']
   },
   {
