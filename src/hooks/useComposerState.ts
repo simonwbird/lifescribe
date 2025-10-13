@@ -5,6 +5,13 @@ import { PersonTag } from '@/components/composer/PeopleTagger'
 export type ComposerMode = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
 export type StoryPrivacy = 'private' | 'link_only' | 'public'
 
+export type ContentBlock = 
+  | { id: string; type: 'text'; content: string }
+  | { id: string; type: 'image'; file: File; preview: string }
+  | { id: string; type: 'video'; blob: Blob; url: string; thumbnail: string | null }
+  | { id: string; type: 'audio'; blob: Blob; url: string; transcript?: string }
+  | { id: string; type: 'divider' }
+
 export interface ComposerState {
   mode: ComposerMode
   title: string
@@ -23,6 +30,7 @@ export interface ComposerState {
   peopleTags: PersonTag[]
   linkedPlaces: string[]
   promptId: string | null
+  contentBlocks: ContentBlock[]
 }
 
 const STORAGE_KEY = 'universal_composer_state'
@@ -146,6 +154,7 @@ function getDefaultState(mode: ComposerMode): ComposerState {
     tags: [],
     peopleTags: [],
     linkedPlaces: [],
-    promptId: null
+    promptId: null,
+    contentBlocks: []
   }
 }

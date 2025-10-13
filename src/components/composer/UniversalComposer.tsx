@@ -13,6 +13,7 @@ import { TextPanel } from './TextPanel'
 import { PhotoPanel } from './PhotoPanel'
 import { VoicePanel } from './VoicePanel'
 import { VideoPanel } from './VideoPanel'
+import { MixedPanel } from './MixedPanel'
 
 interface UniversalComposerProps {
   familyId: string
@@ -127,6 +128,15 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
       toast({
         title: 'Video required',
         description: 'Please record or upload a video.',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    if (state.mode === 'mixed' && state.contentBlocks.length === 0 && !asDraft) {
+      toast({
+        title: 'Content required',
+        description: 'Please add at least one content block.',
         variant: 'destructive'
       })
       return
@@ -264,6 +274,96 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
               mime_type: 'video/webm'
             }
           })
+        }
+      }
+
+      // Handle mixed mode blocks
+      if (state.mode === 'mixed' && state.contentBlocks.length > 0) {
+        for (let i = 0; i < state.contentBlocks.length; i++) {
+          const block = state.contentBlocks[i]
+          
+          if (block.type === 'text') {
+            // Store text blocks in story metadata
+            await supabase.from('story_assets').insert({
+              story_id: story.id,
+              type: 'text',
+              url: '',
+              position: i,
+              metadata: {
+                content: block.content
+              }
+            })
+          } else if (block.type === 'image') {
+            const { path, error: uploadError } = await uploadMediaFile(block.file, familyId, user.id)
+            if (!uploadError && path) {
+              const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
+              await supabase.from('story_assets').insert({
+                story_id: story.id,
+                type: 'image',
+                url: fullUrl,
+                position: i,
+                metadata: {
+                  file_name: block.file.name,
+                  file_size: block.file.size,
+                  mime_type: block.file.type
+                }
+              })
+            }
+          } else if (block.type === 'video') {
+            const videoFile = new File([block.blob], 'video.webm', { type: 'video/webm' })
+            const { path, error: uploadError } = await uploadMediaFile(videoFile, familyId, user.id)
+            
+            if (!uploadError && path) {
+              const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
+              let thumbUrl = null
+              
+              if (block.thumbnail) {
+                const thumbnailResponse = await fetch(block.thumbnail)
+                const thumbnailBlob = await thumbnailResponse.blob()
+                const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
+                const { path: thumbPath } = await uploadMediaFile(thumbnailFile, familyId, user.id)
+                if (thumbPath) {
+                  thumbUrl = `${supabase.storage.from('media').getPublicUrl(thumbPath).data.publicUrl}`
+                }
+              }
+              
+              await supabase.from('story_assets').insert({
+                story_id: story.id,
+                type: 'video',
+                url: fullUrl,
+                thumbnail_url: thumbUrl,
+                position: i,
+                metadata: {
+                  mime_type: 'video/webm'
+                }
+              })
+            }
+          } else if (block.type === 'audio') {
+            const audioFile = new File([block.blob], 'audio.webm', { type: 'audio/webm' })
+            const { path, error: uploadError } = await uploadMediaFile(audioFile, familyId, user.id)
+            
+            if (!uploadError && path) {
+              const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
+              await supabase.from('story_assets').insert({
+                story_id: story.id,
+                type: 'audio',
+                url: fullUrl,
+                position: i,
+                metadata: {
+                  transcript: block.transcript || null,
+                  mime_type: 'audio/webm'
+                }
+              })
+            }
+          } else if (block.type === 'divider') {
+            await supabase.from('story_assets').insert({
+              story_id: story.id,
+              type: 'divider',
+              url: '',
+              position: i,
+              metadata: {}
+            })
+          }
         }
       }
 
@@ -417,9 +517,13 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
                   </TabsContent>
 
                   <TabsContent value="mixed" className="mt-0">
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">Mixed media stories coming soon!</p>
-                    </div>
+                    <MixedPanel
+                      title={state.title}
+                      blocks={state.contentBlocks}
+                      onTitleChange={(value) => updateState({ title: value })}
+                      onBlocksChange={(blocks) => updateState({ contentBlocks: blocks })}
+                      familyId={familyId}
+                    />
                   </TabsContent>
                 </CardContent>
               </Card>
