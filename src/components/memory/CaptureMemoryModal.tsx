@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Dialog,
   DialogContent,
@@ -63,7 +62,6 @@ export function CaptureMemoryModal({
   promptId,
   viewer
 }: CaptureMemoryModalProps) {
-  const navigate = useNavigate()
   const { toast } = useToast()
   const [mode, setMode] = useState<CaptureMode>('text')
   const [title, setTitle] = useState('')
@@ -148,15 +146,6 @@ export function CaptureMemoryModal({
   }
 
   const handleSave = async () => {
-    if (!viewer?.id) {
-      toast({
-        title: 'Authentication required',
-        description: 'Please sign in to save memories',
-        variant: 'destructive'
-      })
-      return
-    }
-
     // Validation
     if (mode === 'text' && !body.trim()) {
       toast({
@@ -188,40 +177,88 @@ export function CaptureMemoryModal({
     setIsSaving(true)
 
     try {
-      // Get user's family_id
-      const { data: memberData, error: memberError } = await supabase
-        .from('members')
-        .select('family_id')
-        .eq('profile_id', viewer.id)
-        .single()
+      let audioUrl: string | undefined
+      let photoUrl: string | undefined
 
-      if (memberError || !memberData) {
-        throw new Error('Could not find family membership')
+      // Upload audio if present
+      if (audioBlob) {
+        const audioFileName = `memory-audio-${Date.now()}.webm`
+        const { data: audioData, error: audioError } = await supabase.storage
+          .from('media')
+          .upload(`memories/${person.id}/${audioFileName}`, audioBlob, {
+            contentType: 'audio/webm'
+          })
+
+        if (audioError) throw audioError
+        
+        const { data: audioUrlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(audioData.path)
+        
+        audioUrl = audioUrlData.publicUrl
       }
 
-      // For now, navigate to story creation with the data
-      // In T5, we'll create the memories table and save directly
-      const params = new URLSearchParams({
-        type: mode,
-        promptTitle: `Memory of ${firstName}`,
-        prompt_text: prompt,
-        person_id: person.id,
-        prefillTitle: title,
-        prefillBody: body,
-        year: yearApprox,
-        place: placeText
-      })
+      // Upload photo if present
+      if (photoFile) {
+        const photoFileName = `memory-photo-${Date.now()}.${photoFile.name.split('.').pop()}`
+        const { data: photoData, error: photoError } = await supabase.storage
+          .from('media')
+          .upload(`memories/${person.id}/${photoFileName}`, photoFile, {
+            contentType: photoFile.type
+          })
+
+        if (photoError) throw photoError
+        
+        const { data: photoUrlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(photoData.path)
+        
+        photoUrl = photoUrlData.publicUrl
+      }
+
+      // Get family_id for the person
+      const { data: personData, error: personError } = await supabase
+        .from('people')
+        .select('family_id')
+        .eq('id', person.id)
+        .single()
+
+      if (personError || !personData) {
+        throw new Error('Could not find person')
+      }
+
+      // Insert memory record
+      const { error: insertError } = await supabase
+        .from('memories')
+        .insert({
+          person_id: person.id,
+          family_id: personData.family_id,
+          contributor_user: viewer?.id || null,
+          contributor_name: viewer?.id ? null : 'Anonymous',
+          relationship_to_person: viewer?.relationship_to_person || null,
+          modality: mode,
+          prompt_id: promptId || null,
+          title: title.trim() || null,
+          body: body.trim() || null,
+          audio_url: audioUrl,
+          photo_url: photoUrl,
+          year_approx: yearApprox ? parseInt(yearApprox) : null,
+          place_id: null, // TODO: Connect to places table if needed
+          tags: [],
+          visibility: 'family',
+          status: 'pending'
+        })
+
+      if (insertError) throw insertError
 
       // Clear draft
       localStorage.removeItem(draftKey)
 
-      // Navigate to full story creation
-      navigate(`/stories/new?${params.toString()}`)
       onOpenChange(false)
 
       toast({
-        title: 'Opening story editor',
-        description: 'Complete your memory in the story editor'
+        title: 'Memory saved!',
+        description: 'Your memory has been submitted and is pending review.'
       })
     } catch (error) {
       console.error('Error saving memory:', error)
@@ -397,7 +434,7 @@ export function CaptureMemoryModal({
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Continue to Story
+                Submit Memory
               </>
             )}
           </Button>

@@ -3728,6 +3728,124 @@ export type Database = {
           },
         ]
       }
+      memories: {
+        Row: {
+          audio_url: string | null
+          body: string | null
+          contributor_name: string | null
+          contributor_user: string | null
+          created_at: string
+          family_id: string
+          id: string
+          modality: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
+          person_id: string
+          photo_url: string | null
+          place_id: string | null
+          prompt_id: string | null
+          relationship_to_person: string | null
+          status: string
+          tags: string[] | null
+          title: string | null
+          updated_at: string
+          visibility: string
+          year_approx: number | null
+        }
+        Insert: {
+          audio_url?: string | null
+          body?: string | null
+          contributor_name?: string | null
+          contributor_user?: string | null
+          created_at?: string
+          family_id: string
+          id?: string
+          modality: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          person_id: string
+          photo_url?: string | null
+          place_id?: string | null
+          prompt_id?: string | null
+          relationship_to_person?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          visibility?: string
+          year_approx?: number | null
+        }
+        Update: {
+          audio_url?: string | null
+          body?: string | null
+          contributor_name?: string | null
+          contributor_user?: string | null
+          created_at?: string
+          family_id?: string
+          id?: string
+          modality?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          person_id?: string
+          photo_url?: string | null
+          place_id?: string | null
+          prompt_id?: string | null
+          relationship_to_person?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          visibility?: string
+          year_approx?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memories_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memories_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "memories_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memories_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "public_person_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memories_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memories_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "tribute_sparks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merge_proposals: {
         Row: {
           collision_score: number
