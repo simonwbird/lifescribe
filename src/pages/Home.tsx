@@ -206,7 +206,7 @@ export default function Home() {
             content,
             created_at,
             profile_id
-          `).eq('family_id', familyId).neq('title', '[Deleted by admin]').order('created_at', {
+          `).eq('family_id', familyId).eq('status', 'published').neq('title', '[Deleted by admin]').order('created_at', {
         ascending: false
       }).limit(15);
       
