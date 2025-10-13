@@ -65,18 +65,61 @@ export function VideoPanel({
   const generateThumbnail = async (videoElement: HTMLVideoElement): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas')
-      canvas.width = videoElement.videoWidth
-      canvas.height = videoElement.videoHeight
+      canvas.width = videoElement.videoWidth || 1280
+      canvas.height = videoElement.videoHeight || 720
       const ctx = canvas.getContext('2d')
       if (ctx) {
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
         canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(URL.createObjectURL(blob))
-          }
+          if (blob) resolve(URL.createObjectURL(blob))
         }, 'image/jpeg', 0.9)
       }
     })
+  }
+
+  // Load a video URL off-DOM and capture a frame (avoids relying on UI refs)
+  const generateThumbnailFromUrl = async (url: string, seekSeconds = 1): Promise<{ thumb: string; duration: number }> => {
+    return new Promise((resolve, reject) => {
+      const v = document.createElement('video')
+      v.src = url
+      v.muted = true
+      v.playsInline = true
+      v.preload = 'metadata'
+      v.onloadedmetadata = () => {
+        const targetTime = isFinite(v.duration) && v.duration > 0 ? Math.min(seekSeconds, Math.max(0, v.duration - 0.1)) : seekSeconds
+        v.currentTime = targetTime
+      }
+      v.onseeked = async () => {
+        try {
+          const canvas = document.createElement('canvas')
+          canvas.width = v.videoWidth || 1280
+          canvas.height = v.videoHeight || 720
+          const ctx = canvas.getContext('2d')
+          if (!ctx) return reject(new Error('Canvas unsupported'))
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
+          canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error('Thumbnail blob failed'))
+            resolve({ thumb: URL.createObjectURL(blob), duration: isFinite(v.duration) ? v.duration : 0 })
+          }, 'image/jpeg', 0.9)
+        } catch (e) {
+          reject(e as Error)
+        }
+      }
+      v.onerror = () => reject(new Error('Video load error'))
+    })
+  }
+
+  const getSupportedMimeType = (): string | undefined => {
+    const types = [
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm',
+    ]
+    for (const t of types) {
+      // @ts-ignore
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t
+    }
+    return undefined
   }
 
   const startCamera = async () => {
@@ -122,68 +165,75 @@ export function VideoPanel({
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        await videoRef.current.play().catch(() => {})
       }
     } catch (error) {
       console.error('Camera toggle error:', error)
     }
   }
 
-  const startRecording = async () => {
-    await startCamera()
-    
-    if (!streamRef.current) return
-    
-    chunksRef.current = []
-    const mediaRecorder = new MediaRecorder(streamRef.current, {
-      mimeType: 'video/webm;codecs=vp9'
-    })
-    
-    mediaRecorderRef.current = mediaRecorder
-    
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) {
-        chunksRef.current.push(e.data)
-      }
+  // Ensure the stream attaches when the recording view renders
+  useEffect(() => {
+    if (state === 'recording' && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current
+      videoRef.current.play().catch(() => {})
     }
-    
+  }, [state])
+
+  const startRecording = async () => {
+    // Render the preview first so the <video> exists, then start camera
+    setState('recording')
+    setRecordingTime(0)
+
+    await startCamera()
+    if (!streamRef.current) return
+
+    chunksRef.current = []
+
+    const mimeType = getSupportedMimeType()
+    let mediaRecorder: MediaRecorder
+    try {
+      mediaRecorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined)
+    } catch (e) {
+      // Fallback to default
+      // @ts-ignore
+      mediaRecorder = new MediaRecorder(streamRef.current)
+    }
+
+    mediaRecorderRef.current = mediaRecorder
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data)
+    }
+
     mediaRecorder.onstop = async () => {
       setState('processing')
-      
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+
+      const blob = new Blob(chunksRef.current, { type: mimeType || 'video/webm' })
       const url = URL.createObjectURL(blob)
       setLocalVideoUrl(url)
-      
-      // Generate thumbnail
-      if (previewVideoRef.current) {
-        previewVideoRef.current.src = url
-        previewVideoRef.current.onloadedmetadata = async () => {
-          if (previewVideoRef.current) {
-            setDuration(previewVideoRef.current.duration)
-            previewVideoRef.current.currentTime = 1 // Seek to 1 second for thumbnail
-            
-            previewVideoRef.current.onseeked = async () => {
-              if (previewVideoRef.current) {
-                const thumb = await generateThumbnail(previewVideoRef.current)
-                setLocalThumbnail(thumb)
-                setState('preview')
-                onVideoReady(blob, url, thumb)
-              }
-            }
-          }
-        }
+
+      try {
+        const { thumb, duration } = await generateThumbnailFromUrl(url, 1)
+        setDuration(duration)
+        setLocalThumbnail(thumb)
+        setState('preview')
+        onVideoReady(blob, url, thumb)
+      } catch (e) {
+        console.error('Thumbnail generation failed', e)
+        setState('preview')
+        onVideoReady(blob, url, '')
       }
-      
+
       // Stop camera
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop())
         streamRef.current = null
       }
     }
-    
+
     mediaRecorder.start()
-    setState('recording')
-    setRecordingTime(0)
-    
+
     timerRef.current = window.setInterval(() => {
       setRecordingTime(prev => prev + 1)
     }, 1000)
@@ -219,24 +269,16 @@ export function VideoPanel({
     const url = URL.createObjectURL(blob)
     setLocalVideoUrl(url)
     
-    // Generate thumbnail
-    if (previewVideoRef.current) {
-      previewVideoRef.current.src = url
-      previewVideoRef.current.onloadedmetadata = async () => {
-        if (previewVideoRef.current) {
-          setDuration(previewVideoRef.current.duration)
-          previewVideoRef.current.currentTime = 1
-          
-          previewVideoRef.current.onseeked = async () => {
-            if (previewVideoRef.current) {
-              const thumb = await generateThumbnail(previewVideoRef.current)
-              setLocalThumbnail(thumb)
-              setState('preview')
-              onVideoReady(blob, url, thumb)
-            }
-          }
-        }
-      }
+    try {
+      const { thumb, duration } = await generateThumbnailFromUrl(url, 1)
+      setDuration(duration)
+      setLocalThumbnail(thumb)
+      setState('preview')
+      onVideoReady(blob, url, thumb)
+    } catch (e) {
+      console.error('Thumbnail generation failed', e)
+      setState('preview')
+      onVideoReady(blob, url, '')
     }
   }
 
