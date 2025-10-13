@@ -17,6 +17,7 @@ export interface ComposerState {
   audioUrl: string | null
   videoBlob: Blob | null
   videoUrl: string | null
+  videoThumbnail: string | null
   transcript: string
   tags: string[]
   peopleTags: PersonTag[]
@@ -52,7 +53,8 @@ export function useComposerState(initialMode: ComposerMode = 'text') {
           // Can't store Blobs/Files in localStorage, so reset them
           photos: [],
           audioBlob: null,
-          videoBlob: null
+          videoBlob: null,
+          videoThumbnail: null
         }
       }
     } catch (e) {
@@ -77,7 +79,8 @@ export function useComposerState(initialMode: ComposerMode = 'text') {
           // Don't save blobs/files
           photos: [],
           audioBlob: null,
-          videoBlob: null
+          videoBlob: null,
+          videoThumbnail: null
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
       } catch (e) {
@@ -138,6 +141,7 @@ function getDefaultState(mode: ComposerMode): ComposerState {
     audioUrl: null,
     videoBlob: null,
     videoUrl: null,
+    videoThumbnail: null,
     transcript: '',
     tags: [],
     peopleTags: [],

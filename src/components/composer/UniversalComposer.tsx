@@ -12,6 +12,7 @@ import { ContextPanel } from './ContextPanel'
 import { TextPanel } from './TextPanel'
 import { PhotoPanel } from './PhotoPanel'
 import { VoicePanel } from './VoicePanel'
+import { VideoPanel } from './VideoPanel'
 
 interface UniversalComposerProps {
   familyId: string
@@ -122,6 +123,15 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
       return
     }
 
+    if (state.mode === 'video' && !state.videoBlob && !asDraft) {
+      toast({
+        title: 'Video required',
+        description: 'Please record or upload a video.',
+        variant: 'destructive'
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -223,6 +233,35 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
             metadata: {
               transcript: state.transcript || null,
               mime_type: 'audio/webm'
+            }
+          })
+        }
+      }
+
+      // Handle video - save video and thumbnail to story_assets
+      if (state.videoBlob && state.videoUrl && state.videoThumbnail) {
+        const videoFile = new File([state.videoBlob], 'video.webm', { type: 'video/webm' })
+        const { path, error: uploadError } = await uploadMediaFile(videoFile, familyId, user.id)
+        
+        if (!uploadError && path) {
+          // Upload thumbnail
+          const thumbnailResponse = await fetch(state.videoThumbnail)
+          const thumbnailBlob = await thumbnailResponse.blob()
+          const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
+          const { path: thumbPath } = await uploadMediaFile(thumbnailFile, familyId, user.id)
+          
+          const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
+          const thumbUrl = thumbPath ? `${supabase.storage.from('media').getPublicUrl(thumbPath).data.publicUrl}` : null
+          
+          // Create story_asset record
+          await supabase.from('story_assets').insert({
+            story_id: story.id,
+            type: 'video',
+            url: fullUrl,
+            thumbnail_url: thumbUrl,
+            position: 0,
+            metadata: {
+              mime_type: 'video/webm'
             }
           })
         }
@@ -359,9 +398,22 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
                   </TabsContent>
 
                   <TabsContent value="video" className="mt-0">
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">Video stories coming soon!</p>
-                    </div>
+                    <VideoPanel
+                      title={state.title}
+                      content={state.content}
+                      videoBlob={state.videoBlob}
+                      videoUrl={state.videoUrl}
+                      thumbnailUrl={state.videoThumbnail}
+                      onTitleChange={(value) => updateState({ title: value })}
+                      onContentChange={(value) => updateState({ content: value })}
+                      onVideoReady={(blob, url, thumbnail) =>
+                        updateState({
+                          videoBlob: blob,
+                          videoUrl: url,
+                          videoThumbnail: thumbnail
+                        })
+                      }
+                    />
                   </TabsContent>
 
                   <TabsContent value="mixed" className="mt-0">
