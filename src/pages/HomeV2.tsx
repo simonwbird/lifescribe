@@ -4,7 +4,10 @@ import { supabase } from '@/integrations/supabase/client'
 import { TopBar } from '@/components/home/TopBar'
 import { HeroStrip } from '@/components/home/HeroStrip'
 import { SmartFeed } from '@/components/home/SmartFeed'
+import { VoiceCapture } from '@/components/home/VoiceCapture'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Mic } from 'lucide-react'
 
 export default function HomeV2() {
   const navigate = useNavigate()
@@ -12,6 +15,7 @@ export default function HomeV2() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string>('')
   const [familyId, setFamilyId] = useState<string>('')
+  const [showVoiceCapture, setShowVoiceCapture] = useState(false)
 
   useEffect(() => {
     loadUserAndFamily()
@@ -95,8 +99,30 @@ export default function HomeV2() {
       <TopBar familyId={familyId} userId={userId} />
       <HeroStrip familyId={familyId} userId={userId} />
 
-      {/* Smart Feed */}
-      <div className="container px-4 py-6 max-w-2xl mx-auto">
+      {/* Smart Feed with Voice Capture */}
+      <div className="container px-4 py-6 max-w-2xl mx-auto space-y-4">
+        {/* Voice Capture Toggle */}
+        {!showVoiceCapture && (
+          <Button 
+            onClick={() => setShowVoiceCapture(true)}
+            variant="outline"
+            className="w-full gap-2 border-dashed"
+          >
+            <Mic className="h-4 w-4" />
+            Record Voice Note
+          </Button>
+        )}
+
+        {/* Inline Voice Capture */}
+        {showVoiceCapture && (
+          <VoiceCapture
+            familyId={familyId}
+            userId={userId}
+            onPublished={() => setShowVoiceCapture(false)}
+            onCancel={() => setShowVoiceCapture(false)}
+          />
+        )}
+
         <SmartFeed familyId={familyId} userId={userId} />
       </div>
     </div>
