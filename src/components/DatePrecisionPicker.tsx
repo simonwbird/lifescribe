@@ -25,6 +25,14 @@ export function DatePrecisionPicker({
 }) {
   const [textInput, setTextInput] = React.useState('')
 
+  // Initialize with today's date on mount if no value
+  React.useEffect(() => {
+    if (!value.date && value.precision === 'exact') {
+      const today = new Date()
+      onChange({ date: today, precision: 'exact', yearOnly: false })
+    }
+  }, [])
+
   // Update text input when value changes
   React.useEffect(() => {
     if (value.date) {
