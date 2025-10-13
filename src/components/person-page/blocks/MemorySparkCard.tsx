@@ -7,6 +7,7 @@ import { CaptureMemoryModal } from '@/components/memory/CaptureMemoryModal'
 import { RecentMemoriesStrip } from '@/components/memory/RecentMemoriesStrip'
 import { useAuth } from '@/contexts/AuthProvider'
 import { supabase } from '@/integrations/supabase/client'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface MemorySparkCardProps {
   person: {
@@ -28,6 +29,7 @@ interface MemorySparkCardProps {
 
 export default function MemorySparkCard({ person, viewer, context }: MemorySparkCardProps) {
   const { user } = useAuth()
+  const { track } = useAnalytics()
   const { currentSpark, interpolatedText, loading, shuffle } = useMemorySpark(person, viewer, context)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedMode, setSelectedMode] = useState<'text' | 'voice' | 'photo'>('text')
@@ -98,9 +100,28 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
     loadRecentMemories()
   }, [person.id])
 
+  // Track spark view
+  useEffect(() => {
+    if (currentSpark && interpolatedText) {
+      track('memory_spark_view', {
+        person_id: person.id,
+        prompt_id: currentSpark.id,
+        prompt_text: interpolatedText
+      })
+    }
+  }, [currentSpark, interpolatedText, person.id, track])
+
   const handleCapture = (mode: 'text' | 'voice' | 'photo') => {
     setSelectedMode(mode)
     setModalOpen(true)
+  }
+
+  const handleShuffle = () => {
+    track('memory_spark_shuffle', {
+      person_id: person.id,
+      previous_prompt_id: currentSpark?.id
+    })
+    shuffle()
   }
 
   const handleModalClose = (open: boolean) => {
@@ -197,7 +218,7 @@ export default function MemorySparkCard({ person, viewer, context }: MemorySpark
             <Button
               variant="ghost"
               size="sm"
-              onClick={shuffle}
+              onClick={handleShuffle}
               className="ml-auto text-xs opacity-70 hover:opacity-100"
             >
               <Shuffle className="w-3 h-3 mr-1" />

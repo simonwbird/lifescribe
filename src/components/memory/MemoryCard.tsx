@@ -18,6 +18,7 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface Memory {
   id: string
@@ -55,6 +56,7 @@ interface MemoryCardProps {
 
 export function MemoryCard({ memory, canModerate = false, onUpdate }: MemoryCardProps) {
   const { toast } = useToast()
+  const { track } = useAnalytics()
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(memory.title || '')
   const [editTags, setEditTags] = useState(memory.tags.join(', '))
@@ -72,6 +74,16 @@ export function MemoryCard({ memory, canModerate = false, onUpdate }: MemoryCard
         .eq('id', memory.id)
 
       if (error) throw error
+
+      // Track memory approval
+      if (newStatus === 'approved') {
+        track('memory_approved', {
+          memory_id: memory.id,
+          person_id: memory.person_id,
+          prompt_id: memory.prompt_id,
+          modality: memory.modality
+        })
+      }
 
       toast({
         title: newStatus === 'approved' ? 'Memory approved' : 'Memory hidden',

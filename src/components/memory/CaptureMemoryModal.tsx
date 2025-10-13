@@ -15,6 +15,15 @@ import { Pencil, Mic, Camera, Save, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import VoiceRecorderPanel from '@/components/story-create/VoiceRecorderPanel'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface CaptureMemoryModalProps {
   isOpen: boolean
@@ -63,6 +72,7 @@ export function CaptureMemoryModal({
   viewer
 }: CaptureMemoryModalProps) {
   const { toast } = useToast()
+  const { track } = useAnalytics()
   const [mode, setMode] = useState<CaptureMode>('text')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -75,6 +85,8 @@ export function CaptureMemoryModal({
   const [audioDuration, setAudioDuration] = useState(0)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [visibility, setVisibility] = useState<'only_me' | 'inner_circle' | 'family' | 'public'>('family')
+  const [isFirstHand, setIsFirstHand] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   
   const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || 'them'
@@ -283,6 +295,17 @@ export function CaptureMemoryModal({
         })
 
       if (insertError) throw insertError
+
+      // Track memory creation
+      track(`memory_created_${mode}` as any, {
+        person_id: person.id,
+        prompt_id: promptId,
+        modality: mode,
+        visibility,
+        is_first_hand: isFirstHand,
+        has_year: !!yearApprox,
+        has_place: !!placeText
+      })
 
       // Clear draft
       localStorage.removeItem(draftKey)
@@ -495,6 +518,49 @@ export function CaptureMemoryModal({
               )}
             </div>
           )}
+        </div>
+
+        {/* Visibility and consent */}
+        <div className="pt-4 border-t space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="visibility" className="text-sm font-medium">
+              Who can see this memory? <span className="text-destructive">*</span>
+            </Label>
+            <Select value={visibility} onValueChange={(v: any) => setVisibility(v)}>
+              <SelectTrigger id="visibility" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="only_me">Only me</SelectItem>
+                <SelectItem value="inner_circle">Close family</SelectItem>
+                <SelectItem value="family">All family members (default)</SelectItem>
+                <SelectItem value="public">Public</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Choose who should be able to view this memory
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="first-hand"
+              checked={isFirstHand}
+              onCheckedChange={(checked) => setIsFirstHand(checked as boolean)}
+              className="mt-1"
+            />
+            <div className="space-y-1">
+              <Label
+                htmlFor="first-hand"
+                className="text-sm font-normal leading-tight cursor-pointer"
+              >
+                This is my own memory (I experienced it first-hand)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Uncheck if you heard this story from someone else
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Action buttons */}

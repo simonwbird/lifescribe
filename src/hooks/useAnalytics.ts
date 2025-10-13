@@ -241,7 +241,15 @@ export type AnalyticsEvent =
   | 'share_link_copied'
   // Feed banner events
   | 'feed_banner_dismissed'
-  | 'feed_banner_clicked';
+  | 'feed_banner_clicked'
+  // Memory analytics events
+  | 'memory_spark_view'
+  | 'memory_spark_shuffle'
+  | 'memory_created_text'
+  | 'memory_created_voice'
+  | 'memory_created_photo'
+  | 'memory_approved'
+  | 'memory_play_voice';
 
 import { supabase } from '@/integrations/supabase/client'
 import { useMode } from './useMode'

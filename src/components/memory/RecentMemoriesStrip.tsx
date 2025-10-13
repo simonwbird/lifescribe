@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Play, Pause, Volume2, Image as ImageIcon, FileText } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface Memory {
   id: string
@@ -23,6 +24,7 @@ interface RecentMemoriesStripProps {
 }
 
 export function RecentMemoriesStrip({ memories }: RecentMemoriesStripProps) {
+  const { track } = useAnalytics()
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({})
 
@@ -57,6 +59,11 @@ export function RecentMemoriesStrip({ memories }: RecentMemoriesStripProps) {
     } else {
       audio.play()
       setPlayingId(memoryId)
+      
+      // Track voice play
+      track('memory_play_voice', {
+        memory_id: memoryId
+      })
     }
   }
 
