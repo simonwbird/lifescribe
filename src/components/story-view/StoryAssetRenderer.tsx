@@ -30,6 +30,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsInstanceRef = useRef<any | null>(null)
+  const [canPlay, setCanPlay] = useState(false)
 
   const getMimeFromUrl = (u?: string | null) => {
     if (!u) return undefined
@@ -74,6 +75,8 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       hlsInstanceRef.current = null
     }
 
+    setCanPlay(false)
+
     if (!isHls) return // nothing to do for MP4/WEBM
 
     // Safari (native HLS)
@@ -96,6 +99,9 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
           hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
             console.warn('HLS error', data?.type, data?.details)
           })
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            setCanPlay(true)
+          })
         } else {
           setUnsupported(true)
         }
@@ -115,19 +121,33 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   }, [asset.url, asset.transcoded_url, asset.type])
 
   const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
+    if (asset.type === 'video') {
+      const v = videoRef.current
+      if (!v) return
+      if (!canPlay) {
+        console.warn('Video not ready to play yet')
+        return
       }
-      setIsPlaying(!isPlaying)
+      try {
+        if (v.paused) {
+          v.play()
+        } else {
+          v.pause()
+        }
+        setIsPlaying(!isPlaying)
+      } catch (e) {
+        console.error('Video play/pause failed', e)
+      }
+      return
     }
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause()
+
+    if (asset.type === 'audio') {
+      const a = audioRef.current
+      if (!a) return
+      if (a.paused) {
+        a.play()
       } else {
-        audioRef.current.play()
+        a.pause()
       }
       setIsPlaying(!isPlaying)
     }
@@ -142,6 +162,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration)
+      setCanPlay(true)
     }
   }
 
