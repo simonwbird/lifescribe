@@ -191,7 +191,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           })
           console.log('Search results:', searchResults)
           setResults(searchResults.results)
-          setActiveIndex(actions.length) // Start with first search result
+          setActiveIndex(0) // Start with first search result
         } catch (error) {
           console.error('Command palette search error:', error)
         } finally {
@@ -219,7 +219,23 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     }
   }, [isOpen, track])
 
-  const allItems = [...actions, ...results]
+  // Group results by type with people first
+  const groupedResults = results.reduce((acc, result) => {
+    if (!acc[result.type]) {
+      acc[result.type] = []
+    }
+    acc[result.type].push(result)
+    return acc
+  }, {} as Record<string, typeof results>)
+  
+  // Sort groups to show people first
+  const sortedGroups = Object.entries(groupedResults).sort(([typeA], [typeB]) => {
+    if (typeA === 'person') return -1
+    if (typeB === 'person') return 1
+    return 0
+  })
+
+  const allItems = [...results, ...actions]
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
@@ -276,80 +292,86 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
           {/* Results */}
           <div className="max-h-96 overflow-y-auto">
-            {/* Actions Section */}
-            <div className="p-2">
-              <div className="px-2 py-1 text-xs font-medium text-muted-foreground mb-1">
-                Actions
-              </div>
-              {actions.map((action, index) => {
-                const Icon = action.icon
-                const isActive = activeIndex === index
-                
-                return (
-                  <button
-                    key={action.id}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 text-left text-sm rounded hover:bg-accent transition-colors",
-                      isActive && "bg-accent"
-                    )}
-                    onClick={action.action}
-                  >
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="flex-1">{action.label}</span>
-                    {action.shortcut && (
-                      <Badge variant="outline" className="h-5 px-1 text-xs">
-                        {action.shortcut}
-                      </Badge>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Search Results Section */}
+            {/* Search Results Section - Show First with People at Top */}
             {(results.length > 0 || isSearching) && (
-              <div className="border-t p-2">
-                <div className="px-2 py-1 text-xs font-medium text-muted-foreground mb-1">
-                  Search Results
-                </div>
+              <div className="p-2">
+                {sortedGroups.map(([type, items], groupIndex) => (
+                  <div key={type} className={groupIndex > 0 ? 'mt-3' : ''}>
+                    <div className="px-2 py-1 text-xs font-medium text-muted-foreground mb-1 capitalize">
+                      {type === 'person' ? 'People' : type}s
+                    </div>
+                    {items.map((result) => {
+                      const resultIndex = results.findIndex(r => r.id === result.id)
+                      const isActive = activeIndex === resultIndex
+                      
+                      return (
+                        <button
+                          key={result.id}
+                          className={cn(
+                            "w-full flex items-start gap-3 px-3 py-2 text-left text-sm rounded hover:bg-accent transition-colors",
+                            isActive && "bg-accent"
+                          )}
+                          onClick={() => {
+                            navigate(result.url)
+                            onClose()
+                            track('command_palette_result_select', { 
+                              entity_type: result.type,
+                              entity_id: result.id 
+                            })
+                          }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{result.title}</div>
+                            {result.subtitle && (
+                              <div className="text-xs text-muted-foreground truncate">
+                                {result.subtitle}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant="outline" className="text-xs capitalize shrink-0">
+                            {result.type}
+                          </Badge>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ))}
                 
                 {isSearching && (
                   <div className="px-3 py-2 text-sm text-muted-foreground">
                     Searching...
                   </div>
                 )}
-                
-                {results.map((result, index) => {
-                  const resultIndex = actions.length + index
-                  const isActive = activeIndex === resultIndex
+              </div>
+            )}
+
+            {/* Actions Section - Show After Search Results */}
+            {(!query || results.length > 0) && (
+              <div className={cn("p-2", results.length > 0 && "border-t")}>
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground mb-1">
+                  Actions
+                </div>
+                {actions.map((action) => {
+                  const Icon = action.icon
+                  const actionIndex = results.length + actions.findIndex(a => a.id === action.id)
+                  const isActive = activeIndex === actionIndex
                   
                   return (
                     <button
-                      key={result.id}
+                      key={action.id}
                       className={cn(
-                        "w-full flex items-start gap-3 px-3 py-2 text-left text-sm rounded hover:bg-accent transition-colors",
+                        "w-full flex items-center gap-3 px-3 py-2 text-left text-sm rounded hover:bg-accent transition-colors",
                         isActive && "bg-accent"
                       )}
-                      onClick={() => {
-                        navigate(result.url)
-                        onClose()
-                        track('command_palette_result_select', { 
-                          entity_type: result.type,
-                          entity_id: result.id 
-                        })
-                      }}
+                      onClick={action.action}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{result.title}</div>
-                        {result.subtitle && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            {result.subtitle}
-                          </div>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="text-xs capitalize shrink-0">
-                        {result.type}
-                      </Badge>
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="flex-1">{action.label}</span>
+                      {action.shortcut && (
+                        <Badge variant="outline" className="h-5 px-1 text-xs">
+                          {action.shortcut}
+                        </Badge>
+                      )}
                     </button>
                   )
                 })}
@@ -358,7 +380,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
             {/* No results */}
             {query.length >= 2 && !isSearching && results.length === 0 && (
-              <div className="border-t p-4 text-center text-sm text-muted-foreground">
+              <div className="p-4 text-center text-sm text-muted-foreground">
                 No results found for "{query}"
               </div>
             )}
