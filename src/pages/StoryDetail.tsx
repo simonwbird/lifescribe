@@ -16,6 +16,7 @@ export default function StoryDetail() {
   const [story, setStory] = useState<(Story & { profiles: Profile }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [attachModalOpen, setAttachModalOpen] = useState(false)
+  const [processingState, setProcessingState] = useState<string>('ready')
 
   useEffect(() => {
     const getStory = async () => {
@@ -33,6 +34,7 @@ export default function StoryDetail() {
 
         if (data) {
           setStory(data)
+          setProcessingState((data as any).processing_state || 'ready')
         }
       } catch (error) {
         console.error('Error fetching story:', error)
@@ -42,7 +44,29 @@ export default function StoryDetail() {
     }
 
     getStory()
-  }, [id])
+
+    // Poll for processing updates if story is processing
+    const pollInterval = setInterval(async () => {
+      if (!id || processingState === 'ready') return
+
+      const { data } = await supabase
+        .from('stories')
+        .select('processing_state')
+        .eq('id', id)
+        .single()
+
+      if (data) {
+        const newState = (data as any).processing_state || 'ready'
+        setProcessingState(newState)
+        if (newState === 'ready') {
+          // Reload full story when processing completes
+          getStory()
+        }
+      }
+    }, 5000) // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [id, processingState])
 
   if (loading) {
     return (
@@ -96,6 +120,25 @@ export default function StoryDetail() {
               Add to Person
             </Button>
           </div>
+          
+          {processingState === 'processing' && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  Processing media... Your story is being optimized and will be ready soon.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {processingState === 'failed' && (
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">
+                Media processing failed. Some content may not display correctly.
+              </p>
+            </div>
+          )}
           
           <StoryCard 
             story={story} 

@@ -249,31 +249,59 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
       }
 
       // Handle video - save video and thumbnail to story_assets
-      if (state.videoBlob && state.videoUrl && state.videoThumbnail) {
+      if (state.videoBlob && state.videoUrl) {
         const videoFile = new File([state.videoBlob], 'video.webm', { type: 'video/webm' })
         const { path, error: uploadError } = await uploadMediaFile(videoFile, familyId, user.id)
         
         if (!uploadError && path) {
           // Upload thumbnail
-          const thumbnailResponse = await fetch(state.videoThumbnail)
-          const thumbnailBlob = await thumbnailResponse.blob()
-          const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
-          const { path: thumbPath } = await uploadMediaFile(thumbnailFile, familyId, user.id)
+          let thumbUrl = null
+          if (state.videoThumbnail) {
+            const thumbnailResponse = await fetch(state.videoThumbnail)
+            const thumbnailBlob = await thumbnailResponse.blob()
+            const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
+            const { path: thumbPath } = await uploadMediaFile(thumbnailFile, familyId, user.id)
+            if (thumbPath) {
+              thumbUrl = `${supabase.storage.from('media').getPublicUrl(thumbPath).data.publicUrl}`
+            }
+          }
           
           const fullUrl = `${supabase.storage.from('media').getPublicUrl(path).data.publicUrl}`
-          const thumbUrl = thumbPath ? `${supabase.storage.from('media').getPublicUrl(thumbPath).data.publicUrl}` : null
           
-          // Create story_asset record
-          await supabase.from('story_assets').insert({
+          // Create story_asset record with processing state
+          const { data: asset } = await supabase.from('story_assets').insert({
             story_id: story.id,
             type: 'video',
             url: fullUrl,
             thumbnail_url: thumbUrl,
             position: 0,
             metadata: {
-              mime_type: 'video/webm'
+              mime_type: 'video/webm',
+              processing_queued: true
             }
-          })
+          }).select().single()
+
+          // Queue video processing via direct DB insert
+          if (asset) {
+            await supabase.from('processing_queue' as any).insert({
+              story_id: story.id,
+              asset_id: asset.id,
+              job_type: 'video_transcode',
+              priority: 10,
+              metadata: { queued_at: new Date().toISOString() }
+            } as any)
+
+            // Also queue thumbnail generation if no thumbnail provided
+            if (!thumbUrl) {
+              await supabase.from('processing_queue' as any).insert({
+                story_id: story.id,
+                asset_id: asset.id,
+                job_type: 'thumbnail_generate',
+                priority: 7,
+                metadata: { queued_at: new Date().toISOString() }
+              } as any)
+            }
+          }
         }
       }
 
