@@ -9,6 +9,8 @@ import RightRail from '@/components/home/RightRail'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Mic } from 'lucide-react'
+import ElderModeView from '@/components/elder/ElderModeView'
+import { useElderMode } from '@/hooks/useElderMode'
 
 export default function HomeV2() {
   const navigate = useNavigate()
@@ -17,6 +19,7 @@ export default function HomeV2() {
   const [userId, setUserId] = useState<string>('')
   const [familyId, setFamilyId] = useState<string>('')
   const [showVoiceCapture, setShowVoiceCapture] = useState(false)
+  const { isElderMode, phoneCode, isLoading: elderModeLoading } = useElderMode(userId)
 
   useEffect(() => {
     loadUserAndFamily()
@@ -54,7 +57,7 @@ export default function HomeV2() {
     }
   }
 
-  if (loading) {
+  if (loading || elderModeLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="h-14 border-b bg-background/95">
@@ -74,6 +77,11 @@ export default function HomeV2() {
         </div>
       </div>
     )
+  }
+
+  // Show Elder Mode if enabled
+  if (isElderMode && phoneCode) {
+    return <ElderModeView userId={userId} familyId={familyId} phoneCode={phoneCode} />
   }
 
   if (!familyId || !userId) {

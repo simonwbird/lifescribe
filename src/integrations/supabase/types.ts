@@ -3189,6 +3189,73 @@ export type Database = {
           },
         ]
       }
+      inbound_voice_messages: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          draft_id: string | null
+          duration_seconds: number | null
+          family_id: string | null
+          id: string
+          phone_number: string | null
+          processed_at: string | null
+          source: string
+          status: string
+          transcript: string | null
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          draft_id?: string | null
+          duration_seconds?: number | null
+          family_id?: string | null
+          id?: string
+          phone_number?: string | null
+          processed_at?: string | null
+          source?: string
+          status?: string
+          transcript?: string | null
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          draft_id?: string | null
+          duration_seconds?: number | null
+          family_id?: string | null
+          id?: string
+          phone_number?: string | null
+          processed_at?: string | null
+          source?: string
+          status?: string
+          transcript?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_voice_messages_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_voice_messages_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_voice_messages_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -6023,6 +6090,8 @@ export type Database = {
           created_at: string
           date_format_preference: string | null
           default_space_id: string | null
+          elder_mode: boolean | null
+          elder_phone_code: string | null
           email: string
           email_verified_at: string | null
           feature_flags: Json | null
@@ -6047,6 +6116,8 @@ export type Database = {
           created_at?: string
           date_format_preference?: string | null
           default_space_id?: string | null
+          elder_mode?: boolean | null
+          elder_phone_code?: string | null
           email: string
           email_verified_at?: string | null
           feature_flags?: Json | null
@@ -6071,6 +6142,8 @@ export type Database = {
           created_at?: string
           date_format_preference?: string | null
           default_space_id?: string | null
+          elder_mode?: boolean | null
+          elder_phone_code?: string | null
           email?: string
           email_verified_at?: string | null
           feature_flags?: Json | null
@@ -8610,6 +8683,10 @@ export type Database = {
         Args: { p_family_id: string }
         Returns: number
       }
+      enable_elder_mode: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       evaluate_feature_flag: {
         Args: {
           p_family_id?: string
@@ -8653,6 +8730,10 @@ export type Database = {
       generate_digest_preview: {
         Args: { p_family_id: string; p_preview_date?: string }
         Returns: Json
+      }
+      generate_elder_phone_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_event_join_code: {
         Args: Record<PropertyKey, never>

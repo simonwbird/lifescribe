@@ -15,6 +15,7 @@ import ExportDataCard from '@/components/compliance/ExportDataCard'
 import RTBFCard from '@/components/compliance/RTBFCard'
 import RegionSettings from '@/components/RegionSettings'
 import ProfilePersonalization from '@/components/profile/ProfilePersonalization'
+import ElderModeSettings from '@/components/profile/ElderModeSettings'
 import TimezoneMismatchBanner from '@/components/TimezoneMismatchBanner'
 import type { UserLocale } from '@/lib/localizationTypes'
 import type { Profile as ProfileType } from '@/lib/types'
@@ -204,6 +205,11 @@ export default function Profile() {
                   window.location.reload()
                 }}
               />
+            )}
+
+            {/* Elder Mode Settings */}
+            {profile && (
+              <ElderModeSettings userId={profile.id} />
             )}
 
             {/* Region & Format Settings */}
