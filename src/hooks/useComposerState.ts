@@ -35,10 +35,20 @@ export function useComposerState(initialMode: ComposerMode = 'text') {
         const parsed = JSON.parse(saved)
         return {
           ...parsed,
+          mode: parsed.mode ?? initialMode,
+          title: parsed.title ?? '',
+          content: parsed.content ?? '',
           dateValue: {
             date: parsed.dateValue?.date ? new Date(parsed.dateValue.date) : null,
+            precision: parsed.dateValue?.precision ?? 'exact',
             yearOnly: parsed.dateValue?.yearOnly || false
           },
+          placeText: parsed.placeText ?? '',
+          privacy: parsed.privacy ?? 'private',
+          tags: parsed.tags ?? [],
+          peopleTags: parsed.peopleTags ?? [],
+          linkedPlaces: parsed.linkedPlaces ?? [],
+          transcript: parsed.transcript ?? '',
           // Can't store Blobs/Files in localStorage, so reset them
           photos: [],
           audioBlob: null,

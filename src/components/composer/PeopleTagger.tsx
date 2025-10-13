@@ -35,12 +35,15 @@ export function PeopleTagger({ familyId, tags, onChange, currentUserId }: People
   const [showAddNew, setShowAddNew] = useState(false)
   const [newPersonName, setNewPersonName] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+  
+  // Guard against undefined tags from parents
+  const safeTags = tags ?? []
 
   useEffect(() => {
     loadPeople()
     
     // Add current user as author by default if not already tagged
-    if (currentUserId && tags.length === 0) {
+    if (currentUserId && safeTags.length === 0) {
       loadCurrentUserPerson()
     }
   }, [familyId])
@@ -109,7 +112,7 @@ export function PeopleTagger({ familyId, tags, onChange, currentUserId }: People
       if (error) throw error
 
       // Add to tags
-      onChange([...tags, {
+      onChange([...safeTags, {
         personId: person.id,
         personName: newPersonName.trim(),
         role: 'subject'
@@ -139,7 +142,7 @@ export function PeopleTagger({ familyId, tags, onChange, currentUserId }: People
   function handleAddTag(person: Person) {
     if (tags.some(t => t.personId === person.id)) return
 
-    onChange([...tags, {
+    onChange([...safeTags, {
       personId: person.id,
       personName: `${person.given_name} ${person.surname || ''}`.trim(),
       role: 'subject'
@@ -148,19 +151,19 @@ export function PeopleTagger({ familyId, tags, onChange, currentUserId }: People
   }
 
   function handleRemoveTag(personId: string) {
-    onChange(tags.filter(t => t.personId !== personId))
+    onChange(safeTags.filter(t => t.personId !== personId))
   }
 
   function handleRoleChange(personId: string, role: PersonTag['role']) {
-    onChange(tags.map(t => t.personId === personId ? { ...t, role } : t))
+    onChange(safeTags.map(t => t.personId === personId ? { ...t, role } : t))
   }
 
-  const availablePeople = people.filter(p => !tags.some(t => t.personId === p.id))
+  const availablePeople = people.filter(p => !safeTags.some(t => t.personId === p.id))
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {tags.map(tag => (
+        {safeTags.map(tag => (
           <div key={tag.personId} className="flex items-center gap-2 bg-secondary rounded-lg p-2">
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{tag.personName}</span>
@@ -265,7 +268,7 @@ export function PeopleTagger({ familyId, tags, onChange, currentUserId }: People
         </div>
       )}
 
-      {tags.length === 0 && (
+      {safeTags.length === 0 && (
         <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 shrink-0" />
           <p className="text-sm text-amber-800 dark:text-amber-200">
