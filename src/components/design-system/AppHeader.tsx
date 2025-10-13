@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, BookHeart, FileText, Users, GitBranch, Plus, PenTool, Mic, Camera, Archive, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,14 +13,37 @@ import GlobalSearch from '@/components/search/GlobalSearch'
 import NotificationsBell from '@/components/navigation/NotificationsBell'
 import ProfileDropdown from '@/components/navigation/ProfileDropdown'
 import QuickAddSheet from '@/components/home/QuickAddSheet'
+import { InviteFamilySheet } from '@/components/invites/InviteFamilySheet'
 import { useLabs } from '@/hooks/useLabs'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { supabase } from '@/integrations/supabase/client'
 
 export function AppHeader() {
   const location = useLocation()
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
   const [showQuickAdd, setShowQuickAdd] = useState(false)
+  const [familyId, setFamilyId] = useState<string | null>(null)
+
+  useEffect(() => {
+    loadFamilyId()
+  }, [])
+
+  const loadFamilyId = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('members')
+      .select('family_id')
+      .eq('profile_id', user.id)
+      .limit(1)
+      .single()
+
+    if (data) {
+      setFamilyId(data.family_id)
+    }
+  }
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
@@ -127,6 +150,9 @@ export function AppHeader() {
             <Plus className="h-3 w-3" />
             Create
           </Button>
+
+          {/* Invite Button */}
+          {familyId && <InviteFamilySheet familyId={familyId} />}
 
           {/* Notifications */}
           {labsEnabled && flags.notifications && <NotificationsBell />}

@@ -86,6 +86,7 @@ import People from './pages/People'
 import PersonPageBySlug from './pages/PersonPageBySlug'
 import SitemapPage from './pages/SitemapPage'
 import DateFormattingExamplePage from './pages/DateFormattingExample'
+import InviteRedeem from './pages/InviteRedeem'
 import AdminShell from './components/admin/AdminShell'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminPeople from './pages/admin/AdminPeople'
@@ -218,7 +219,8 @@ function AppContent() {
        <Route path="/media" element={<AuthGate><Media /></AuthGate>} />
        <Route path="/media/albums" element={<AuthGate><Media /></AuthGate>} />
         <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
-      <Route path="/digest/pause" element={<LazyRoute factory={() => import('./pages/DigestPause')} />} />
+       <Route path="/digest/pause" element={<LazyRoute factory={() => import('./pages/DigestPause')} />} />
+       <Route path="/invite/:token" element={<InviteRedeem />} />
       
       {/* Admin Routes - Role-protected */}
        <Route path="/admin" element={<AuthGate><RoleGate role="admin"><AdminShell /></RoleGate></AuthGate>}>
