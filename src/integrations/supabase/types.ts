@@ -7200,6 +7200,67 @@ export type Database = {
           },
         ]
       }
+      story_sources: {
+        Row: {
+          created_at: string
+          created_by: string
+          display_text: string | null
+          family_id: string
+          id: string
+          paragraph_index: number | null
+          source_content: string
+          source_type: string
+          story_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          display_text?: string | null
+          family_id: string
+          id?: string
+          paragraph_index?: number | null
+          source_content: string
+          source_type: string
+          story_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          display_text?: string | null
+          family_id?: string
+          id?: string
+          paragraph_index?: number | null
+          source_content?: string
+          source_type?: string
+          story_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_sources_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_sources_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "story_sources_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suggestions: {
         Row: {
           created_at: string
@@ -8637,6 +8698,10 @@ export type Database = {
       }
       is_family_orphaned: {
         Args: { p_family_id: string }
+        Returns: boolean
+      }
+      is_story_cited: {
+        Args: { p_story_id: string }
         Returns: boolean
       }
       is_super_admin: {
