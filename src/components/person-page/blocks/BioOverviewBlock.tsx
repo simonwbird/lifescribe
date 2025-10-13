@@ -149,24 +149,129 @@ export default function BioOverviewBlock({
 
   if (isEmpty && canEdit) {
     return (
-      <div className="text-center py-12 border-2 border-dashed rounded-lg">
-        <p className="text-muted-foreground mb-4">
-          Add a short bio so visitors meet the person, not just the dates.
-        </p>
-        <div className="flex gap-2 justify-center">
-          <Button onClick={() => setIsEditing(true)}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Write Bio
-          </Button>
-          <Button variant="outline" onClick={() => {
-            setIsEditing(true)
-            handleGenerateFromStories()
-          }} disabled={isGenerating}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            {isGenerating ? 'Generating…' : 'Generate from stories'}
-          </Button>
+      <>
+        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+          <p className="text-muted-foreground mb-4">
+            Add a short bio so visitors meet the person, not just the dates.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => setIsEditing(true)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Write Bio
+            </Button>
+            <Button variant="outline" onClick={() => {
+              setIsEditing(true)
+              handleGenerateFromStories()
+            }} disabled={isGenerating}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Generating…' : 'Generate from stories'}
+            </Button>
+          </div>
         </div>
-      </div>
+
+        {/* Ensure dialog renders even in empty state */}
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Biography</DialogTitle>
+            </DialogHeader>
+
+            {justGenerated && (
+              <div className="rounded-md bg-muted p-3 text-sm mb-3">
+                Draft generated from stories — review and adjust, then click Save Biography.
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <Label>Tone</Label>
+                <Select
+                  value={formData.tone}
+                  onValueChange={(value: 'classic' | 'warm' | 'vivid') =>
+                    setFormData({ ...formData, tone: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="classic">Classic</SelectItem>
+                    <SelectItem value="warm">Warm</SelectItem>
+                    <SelectItem value="vivid">Vivid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Short Bio (40-160 characters for SEO)</Label>
+                  <span className="text-sm text-muted-foreground">
+                    {formData.short_bio?.length || 0}/160
+                  </span>
+                </div>
+                <Textarea
+                  value={formData.short_bio}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 160) {
+                      setFormData({ ...formData, short_bio: e.target.value })
+                    }
+                  }}
+                  placeholder="A brief summary for search engines and social media..."
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Required when page is public and searchable
+                </p>
+              </div>
+
+              <div>
+                <Label>Long Bio (Markdown supported)</Label>
+                <Textarea
+                  value={formData.long_bio}
+                  onChange={(e) => setFormData({ ...formData, long_bio: e.target.value })}
+                  placeholder="Write a longer biography with details, stories, and memories..."
+                  rows={12}
+                />
+              </div>
+
+              {formData.sources && formData.sources.length > 0 && (
+                <div>
+                  <Label>Sources</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.sources.map((source, index) => (
+                      <Badge key={index} variant="secondary" className="gap-1">
+                        <LinkIcon className="h-3 w-3" />
+                        {source.title}
+                        <button
+                          onClick={() => removeSource(index)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleSave}>Save Biography</Button>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateFromStories}
+                  disabled={isGenerating}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {isGenerating ? 'Generating...' : 'Generate from stories'}
+                </Button>
+                <Button variant="ghost" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
