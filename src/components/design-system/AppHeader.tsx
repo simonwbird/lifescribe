@@ -12,6 +12,7 @@ import {
 import GlobalSearch from '@/components/search/GlobalSearch'
 import NotificationsBell from '@/components/navigation/NotificationsBell'
 import ProfileDropdown from '@/components/navigation/ProfileDropdown'
+import QuickAddSheet from '@/components/home/QuickAddSheet'
 import { useLabs } from '@/hooks/useLabs'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
@@ -19,6 +20,7 @@ export function AppHeader() {
   const location = useLocation()
   const { track } = useAnalytics()
   const { labsEnabled, flags } = useLabs()
+  const [showQuickAdd, setShowQuickAdd] = useState(false)
 
   // Don't render header on marketing homepage
   if (location.pathname === '/' && !location.search) {
@@ -117,9 +119,13 @@ export function AppHeader() {
           </nav>
 
           {/* Create Button */}
-          <Button size="sm" className="gap-1 text-primary-foreground hover:text-primary-foreground">
+          <Button 
+            size="sm" 
+            className="gap-1 text-primary-foreground hover:text-primary-foreground"
+            onClick={() => setShowQuickAdd(true)}
+          >
             <Plus className="h-3 w-3" />
-            <Link to="/stories/new" className="text-inherit hover:text-inherit no-underline">Create</Link>
+            Create
           </Button>
 
           {/* Notifications */}
@@ -129,6 +135,8 @@ export function AppHeader() {
           <ProfileDropdown />
         </div>
       </div>
+
+      <QuickAddSheet open={showQuickAdd} onOpenChange={setShowQuickAdd} />
     </header>
   )
 }

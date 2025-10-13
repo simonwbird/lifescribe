@@ -29,6 +29,17 @@ export function VoiceCapture({ familyId, userId, onPublished, onCancel }: VoiceC
   
   const { toast } = useToast()
 
+  // Listen for global event to trigger recording
+  useEffect(() => {
+    const handleOpen = () => {
+      if (state === 'idle') {
+        startRecording()
+      }
+    }
+    window.addEventListener('open-voice-capture', handleOpen)
+    return () => window.removeEventListener('open-voice-capture', handleOpen)
+  }, [state])
+
   useEffect(() => {
     return () => {
       stopRecording()
