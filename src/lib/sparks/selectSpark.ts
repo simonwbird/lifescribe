@@ -11,6 +11,8 @@ interface Spark {
 
 interface Person {
   first_name?: string
+  preferred_name?: string
+  full_name?: string
   birth_date?: string
   death_date?: string
 }
@@ -119,7 +121,7 @@ export function selectSpark(
 
 export function interpolateSpark(sparkText: string, person: Person, context?: Context): string {
   let text = sparkText
-  const firstName = person.first_name || 'them'
+  const firstName = person.first_name || person.preferred_name || person.full_name?.split(' ')[0] || person.full_name || 'this person'
   text = text.replace(/\{\{first_name\}\}/g, firstName)
   if (context?.place) {
     text = text.replace(/\{\{place\}\}/g, context.place)

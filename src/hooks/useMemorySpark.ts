@@ -5,6 +5,8 @@ import { selectSpark, interpolateSpark } from '@/lib/sparks/selectSpark'
 interface Person {
   id: string
   first_name?: string
+  preferred_name?: string
+  full_name?: string
   birth_date?: string
   death_date?: string
 }
