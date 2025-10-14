@@ -14,22 +14,26 @@ export default function MeRedirect() {
     }
 
     // Fetch the person record for the current user
-    supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then((response: any) => {
-        if (response?.data?.id) {
-          navigate(`/people/${response.data.id}`, { replace: true })
+    const fetchProfile = async () => {
+      try {
+        // @ts-ignore - Avoiding deep type instantiation error
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        if (!error && data?.id) {
+          navigate(`/people/${data.id}`, { replace: true })
         } else {
           navigate('/home', { replace: true })
         }
-      })
-      .catch((error: any) => {
-        console.error('Error redirecting to person page:', error)
+      } catch (err) {
         navigate('/home', { replace: true })
-      })
+      }
+    }
+
+    fetchProfile()
   }, [user, navigate])
 
   return (
