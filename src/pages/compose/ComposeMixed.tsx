@@ -7,28 +7,20 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import Header from '@/components/Header'
+import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
 
-export default function ComposeMixed() {
+interface ComposeMixedProps {
+  prefillData?: ComposerPrefillData
+  standalone?: boolean
+}
+
+export default function ComposeMixed({ prefillData, standalone = true }: ComposeMixedProps) {
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold mb-2">Mixed Content Story</h1>
-          <p className="text-muted-foreground">
-            Combine text, photos, and videos in one story
-          </p>
-        </div>
-
-        <div className="space-y-4">
+  const content_ui = (
+    <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Story Details</CardTitle>
@@ -90,6 +82,27 @@ export default function ComposeMixed() {
             </Button>
           </div>
         </div>
+  )
+
+  if (!standalone) {
+    return content_ui
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Mixed Content Story</h1>
+          <p className="text-muted-foreground">
+            Combine text, photos, and videos in one story
+          </p>
+        </div>
+        {content_ui}
       </main>
     </div>
   )

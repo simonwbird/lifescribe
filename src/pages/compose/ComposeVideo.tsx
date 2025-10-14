@@ -5,27 +5,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/Header'
+import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
 
-export default function ComposeVideo() {
+interface ComposeVideoProps {
+  prefillData?: ComposerPrefillData
+  standalone?: boolean
+}
+
+export default function ComposeVideo({ prefillData, standalone = true }: ComposeVideoProps) {
   const navigate = useNavigate()
   const [activeCamera, setActiveCamera] = useState<'front' | 'back'>('back')
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold mb-2">Record Video</h1>
-          <p className="text-muted-foreground">
-            Capture a short video memory or moment
-          </p>
-        </div>
-
-        <Card>
+  const content_ui = (
+    <Card>
           <CardHeader>
             <CardTitle>Video Recording</CardTitle>
             <CardDescription>
@@ -98,6 +90,27 @@ export default function ComposeVideo() {
             </Tabs>
           </CardContent>
         </Card>
+  )
+
+  if (!standalone) {
+    return content_ui
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Record Video</h1>
+          <p className="text-muted-foreground">
+            Capture a short video memory or moment
+          </p>
+        </div>
+        {content_ui}
       </main>
     </div>
   )

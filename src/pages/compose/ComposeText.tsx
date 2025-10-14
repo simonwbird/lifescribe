@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -7,28 +7,28 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import Header from '@/components/Header'
+import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
 
-export default function ComposeText() {
+interface ComposeTextProps {
+  prefillData?: ComposerPrefillData
+  standalone?: boolean
+}
+
+export default function ComposeText({ prefillData, standalone = true }: ComposeTextProps) {
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold mb-2">Write a Story</h1>
-          <p className="text-muted-foreground">
-            Share your memories and experiences in writing
-          </p>
-        </div>
+  // Apply prefill data
+  useEffect(() => {
+    if (prefillData?.promptId) {
+      // TODO: Load prompt from API/database
+      console.log('Loading prompt:', prefillData.promptId)
+    }
+  }, [prefillData])
 
-        <Card>
+  const content_ui = (
+    <Card>
           <CardHeader>
             <CardTitle>Your Story</CardTitle>
             <CardDescription>
@@ -68,6 +68,27 @@ export default function ComposeText() {
             </div>
           </CardContent>
         </Card>
+  )
+
+  if (!standalone) {
+    return content_ui
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Write a Story</h1>
+          <p className="text-muted-foreground">
+            Share your memories and experiences in writing
+          </p>
+        </div>
+        {content_ui}
       </main>
     </div>
   )

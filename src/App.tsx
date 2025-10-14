@@ -82,6 +82,7 @@ import Vault from "./pages/Vault";
 import Help from "./pages/Help";
 import Inbox from "./pages/Inbox";
 import Labs from "./pages/Labs";
+import StoryNew from "./pages/stories/StoryNew";
 import ComposeVoice from "./pages/compose/ComposeVoice";
 import ComposeText from "./pages/compose/ComposeText";
 import ComposePhotos from "./pages/compose/ComposePhotos";
@@ -198,6 +199,7 @@ function AppContent() {
       
       {/* Story routes with legacy redirect */}
       <Route path="/simple/story/new" element={<Navigate to="/stories/new" replace />} />
+      <Route path="/stories/new-tabbed" element={<AuthGate><StoryNew /></AuthGate>} />
       <Route path="/stories/new" element={<AuthGate><NewStory /></AuthGate>} />
       <Route path="/stories/drafts" element={<AuthGate><DraftsPage /></AuthGate>} />
       <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />

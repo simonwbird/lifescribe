@@ -50,7 +50,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
       label: 'Voice Story',
       description: 'Record your story with audio',
       icon: <Mic className="h-5 w-5" />,
-      route: '/compose/voice',
+      route: '/stories/new-tabbed?tab=voice&source=quick_add',
       color: 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20',
       badge: 'Popular',
     },
@@ -59,7 +59,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
       label: 'Text Story',
       description: 'Write a story or memory',
       icon: <PenTool className="h-5 w-5" />,
-      route: '/compose/text',
+      route: '/stories/new-tabbed?tab=text&source=quick_add',
       color: 'bg-green-500/10 text-green-600 hover:bg-green-500/20',
     },
     {
@@ -67,7 +67,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
       label: 'Photo(s)',
       description: 'Upload one or more photos',
       icon: <Camera className="h-5 w-5" />,
-      route: '/compose/photos',
+      route: '/stories/new-tabbed?tab=photo&source=quick_add',
       color: 'bg-purple-500/10 text-purple-600 hover:bg-purple-500/20',
     },
     {
@@ -75,7 +75,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
       label: 'Scan Old Photo',
       description: 'Digitize physical photos',
       icon: <ScanLine className="h-5 w-5" />,
-      route: '/compose/scan',
+      route: '/compose/scan?source=quick_add',
       color: 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20',
     },
     {
@@ -83,7 +83,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
       label: 'Short Video',
       description: 'Record or upload a video clip',
       icon: <Video className="h-5 w-5" />,
-      route: '/compose/video',
+      route: '/stories/new-tabbed?tab=video&source=quick_add',
       color: 'bg-red-500/10 text-red-600 hover:bg-red-500/20',
     },
     {
@@ -91,7 +91,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
       label: 'Mixed',
       description: 'Story with photos and videos',
       icon: <Layers className="h-5 w-5" />,
-      route: '/compose/mixed',
+      route: '/stories/new-tabbed?tab=mixed&source=quick_add',
       color: 'bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20',
     },
     {

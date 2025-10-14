@@ -54,9 +54,9 @@ export function QuickAddButton() {
   }
 
   const quickLinks = [
-    { label: 'Voice Story', route: '/compose/voice' },
-    { label: 'Text Story', route: '/compose/text' },
-    { label: 'Photo(s)', route: '/compose/photos' },
+    { label: 'Voice Story', route: '/stories/new-tabbed?tab=voice&source=header_create' },
+    { label: 'Text Story', route: '/stories/new-tabbed?tab=text&source=header_create' },
+    { label: 'Photo(s)', route: '/stories/new-tabbed?tab=photo&source=header_create' },
     { label: 'Recipe', route: '/recipes/new' },
     { label: 'Event', route: '/events/new' },
   ]

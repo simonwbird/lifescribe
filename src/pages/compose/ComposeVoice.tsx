@@ -4,27 +4,19 @@ import { ArrowLeft, Mic, Square, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Header from '@/components/Header'
+import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
 
-export default function ComposeVoice() {
+interface ComposeVoiceProps {
+  prefillData?: ComposerPrefillData
+  standalone?: boolean
+}
+
+export default function ComposeVoice({ prefillData, standalone = true }: ComposeVoiceProps) {
   const navigate = useNavigate()
   const [isRecording, setIsRecording] = useState(false)
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold mb-2">Record Voice Story</h1>
-          <p className="text-muted-foreground">
-            Share your story through audio recording
-          </p>
-        </div>
-
-        <Card>
+  const content_ui = (
+    <Card>
           <CardHeader>
             <CardTitle>Voice Recording</CardTitle>
             <CardDescription>
@@ -58,6 +50,27 @@ export default function ComposeVoice() {
             </div>
           </CardContent>
         </Card>
+  )
+
+  if (!standalone) {
+    return content_ui
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Record Voice Story</h1>
+          <p className="text-muted-foreground">
+            Share your story through audio recording
+          </p>
+        </div>
+        {content_ui}
       </main>
     </div>
   )
