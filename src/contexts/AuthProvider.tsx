@@ -153,24 +153,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
     
     // Load extended user data when signing in
-    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-      // Don't set loading for refreshes
-      if (event === 'SIGNED_IN') {
-        setLoading(true)
-      }
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      setLoading(true)
       
       try {
+        const userId = newSession.user.id
+        
         // Load all user data in parallel
-        await Promise.all([
-          refreshProfile(),
-          refreshRoles(),
-          refreshOnboarding()
+        const [profileResult, rolesResult, onboardingResult] = await Promise.all([
+          getProfile(userId),
+          getRolesFromMembers(userId),
+          getOnboardingState(userId)
         ])
+        
+        if (profileResult.data) setProfile(profileResult.data)
+        if (rolesResult.data) setRoles(rolesResult.data)
+        if (onboardingResult.data) setOnboarding(onboardingResult.data)
+      } catch (error) {
+        console.error('Failed to load user data:', error)
+        Sentry.captureException(error, {
+          tags: { auth: 'initial_load' },
+          user: { id: newSession.user.id }
+        })
       } finally {
         setLoading(false)
       }
     }
-  }, [refreshProfile, refreshRoles, refreshOnboarding])
+  }, [])
 
   // Initialize auth state
   useEffect(() => {
