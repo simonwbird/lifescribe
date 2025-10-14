@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { routes } from '@/lib/routes'
 import { useAuth } from '@/contexts/AuthProvider'
+import { supabase } from '@/lib/supabase'
 
 export default function MeRedirect() {
   const navigate = useNavigate()
@@ -13,9 +13,23 @@ export default function MeRedirect() {
       return
     }
 
-    // For now, redirect to timeline - we'll update this once we have the person record
-    // The person record will be fetched via a custom hook or server action
-    navigate(routes.meTimeline(), { replace: true })
+    // Fetch the person record for the current user
+    supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then((response: any) => {
+        if (response?.data?.id) {
+          navigate(`/people/${response.data.id}`, { replace: true })
+        } else {
+          navigate('/home', { replace: true })
+        }
+      })
+      .catch((error: any) => {
+        console.error('Error redirecting to person page:', error)
+        navigate('/home', { replace: true })
+      })
   }, [user, navigate])
 
   return (
