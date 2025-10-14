@@ -64,7 +64,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
     <>
       <header 
         role="banner" 
-        className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        className="w-full border-b bg-background"
         aria-label="LifeScribe navigation bar"
       >
         <div className="container flex h-14 items-center px-4">
