@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthProvider'
+import { supabase } from '@/lib/supabase'
+import { getCurrentSpaceId } from '@/lib/spaceUtils'
 
 export default function MeRedirect() {
   const navigate = useNavigate()
@@ -12,8 +14,28 @@ export default function MeRedirect() {
       return
     }
 
-    // Redirect directly to the current user's LifePage (person page)
-    navigate(`/people/${user.id}`, { replace: true })
+    const go = async () => {
+      const spaceId = await getCurrentSpaceId()
+      if (!spaceId) {
+        navigate('/home', { replace: true })
+        return
+      }
+
+      const { data: link } = await supabase
+        .from('person_user_links')
+        .select('person_id')
+        .eq('user_id', user.id)
+        .eq('family_id', spaceId)
+        .maybeSingle()
+
+      if (link?.person_id) {
+        navigate(`/people/${link.person_id}`, { replace: true })
+      } else {
+        navigate('/home', { replace: true })
+      }
+    }
+
+    void go()
   }, [user, navigate])
 
   return (
