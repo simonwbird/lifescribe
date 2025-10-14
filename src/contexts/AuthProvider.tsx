@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/integrations/supabase/client'
 import { UserProfile, UserRole, OnboardingState, getProfile, getRolesFromMembers, getOnboardingState } from '@/services/user'
@@ -130,72 +130,82 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [user?.id])
 
-  // Handle auth state changes
-  const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
+  // Track if extended user data has been loaded to avoid flicker in dev StrictMode
+  const hasLoadedExtended = useRef(false)
+  const initRef = useRef(false)
+
+  const fetchAllUserData = useCallback(async (userId: string) => {
+    try {
+      const [profileResult, rolesResult, onboardingResult] = await Promise.all([
+        getProfile(userId),
+        getRolesFromMembers(userId),
+        getOnboardingState(userId)
+      ])
+      if (profileResult.data) setProfile(profileResult.data)
+      if (rolesResult.data) setRoles(rolesResult.data || [])
+      if (onboardingResult.data) setOnboarding(onboardingResult.data)
+    } catch (error) {
+      console.error('Failed to load user data:', error)
+      Sentry.captureException(error, {
+        tags: { auth: 'initial_load' },
+      })
+    }
+  }, [])
+
+  // Handle auth state changes (sync only; defer async work)
+  const handleAuthStateChange = useCallback((event: string, newSession: Session | null) => {
     console.log('Auth state change:', event, newSession?.user?.id)
-    
+
     setSession(newSession)
     setUser(newSession?.user ?? null)
-    
+
     // Clear extended data when signing out
     if (!newSession?.user) {
       setProfile(null)
       setRoles([])
       setOnboarding(null)
       setLoading(false)
+      hasLoadedExtended.current = false
       return
     }
-    
+
     // Set user context for Sentry
     Sentry.setUser({
       id: newSession.user.id,
       email: newSession.user.email
     })
-    
-    // Load extended user data when signing in
+
+    // Load extended user data on first load or explicit sign-in
     if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-      setLoading(true)
-      
-      try {
-        const userId = newSession.user.id
-        
-        // Load all user data in parallel
-        const [profileResult, rolesResult, onboardingResult] = await Promise.all([
-          getProfile(userId),
-          getRolesFromMembers(userId),
-          getOnboardingState(userId)
-        ])
-        
-        if (profileResult.data) setProfile(profileResult.data)
-        if (rolesResult.data) setRoles(rolesResult.data)
-        if (onboardingResult.data) setOnboarding(onboardingResult.data)
-      } catch (error) {
-        console.error('Failed to load user data:', error)
-        Sentry.captureException(error, {
-          tags: { auth: 'initial_load' },
-          user: { id: newSession.user.id }
-        })
-      } finally {
-        setLoading(false)
+      const shouldLoad = event === 'SIGNED_IN' || !hasLoadedExtended.current
+      if (shouldLoad) {
+        setLoading(true)
+        setTimeout(() => {
+          fetchAllUserData(newSession.user!.id)
+            .finally(() => {
+              setLoading(false)
+              hasLoadedExtended.current = true
+            })
+        }, 0)
       }
     }
-  }, [])
+    // Do nothing for TOKEN_REFRESHED to avoid flicker
+  }, [fetchAllUserData])
 
-  // Initialize auth state
+  // Initialize auth state: subscribe first, then read session. Guard for StrictMode double-invoke.
   useEffect(() => {
-    let mounted = true
-    
-    // Get initial session
+    if (initRef.current) return
+    initRef.current = true
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      handleAuthStateChange(event, session)
+    })
+
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (!mounted) return
       handleAuthStateChange('INITIAL_SESSION', initialSession)
     })
-    
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
-    
+
     return () => {
-      mounted = false
       subscription.unsubscribe()
     }
   }, [handleAuthStateChange])
