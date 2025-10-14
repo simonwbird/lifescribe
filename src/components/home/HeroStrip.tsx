@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface HeroStripProps {
   familyId: string
@@ -32,6 +33,7 @@ interface HeroTile {
 
 export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCapture }: HeroStripProps) {
   const navigate = useNavigate()
+  const { track } = useAnalytics()
   const [draftCount, setDraftCount] = useState(0)
   const [todayPrompt, setTodayPrompt] = useState<any>(null)
 
@@ -92,6 +94,8 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: todayPrompt?.prompts?.title || 'What would you like to remember?',
       icon: <Lightbulb className="h-6 w-6" />,
       action: () => {
+        track('quick_add_open', { source: 'hero', item: 'prompt' })
+        
         // Elder Mode: open inline recorder on Home
         if (isElderMode && onOpenVoiceCapture) {
           onOpenVoiceCapture()
@@ -113,28 +117,40 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: draftCount > 0 ? `${draftCount} draft${draftCount === 1 ? '' : 's'}` : 'No drafts',
       icon: <FileText className="h-6 w-6" />,
       badge: draftCount,
-      action: () => navigate('/drafts'),
+      action: () => {
+        track('quick_add_select', { source: 'hero', item: 'drafts', route: '/drafts' })
+        navigate('/drafts')
+      },
     },
     {
       id: 'photo',
       title: 'Add Photo',
       subtitle: 'Capture or scan',
       icon: <Camera className="h-6 w-6" />,
-      action: () => navigate('/stories/new-tabbed?tab=photo&source=hero'),
+      action: () => {
+        track('quick_add_select', { source: 'hero', item: 'photo', route: '/stories/new-tabbed?tab=photo&source=hero' })
+        navigate('/stories/new-tabbed?tab=photo&source=hero')
+      },
     },
     {
       id: 'event',
       title: 'Create Event',
       subtitle: 'Plan together',
       icon: <Calendar className="h-6 w-6" />,
-      action: () => navigate('/events/new?source=hero'),
+      action: () => {
+        track('quick_add_select', { source: 'hero', item: 'event', route: '/events/new?source=hero' })
+        navigate('/events/new?source=hero')
+      },
     },
     {
       id: 'invite',
       title: 'Invite Family',
       subtitle: 'Grow your circle',
       icon: <UserPlus className="h-6 w-6" />,
-      action: () => navigate('/invites/new?source=hero'),
+      action: () => {
+        track('quick_add_select', { source: 'hero', item: 'invite', route: '/invites/new?source=hero' })
+        navigate('/invites/new?source=hero')
+      },
     },
   ]
 

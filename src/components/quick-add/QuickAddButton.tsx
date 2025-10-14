@@ -69,7 +69,14 @@ export function QuickAddButton() {
 
   const handlePrimaryClick = () => {
     setSheetOpen(true)
-    track('create_item_selected', { trigger: 'button_click' })
+    track('quick_add_open', { source: 'header' })
+  }
+
+  const handleDropdownOpen = (open: boolean) => {
+    setDropdownOpen(open)
+    if (open) {
+      track('quick_add_open', { source: 'header' })
+    }
   }
 
   const quickLinks = [
@@ -99,7 +106,7 @@ export function QuickAddButton() {
         </Button>
 
         {/* Dropdown Toggle */}
-        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="default"
@@ -117,10 +124,9 @@ export function QuickAddButton() {
               <DropdownMenuItem
                 key={link.route}
                 onClick={() => {
-                  console.log('Create menu click:', { 
+                  track('quick_add_select', { 
                     item: link.label,
-                    route: link.route,
-                    user_role: userRole,
+                    route: link.route
                   })
                   navigate(link.route)
                 }}

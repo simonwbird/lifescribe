@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useComposerState, ComposerMode } from '@/hooks/useComposerState'
 import { useToast } from '@/hooks/use-toast'
 import { useStoryAutosave } from '@/hooks/useStoryAutosave'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 type ComposerTab = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
 
@@ -30,6 +31,7 @@ export interface ComposerPrefillData {
 export default function StoryNew() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { track } = useAnalytics()
   const [searchParams, setSearchParams] = useSearchParams()
   
   const tabParam = (searchParams.get('tab') || 'text') as ComposerTab
@@ -45,6 +47,28 @@ export default function StoryNew() {
     storyId: draftId,
     enabled: true 
   })
+
+  // Track composer open on mount
+  useEffect(() => {
+    track('composer_open', {
+      route: window.location.pathname,
+      tab: activeTab,
+      params_present: {
+        promptId: !!searchParams.get('promptId'),
+        personId: !!searchParams.get('personId'),
+        draft: !!draftId,
+        source: searchParams.get('source') || 'direct'
+      }
+    })
+    
+    // Track draft resume if applicable
+    if (draftId) {
+      track('draft_resume', { 
+        draft_id: draftId,
+        tab: activeTab
+      })
+    }
+  }, [])
 
   // Get family ID
   useEffect(() => {
@@ -95,6 +119,14 @@ export default function StoryNew() {
           metadata: { tab: activeTab, source: searchParams.get('source') }
         })
         .eq('id', storyId)
+      
+      // Track draft save
+      track('draft_save', {
+        draft_id: storyId,
+        tab: activeTab,
+        has_title: !!composerState.title,
+        has_content: !!composerState.content
+      })
     }
     updateTabMetadata()
   }, [storyId, activeTab])

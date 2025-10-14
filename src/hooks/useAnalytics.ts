@@ -249,7 +249,14 @@ export type AnalyticsEvent =
   | 'memory_created_voice'
   | 'memory_created_photo'
   | 'memory_approved'
-  | 'memory_play_voice';
+  | 'memory_play_voice'
+  // Composer analytics events
+  | 'quick_add_open'
+  | 'quick_add_select'
+  | 'composer_open'
+  | 'composer_publish'
+  | 'draft_save'
+  | 'draft_resume';
 
 import { supabase } from '@/integrations/supabase/client'
 import { useMode } from './useMode'
@@ -312,10 +319,24 @@ const flushAnalytics = async () => {
   }
 }
 
+// Helper to get device info
+const getDeviceInfo = () => ({
+  userAgent: navigator.userAgent,
+  platform: navigator.platform,
+  screenWidth: window.screen.width,
+  screenHeight: window.screen.height,
+  viewport: {
+    width: window.innerWidth,
+    height: window.innerHeight
+  },
+  deviceType: /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+})
+
 export const useAnalytics = () => {
   const { mode } = useMode()
   const { labsEnabled } = useLabs()
   const familyIdCache = useRef<string | null>(null)
+  const userRoleCache = useRef<string | null>(null)
   const lastFamilyFetch = useRef<number>(0)
 
   const track = useCallback(async (event: AnalyticsEvent, properties?: Record<string, any>) => {
@@ -323,13 +344,37 @@ export const useAnalytics = () => {
     console.log(`Analytics: ${event}`, properties);
     
     try {
+      // Get user role if not cached
+      if (!userRoleCache.current) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: member } = await supabase
+            .from('members')
+            .select('role')
+            .eq('profile_id', user.id)
+            .limit(1)
+            .single()
+          
+          if (member) {
+            userRoleCache.current = member.role
+          }
+        }
+      }
+
+      // Get device info
+      const deviceInfo = getDeviceInfo()
+
       // Add event to batch queue with current context
       analyticsQueue.push({
         event,
         properties: {
           ...properties,
           mode,
-          labsEnabled
+          labsEnabled,
+          user_role: userRoleCache.current || 'unknown',
+          persona_mode: mode, // 'simple' or 'studio'
+          device: deviceInfo.deviceType,
+          device_info: deviceInfo
         },
         timestamp: Date.now()
       })
