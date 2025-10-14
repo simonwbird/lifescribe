@@ -76,7 +76,8 @@ export function UncitedStoriesWidget({ familyId }: UncitedStoriesWidgetProps) {
             variant="link"
             size="sm"
             className="w-full"
-            onClick={() => navigate('/stories?filter=uncited')}
+            onClick={() => navigate('/research/citations?status=uncited')}
+            aria-label={`View all ${uncitedStories.length} uncited stories`}
           >
             View all {uncitedStories.length} uncited stories
           </Button>

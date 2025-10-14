@@ -236,8 +236,17 @@ export default function Upcoming() {
               {events.map((event) => (
                 <div 
                   key={event.id} 
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleEventClick(event)}
+                  tabIndex={0}
+                  role="button"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      navigate(`/events/${event.id}`)
+                    }
+                  }}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card cursor-pointer hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                  onClick={() => navigate(`/events/${event.id}`)}
+                  aria-label={`${event.person_name} - ${getEventLabel(event)}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -311,12 +320,11 @@ export default function Upcoming() {
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  asChild
+                  onClick={() => navigate('/events')}
+                  aria-label="View all upcoming events"
                 >
-                  <Link to="/events?range=90d">
-                    <Users className="h-4 w-4 mr-2" />
-                    View all events
-                  </Link>
+                  <Users className="h-4 w-4 mr-2" />
+                  View all events
                 </Button>
               </div>
             </>

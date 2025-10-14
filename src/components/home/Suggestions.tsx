@@ -1,33 +1,35 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Suggestion } from '@/lib/homeTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
-// Mock data
+// Mock data with updated routes
 const mockSuggestions: Suggestion[] = [
   {
     id: '1',
     text: 'Share a memory about your first pet',
     actionLabel: 'Write story',
-    href: '/create/story?prompt=first-pet'
+    href: '/stories/new?tab=voice&promptId=first-pet&source=suggestion'
   },
   {
     id: '2', 
     text: 'Upload photos from last family gathering',
     actionLabel: 'Add photos',
-    href: '/create/photos'
+    href: '/stories/new?tab=photo&album=last-event&source=suggestion'
   },
   {
     id: '3',
     text: 'Record your grandmother\'s recipe story',
     actionLabel: 'Record audio',
-    href: '/create/audio'
+    href: '/recipes/new?prefill=grandmother&source=suggestion'
   }
 ];
 
 export default function Suggestions() {
+  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState(mockSuggestions);
   const { track } = useAnalytics();
 
@@ -40,8 +42,8 @@ export default function Suggestions() {
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
-    console.log('Following suggestion:', suggestion.href);
-    // In real app, would navigate to suggested action
+    track('home_suggestion_click', { suggestionId: suggestion.id, href: suggestion.href });
+    navigate(suggestion.href);
   };
 
   if (suggestions.length === 0) {
@@ -68,6 +70,7 @@ export default function Suggestions() {
                   variant="outline"
                   onClick={() => handleSuggestionClick(suggestion)}
                   className="text-xs h-7"
+                  aria-label={`${suggestion.actionLabel}: ${suggestion.text}`}
                 >
                   {suggestion.actionLabel}
                 </Button>

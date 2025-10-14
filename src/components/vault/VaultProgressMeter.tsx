@@ -129,15 +129,47 @@ export default function VaultProgressMeter({ familyId }: VaultProgressMeterProps
           </div>
         )}
 
-        <Button 
-          onClick={() => navigate('/vault')} 
-          className="w-full"
-          variant="outline"
-          size="sm"
-        >
-          <Lock className="h-3 w-3 mr-2" />
-          Open SafeBox Vault
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button 
+            onClick={() => navigate('/vault')} 
+            className="text-xs"
+            variant="outline"
+            size="sm"
+            aria-label="Open SafeBox Vault"
+          >
+            <Lock className="h-3 w-3 mr-1" />
+            Open Vault
+          </Button>
+          <Button 
+            onClick={() => navigate('/vault/docs/new')} 
+            className="text-xs"
+            variant="outline"
+            size="sm"
+            aria-label="Add new document"
+          >
+            Add Docs
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button 
+            onClick={() => navigate('/vault/delegates')} 
+            className="text-xs"
+            variant="outline"
+            size="sm"
+            aria-label="Manage delegates"
+          >
+            Delegates
+          </Button>
+          <Button 
+            onClick={() => navigate('/vault/checklists')} 
+            className="text-xs"
+            variant="outline"
+            size="sm"
+            aria-label="View checklists"
+          >
+            Checklists
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

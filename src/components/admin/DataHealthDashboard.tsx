@@ -57,44 +57,45 @@ export function DataHealthDashboard({ familyId }: DataHealthDashboardProps) {
 
   const metrics: HealthMetric[] = [
     {
-      label: 'Uncited Stories',
-      count: health.uncitedStories,
-      icon: FileQuestion,
+      label: 'Orphan Media',
+      count: health.orphanMedia,
+      icon: ImageOff,
+      color: 'text-destructive',
+      route: '/search?has=orphan',
+      description: 'Media without context',
+    },
+    {
+      label: 'Untagged Faces',
+      count: health.untaggedFaces,
+      icon: Users,
       color: 'text-warning',
-      route: '/stories?filter=uncited',
-      description: 'Stories without sources',
+      route: '/search?has=untagged_faces',
+      description: 'Photos with unidentified people',
     },
     {
       label: 'Duplicates',
       count: health.duplicates,
       icon: Users,
       color: 'text-warning',
-      route: '/admin/duplicates',
+      route: '/admin/merge?type=people',
       description: 'Potential duplicate people',
     },
-    {
-      label: 'Orphan Media',
-      count: health.orphanMedia,
-      icon: ImageOff,
-      color: 'text-destructive',
-      route: '/media?filter=orphan',
-      description: 'Media without context',
-    },
-    {
-      label: 'Failed Imports',
-      count: health.failedImports,
-      icon: XCircle,
-      color: 'text-destructive',
-      route: '/admin/failed-imports',
-      description: 'Import errors to review',
-    },
   ];
+
+  // Add header button for overall data health
+  const handleViewAll = () => {
+    navigate('/admin/data-health');
+  };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <button
+            onClick={handleViewAll}
+            className="text-left hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary rounded"
+            aria-label="View full data health dashboard"
+          >
             <CardTitle className="text-sm flex items-center gap-2">
               {totalIssues === 0 ? (
                 <>
@@ -114,7 +115,7 @@ export function DataHealthDashboard({ familyId }: DataHealthDashboardProps) {
                 : `${totalIssues} ${totalIssues === 1 ? 'issue' : 'issues'} to review`
               }
             </CardDescription>
-          </div>
+          </button>
           {totalIssues > 0 && (
             <Badge variant="outline" className="text-warning border-warning">
               {totalIssues}

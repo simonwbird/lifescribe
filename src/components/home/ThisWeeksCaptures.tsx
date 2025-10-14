@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, X } from 'lucide-react';
+import { Flame, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ThisWeeksCaptures() {
+  const navigate = useNavigate();
   const capturesThisWeek = 4;
   const weeklyGoal = 7;
   const currentStreak = 12;
@@ -13,7 +15,13 @@ export default function ThisWeeksCaptures() {
     <Card className="shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-serif">This Week's Captures</CardTitle>
+          <button
+            onClick={() => navigate('/analytics/captures?range=this-week')}
+            className="text-lg font-serif hover:text-primary transition-colors focus:outline-none focus:text-primary text-left"
+            aria-label="View detailed capture analytics"
+          >
+            This Week's Captures
+          </button>
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
             Turn off streaks
           </Button>
@@ -39,6 +47,17 @@ export default function ThisWeeksCaptures() {
         <p className="text-xs text-muted-foreground">
           Keep sharing to maintain your streak. Great job staying connected with your family!
         </p>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-2"
+          onClick={() => navigate('/analytics/captures?range=this-week')}
+          aria-label="View full capture analytics"
+        >
+          View Details
+          <ArrowRight className="h-3 w-3 ml-2" />
+        </Button>
       </CardContent>
     </Card>
   );
