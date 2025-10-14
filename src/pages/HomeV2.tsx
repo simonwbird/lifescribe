@@ -147,8 +147,8 @@ export default function HomeV2() {
         />
 
         {/* Two-column layout: Feed + Right Rail */}
-        <div className="container px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
+        <div className="px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px]">
             {/* Left: Main Feed */}
             <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
               {/* Voice Capture Toggle */}
