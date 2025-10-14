@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { useVaultProgress } from '@/hooks/useVault';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { routes } from '@/lib/routes';
 
 interface VaultProgressMeterProps {
   familyId: string;
@@ -131,7 +132,7 @@ export default function VaultProgressMeter({ familyId }: VaultProgressMeterProps
 
         <div className="grid grid-cols-2 gap-2">
           <Button 
-            onClick={() => navigate('/vault')} 
+            onClick={() => navigate(routes.vault())} 
             className="text-xs"
             variant="outline"
             size="sm"
@@ -141,7 +142,7 @@ export default function VaultProgressMeter({ familyId }: VaultProgressMeterProps
             Open Vault
           </Button>
           <Button 
-            onClick={() => navigate('/vault/docs/new')} 
+            onClick={() => navigate(routes.vaultDocsNew())} 
             className="text-xs"
             variant="outline"
             size="sm"
@@ -152,7 +153,7 @@ export default function VaultProgressMeter({ familyId }: VaultProgressMeterProps
         </div>
         <div className="grid grid-cols-2 gap-2">
           <Button 
-            onClick={() => navigate('/vault/delegates')} 
+            onClick={() => navigate(routes.vaultDelegates())} 
             className="text-xs"
             variant="outline"
             size="sm"
@@ -161,7 +162,7 @@ export default function VaultProgressMeter({ familyId }: VaultProgressMeterProps
             Delegates
           </Button>
           <Button 
-            onClick={() => navigate('/vault/checklists')} 
+            onClick={() => navigate(routes.vaultChecklists())} 
             className="text-xs"
             variant="outline"
             size="sm"

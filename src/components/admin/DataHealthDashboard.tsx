@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { routes } from '@/lib/routes';
 
 interface DataHealthDashboardProps {
   familyId: string;
@@ -61,7 +62,7 @@ export function DataHealthDashboard({ familyId }: DataHealthDashboardProps) {
       count: health.orphanMedia,
       icon: ImageOff,
       color: 'text-destructive',
-      route: '/search?has=orphan',
+      route: routes.searchOrphan(),
       description: 'Media without context',
     },
     {
@@ -69,7 +70,7 @@ export function DataHealthDashboard({ familyId }: DataHealthDashboardProps) {
       count: health.untaggedFaces,
       icon: Users,
       color: 'text-warning',
-      route: '/search?has=untagged_faces',
+      route: routes.searchUntaggedFaces(),
       description: 'Photos with unidentified people',
     },
     {
@@ -77,14 +78,14 @@ export function DataHealthDashboard({ familyId }: DataHealthDashboardProps) {
       count: health.duplicates,
       icon: Users,
       color: 'text-warning',
-      route: '/admin/merge?type=people',
+      route: routes.adminMergePeople(),
       description: 'Potential duplicate people',
     },
   ];
 
   // Add header button for overall data health
   const handleViewAll = () => {
-    navigate('/admin/data-health');
+    navigate(routes.adminDataHealth());
   };
 
   return (

@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { routes } from '@/lib/routes'
 
 interface HeroStripProps {
   familyId: string
@@ -94,9 +95,10 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: todayPrompt?.prompts?.title || 'What would you like to remember?',
       icon: <Lightbulb className="h-6 w-6" />,
       action: () => {
+        const destination = isElderMode ? routes.home() : routes.todaysPrompt()
         track('hero_tile_click', { 
           tile_name: 'prompt',
-          destination: isElderMode ? '/home' : '/prompts/today'
+          destination
         })
         
         // Elder Mode: open inline recorder on Home
@@ -106,7 +108,7 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
         }
         
         // Regular mode: navigate to prompts/today
-        navigate('/prompts/today')
+        navigate(destination)
       },
       variant: 'primary',
     },
@@ -117,11 +119,12 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       icon: <FileText className="h-6 w-6" />,
       badge: draftCount,
       action: () => {
+        const destination = routes.drafts()
         track('hero_tile_click', { 
           tile_name: 'drafts',
-          destination: '/drafts'
+          destination
         })
-        navigate('/drafts')
+        navigate(destination)
       },
     },
     {
@@ -130,11 +133,12 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Capture or scan',
       icon: <Camera className="h-6 w-6" />,
       action: () => {
+        const destination = routes.storyNew({ tab: 'photo' })
         track('hero_tile_click', { 
           tile_name: 'photo',
-          destination: '/stories/new?tab=photo'
+          destination
         })
-        navigate('/stories/new?tab=photo')
+        navigate(destination)
       },
     },
     {
@@ -143,11 +147,12 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Plan together',
       icon: <Calendar className="h-6 w-6" />,
       action: () => {
+        const destination = routes.eventNew()
         track('hero_tile_click', { 
           tile_name: 'event',
-          destination: '/events/new'
+          destination
         })
-        navigate('/events/new')
+        navigate(destination)
       },
     },
     {
@@ -156,11 +161,12 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Grow your circle',
       icon: <UserPlus className="h-6 w-6" />,
       action: () => {
+        const destination = routes.invitesNew()
         track('hero_tile_click', { 
           tile_name: 'invite',
-          destination: '/invites/new'
+          destination
         })
-        navigate('/invites/new')
+        navigate(destination)
       },
     },
   ]

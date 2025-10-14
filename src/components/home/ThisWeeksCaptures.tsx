@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Flame, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { routes } from '@/lib/routes';
 
 export default function ThisWeeksCaptures() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function ThisWeeksCaptures() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/analytics/captures?range=this-week')}
+            onClick={() => navigate(routes.analyticsCapturesWeek())}
             className="text-lg font-serif hover:text-primary transition-colors focus:outline-none focus:text-primary text-left"
             aria-label="View detailed capture analytics"
           >
@@ -52,7 +53,7 @@ export default function ThisWeeksCaptures() {
           variant="outline"
           size="sm"
           className="w-full mt-2"
-          onClick={() => navigate('/analytics/captures?range=this-week')}
+          onClick={() => navigate(routes.analyticsCapturesWeek())}
           aria-label="View full capture analytics"
         >
           View Details

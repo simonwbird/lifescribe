@@ -12,6 +12,7 @@ import {
 import { LifeScribeLogo } from '@/components/branding/LifeScribeLogo'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { routes } from '@/lib/routes'
 import {
   Sidebar,
   SidebarContent,
@@ -28,55 +29,55 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { 
     title: 'My Timeline', 
-    url: '/me/timeline', 
+    url: routes.meTimeline(), 
     icon: User,
     section: 'personal'
   },
   { 
     title: 'People', 
-    url: '/people', 
+    url: routes.peopleIndex(), 
     icon: Users,
     section: 'family'
   },
   { 
     title: 'Albums', 
-    url: '/albums', 
+    url: routes.albumsIndex(), 
     icon: Image,
     section: 'family'
   },
   { 
     title: 'Objects', 
-    url: '/objects', 
+    url: routes.objectsIndex(), 
     icon: Package,
     section: 'family'
   },
   { 
     title: 'Recipes', 
-    url: '/recipes', 
+    url: routes.recipesIndex(), 
     icon: UtensilsCrossed,
     section: 'family'
   },
   { 
     title: 'Properties', 
-    url: '/properties', 
+    url: routes.propertiesIndex(), 
     icon: HomeIcon,
     section: 'family'
   },
   { 
     title: 'Pets', 
-    url: '/pets', 
+    url: routes.petsIndex(), 
     icon: Dog,
     section: 'family'
   },
   { 
     title: 'Family Tree', 
-    url: '/tree', 
+    url: routes.tree(), 
     icon: GitBranch,
     section: 'family'
   },
   { 
     title: 'Vault', 
-    url: '/vault', 
+    url: routes.vault(), 
     icon: Lock,
     section: 'vault'
   },
@@ -128,8 +129,9 @@ export function LeftNav() {
               className="text-foreground flex items-center gap-2" 
               clickable
               onClick={() => {
-                track('nav_logo_click', { destination: '/home' })
-                navigate('/home')
+                const destination = routes.home()
+                track('nav_logo_click', { destination })
+                navigate(destination)
               }}
             />
           ) : (
@@ -138,8 +140,9 @@ export function LeftNav() {
               className="text-foreground w-8 h-8 mx-auto" 
               clickable
               onClick={() => {
-                track('nav_logo_click', { destination: '/home' })
-                navigate('/home')
+                const destination = routes.home()
+                track('nav_logo_click', { destination })
+                navigate(destination)
               }}
             />
           )}

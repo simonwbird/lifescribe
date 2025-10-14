@@ -4,6 +4,7 @@ import { AlertCircle, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { routes } from '@/lib/routes';
 
 interface UncitedStoriesWidgetProps {
   familyId: string;
@@ -61,7 +62,7 @@ export function UncitedStoriesWidget({ familyId }: UncitedStoriesWidgetProps) {
           <div
             key={story.id}
             className="flex items-start justify-between gap-2 p-2 rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-            onClick={() => navigate(`/story/${story.id}`)}
+            onClick={() => navigate(routes.storiesShow(story.id))}
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{story.title}</p>
@@ -76,7 +77,7 @@ export function UncitedStoriesWidget({ familyId }: UncitedStoriesWidgetProps) {
             variant="link"
             size="sm"
             className="w-full"
-            onClick={() => navigate('/research/citations?status=uncited')}
+            onClick={() => navigate(routes.researchCitations())}
             aria-label={`View all ${uncitedStories.length} uncited stories`}
           >
             View all {uncitedStories.length} uncited stories

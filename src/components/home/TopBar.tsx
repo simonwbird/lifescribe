@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Bell, Search, Plus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { routes } from '@/lib/routes'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -104,7 +105,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <DropdownMenuItem onClick={() => navigate(routes.settings())}>
                 Settings
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -128,7 +129,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
             variant="ghost"
             size="icon"
             className="relative shrink-0"
-            onClick={() => navigate('/notifications')}
+            onClick={() => navigate(routes.notifications())}
             aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
           >
             <Bell className="h-5 w-5" />
@@ -156,26 +157,30 @@ export function TopBar({ familyId, userId }: TopBarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => {
-                track('nav_quick_add_open', { item: 'new_story', route: '/new-story' })
-                navigate('/new-story')
+                const route = routes.storyNew()
+                track('nav_quick_add_open', { item: 'new_story', route })
+                navigate(route)
               }}>
                 New Story
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-                track('nav_quick_add_open', { item: 'capture_photo', route: '/capture' })
-                navigate('/capture')
+                const route = routes.storyNew({ tab: 'photo' })
+                track('nav_quick_add_open', { item: 'capture_photo', route })
+                navigate(route)
               }}>
                 Capture Photo
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-                track('nav_quick_add_open', { item: 'create_event', route: '/events?new=true' })
-                navigate('/events?new=true')
+                const route = routes.eventNew()
+                track('nav_quick_add_open', { item: 'create_event', route })
+                navigate(route)
               }}>
                 Create Event
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-                track('nav_quick_add_open', { item: 'add_person', route: '/people?new=true' })
-                navigate('/people?new=true')
+                const route = routes.peopleNew()
+                track('nav_quick_add_open', { item: 'add_person', route })
+                navigate(route)
               }}>
                 Add Person
               </DropdownMenuItem>

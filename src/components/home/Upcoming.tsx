@@ -14,6 +14,7 @@ import { formatForUser, getCurrentUserRegion } from '@/utils/date'
 import AddBirthdayModal from './AddBirthdayModal'
 import AddEventModal from './AddEventModal'
 import { EventDetailsModal } from './EventDetailsModal'
+import { routes } from '@/lib/routes'
 
 export default function Upcoming() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
@@ -241,11 +242,11 @@ export default function Upcoming() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      navigate(`/events/${event.id}`)
+                      navigate(routes.eventShow(event.id))
                     }
                   }}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card cursor-pointer hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-                  onClick={() => navigate(`/events/${event.id}`)}
+                  onClick={() => navigate(routes.eventShow(event.id))}
                   aria-label={`${event.person_name} - ${getEventLabel(event)}`}
                 >
                   <div className="flex-1 min-w-0">
@@ -320,7 +321,7 @@ export default function Upcoming() {
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={() => navigate('/events')}
+                  onClick={() => navigate(routes.events())}
                   aria-label="View all upcoming events"
                 >
                   <Users className="h-4 w-4 mr-2" />

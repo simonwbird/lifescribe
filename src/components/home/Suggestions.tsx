@@ -5,26 +5,27 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Suggestion } from '@/lib/homeTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { routes } from '@/lib/routes';
 
-// Mock data with updated routes
+// Mock data with canonical routes
 const mockSuggestions: Suggestion[] = [
   {
     id: '1',
     text: 'Share a memory about your first pet',
     actionLabel: 'Write story',
-    href: '/stories/new?tab=voice&promptId=first-pet&source=suggestion'
+    href: routes.storyNew({ tab: 'voice', promptId: 'first-pet', source: 'suggestion' })
   },
   {
     id: '2', 
     text: 'Upload photos from last family gathering',
     actionLabel: 'Add photos',
-    href: '/stories/new?tab=photo&album=last-event&source=suggestion'
+    href: routes.storyNew({ tab: 'photo', album: 'last-event', source: 'suggestion' })
   },
   {
     id: '3',
     text: 'Record your grandmother\'s recipe story',
     actionLabel: 'Record audio',
-    href: '/recipes/new?prefill=grandmother&source=suggestion'
+    href: routes.recipesNew('grandmother') + '&source=suggestion'
   }
 ];
 
