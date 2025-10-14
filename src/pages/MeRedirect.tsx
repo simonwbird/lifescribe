@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthProvider'
-import { supabase } from '@/lib/supabase'
 
 export default function MeRedirect() {
   const navigate = useNavigate()
@@ -13,27 +12,8 @@ export default function MeRedirect() {
       return
     }
 
-    // Fetch the person record for the current user
-    const fetchProfile = async () => {
-      try {
-        // @ts-ignore - Avoiding deep type instantiation error
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (!error && data?.id) {
-          navigate(`/people/${data.id}`, { replace: true })
-        } else {
-          navigate('/home', { replace: true })
-        }
-      } catch (err) {
-        navigate('/home', { replace: true })
-      }
-    }
-
-    fetchProfile()
+    // Redirect directly to the current user's LifePage (person page)
+    navigate(`/people/${user.id}`, { replace: true })
   }, [user, navigate])
 
   return (
