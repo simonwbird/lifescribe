@@ -147,7 +147,7 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
 
   return (
     <div className="w-full border-b bg-background">
-      <div className="container px-4 py-6">
+      <div className="px-4 py-6">
         {/* Mobile: Vertical Stack */}
         <div className="grid gap-3 sm:hidden">
           {tiles.map((tile) => (

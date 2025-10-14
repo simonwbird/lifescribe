@@ -67,7 +67,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
         className="w-full border-b bg-background"
         aria-label="LifeScribe navigation bar"
       >
-        <div className="container flex h-14 items-center px-4">
+        <div className="flex h-14 items-center px-4">
           {/* Avatar Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
