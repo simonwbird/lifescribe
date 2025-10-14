@@ -7475,6 +7475,7 @@ export type Database = {
           happened_at_property_id: string | null
           id: string
           is_approx: boolean | null
+          metadata: Json | null
           occurred_on: string | null
           occurred_precision:
             | Database["public"]["Enums"]["date_precision"]
@@ -7499,6 +7500,7 @@ export type Database = {
           happened_at_property_id?: string | null
           id?: string
           is_approx?: boolean | null
+          metadata?: Json | null
           occurred_on?: string | null
           occurred_precision?:
             | Database["public"]["Enums"]["date_precision"]
@@ -7523,6 +7525,7 @@ export type Database = {
           happened_at_property_id?: string | null
           id?: string
           is_approx?: boolean | null
+          metadata?: Json | null
           occurred_on?: string | null
           occurred_precision?:
             | Database["public"]["Enums"]["date_precision"]

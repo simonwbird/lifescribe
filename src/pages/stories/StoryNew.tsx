@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useBlocker } from 'react-router-dom'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -13,6 +13,8 @@ import ComposeVideo from '@/pages/compose/ComposeVideo'
 import ComposeMixed from '@/pages/compose/ComposeMixed'
 import { supabase } from '@/integrations/supabase/client'
 import { useComposerState, ComposerMode } from '@/hooks/useComposerState'
+import { useToast } from '@/hooks/use-toast'
+import { useStoryAutosave } from '@/hooks/useStoryAutosave'
 
 type ComposerTab = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
 
@@ -27,13 +29,92 @@ export interface ComposerPrefillData {
 
 export default function StoryNew() {
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   
   const tabParam = (searchParams.get('tab') || 'text') as ComposerTab
+  const draftId = searchParams.get('draft')
   const [activeTab, setActiveTab] = useState<ComposerTab>(tabParam)
+  const [familyId, setFamilyId] = useState<string>('')
 
   // Use shared composer state
-  const { state: composerState, updateState, switchMode } = useComposerState(tabParam)
+  const { state: composerState, updateState, switchMode, hasContent } = useComposerState(tabParam)
+  
+  // Autosave hook
+  const { save, storyId, isSaving } = useStoryAutosave({ 
+    storyId: draftId,
+    enabled: true 
+  })
+
+  // Get family ID
+  useEffect(() => {
+    async function getFamilyId() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      
+      const { data } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+      
+      if (data) setFamilyId(data.family_id)
+    }
+    getFamilyId()
+  }, [])
+
+  // Autosave on content change
+  useEffect(() => {
+    if (!familyId || !hasContent()) return
+    
+    const occurredDate = composerState.dateValue.date 
+      ? composerState.dateValue.date.toISOString().split('T')[0]
+      : null
+    
+    const isApprox = composerState.dateValue.precision === 'circa' || 
+                     composerState.dateValue.precision === 'year' ||
+                     composerState.dateValue.precision === 'month'
+    
+    save({
+      title: composerState.title,
+      content: composerState.content,
+      familyId,
+      occurred_on: occurredDate,
+      is_approx: isApprox
+    })
+  }, [composerState.title, composerState.content, familyId, composerState.dateValue])
+
+  // Store tab metadata in draft
+  useEffect(() => {
+    if (!storyId) return
+    
+    async function updateTabMetadata() {
+      await supabase
+        .from('stories')
+        .update({ 
+          metadata: { tab: activeTab, source: searchParams.get('source') }
+        })
+        .eq('id', storyId)
+    }
+    updateTabMetadata()
+  }, [storyId, activeTab])
+
+  // Block navigation and show toast when leaving with unsaved content
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    const isNavigatingAway = currentLocation.pathname !== nextLocation.pathname
+    return isNavigatingAway && hasContent() && !isSaving
+  })
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      toast({
+        title: 'Saved as draft',
+        description: 'Your progress has been saved',
+        duration: 2000
+      })
+      blocker.proceed()
+    }
+  }, [blocker.state])
   
   // Parse prefill params
   const prefillData: ComposerPrefillData = {

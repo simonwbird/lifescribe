@@ -26,7 +26,7 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
   const save = async (data: StoryDraftData) => {
     if (!enabled) return
 
-    // Debounce - wait 10 seconds before saving
+    // Debounce - wait 3 seconds before saving
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
     }
@@ -81,7 +81,7 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
       } finally {
         setIsSaving(false)
       }
-    }, 10000) // 10 seconds
+    }, 3000) // 3 seconds
   }
 
   // Force save immediately (for blur events)

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDistanceToNow } from 'date-fns'
-import { FileText, Trash2 } from 'lucide-react'
+import { FileText, Trash2, Image, Mic, Video, TextIcon, Layers } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Header from '@/components/Header'
 
@@ -15,6 +15,10 @@ interface Draft {
   content: string
   updated_at: string
   family_id: string
+  metadata?: {
+    tab?: string
+    source?: string
+  } | null
 }
 
 export default function DraftsPage() {
@@ -38,13 +42,13 @@ export default function DraftsPage() {
 
       const { data, error } = await supabase
         .from('stories')
-        .select('id, title, content, updated_at, family_id')
+        .select('id, title, content, updated_at, family_id, metadata')
         .eq('profile_id', user.id)
         .eq('status', 'draft')
         .order('updated_at', { ascending: false })
 
       if (error) throw error
-      setDrafts(data || [])
+      setDrafts((data || []) as Draft[])
     } catch (error) {
       console.error('Error loading drafts:', error)
       toast({
@@ -55,6 +59,21 @@ export default function DraftsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function getTabIcon(tab?: string) {
+    switch(tab) {
+      case 'text': return <TextIcon className="h-4 w-4" />
+      case 'photo': return <Image className="h-4 w-4" />
+      case 'voice': return <Mic className="h-4 w-4" />
+      case 'video': return <Video className="h-4 w-4" />
+      case 'mixed': return <Layers className="h-4 w-4" />
+      default: return <FileText className="h-4 w-4" />
+    }
+  }
+
+  function getTabLabel(tab?: string) {
+    return tab ? tab.charAt(0).toUpperCase() + tab.slice(1) : 'Story'
   }
 
   async function deleteDraft(id: string) {
@@ -124,41 +143,50 @@ export default function DraftsPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {drafts.map((draft) => (
-              <Card key={draft.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{draft.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                    {draft.content || 'No content yet...'}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
-                      Updated {formatDistanceToNow(new Date(draft.updated_at), { addSuffix: true })}
-                    </span>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => deleteDraft(draft.id)}
-                        disabled={deleting === draft.id}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => navigate(`/stories/new?draft=${draft.id}`)}
-                      >
-                        Resume
-                      </Button>
+            {drafts.map((draft) => {
+              const tab = draft.metadata?.tab || 'text'
+              return (
+                <Card key={draft.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      {getTabIcon(tab)}
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {getTabLabel(tab)}
+                      </span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <CardTitle className="text-lg">{draft.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                      {draft.content || 'No content yet...'}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        Updated {formatDistanceToNow(new Date(draft.updated_at), { addSuffix: true })}
+                      </span>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteDraft(draft.id)}
+                          disabled={deleting === draft.id}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/stories/new-tabbed?draft=${draft.id}&tab=${tab}`)}
+                        >
+                          Resume
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         )}
       </div>

@@ -17,7 +17,7 @@ export interface AutosaveStatus {
   message: string
 }
 
-export function useDraftManager(draftKey: string, autosaveInterval = 10000) {
+export function useDraftManager(draftKey: string, autosaveInterval = 3000) {
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>({
     status: 'idle',
     message: ''
