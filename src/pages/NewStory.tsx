@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import Header from '@/components/Header'
 import FamilyPicker from '@/components/story-create/FamilyPicker'
 import { UniversalComposer } from '@/components/composer/UniversalComposer'
+import { useComposerParams } from '@/lib/linking'
 
 export default function NewStory() {
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const composerParams = useComposerParams()
   const [isLoading, setIsLoading] = useState(true)
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [families, setFamilies] = useState<{ id: string; name: string }[]>([])
   const [needsFamilyPicker, setNeedsFamilyPicker] = useState(false)
-  const familyIdParam = searchParams.get('family_id')
 
   // Fetch user's families
   useEffect(() => {
@@ -40,12 +40,8 @@ export default function NewStory() {
 
         setFamilies(familyList)
 
-        // Check if family_id was provided in URL (from New Memory modal)
-        if (familyIdParam && familyList.some(f => f.id === familyIdParam)) {
-          setFamilyId(familyIdParam)
-        }
         // Auto-select if only one family
-        else if (familyList.length === 1) {
+        if (familyList.length === 1) {
           setFamilyId(familyList[0].id)
         } else if (familyList.length > 1) {
           setNeedsFamilyPicker(true)
@@ -113,7 +109,18 @@ export default function NewStory() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <UniversalComposer familyId={familyId} />
+      <UniversalComposer 
+        familyId={familyId}
+        initialTab={composerParams.tab}
+        prefillData={{
+          promptId: composerParams.promptId,
+          personId: composerParams.personId,
+          childrenIds: composerParams.children,
+          circle: composerParams.circle,
+          album: composerParams.album,
+          source: composerParams.source,
+        }}
+      />
     </div>
   )
 }

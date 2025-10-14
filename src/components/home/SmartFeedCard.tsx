@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
 import { PrivacyChip } from '@/components/privacy/PrivacyChip'
 import { useContentVisibility } from '@/hooks/useContentVisibility'
+import { routes } from '@/lib/routes'
+import { LSLink } from '@/lib/linking'
 
 interface FeedItemData {
   id: string
@@ -110,16 +112,9 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
     // TODO: Implement actual bookmark creation/deletion
   }
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on interactive elements
-    const target = e.target as HTMLElement
-    if (target.closest('button, a, [role="button"]')) return
-    navigate(`/stories/${item.id}`)
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.defaultPrevented) {
-      navigate(`/stories/${item.id}`)
+      navigate(routes.storiesShow(item.id))
     }
   }
 
@@ -135,10 +130,10 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
       <CardContent className="p-4 space-y-3">
         {/* Header with avatar and name */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(`/people/${item.profile_id}`)}
-            className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full"
+          <LSLink
+            to={routes.people(item.profile_id)}
             aria-label={`View ${item.profiles?.full_name}'s profile`}
+            className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full"
           >
             <Avatar className="h-10 w-10 hover:ring-2 hover:ring-primary transition-all cursor-pointer">
               <AvatarImage src={item.profiles?.avatar_url} />
@@ -146,46 +141,46 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
                 {item.profiles?.full_name?.charAt(0) || '?'}
               </AvatarFallback>
             </Avatar>
-          </button>
+          </LSLink>
           <div className="flex-1 min-w-0">
-            <button
-              onClick={() => navigate(`/people/${item.profile_id}`)}
-              className="font-semibold text-sm hover:underline focus:outline-none focus:underline text-left"
+            <LSLink
+              to={routes.people(item.profile_id)}
+              className="font-semibold text-sm hover:underline focus:outline-none focus:underline text-left block"
               aria-label={`View ${item.profiles?.full_name}'s profile`}
             >
               {item.profiles?.full_name || 'Unknown'}
-            </button>
-            <button
-              onClick={() => navigate(`/stories/${item.id}#activity`)}
+            </LSLink>
+            <LSLink
+              to={routes.storiesActivity(item.id)}
               className="block text-xs text-muted-foreground hover:underline focus:outline-none focus:underline text-left"
               aria-label="View activity timeline"
             >
               {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
-            </button>
+            </LSLink>
           </div>
           <PrivacyChip
             currentVisibility={visibility}
             isOwner={currentUserId === item.profile_id}
             onVisibilityChange={updateVisibility}
-            onViewPermissions={() => navigate(`/stories/${item.id}#privacy`)}
+            onViewPermissions={() => navigate(routes.storiesPrivacy(item.id))}
             size="sm"
           />
         </div>
 
         {/* Title */}
-        <button
-          onClick={() => navigate(`/stories/${item.id}`)}
-          className="w-full text-left font-semibold text-base leading-snug hover:text-primary transition-colors focus:outline-none focus:text-primary"
+        <LSLink
+          to={routes.storiesShow(item.id)}
+          className="w-full text-left font-semibold text-base leading-snug hover:text-primary transition-colors focus:outline-none focus:text-primary block"
           aria-label={`Read full story: ${item.title}`}
         >
           {item.title}
-        </button>
+        </LSLink>
 
         {/* Media */}
         {item.media_urls && item.media_urls.length > 0 && (
-          <button
-            onClick={() => navigate(`/stories/${item.id}`)}
-            className="w-full rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary hover:opacity-95 transition-opacity"
+          <LSLink
+            to={routes.storiesShow(item.id)}
+            className="block w-full rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary hover:opacity-95 transition-opacity"
             aria-label="View story media"
           >
             {item.media_urls[0].type === 'image' && (
@@ -204,27 +199,21 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
               />
             )}
             {item.media_urls[0].type === 'audio' && (
-              <div 
-                className="bg-muted/50 p-4 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  navigate(`/stories/${item.id}#audio`)
-                }}
-              >
+              <LSLink to={routes.storiesAudio(item.id)} className="block bg-muted/50 p-4 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors">
                 <audio 
                   src={item.media_urls[0].url} 
                   controls 
                   className="w-full"
                   onClick={(e) => e.stopPropagation()}
                 />
-              </div>
+              </LSLink>
             )}
             {item.media_urls.length > 1 && (
               <div className="text-xs text-muted-foreground text-center mt-2">
                 +{item.media_urls.length - 1} more
               </div>
             )}
-          </button>
+          </LSLink>
         )}
 
         {/* Content snippet */}
@@ -236,17 +225,17 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
         {(item.tags || item.people) && (
           <div className="flex flex-wrap gap-2">
             {item.people?.map(person => (
-              <button
+              <LSLink
                 key={person.id}
-                onClick={() => navigate(`/stories/${item.id}#tagging`)}
-                className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full"
+                to={routes.storiesTagging(item.id)}
+                className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full inline-block"
                 aria-label={`View ${person.name} in photo`}
               >
                 <Badge variant="secondary" className="gap-1 hover:bg-secondary/80 cursor-pointer transition-colors">
                   <Users className="h-3 w-3" />
                   {person.name}
                 </Badge>
-              </button>
+              </LSLink>
             ))}
             {item.tags?.map(tag => (
               <Badge key={tag} variant="outline" className="gap-1">
@@ -271,16 +260,16 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
               aria-label={isLiked ? "Unlike story" : "Like story"}
             >
               <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (likeCount > 0) navigate(`/stories/${item.id}#likes`)
-                }}
+              <LSLink
+                to={routes.storiesLikes(item.id)}
                 className="text-xs hover:underline focus:outline-none focus:underline"
                 aria-label={`View ${likeCount} likes`}
+                onClick={(e) => {
+                  if (likeCount === 0) e.preventDefault()
+                }}
               >
                 {likeCount}
-              </button>
+              </LSLink>
             </Button>
 
             <Button
@@ -305,15 +294,21 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
           </div>
 
           <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-9 gap-2"
-              onClick={() => navigate(`/stories/${item.id}#tagging`)}
+            <LSLink 
+              to={routes.storiesTagging(item.id)}
               aria-label="Tag people in this story"
             >
-              <Tag className="h-4 w-4" />
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-9 gap-2"
+                asChild
+              >
+                <span>
+                  <Tag className="h-4 w-4" />
+                </span>
+              </Button>
+            </LSLink>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -356,15 +351,13 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
               </div>
             ))}
             {comments.length > 2 && !showAllComments && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(`/stories/${item.id}#comments`)}
-                className="text-xs text-muted-foreground h-auto p-0 hover:bg-transparent"
+              <LSLink
+                to={routes.storiesComments(item.id)}
+                className="text-xs text-muted-foreground hover:underline"
                 aria-label={`View all ${comments.length} comments`}
               >
                 View all {comments.length} comments
-              </Button>
+              </LSLink>
             )}
           </div>
         )}

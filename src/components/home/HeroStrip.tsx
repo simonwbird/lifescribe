@@ -10,10 +10,10 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
-import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { routes } from '@/lib/routes'
+import { LSLink, TodaysPromptHeroTile, AddPhotoHeroTile } from '@/lib/linking'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface HeroStripProps {
   familyId: string
@@ -28,12 +28,14 @@ interface HeroTile {
   subtitle?: string
   icon: React.ReactNode
   badge?: number
-  action: () => void
+  href?: string
   variant?: 'default' | 'primary'
+  event?: string
+  eventProps?: Record<string, unknown>
+  onClick?: () => void
 }
 
 export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCapture }: HeroStripProps) {
-  const navigate = useNavigate()
   const { track } = useAnalytics(userId)
   const [draftCount, setDraftCount] = useState(0)
   const [todayPrompt, setTodayPrompt] = useState<any>(null)
@@ -94,22 +96,14 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       title: "Today's Prompt",
       subtitle: todayPrompt?.prompts?.title || 'What would you like to remember?',
       icon: <Lightbulb className="h-6 w-6" />,
-      action: () => {
-        const destination = isElderMode ? routes.home() : routes.todaysPrompt()
-        track('hero_tile_click', { 
-          tile_name: 'prompt',
-          destination
-        })
-        
-        // Elder Mode: open inline recorder on Home
-        if (isElderMode && onOpenVoiceCapture) {
-          onOpenVoiceCapture()
-          return
-        }
-        
-        // Regular mode: navigate to prompts/today
-        navigate(destination)
-      },
+      ...(isElderMode && onOpenVoiceCapture 
+        ? { onClick: onOpenVoiceCapture }
+        : { 
+            href: routes.todaysPrompt(),
+            event: 'hero_tile_click',
+            eventProps: { tile: 'todays_prompt' }
+          }
+      ),
       variant: 'primary',
     },
     {
@@ -118,56 +112,36 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: draftCount > 0 ? `${draftCount} draft${draftCount === 1 ? '' : 's'}` : 'No drafts',
       icon: <FileText className="h-6 w-6" />,
       badge: draftCount,
-      action: () => {
-        const destination = routes.drafts()
-        track('hero_tile_click', { 
-          tile_name: 'drafts',
-          destination
-        })
-        navigate(destination)
-      },
+      href: routes.drafts(),
+      event: 'hero_tile_click',
+      eventProps: { tile: 'resume_drafts' },
     },
     {
       id: 'photo',
       title: 'Add Photo',
       subtitle: 'Capture or scan',
       icon: <Camera className="h-6 w-6" />,
-      action: () => {
-        const destination = routes.storyNew({ tab: 'photo' })
-        track('hero_tile_click', { 
-          tile_name: 'photo',
-          destination
-        })
-        navigate(destination)
-      },
+      href: routes.storyNew({ tab: 'photo', source: 'hero' }),
+      event: 'hero_tile_click',
+      eventProps: { tile: 'add_photo' },
     },
     {
       id: 'event',
       title: 'Create Event',
       subtitle: 'Plan together',
       icon: <Calendar className="h-6 w-6" />,
-      action: () => {
-        const destination = routes.eventNew()
-        track('hero_tile_click', { 
-          tile_name: 'event',
-          destination
-        })
-        navigate(destination)
-      },
+      href: routes.eventNew(),
+      event: 'hero_tile_click',
+      eventProps: { tile: 'create_event' },
     },
     {
       id: 'invite',
       title: 'Invite Family',
       subtitle: 'Grow your circle',
       icon: <UserPlus className="h-6 w-6" />,
-      action: () => {
-        const destination = routes.invitesNew()
-        track('hero_tile_click', { 
-          tile_name: 'invite',
-          destination
-        })
-        navigate(destination)
-      },
+      href: routes.invitesNew(),
+      event: 'hero_tile_click',
+      eventProps: { tile: 'invite_family' },
     },
   ]
 
@@ -197,13 +171,13 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
 }
 
 function HeroTileCard({ tile }: { tile: HeroTile }) {
-  return (
+  const content = (
     <Card
       className={cn(
         'group cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95',
         tile.variant === 'primary' && 'border-primary/50 bg-primary/5'
       )}
-      onClick={tile.action}
+      onClick={tile.onClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
@@ -238,5 +212,22 @@ function HeroTileCard({ tile }: { tile: HeroTile }) {
         </div>
       </CardContent>
     </Card>
+  )
+
+  // If tile has onClick, render as-is. Otherwise wrap in LSLink
+  if (tile.onClick || !tile.href) {
+    return content
+  }
+
+  return (
+    <LSLink
+      to={tile.href}
+      event={tile.event}
+      eventProps={tile.eventProps}
+      aria-label={tile.title}
+      className="block"
+    >
+      {content}
+    </LSLink>
   )
 }

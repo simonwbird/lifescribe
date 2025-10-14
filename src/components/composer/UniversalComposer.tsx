@@ -20,9 +20,18 @@ import { useStoryAnalytics } from '@/hooks/useStoryAnalytics'
 
 interface UniversalComposerProps {
   familyId: string
+  initialTab?: 'text' | 'photo' | 'voice' | 'video' | 'mixed'
+  prefillData?: {
+    promptId?: string
+    personId?: string
+    childrenIds?: string[]
+    circle?: string
+    album?: string
+    source?: string
+  }
 }
 
-export function UniversalComposer({ familyId }: UniversalComposerProps) {
+export function UniversalComposer({ familyId, initialTab, prefillData }: UniversalComposerProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { toast } = useToast()
@@ -35,9 +44,8 @@ export function UniversalComposer({ familyId }: UniversalComposerProps) {
   // Analytics tracking
   const analytics = useStoryAnalytics(familyId)
 
-  const { state, updateState, switchMode, clearState, hasContent } = useComposerState(
-    (searchParams.get('type') as ComposerMode) || 'text'
-  )
+  const initialMode = initialTab || (searchParams.get('type') as ComposerMode) || 'text'
+  const { state, updateState, switchMode, clearState, hasContent } = useComposerState(initialMode)
 
   // Autosave hook for database drafts
   const { save, forceSave, storyId, isSaving, lastSaved } = useStoryAutosave({ enabled: true })
