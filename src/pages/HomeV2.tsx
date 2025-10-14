@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
+import { AppLayout } from '@/components/layouts/AppLayout'
 import { TopBar } from '@/components/home/TopBar'
 import { HeroStrip } from '@/components/home/HeroStrip'
 import { SmartFeed } from '@/components/home/SmartFeed'
@@ -104,53 +105,55 @@ export default function HomeV2() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar familyId={familyId} userId={userId} />
-      <HeroStrip 
-        familyId={familyId} 
-        userId={userId} 
-        isElderMode={isElderMode}
-        onOpenVoiceCapture={() => setShowVoiceCapture(true)}
-      />
+    <AppLayout showHeader={false}>
+      <div className="min-h-screen bg-background">
+        <TopBar familyId={familyId} userId={userId} />
+        <HeroStrip 
+          familyId={familyId} 
+          userId={userId} 
+          isElderMode={isElderMode}
+          onOpenVoiceCapture={() => setShowVoiceCapture(true)}
+        />
 
-      {/* Two-column layout: Feed + Right Rail */}
-      <div className="container px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
-          {/* Left: Main Feed */}
-          <div className="space-y-4 min-w-0">
-            {/* Voice Capture Toggle */}
-            {!showVoiceCapture && (
-              <Button 
-                onClick={() => setShowVoiceCapture(true)}
-                variant="outline"
-                className="w-full gap-2 border-dashed"
-              >
-                <Mic className="h-4 w-4" />
-                Record Voice Note
-              </Button>
-            )}
+        {/* Two-column layout: Feed + Right Rail */}
+        <div className="container px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
+            {/* Left: Main Feed */}
+            <div className="space-y-4 min-w-0">
+              {/* Voice Capture Toggle */}
+              {!showVoiceCapture && (
+                <Button 
+                  onClick={() => setShowVoiceCapture(true)}
+                  variant="outline"
+                  className="w-full gap-2 border-dashed"
+                >
+                  <Mic className="h-4 w-4" />
+                  Record Voice Note
+                </Button>
+              )}
 
-            {/* Inline Voice Capture */}
-            {showVoiceCapture && (
-              <VoiceCapture
-                familyId={familyId}
-                userId={userId}
-                onPublished={() => setShowVoiceCapture(false)}
-                onCancel={() => setShowVoiceCapture(false)}
-              />
-            )}
+              {/* Inline Voice Capture */}
+              {showVoiceCapture && (
+                <VoiceCapture
+                  familyId={familyId}
+                  userId={userId}
+                  onPublished={() => setShowVoiceCapture(false)}
+                  onCancel={() => setShowVoiceCapture(false)}
+                />
+              )}
 
-            <SmartFeed familyId={familyId} userId={userId} />
-          </div>
-
-          {/* Right: Widgets Rail */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-20">
-              <RightRail />
+              <SmartFeed familyId={familyId} userId={userId} />
             </div>
-          </aside>
+
+            {/* Right: Widgets Rail */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-20">
+                <RightRail />
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
