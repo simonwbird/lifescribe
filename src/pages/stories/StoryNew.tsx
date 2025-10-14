@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import Header from '@/components/Header'
 import ComposeText from '@/pages/compose/ComposeText'
 import ComposePhotos from '@/pages/compose/ComposePhotos'
 import ComposeVoice from '@/pages/compose/ComposeVoice'
 import ComposeVideo from '@/pages/compose/ComposeVideo'
 import ComposeMixed from '@/pages/compose/ComposeMixed'
+import { supabase } from '@/integrations/supabase/client'
 
 type ComposerTab = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
 
@@ -38,6 +40,29 @@ export default function StoryNew() {
     source: searchParams.get('source') || undefined,
   }
 
+  // Load prompt data if promptId is present
+  const [promptTitle, setPromptTitle] = useState<string>('')
+  
+  useEffect(() => {
+    if (prefillData.promptId && prefillData.promptId !== 'today') {
+      loadPrompt(prefillData.promptId)
+    } else if (prefillData.promptId === 'today') {
+      setPromptTitle("Today's Prompt")
+    }
+  }, [prefillData.promptId])
+
+  async function loadPrompt(promptId: string) {
+    const { data } = await supabase
+      .from('prompt_instances')
+      .select('id, prompts(title)')
+      .eq('id', promptId)
+      .single()
+    
+    if (data && data.prompts) {
+      setPromptTitle((data.prompts as any).title)
+    }
+  }
+
   // Sync activeTab with URL param
   useEffect(() => {
     const urlTab = searchParams.get('tab') as ComposerTab
@@ -65,7 +90,14 @@ export default function StoryNew() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-3xl font-bold mb-2">Create Story</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold">Create Story</h1>
+            {promptTitle && (
+              <Badge variant="secondary" className="text-sm">
+                {promptTitle}
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Choose how you'd like to capture your story
           </p>

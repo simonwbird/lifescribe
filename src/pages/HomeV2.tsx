@@ -106,7 +106,12 @@ export default function HomeV2() {
   return (
     <div className="min-h-screen bg-background">
       <TopBar familyId={familyId} userId={userId} />
-      <HeroStrip familyId={familyId} userId={userId} />
+      <HeroStrip 
+        familyId={familyId} 
+        userId={userId} 
+        isElderMode={isElderMode}
+        onOpenVoiceCapture={() => setShowVoiceCapture(true)}
+      />
 
       {/* Two-column layout: Feed + Right Rail */}
       <div className="container px-4 py-6">

@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 interface HeroStripProps {
   familyId: string
   userId: string
+  isElderMode?: boolean
+  onOpenVoiceCapture?: () => void
 }
 
 interface HeroTile {
@@ -28,7 +30,7 @@ interface HeroTile {
   variant?: 'default' | 'primary'
 }
 
-export function HeroStrip({ familyId, userId }: HeroStripProps) {
+export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCapture }: HeroStripProps) {
   const navigate = useNavigate()
   const [draftCount, setDraftCount] = useState(0)
   const [todayPrompt, setTodayPrompt] = useState<any>(null)
@@ -90,10 +92,17 @@ export function HeroStrip({ familyId, userId }: HeroStripProps) {
       subtitle: todayPrompt?.prompts?.title || 'What would you like to remember?',
       icon: <Lightbulb className="h-6 w-6" />,
       action: () => {
+        // Elder Mode: open inline recorder on Home
+        if (isElderMode && onOpenVoiceCapture) {
+          onOpenVoiceCapture()
+          return
+        }
+        
+        // Regular mode: navigate to composer
         if (todayPrompt?.id) {
-          navigate(`/new-story?prompt_id=${todayPrompt.id}`)
+          navigate(`/stories/new-tabbed?tab=voice&promptId=${todayPrompt.id}&source=hero`)
         } else {
-          navigate('/prompts')
+          navigate('/stories/new-tabbed?tab=voice&promptId=today&source=hero')
         }
       },
       variant: 'primary',
@@ -111,21 +120,21 @@ export function HeroStrip({ familyId, userId }: HeroStripProps) {
       title: 'Add Photo',
       subtitle: 'Capture or scan',
       icon: <Camera className="h-6 w-6" />,
-      action: () => navigate('/capture'),
+      action: () => navigate('/stories/new-tabbed?tab=photo&source=hero'),
     },
     {
       id: 'event',
       title: 'Create Event',
       subtitle: 'Plan together',
       icon: <Calendar className="h-6 w-6" />,
-      action: () => navigate('/events?new=true'),
+      action: () => navigate('/events/new?source=hero'),
     },
     {
       id: 'invite',
       title: 'Invite Family',
       subtitle: 'Grow your circle',
       icon: <UserPlus className="h-6 w-6" />,
-      action: () => navigate('/family/members?invite=true'),
+      action: () => navigate('/invites/new?source=hero'),
     },
   ]
 
