@@ -33,7 +33,7 @@ interface HeroTile {
 
 export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCapture }: HeroStripProps) {
   const navigate = useNavigate()
-  const { track } = useAnalytics()
+  const { track } = useAnalytics(userId)
   const [draftCount, setDraftCount] = useState(0)
   const [todayPrompt, setTodayPrompt] = useState<any>(null)
 
@@ -94,7 +94,10 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: todayPrompt?.prompts?.title || 'What would you like to remember?',
       icon: <Lightbulb className="h-6 w-6" />,
       action: () => {
-        track('quick_add_open', { source: 'hero', item: 'prompt' })
+        track('hero_tile_click', { 
+          tile_name: 'prompt',
+          destination: isElderMode ? '/home' : '/prompts/today'
+        })
         
         // Elder Mode: open inline recorder on Home
         if (isElderMode && onOpenVoiceCapture) {
@@ -114,7 +117,10 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       icon: <FileText className="h-6 w-6" />,
       badge: draftCount,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'drafts', route: '/drafts' })
+        track('hero_tile_click', { 
+          tile_name: 'drafts',
+          destination: '/drafts'
+        })
         navigate('/drafts')
       },
     },
@@ -124,7 +130,10 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Capture or scan',
       icon: <Camera className="h-6 w-6" />,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'photo', route: '/stories/new?tab=photo' })
+        track('hero_tile_click', { 
+          tile_name: 'photo',
+          destination: '/stories/new?tab=photo'
+        })
         navigate('/stories/new?tab=photo')
       },
     },
@@ -134,7 +143,10 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Plan together',
       icon: <Calendar className="h-6 w-6" />,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'event', route: '/events/new' })
+        track('hero_tile_click', { 
+          tile_name: 'event',
+          destination: '/events/new'
+        })
         navigate('/events/new')
       },
     },
@@ -144,7 +156,10 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Grow your circle',
       icon: <UserPlus className="h-6 w-6" />,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'invite', route: '/invites/new' })
+        track('hero_tile_click', { 
+          tile_name: 'invite',
+          destination: '/invites/new'
+        })
         navigate('/invites/new')
       },
     },

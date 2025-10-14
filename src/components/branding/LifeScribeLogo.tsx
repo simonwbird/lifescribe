@@ -1,6 +1,8 @@
 interface LogoProps {
   className?: string
   variant?: 'icon' | 'wordmark'
+  onClick?: () => void
+  clickable?: boolean
 }
 
 /**
@@ -10,7 +12,32 @@ interface LogoProps {
  * - 'icon': 32×32 book heart icon only
  * - 'wordmark': Icon plus "LifeScribe" text
  */
-export function LifeScribeLogo({ className = '', variant = 'icon' }: LogoProps) {
+export function LifeScribeLogo({ 
+  className = '', 
+  variant = 'icon',
+  onClick,
+  clickable = false 
+}: LogoProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
+  const commonProps = clickable ? {
+    onClick: handleClick,
+    role: 'button',
+    tabIndex: 0,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        onClick?.()
+      }
+    },
+    className: `${className} cursor-pointer hover:opacity-80 transition-opacity focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded`
+  } : { className }
+
   if (variant === 'icon') {
     return (
       <svg
@@ -19,9 +46,9 @@ export function LifeScribeLogo({ className = '', variant = 'icon' }: LogoProps) 
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={className}
+        {...commonProps}
         role="img"
-        aria-label="LifeScribe logo"
+        aria-label={clickable ? "LifeScribe logo, navigate to home" : "LifeScribe logo"}
       >
         {/* Book shape */}
         <rect x="6" y="4" width="20" height="24" rx="2" fill="currentColor" opacity="0.2" />
@@ -49,7 +76,7 @@ export function LifeScribeLogo({ className = '', variant = 'icon' }: LogoProps) 
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div {...commonProps}>
       <svg
         width="32"
         height="32"

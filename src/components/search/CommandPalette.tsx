@@ -254,12 +254,13 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           if ('action' in activeItem) {
             activeItem.action()
           } else {
+            track('nav_search_submit', { 
+              entity_type: activeItem.type,
+              entity_id: activeItem.id,
+              destination: activeItem.url
+            })
             navigate(activeItem.url)
             onClose()
-            track('command_palette_result_select', { 
-              entity_type: activeItem.type,
-              entity_id: activeItem.id 
-            })
           }
         }
         break
@@ -312,12 +313,13 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                             isActive && "bg-accent"
                           )}
                           onClick={() => {
+                            track('nav_search_submit', { 
+                              entity_type: result.type,
+                              entity_id: result.id,
+                              destination: result.url
+                            })
                             navigate(result.url)
                             onClose()
-                            track('command_palette_result_select', { 
-                              entity_type: result.type,
-                              entity_id: result.id 
-                            })
                           }}
                         >
                           <div className="flex-1 min-w-0">

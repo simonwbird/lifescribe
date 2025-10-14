@@ -10,7 +10,8 @@ import {
   Lock
 } from 'lucide-react'
 import { LifeScribeLogo } from '@/components/branding/LifeScribeLogo'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import {
   Sidebar,
   SidebarContent,
@@ -84,6 +85,8 @@ const navItems = [
 export function LeftNav() {
   const { open } = useSidebar()
   const location = useLocation()
+  const navigate = useNavigate()
+  const { track } = useAnalytics()
   const currentPath = location.pathname
 
   const isActive = (path: string) => {
@@ -120,9 +123,25 @@ export function LeftNav() {
         {/* Logo Section */}
         <div className="p-4 border-b">
           {open ? (
-            <LifeScribeLogo variant="wordmark" className="text-foreground" />
+            <LifeScribeLogo 
+              variant="wordmark" 
+              className="text-foreground flex items-center gap-2" 
+              clickable
+              onClick={() => {
+                track('nav_logo_click', { destination: '/home' })
+                navigate('/home')
+              }}
+            />
           ) : (
-            <LifeScribeLogo variant="icon" className="text-foreground w-8 h-8 mx-auto" />
+            <LifeScribeLogo 
+              variant="icon" 
+              className="text-foreground w-8 h-8 mx-auto" 
+              clickable
+              onClick={() => {
+                track('nav_logo_click', { destination: '/home' })
+                navigate('/home')
+              }}
+            />
           )}
         </div>
         

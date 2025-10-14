@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Bell, Search, Plus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -22,6 +23,7 @@ interface TopBarProps {
 
 export function TopBar({ familyId, userId }: TopBarProps) {
   const navigate = useNavigate()
+  const { track } = useAnalytics(userId)
   const [profile, setProfile] = useState<any>(null)
   const [families, setFamilies] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -153,16 +155,28 @@ export function TopBar({ familyId, userId }: TopBarProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => navigate('/new-story')}>
+              <DropdownMenuItem onClick={() => {
+                track('nav_quick_add_open', { item: 'new_story', route: '/new-story' })
+                navigate('/new-story')
+              }}>
                 New Story
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/capture')}>
+              <DropdownMenuItem onClick={() => {
+                track('nav_quick_add_open', { item: 'capture_photo', route: '/capture' })
+                navigate('/capture')
+              }}>
                 Capture Photo
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/events?new=true')}>
+              <DropdownMenuItem onClick={() => {
+                track('nav_quick_add_open', { item: 'create_event', route: '/events?new=true' })
+                navigate('/events?new=true')
+              }}>
                 Create Event
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/people?new=true')}>
+              <DropdownMenuItem onClick={() => {
+                track('nav_quick_add_open', { item: 'add_person', route: '/people?new=true' })
+                navigate('/people?new=true')
+              }}>
                 Add Person
               </DropdownMenuItem>
             </DropdownMenuContent>
