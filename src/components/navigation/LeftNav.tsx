@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { 
-    title: 'My Timeline', 
+    title: 'My LifePage', 
     url: routes.meTimeline(), 
     icon: User,
     section: 'personal'
