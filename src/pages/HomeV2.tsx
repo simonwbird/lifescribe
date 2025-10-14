@@ -135,7 +135,7 @@ export default function HomeV2() {
     <AppLayout showHeader={false}>
       <div className="min-h-screen bg-background">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-40 bg-background border-b">
+        <div className="sticky top-0 z-50 bg-background border-b">
           <TopBar familyId={familyId} userId={userId} />
         </div>
         
