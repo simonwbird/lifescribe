@@ -282,6 +282,10 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
+              onPaste={(e) => {
+                // Ensure paste events are not blocked
+                e.stopPropagation()
+              }}
               placeholder="Search or type a command..."
               className="border-0 focus-visible:ring-0 text-base"
               autoFocus
