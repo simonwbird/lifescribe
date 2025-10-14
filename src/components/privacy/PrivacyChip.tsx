@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Users, Lock, Globe, Eye, ChevronDown } from 'lucide-react'
+import { Users, Lock, Globe, Eye, ChevronDown, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/hooks/use-toast'
@@ -16,6 +17,7 @@ interface PrivacyChipProps {
   currentVisibility: VisibilityOption
   isOwner: boolean
   onVisibilityChange?: (newVisibility: VisibilityOption) => Promise<void>
+  onViewPermissions?: () => void
   className?: string
   size?: 'sm' | 'md'
 }
@@ -51,6 +53,7 @@ export function PrivacyChip({
   currentVisibility, 
   isOwner, 
   onVisibilityChange,
+  onViewPermissions,
   className,
   size = 'sm'
 }: PrivacyChipProps) {
@@ -150,6 +153,23 @@ export function PrivacyChip({
             </DropdownMenuItem>
           )
         })}
+        {onViewPermissions && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onViewPermissions}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Shield className="h-4 w-4" />
+              <div className="flex-1">
+                <div className="font-medium">See permissions</div>
+                <div className="text-xs text-muted-foreground">
+                  View who can access this
+                </div>
+              </div>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
