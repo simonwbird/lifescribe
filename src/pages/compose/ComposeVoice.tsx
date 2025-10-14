@@ -5,15 +5,25 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Header from '@/components/Header'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
+import type { ComposerState } from '@/hooks/useComposerState'
 
 interface ComposeVoiceProps {
   prefillData?: ComposerPrefillData
   standalone?: boolean
+  composerState?: ComposerState
+  updateState?: (updates: Partial<ComposerState>) => void
 }
 
-export default function ComposeVoice({ prefillData, standalone = true }: ComposeVoiceProps) {
+export default function ComposeVoice({ 
+  prefillData, 
+  standalone = true,
+  composerState,
+  updateState
+}: ComposeVoiceProps) {
   const navigate = useNavigate()
   const [isRecording, setIsRecording] = useState(false)
+  
+  const hasAudio = composerState?.audioBlob !== null
 
   const content_ui = (
     <Card>
@@ -38,7 +48,7 @@ export default function ComposeVoice({ prefillData, standalone = true }: Compose
                 )}
               </Button>
               <p className="text-sm text-muted-foreground">
-                {isRecording ? 'Recording... Click to stop' : 'Click to start recording'}
+                {isRecording ? 'Recording... Click to stop' : hasAudio ? 'Audio recorded! Click to re-record' : 'Click to start recording'}
               </p>
             </div>
 

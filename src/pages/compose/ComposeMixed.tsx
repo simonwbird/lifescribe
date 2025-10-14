@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Plus } from 'lucide-react'
+import { ArrowLeft, Save, Plus, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,16 +8,47 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import Header from '@/components/Header'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
+import type { ComposerState } from '@/hooks/useComposerState'
 
 interface ComposeMixedProps {
   prefillData?: ComposerPrefillData
   standalone?: boolean
+  composerState?: ComposerState
+  updateState?: (updates: Partial<ComposerState>) => void
 }
 
-export default function ComposeMixed({ prefillData, standalone = true }: ComposeMixedProps) {
+export default function ComposeMixed({ 
+  prefillData, 
+  standalone = true,
+  composerState,
+  updateState
+}: ComposeMixedProps) {
   const navigate = useNavigate()
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [localTitle, setLocalTitle] = useState('')
+  const [localContent, setLocalContent] = useState('')
+
+  // Use shared state if provided, otherwise use local state
+  const title = composerState?.title ?? localTitle
+  const content = composerState?.content ?? localContent
+  const photos = composerState?.photos ?? []
+  const hasAudio = composerState?.audioBlob !== null
+  const hasVideo = composerState?.videoBlob !== null
+
+  const handleTitleChange = (value: string) => {
+    if (updateState) {
+      updateState({ title: value })
+    } else {
+      setLocalTitle(value)
+    }
+  }
+
+  const handleContentChange = (value: string) => {
+    if (updateState) {
+      updateState({ content: value })
+    } else {
+      setLocalContent(value)
+    }
+  }
 
   const content_ui = (
     <div className="space-y-4">
@@ -35,7 +66,7 @@ export default function ComposeMixed({ prefillData, standalone = true }: Compose
                   id="title"
                   placeholder="Give your story a title..."
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => handleTitleChange(e.target.value)}
                 />
               </div>
 
@@ -46,7 +77,7 @@ export default function ComposeMixed({ prefillData, standalone = true }: Compose
                   placeholder="Write your story..."
                   className="min-h-[200px]"
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => handleContentChange(e.target.value)}
                 />
               </div>
             </CardContent>
@@ -61,13 +92,42 @@ export default function ComposeMixed({ prefillData, standalone = true }: Compose
             </CardHeader>
             <CardContent>
               <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <p className="text-sm text-muted-foreground mb-4">
-                  No media added yet
-                </p>
-                <Button variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Photos or Videos
-                </Button>
+                {photos.length === 0 && !hasAudio && !hasVideo ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      No media added yet
+                    </p>
+                    <Button variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Photos or Videos
+                    </Button>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    {photos.length > 0 && (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-sm">
+                          {photos.length} photo{photos.length !== 1 ? 's' : ''} added
+                        </span>
+                      </div>
+                    )}
+                    {hasAudio && (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <span className="text-sm">Audio recording added</span>
+                      </div>
+                    )}
+                    {hasVideo && (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <span className="text-sm">Video added</span>
+                      </div>
+                    )}
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add More Media
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -6,15 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/Header'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
+import type { ComposerState } from '@/hooks/useComposerState'
 
 interface ComposeVideoProps {
   prefillData?: ComposerPrefillData
   standalone?: boolean
+  composerState?: ComposerState
+  updateState?: (updates: Partial<ComposerState>) => void
 }
 
-export default function ComposeVideo({ prefillData, standalone = true }: ComposeVideoProps) {
+export default function ComposeVideo({ 
+  prefillData, 
+  standalone = true,
+  composerState,
+  updateState
+}: ComposeVideoProps) {
   const navigate = useNavigate()
   const [activeCamera, setActiveCamera] = useState<'front' | 'back'>('back')
+  
+  const hasVideo = composerState?.videoBlob !== null
 
   const content_ui = (
     <Card>
@@ -37,7 +47,7 @@ export default function ComposeVideo({ prefillData, standalone = true }: Compose
                   <div>
                     <p className="text-lg font-medium mb-1">Camera preview</p>
                     <p className="text-sm text-muted-foreground">
-                      Click below to start recording
+                      {hasVideo ? 'Video recorded! Click below to re-record' : 'Click below to start recording'}
                     </p>
                   </div>
                 </div>

@@ -8,16 +8,44 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import Header from '@/components/Header'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
+import type { ComposerState } from '@/hooks/useComposerState'
 
 interface ComposeTextProps {
   prefillData?: ComposerPrefillData
   standalone?: boolean
+  composerState?: ComposerState
+  updateState?: (updates: Partial<ComposerState>) => void
 }
 
-export default function ComposeText({ prefillData, standalone = true }: ComposeTextProps) {
+export default function ComposeText({ 
+  prefillData, 
+  standalone = true,
+  composerState,
+  updateState
+}: ComposeTextProps) {
   const navigate = useNavigate()
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [localTitle, setLocalTitle] = useState('')
+  const [localContent, setLocalContent] = useState('')
+
+  // Use shared state if provided, otherwise use local state
+  const title = composerState?.title ?? localTitle
+  const content = composerState?.content ?? localContent
+
+  const handleTitleChange = (value: string) => {
+    if (updateState) {
+      updateState({ title: value })
+    } else {
+      setLocalTitle(value)
+    }
+  }
+
+  const handleContentChange = (value: string) => {
+    if (updateState) {
+      updateState({ content: value })
+    } else {
+      setLocalContent(value)
+    }
+  }
 
   // Apply prefill data
   useEffect(() => {
@@ -42,7 +70,7 @@ export default function ComposeText({ prefillData, standalone = true }: ComposeT
                 id="title"
                 placeholder="Give your story a title..."
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => handleTitleChange(e.target.value)}
               />
             </div>
 
@@ -53,7 +81,7 @@ export default function ComposeText({ prefillData, standalone = true }: ComposeT
                 placeholder="Start writing your story..."
                 className="min-h-[400px]"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => handleContentChange(e.target.value)}
               />
             </div>
 

@@ -5,14 +5,31 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Header from '@/components/Header'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
+import type { ComposerState } from '@/hooks/useComposerState'
 
 interface ComposePhotosProps {
   prefillData?: ComposerPrefillData
   standalone?: boolean
+  composerState?: ComposerState
+  updateState?: (updates: Partial<ComposerState>) => void
 }
 
-export default function ComposePhotos({ prefillData, standalone = true }: ComposePhotosProps) {
+export default function ComposePhotos({ 
+  prefillData, 
+  standalone = true,
+  composerState,
+  updateState
+}: ComposePhotosProps) {
   const navigate = useNavigate()
+  
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files || !updateState) return
+    
+    const newPhotos = Array.from(files)
+    updateState({ 
+      photos: [...(composerState?.photos || []), ...newPhotos] 
+    })
+  }
 
   const content_ui = (
     <Card>
@@ -28,10 +45,24 @@ export default function ComposePhotos({ prefillData, standalone = true }: Compos
               <div>
                 <p className="text-lg font-medium mb-1">Drag and drop photos here</p>
                 <p className="text-sm text-muted-foreground">or click to browse</p>
+                {composerState && composerState.photos.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {composerState.photos.length} photo{composerState.photos.length !== 1 ? 's' : ''} selected
+                  </p>
+                )}
               </div>
-              <Button variant="outline">
-                Browse Files
-              </Button>
+              <label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleFileSelect(e.target.files)}
+                />
+                <Button variant="outline" asChild>
+                  <span>Browse Files</span>
+                </Button>
+              </label>
             </div>
 
             <div className="flex items-center gap-4">

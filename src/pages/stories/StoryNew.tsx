@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import Header from '@/components/Header'
 import ComposeText from '@/pages/compose/ComposeText'
 import ComposePhotos from '@/pages/compose/ComposePhotos'
@@ -11,6 +12,7 @@ import ComposeVoice from '@/pages/compose/ComposeVoice'
 import ComposeVideo from '@/pages/compose/ComposeVideo'
 import ComposeMixed from '@/pages/compose/ComposeMixed'
 import { supabase } from '@/integrations/supabase/client'
+import { useComposerState, ComposerMode } from '@/hooks/useComposerState'
 
 type ComposerTab = 'text' | 'photo' | 'voice' | 'video' | 'mixed'
 
@@ -30,6 +32,9 @@ export default function StoryNew() {
   const tabParam = (searchParams.get('tab') || 'text') as ComposerTab
   const [activeTab, setActiveTab] = useState<ComposerTab>(tabParam)
 
+  // Use shared composer state
+  const { state: composerState, updateState, switchMode } = useComposerState(tabParam)
+  
   // Parse prefill params
   const prefillData: ComposerPrefillData = {
     promptId: searchParams.get('promptId') || undefined,
@@ -74,10 +79,33 @@ export default function StoryNew() {
   const handleTabChange = (value: string) => {
     const newTab = value as ComposerTab
     setActiveTab(newTab)
+    switchMode(newTab)
     
     // Update URL without triggering navigation
     const newParams = new URLSearchParams(searchParams)
     newParams.set('tab', newTab)
+    setSearchParams(newParams, { replace: true })
+  }
+
+  // Detect if user should upgrade to mixed mode
+  const shouldShowMixedUpgrade = () => {
+    if (activeTab === 'mixed') return false
+    
+    const hasText = composerState.title.trim() || composerState.content.trim()
+    const hasPhotos = composerState.photos.length > 0
+    const hasAudio = composerState.audioBlob !== null
+    const hasVideo = composerState.videoBlob !== null
+    
+    const mediaCount = [hasText, hasPhotos, hasAudio, hasVideo].filter(Boolean).length
+    return mediaCount > 1
+  }
+
+  const handleUpgradeToMixed = () => {
+    setActiveTab('mixed')
+    switchMode('mixed')
+    
+    const newParams = new URLSearchParams(searchParams)
+    newParams.set('tab', 'mixed')
     setSearchParams(newParams, { replace: true })
   }
 
@@ -112,24 +140,63 @@ export default function StoryNew() {
             <TabsTrigger value="mixed">Mixed</TabsTrigger>
           </TabsList>
 
+          {/* Mixed Mode Upgrade Alert */}
+          {shouldShowMixedUpgrade() && (
+            <Alert className="mb-4 border-primary/50 bg-primary/5">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-sm">
+                  You've added multiple types of content. Switch to Mixed mode for a richer story.
+                </span>
+                <Button 
+                  size="sm" 
+                  onClick={handleUpgradeToMixed}
+                  className="ml-4"
+                >
+                  Upgrade to Mixed
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <TabsContent value="text" className="mt-0">
-            <ComposeText prefillData={prefillData} />
+            <ComposeText 
+              prefillData={prefillData} 
+              composerState={composerState}
+              updateState={updateState}
+            />
           </TabsContent>
 
           <TabsContent value="photo" className="mt-0">
-            <ComposePhotos prefillData={prefillData} />
+            <ComposePhotos 
+              prefillData={prefillData}
+              composerState={composerState}
+              updateState={updateState}
+            />
           </TabsContent>
 
           <TabsContent value="voice" className="mt-0">
-            <ComposeVoice prefillData={prefillData} />
+            <ComposeVoice 
+              prefillData={prefillData}
+              composerState={composerState}
+              updateState={updateState}
+            />
           </TabsContent>
 
           <TabsContent value="video" className="mt-0">
-            <ComposeVideo prefillData={prefillData} />
+            <ComposeVideo 
+              prefillData={prefillData}
+              composerState={composerState}
+              updateState={updateState}
+            />
           </TabsContent>
 
           <TabsContent value="mixed" className="mt-0">
-            <ComposeMixed prefillData={prefillData} />
+            <ComposeMixed 
+              prefillData={prefillData}
+              composerState={composerState}
+              updateState={updateState}
+            />
           </TabsContent>
         </Tabs>
       </main>
