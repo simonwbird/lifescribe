@@ -59,12 +59,16 @@ export function TopBar({ familyId, userId }: TopBarProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center px-4">
           {/* Avatar Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+              <Button 
+                variant="ghost" 
+                className="relative h-10 w-10 rounded-full"
+                aria-label="Switch family or view settings"
+              >
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
                   <AvatarFallback>
@@ -101,14 +105,15 @@ export function TopBar({ familyId, userId }: TopBarProps) {
           </DropdownMenu>
 
           {/* Global Search/Command */}
-          <div className="flex-1 px-4">
+          <div className="flex-1 px-2 sm:px-4">
             <Button
               variant="outline"
               className="w-full max-w-lg justify-start text-sm text-muted-foreground"
               onClick={() => setSearchOpen(true)}
+              aria-label="Search stories, people, events"
             >
-              <Search className="mr-2 h-4 w-4" />
-              Search stories, people, events...
+              <Search className="mr-2 h-4 w-4 shrink-0" />
+              <span className="truncate">Search stories, people, events...</span>
             </Button>
           </div>
 
@@ -116,14 +121,16 @@ export function TopBar({ familyId, userId }: TopBarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative shrink-0"
             onClick={() => navigate('/notifications')}
+            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
               <Badge
                 variant="destructive"
-                className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
+                className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full p-0 text-xs flex items-center justify-center"
+                aria-hidden="true"
               >
                 {unreadCount}
               </Badge>
@@ -133,7 +140,11 @@ export function TopBar({ familyId, userId }: TopBarProps) {
           {/* Quick Add */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" className="ml-2">
+              <Button 
+                size="icon" 
+                className="ml-1 sm:ml-2 shrink-0"
+                aria-label="Quick add menu"
+              >
                 <Plus className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>

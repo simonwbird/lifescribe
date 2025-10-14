@@ -9,18 +9,45 @@ import { VoiceCapture } from '@/components/home/VoiceCapture'
 import RightRail from '@/components/home/RightRail'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { Mic } from 'lucide-react'
+import { Mic, Menu } from 'lucide-react'
 import ElderModeView from '@/components/elder/ElderModeView'
 import { useElderMode } from '@/hooks/useElderMode'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 export default function HomeV2() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string>('')
   const [familyId, setFamilyId] = useState<string>('')
   const [showVoiceCapture, setShowVoiceCapture] = useState(false)
+  const [toolsDrawerOpen, setToolsDrawerOpen] = useState(false)
   const { isElderMode, phoneCode, isLoading: elderModeLoading } = useElderMode(userId)
+
+  // Handle ?panel=tools URL parameter
+  useEffect(() => {
+    const panel = searchParams.get('panel')
+    if (panel === 'tools') {
+      setToolsDrawerOpen(true)
+    }
+  }, [searchParams])
+
+  // Update URL when drawer opens/closes
+  const handleToolsDrawerChange = (open: boolean) => {
+    setToolsDrawerOpen(open)
+    if (open) {
+      setSearchParams({ panel: 'tools' })
+    } else {
+      searchParams.delete('panel')
+      setSearchParams(searchParams)
+    }
+  }
 
   useEffect(() => {
     loadUserAndFamily()
@@ -107,7 +134,11 @@ export default function HomeV2() {
   return (
     <AppLayout showHeader={false}>
       <div className="min-h-screen bg-background">
-        <TopBar familyId={familyId} userId={userId} />
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-40 bg-background border-b">
+          <TopBar familyId={familyId} userId={userId} />
+        </div>
+        
         <HeroStrip 
           familyId={familyId} 
           userId={userId} 
@@ -126,6 +157,7 @@ export default function HomeV2() {
                   onClick={() => setShowVoiceCapture(true)}
                   variant="outline"
                   className="w-full gap-2 border-dashed"
+                  aria-label="Record voice note"
                 >
                   <Mic className="h-4 w-4" />
                   Record Voice Note
@@ -145,14 +177,38 @@ export default function HomeV2() {
               <SmartFeed familyId={familyId} userId={userId} />
             </div>
 
-            {/* Right: Widgets Rail */}
+            {/* Right: Widgets Rail (Desktop only) */}
             <aside className="hidden lg:block">
-              <div className="sticky top-20">
+              <div className="sticky top-24">
                 <RightRail />
               </div>
             </aside>
           </div>
         </div>
+
+        {/* Mobile Tools Drawer */}
+        <Sheet open={toolsDrawerOpen} onOpenChange={handleToolsDrawerChange}>
+          <SheetTrigger asChild>
+            <Button
+              size="lg"
+              className="fixed bottom-6 right-6 z-50 lg:hidden shadow-lg rounded-full w-14 h-14 p-0"
+              aria-label="Open tools drawer"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent 
+            side="right" 
+            className="w-full sm:w-[400px] overflow-y-auto"
+          >
+            <SheetHeader>
+              <SheetTitle>Tools & Widgets</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <RightRail />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </AppLayout>
   )

@@ -162,9 +162,9 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
 
         {/* Tablet/Desktop: Horizontal Scroll */}
         <div className="hidden sm:block">
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory scrollbar-hide">
             {tiles.map((tile) => (
-              <div key={tile.id} className="flex-shrink-0 w-64">
+              <div key={tile.id} className="flex-shrink-0 w-64 snap-start">
                 <HeroTileCard tile={tile} />
               </div>
             ))}
@@ -179,7 +179,7 @@ function HeroTileCard({ tile }: { tile: HeroTile }) {
   return (
     <Card
       className={cn(
-        'group cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5',
+        'group cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95',
         tile.variant === 'primary' && 'border-primary/50 bg-primary/5'
       )}
       onClick={tile.action}
@@ -189,10 +189,10 @@ function HeroTileCard({ tile }: { tile: HeroTile }) {
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div
               className={cn(
-                'flex-shrink-0 rounded-lg p-2',
+                'flex-shrink-0 rounded-lg p-2 transition-colors',
                 tile.variant === 'primary'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-muted text-muted-foreground'
+                  ? 'bg-primary/10 text-primary group-hover:bg-primary/20'
+                  : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
               )}
             >
               {tile.icon}
