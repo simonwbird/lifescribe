@@ -83,7 +83,7 @@ export default function LifeScribeHeader() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300',
+        'sticky top-0 z-50 w-full border-b bg-background transition-all duration-300',
         isScrolled ? 'shadow-sm h-14 md:h-16' : 'h-14 md:h-16'
       )}
       role="banner"
