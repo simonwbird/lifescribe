@@ -102,12 +102,8 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
           return
         }
         
-        // Regular mode: navigate to composer
-        if (todayPrompt?.id) {
-          navigate(`/stories/new-tabbed?tab=voice&promptId=${todayPrompt.id}&source=hero`)
-        } else {
-          navigate('/stories/new-tabbed?tab=voice&promptId=today&source=hero')
-        }
+        // Regular mode: navigate to prompts/today
+        navigate('/prompts/today')
       },
       variant: 'primary',
     },
@@ -128,8 +124,8 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Capture or scan',
       icon: <Camera className="h-6 w-6" />,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'photo', route: '/stories/new-tabbed?tab=photo&source=hero' })
-        navigate('/stories/new-tabbed?tab=photo&source=hero')
+        track('quick_add_select', { source: 'hero', item: 'photo', route: '/stories/new?tab=photo' })
+        navigate('/stories/new?tab=photo')
       },
     },
     {
@@ -138,8 +134,8 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Plan together',
       icon: <Calendar className="h-6 w-6" />,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'event', route: '/events/new?source=hero' })
-        navigate('/events/new?source=hero')
+        track('quick_add_select', { source: 'hero', item: 'event', route: '/events/new' })
+        navigate('/events/new')
       },
     },
     {
@@ -148,8 +144,8 @@ export function HeroStrip({ familyId, userId, isElderMode = false, onOpenVoiceCa
       subtitle: 'Grow your circle',
       icon: <UserPlus className="h-6 w-6" />,
       action: () => {
-        track('quick_add_select', { source: 'hero', item: 'invite', route: '/invites/new?source=hero' })
-        navigate('/invites/new?source=hero')
+        track('quick_add_select', { source: 'hero', item: 'invite', route: '/invites/new' })
+        navigate('/invites/new')
       },
     },
   ]
