@@ -47,6 +47,7 @@ import SignupPage from "./pages/auth/Signup";
 import VerifyPage from "./pages/auth/Verify";
 import ResetRequestPage from "./pages/auth/ResetRequest";
 import ResetConfirmPage from "./pages/auth/ResetConfirm";
+import MeRedirect from "./pages/MeRedirect";
 import Onboarding from "./pages/Onboarding";
 import OnboardingWizard from "./pages/OnboardingWizard";
 import AuthGate from "./components/auth/AuthGate";
@@ -193,6 +194,9 @@ function AppContent() {
        <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
        <Route path="/home-v2" element={<AuthGate><HomeV2 /></AuthGate>} />
         <Route path="/prompts/wow" element={<AuthGate><PromptsWow /></AuthGate>} />
+        
+        {/* Me redirect to person page */}
+        <Route path="/me" element={<AuthGate><MeRedirect /></AuthGate>} />
         
         {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />

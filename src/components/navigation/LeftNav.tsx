@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   User,
   Users,
@@ -26,10 +27,17 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
-const navItems = [
+interface NavItem {
+  title: string
+  url: string
+  icon: React.ComponentType<{ className?: string }>
+  section: 'personal' | 'family' | 'vault'
+}
+
+const navItems: NavItem[] = [
   { 
     title: 'My LifePage', 
-    url: routes.meTimeline(), 
+    url: '/me', 
     icon: User,
     section: 'personal'
   },
