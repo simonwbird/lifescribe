@@ -217,7 +217,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       setActiveIndex(0)
       track('command_palette_open')
     }
-  }, [isOpen, track])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Group results by type with people first
   const groupedResults = results.reduce((acc, result) => {
