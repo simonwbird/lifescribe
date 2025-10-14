@@ -9,6 +9,7 @@ import {
   GitBranch,
   Lock
 } from 'lucide-react'
+import { LifeScribeLogo } from '@/components/branding/LifeScribeLogo'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   Sidebar,
@@ -113,8 +114,18 @@ export function LeftNav() {
         open ? 'w-60' : 'w-14'
       )}
       collapsible="icon"
+      aria-label="Main navigation"
     >
       <SidebarContent>
+        {/* Logo Section */}
+        <div className="p-4 border-b">
+          {open ? (
+            <LifeScribeLogo variant="wordmark" className="text-foreground" />
+          ) : (
+            <LifeScribeLogo variant="icon" className="text-foreground w-8 h-8 mx-auto" />
+          )}
+        </div>
+        
         {/* Personal Section */}
         <SidebarGroup>
           {open && <SidebarGroupLabel>Personal</SidebarGroupLabel>}

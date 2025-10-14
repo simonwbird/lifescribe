@@ -21,17 +21,20 @@ export function AppLayout({ children, showSidebar = true, showHeader = true }: A
         
         <div className="flex-1 flex flex-col min-w-0">
           {showHeader && (
-            <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur px-4">
+            <header 
+              role="banner"
+              className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur px-4"
+            >
               <SidebarTrigger className="shrink-0">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle sidebar</span>
+                <span className="sr-only">Toggle navigation sidebar</span>
               </SidebarTrigger>
             </header>
           )}
           
-          <main className="flex-1">
+          <div className="flex-1">
             {children}
-          </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>

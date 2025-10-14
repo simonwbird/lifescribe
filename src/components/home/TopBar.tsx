@@ -59,7 +59,11 @@ export function TopBar({ familyId, userId }: TopBarProps) {
 
   return (
     <>
-      <div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header 
+        role="banner" 
+        className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        aria-label="LifeScribe navigation bar"
+      >
         <div className="container flex h-14 items-center px-4">
           {/* Avatar Switcher */}
           <DropdownMenu>
@@ -164,7 +168,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </header>
 
       {/* Search Command Palette */}
       <CommandPalette 
