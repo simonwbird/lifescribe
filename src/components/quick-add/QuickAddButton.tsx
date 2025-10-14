@@ -12,12 +12,31 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { QuickAddSheet } from './QuickAddSheet'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { supabase } from '@/integrations/supabase/client'
+import { useQuery } from '@tanstack/react-query'
 
 export function QuickAddButton() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const { track } = useAnalytics()
+
+  // Get user role for analytics
+  const { data: userRole } = useQuery({
+    queryKey: ['user-role'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+      
+      const { data } = await supabase
+        .from('members')
+        .select('role')
+        .eq('profile_id', user.id)
+        .single()
+      
+      return data?.role || 'member'
+    },
+  })
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -54,11 +73,14 @@ export function QuickAddButton() {
   }
 
   const quickLinks = [
-    { label: 'Voice Story', route: '/stories/new-tabbed?tab=voice&source=header_create' },
-    { label: 'Text Story', route: '/stories/new-tabbed?tab=text&source=header_create' },
-    { label: 'Photo(s)', route: '/stories/new-tabbed?tab=photo&source=header_create' },
-    { label: 'Recipe', route: '/recipes/new' },
-    { label: 'Event', route: '/events/new' },
+    { label: 'Story (Text)', route: '/stories/new-tabbed?tab=text&source=menu' },
+    { label: 'Story (Photo)', route: '/stories/new-tabbed?tab=photo&source=menu' },
+    { label: 'Story (Voice)', route: '/stories/new-tabbed?tab=voice&source=menu' },
+    { label: 'Story (Video)', route: '/stories/new-tabbed?tab=video&source=menu' },
+    { label: 'Mixed', route: '/stories/new-tabbed?tab=mixed&source=menu' },
+    { label: 'Recipe', route: '/recipes/new?source=menu' },
+    { label: 'Object/Heirloom', route: '/objects/new?source=menu' },
+    { label: 'Event', route: '/events/new?source=menu' },
   ]
 
   return (
@@ -88,18 +110,19 @@ export function QuickAddButton() {
               <ChevronDown className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52 bg-background">
+          <DropdownMenuContent align="end" className="w-52 bg-background z-50">
             <DropdownMenuLabel>Quick Links</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {quickLinks.map((link) => (
               <DropdownMenuItem
                 key={link.route}
                 onClick={() => {
-                  navigate(link.route)
-                  track('create_item_selected', { 
-                    type: link.label.toLowerCase().replace(/\s+/g, '_'),
-                    trigger: 'dropdown',
+                  console.log('Create menu click:', { 
+                    item: link.label,
+                    route: link.route,
+                    user_role: userRole,
                   })
+                  navigate(link.route)
                 }}
               >
                 {link.label}
