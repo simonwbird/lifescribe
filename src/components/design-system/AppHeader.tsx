@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { ChevronDown, BookHeart, FileText, Users, GitBranch, Plus, PenTool, Mic, Camera, Archive, Calendar, Search } from 'lucide-react'
+import { LSLink } from '@/lib/linking'
+import { routes } from '@/lib/routes'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -73,10 +75,15 @@ export function AppHeader() {
     <header className="header-modern sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto px-4 h-full flex items-center">
         {/* Left: Logo */}
-        <Link to="/home" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <LSLink 
+          to={routes.home()} 
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          event="nav_logo_click"
+          aria-label="Go to home"
+        >
           <BookHeart className="h-6 w-6 text-primary" />
           <span className="hidden sm:inline text-lg font-serif font-bold">LifeScribe</span>
-        </Link>
+        </LSLink>
 
         {/* Center: Search */}
         <div className="flex-1 flex justify-center px-4">
@@ -107,10 +114,10 @@ export function AppHeader() {
                   asChild
                   className={`${activeSection === 'stories' ? 'bg-accent text-accent-foreground' : ''} gap-1`}
                 >
-                  <Link to="/stories/new">
+                  <LSLink to={routes.storyNew()} aria-label="Stories menu">
                     Stories
                     <ChevronDown className="h-3 w-3 opacity-50" />
-                  </Link>
+                  </LSLink>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
@@ -118,29 +125,49 @@ export function AppHeader() {
                 className="w-48 bg-background border shadow-lg z-50"
               >
                 <DropdownMenuItem asChild>
-                  <Link to="/stories/new" className="cursor-pointer">
+                  <LSLink 
+                    to={routes.storyNew()} 
+                    className="cursor-pointer"
+                    event="nav_create_story"
+                    aria-label="Create new story"
+                  >
                     <PenTool className="h-4 w-4 mr-2" />
                     New Story
-                  </Link>
+                  </LSLink>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/mylife" className="cursor-pointer">
+                  <LSLink 
+                    to={routes.meTimeline()} 
+                    className="cursor-pointer"
+                    event="nav_my_life"
+                    aria-label="View my life page"
+                  >
                     <BookHeart className="h-4 w-4 mr-2" />
                     My Life Page
-                  </Link>
+                  </LSLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/family/tree" className="cursor-pointer flex items-center">
+                  <LSLink 
+                    to={routes.tree()} 
+                    className="cursor-pointer flex items-center"
+                    event="nav_family_tree"
+                    aria-label="View family tree"
+                  >
                     <GitBranch className="h-4 w-4 mr-2" />
                     Family Tree
-                  </Link>
+                  </LSLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/prompts/hub" className="cursor-pointer">
+                  <LSLink 
+                    to="/prompts/hub" 
+                    className="cursor-pointer"
+                    event="nav_prompts_hub"
+                    aria-label="Browse prompts"
+                  >
                     <FileText className="h-4 w-4 mr-2" />
                     Prompts
-                  </Link>
+                  </LSLink>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -148,8 +175,15 @@ export function AppHeader() {
               variant="ghost"
               size="sm"
               className={activeSection === 'family' ? 'bg-accent text-accent-foreground' : ''}
+              asChild
             >
-              <Link to="/people">Family</Link>
+              <LSLink 
+                to={routes.peopleIndex()} 
+                event="nav_family"
+                aria-label="View family"
+              >
+                Family
+              </LSLink>
             </Button>
           </nav>
 
@@ -157,7 +191,11 @@ export function AppHeader() {
           <Button 
             size="sm" 
             className="gap-1 text-primary-foreground hover:text-primary-foreground"
-            onClick={() => setShowQuickAdd(true)}
+            onClick={() => {
+              track('nav_quick_add_open')
+              setShowQuickAdd(true)
+            }}
+            aria-label="Quick add menu"
           >
             <Plus className="h-3 w-3" />
             Create
