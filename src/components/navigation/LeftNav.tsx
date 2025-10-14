@@ -123,7 +123,7 @@ export function LeftNav() {
     <Sidebar
       className={cn(
         'border-r transition-all duration-300',
-        open ? 'w-60' : 'w-14'
+        open ? 'w-52' : 'w-14'
       )}
       collapsible="icon"
       aria-label="Main navigation"
