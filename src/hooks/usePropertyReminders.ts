@@ -30,15 +30,20 @@ export function usePropertyReminders(familyId: string | null, daysAhead = 30) {
 
       // Fetch property details separately
       const propertyIds = [...new Set(reminders.map((r: any) => r.property_id))]
-      const { data: properties } = await supabase
+      const { data: propertiesRaw } = await supabase
         .from('properties' as any)
-        .select('id, title')
+        .select('id, display_title')
         .in('id', propertyIds)
+
+      const properties = (propertiesRaw || []) as any[]
 
       // Map reminders with property data
       return reminders.map((reminder: any) => ({
         ...reminder,
-        property: properties?.find((p: any) => p.id === reminder.property_id) || { id: '', title: 'Property' }
+        property: (() => {
+          const p = properties?.find((p: any) => p.id === reminder.property_id)
+          return p ? { id: p.id, title: p.display_title || 'Property' } : { id: '', title: 'Property' }
+        })()
       })) as (PropertyReminder & { property: { id: string; title: string } })[]
     },
     enabled: !!familyId

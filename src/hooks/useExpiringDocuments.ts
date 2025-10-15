@@ -13,7 +13,7 @@ export function useExpiringDocuments(familyId: string) {
         .from('property_documents' as any)
         .select(`
           *,
-          property:properties(id, title)
+          property:properties(id, display_title)
         `)
         .eq('family_id', familyId)
         .not('expires_at', 'is', null)
@@ -25,9 +25,12 @@ export function useExpiringDocuments(familyId: string) {
         return []
       }
 
-      return (data || []) as unknown as (PropertyDocument & {
-        property: { id: string; title: string }
-      })[]
+      return (data || []).map((d: any) => ({
+        ...d,
+        property: d.property
+          ? { id: d.property.id, title: d.property.display_title ?? 'Property' }
+          : { id: '', title: 'Property' }
+      })) as (PropertyDocument & { property: { id: string; title: string } })[]
     },
     enabled: !!familyId,
   })
