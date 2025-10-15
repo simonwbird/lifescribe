@@ -8,6 +8,7 @@ interface StoryDraftData {
   familyId: string
   occurred_on?: string | null
   is_approx?: boolean
+  propertyId?: string | null
 }
 
 interface UseStoryAutosaveOptions {
@@ -51,7 +52,8 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
           profile_id: user.id,
           status: 'draft',
           occurred_on: data.occurred_on,
-          is_approx: data.is_approx
+          is_approx: data.is_approx,
+          happened_at_property_id: data.propertyId || null
         }
 
         // Update existing draft or create new
@@ -111,7 +113,8 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
         profile_id: user.id,
         status: 'draft',
         occurred_on: data.occurred_on,
-        is_approx: data.is_approx
+        is_approx: data.is_approx,
+        happened_at_property_id: data.propertyId || null
       }
 
       // Update existing draft or create new

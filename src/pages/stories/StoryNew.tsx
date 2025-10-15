@@ -26,6 +26,7 @@ export interface ComposerPrefillData {
   circle?: string
   album?: string
   source?: string
+  propertyId?: string
 }
 
 export default function StoryNew() {
@@ -104,7 +105,8 @@ export default function StoryNew() {
       content: composerState.content,
       familyId,
       occurred_on: occurredDate,
-      is_approx: isApprox
+      is_approx: isApprox,
+      propertyId: prefillData.propertyId
     })
   }, [composerState.title, composerState.content, familyId, composerState.dateValue])
 
@@ -156,6 +158,7 @@ export default function StoryNew() {
     circle: searchParams.get('circle') || undefined,
     album: searchParams.get('album') || undefined,
     source: searchParams.get('source') || undefined,
+    propertyId: searchParams.get('propertyId') || undefined,
   }
 
   // Load prompt data if promptId is present
