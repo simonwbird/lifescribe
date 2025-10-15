@@ -68,8 +68,6 @@ import ThingEdit from "./pages/ThingEdit";
 import PropertyDetail from "./pages/PropertyDetail";
 import PetNew from "./pages/PetNew";
 import PetEdit from "./pages/PetEdit";
-import PropertyNew from "./pages/PropertyNew";
-import PropertyEdit from "./pages/PropertyEdit";
 import Properties from "./pages/Properties";
 import StoryEdit from "./pages/StoryEdit";
 import Capture from "./pages/Capture";
@@ -260,9 +258,6 @@ function AppContent() {
       <Route path="/things/:id" element={<AuthGate><LabsGuard feature="collections"><ThingDetail /></LabsGuard></AuthGate>} />
       <Route path="/things/:id/edit" element={<AuthGate><LabsGuard feature="collections"><ThingEdit /></LabsGuard></AuthGate>} />
       <Route path="/properties" element={<AuthGate><LabsGuard feature="collections"><Properties /></LabsGuard></AuthGate>} />
-      <Route path="/properties/new" element={<AuthGate><LabsGuard feature="collections"><PropertyNew /></LabsGuard></AuthGate>} />
-      <Route path="/properties/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PropertyEdit /></LabsGuard></AuthGate>} />
-      <Route path="/properties/:id" element={<AuthGate><LabsGuard feature="collections"><PropertyDetail /></LabsGuard></AuthGate>} />
       <Route path="/pets" element={<AuthGate><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/Pets')} /></LabsGuard></AuthGate>} />
       <Route path="/pets/new" element={<AuthGate><LabsGuard feature="collections"><PetNew /></LabsGuard></AuthGate>} />
       <Route path="/pets/:id" element={<AuthGate><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/PetDetail')} /></LabsGuard></AuthGate>} />
