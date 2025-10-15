@@ -70,6 +70,7 @@ import PetNew from "./pages/PetNew";
 import PetEdit from "./pages/PetEdit";
 import PropertyNew from "./pages/PropertyNew";
 import PropertyEdit from "./pages/PropertyEdit";
+import Properties from "./pages/Properties";
 import StoryEdit from "./pages/StoryEdit";
 import Capture from "./pages/Capture";
 import Events from "./pages/Events";
@@ -258,6 +259,7 @@ function AppContent() {
       <Route path="/objects/new" element={<AuthGate><LabsGuard feature="collections"><ObjectsNew /></LabsGuard></AuthGate>} />
       <Route path="/things/:id" element={<AuthGate><LabsGuard feature="collections"><ThingDetail /></LabsGuard></AuthGate>} />
       <Route path="/things/:id/edit" element={<AuthGate><LabsGuard feature="collections"><ThingEdit /></LabsGuard></AuthGate>} />
+      <Route path="/properties" element={<AuthGate><LabsGuard feature="collections"><Properties /></LabsGuard></AuthGate>} />
       <Route path="/properties/new" element={<AuthGate><LabsGuard feature="collections"><PropertyNew /></LabsGuard></AuthGate>} />
       <Route path="/properties/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PropertyEdit /></LabsGuard></AuthGate>} />
       <Route path="/properties/:id" element={<AuthGate><LabsGuard feature="collections"><PropertyDetail /></LabsGuard></AuthGate>} />
