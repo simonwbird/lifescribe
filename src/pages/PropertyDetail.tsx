@@ -12,7 +12,6 @@ import {
   MapPin, 
   PenLine, 
   Camera, 
-  FileText,
   Copy,
   Check,
   Calendar,
@@ -23,6 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import type { Property } from '@/lib/propertyTypes'
 import { PROPERTY_STATUSES } from '@/lib/propertyTypes'
+import { PropertyUpkeepTab } from '@/components/properties/PropertyUpkeepTab'
 
 export default function PropertyDetail() {
   const { id } = useParams()
@@ -372,16 +372,7 @@ export default function PropertyDetail() {
                 </TabsContent>
 
                 <TabsContent value="upkeep" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Upkeep & Reminders</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-body-sm text-muted-foreground text-center py-8">
-                        Maintenance reminders and upkeep tasks will appear here.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <PropertyUpkeepTab propertyId={property.id} familyId={property.family_id} />
                 </TabsContent>
 
                 <TabsContent value="documents" className="mt-6">
