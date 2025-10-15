@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -6,17 +7,53 @@ import { MapPin, Calendar, FileText, Bell, Eye, PenLine, Home } from 'lucide-rea
 import type { PropertyWithStats } from '@/lib/propertyTypes'
 import { PROPERTY_STATUSES } from '@/lib/propertyTypes'
 import { computeDisplayAddress, getStaticMapUrl, hasValidGeocode } from '@/lib/addressUtils'
+import { supabase } from '@/integrations/supabase/client'
 
 interface PropertyCardProps {
   property: PropertyWithStats
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null)
   const statusLabel = PROPERTY_STATUSES.find(s => s.value === property.status)?.label || property.status
   const displayAddress = computeDisplayAddress(property)
   
+  useEffect(() => {
+    async function fetchCoverImage() {
+      if (!property.cover_media_id) {
+        setCoverImageUrl(null)
+        return
+      }
+
+      try {
+        const { data: mediaData } = await supabase
+          .from('media' as any)
+          .select('file_path')
+          .eq('id', property.cover_media_id)
+          .single()
+
+        if (mediaData) {
+          const filePath = (mediaData as any).file_path
+          if (filePath) {
+            const { data: signedUrl } = await supabase.storage
+              .from('media')
+              .createSignedUrl(filePath, 3600)
+            
+            if (signedUrl) {
+              setCoverImageUrl(signedUrl.signedUrl)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching cover image:', error)
+      }
+    }
+
+    fetchCoverImage()
+  }, [property.cover_media_id])
+  
   // Determine cover image or fallback to map
-  const coverImage = property.cover_url || 
+  const coverImage = coverImageUrl || property.cover_url || 
     (hasValidGeocode(property) 
       ? getStaticMapUrl(property.geocode_lat!, property.geocode_lng!, 600, 400, 15)
       : null)
