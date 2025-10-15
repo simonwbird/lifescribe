@@ -3748,6 +3748,30 @@ export type Database = {
         }
         Relationships: []
       }
+      media_property_links: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          media_id: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          media_id: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          media_id?: string
+          property_id?: string
+        }
+        Relationships: []
+      }
       media_vendor_status: {
         Row: {
           avg_response_time_ms: number | null
@@ -7045,6 +7069,48 @@ export type Database = {
           },
         ]
       }
+      property_reminders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          due_at: string
+          family_id: string
+          id: string
+          notes: string | null
+          property_id: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at: string
+          family_id: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at?: string
+          family_id?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       property_rooms: {
         Row: {
           created_at: string
@@ -7815,6 +7881,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      story_property_links: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          property_id: string
+          story_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          property_id: string
+          story_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          property_id?: string
+          story_id?: string
+        }
+        Relationships: []
       }
       story_sources: {
         Row: {
