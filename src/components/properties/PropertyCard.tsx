@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, Calendar, FileText, Bell, Eye, PenLine } from 'lucide-react'
+import { MapPin, Calendar, FileText, Bell, Eye, PenLine, Home } from 'lucide-react'
 import type { PropertyWithStats } from '@/lib/propertyTypes'
 import { PROPERTY_STATUSES } from '@/lib/propertyTypes'
+import { computeDisplayAddress, getStaticMapUrl, hasValidGeocode } from '@/lib/addressUtils'
 
 interface PropertyCardProps {
   property: PropertyWithStats
@@ -12,20 +13,27 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const statusLabel = PROPERTY_STATUSES.find(s => s.value === property.status)?.label || property.status
+  const displayAddress = computeDisplayAddress(property)
+  
+  // Determine cover image or fallback to map
+  const coverImage = property.cover_url || 
+    (hasValidGeocode(property) 
+      ? getStaticMapUrl(property.geocode_lat!, property.geocode_lng!, 600, 400, 15)
+      : null)
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      {/* Cover Image */}
+      {/* Cover Image or Map */}
       <div className="aspect-video bg-muted relative">
-        {property.cover_url ? (
+        {coverImage ? (
           <img 
-            src={property.cover_url} 
+            src={coverImage} 
             alt={property.title}
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <MapPin className="w-12 h-12" />
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-gradient-to-br from-muted to-muted-foreground/5">
+            <Home className="w-12 h-12" />
           </div>
         )}
         
@@ -44,11 +52,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <h3 className="font-serif text-h5 text-foreground mb-1">
             {property.title}
           </h3>
-          {property.address_line1 && (
+          {displayAddress && (
             <p className="text-body-sm text-muted-foreground flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              {property.address_line1}
-              {property.city && `, ${property.city}`}
+              {displayAddress}
             </p>
           )}
         </div>
