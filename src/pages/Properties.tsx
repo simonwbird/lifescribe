@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AppLayout } from '@/components/layouts/AppLayout'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { EmptyState } from '@/components/design-system/EmptyState'
 import { supabase } from '@/integrations/supabase/client'
 import { 
@@ -23,10 +24,14 @@ import { useExpiringDocuments } from '@/hooks/useExpiringDocuments'
 import { PropertyCard } from '@/components/properties/PropertyCard'
 import { UpcomingUpkeepWidget } from '@/components/properties/UpcomingUpkeepWidget'
 import { PropertyStoryCard } from '@/components/properties/PropertyStoryCard'
+import { routes } from '@/lib/routes'
+import { computeDisplayAddress } from '@/lib/addressUtils'
 
 export default function Properties() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [showPropertySelector, setShowPropertySelector] = useState(false)
+  const navigate = useNavigate()
 
   const { data: properties = [], isLoading: propertiesLoading } = useProperties(familyId)
   const { data: upcomingReminders = [] } = usePropertyReminders(familyId)
@@ -75,11 +80,9 @@ export default function Properties() {
                   Add a Property
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/stories/new">
-                  <PenLine className="w-5 h-5 mr-2" />
-                  Add a Memory
-                </Link>
+              <Button variant="outline" size="lg" onClick={() => setShowPropertySelector(true)}>
+                <PenLine className="w-5 h-5 mr-2" />
+                Add a Memory
               </Button>
             </div>
           </header>
@@ -262,6 +265,56 @@ export default function Properties() {
             </div>
           </section>
         </div>
+
+        {/* Property Selector Dialog */}
+        <Dialog open={showPropertySelector} onOpenChange={setShowPropertySelector}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Select a Property</DialogTitle>
+              <DialogDescription>
+                Choose which property this memory is about
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1 -mx-6 px-6">
+              {properties.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3 py-4">
+                  {properties.map((property) => (
+                    <button
+                      key={property.id}
+                      onClick={() => {
+                        navigate(routes.storyNew({ propertyId: property.id }))
+                        setShowPropertySelector(false)
+                      }}
+                      className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-accent hover:border-accent-foreground transition-colors text-left w-full"
+                    >
+                      <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Home className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-foreground mb-1 truncate">
+                          {property.display_title || property.name || property.title || 'Untitled Property'}
+                        </h3>
+                        {computeDisplayAddress(property) && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {computeDisplayAddress(property)}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8">
+                  <EmptyState
+                    icon={<Home className="w-6 h-6" />}
+                    title="No properties yet"
+                    description="Create a property first before adding memories to it."
+                  />
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </AppLayout>
   )
