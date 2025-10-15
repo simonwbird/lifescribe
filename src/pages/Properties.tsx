@@ -76,7 +76,7 @@ export default function Properties() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/compose?type=story&propertyId=select">
+                <Link to="/stories/new">
                   <PenLine className="w-5 h-5 mr-2" />
                   Add a Memory
                 </Link>

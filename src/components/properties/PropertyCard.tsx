@@ -8,6 +8,7 @@ import type { PropertyWithStats } from '@/lib/propertyTypes'
 import { PROPERTY_STATUSES } from '@/lib/propertyTypes'
 import { computeDisplayAddress, getStaticMapUrl, hasValidGeocode } from '@/lib/addressUtils'
 import { supabase } from '@/integrations/supabase/client'
+import { routes } from '@/lib/routes'
 
 interface PropertyCardProps {
   property: PropertyWithStats
@@ -143,7 +144,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link to={`/compose?type=story&propertyId=${property.id}`}>
+            <Link to={routes.storyNew({ propertyId: property.id })}>
               <PenLine className="w-4 h-4 mr-1" />
               Add Story
             </Link>
