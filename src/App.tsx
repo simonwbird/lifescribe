@@ -262,6 +262,7 @@ function AppContent() {
       <Route path="/properties/new" element={<AuthGate><LabsGuard feature="collections"><PropertyNew /></LabsGuard></AuthGate>} />
       <Route path="/properties/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PropertyEdit /></LabsGuard></AuthGate>} />
       <Route path="/properties/:id" element={<AuthGate><LabsGuard feature="collections"><PropertyDetail /></LabsGuard></AuthGate>} />
+      <Route path="/pets" element={<AuthGate><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/Pets')} /></LabsGuard></AuthGate>} />
       <Route path="/pets/new" element={<AuthGate><LabsGuard feature="collections"><PetNew /></LabsGuard></AuthGate>} />
       <Route path="/pets/:id" element={<AuthGate><LabsGuard feature="collections"><PetDetail /></LabsGuard></AuthGate>} />
        <Route path="/pets/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PetEdit /></LabsGuard></AuthGate>} />

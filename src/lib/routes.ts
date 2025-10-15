@@ -38,6 +38,13 @@ export const routes = {
   home: () => '/home',
   drafts: () => '/drafts',
   
+  // Pets
+  pets: () => '/pets',
+  petNew: () => '/pets/new',
+  petDetail: (id: string) => `/pets/${id}`,
+  petEdit: (id: string) => `/pets/${id}/edit`,
+  petStories: (id: string) => `/pets/${id}/stories`,
+  
   // Invites & Events
   invitesNew: () => '/invites/new',
   events: () => '/events',
