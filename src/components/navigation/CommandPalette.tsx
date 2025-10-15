@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { usePets } from '@/hooks/usePets'
+import { supabase } from '@/integrations/supabase/client'
 import {
   CommandDialog,
   CommandEmpty,
@@ -37,6 +39,7 @@ const navigationItems: CommandPaletteItem[] = [
   { icon: TreePine, label: 'Go to Tree', href: '/family/tree', group: 'Navigation' },
   { icon: Archive, label: 'Go to Collections', href: '/collections', group: 'Navigation' },
   { icon: MessageSquare, label: 'Go to Prompts', href: '/prompts', group: 'Navigation' },
+  { icon: Heart, label: 'Open Pets', href: '/pets', group: 'Navigation' },
   { icon: User, label: 'Go to Profile', href: '/profile', group: 'Navigation' },
 ]
 
@@ -47,7 +50,7 @@ const createItems: CommandPaletteItem[] = [
   { icon: ChefHat, label: 'Create Recipe', href: '/recipes/new', group: 'Create' },
   { icon: Package, label: 'Create Object', href: '/objects/new', group: 'Create' },
   { icon: Home, label: 'Create Property', href: '/properties/new', group: 'Create' },
-  { icon: Heart, label: 'Create Pet', href: '/pets/new', group: 'Create' },
+  { icon: Heart, label: 'Add Pet', href: '/pets/new', group: 'Create' },
   { icon: MessageSquare, label: 'Answer Prompt', href: '/prompts/browse', group: 'Create' },
 ]
 
@@ -61,6 +64,28 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
   const location = useLocation()
   const { track } = useAnalytics()
   const [query, setQuery] = useState('')
+  const [familyId, setFamilyId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadFamily = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: member } = await supabase
+        .from('members')
+        .select('family_id')
+        .eq('profile_id', user.id)
+        .single()
+
+      if (member) {
+        setFamilyId(member.family_id)
+      }
+    }
+
+    loadFamily()
+  }, [])
+
+  const { data: pets } = usePets(familyId)
 
   useEffect(() => {
     if (open) {
@@ -97,7 +122,19 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
     return contextual
   }
 
-  const allItems = [...navigationItems, ...createItems, ...getContextualActions()]
+  // Add pet-specific actions
+  const getPetActions = (): CommandPaletteItem[] => {
+    if (!pets || pets.length === 0) return []
+    
+    return pets.slice(0, 5).map(pet => ({
+      icon: Heart,
+      label: `Add memory for ${pet.name}`,
+      href: `/stories/new?petId=${pet.id}`,
+      group: 'Pets'
+    }))
+  }
+
+  const allItems = [...navigationItems, ...createItems, ...getContextualActions(), ...getPetActions()]
   const groups = allItems.reduce((acc, item) => {
     if (!acc[item.group]) acc[item.group] = []
     acc[item.group].push(item)

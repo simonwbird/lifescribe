@@ -16,6 +16,7 @@ import Upcoming from '@/components/home/Upcoming';
 import DraftsRow from '@/components/home/DraftsRow';
 import FloatingCoachMark from '@/components/onboarding/FloatingCoachMark';
 import QuickStoryCreator from '@/components/stories/QuickStoryCreator';
+import { PetsTile } from '@/components/home/PetsTile';
 import { SimpleHeader } from '@/components/home/simple/SimpleHeader';
 import { SimpleAdminPanel } from '@/components/home/simple/SimpleAdminPanel';
 import SimpleRecordingController from '@/components/home/simple/SimpleRecordingController';
@@ -625,6 +626,9 @@ export default function Home() {
                   familyId={spaceId}
                   onStoryCreated={() => loadHomeData()}
                 />
+
+                {/* Pets Tile */}
+                <PetsTile />
 
                 {/* Pinned Drafts Row */}
                 {drafts.length > 0 && <DraftsRow drafts={drafts} onResume={handleResumeDraft} onDelete={handleDeleteDraft} />}
