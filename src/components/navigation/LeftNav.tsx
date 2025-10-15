@@ -79,7 +79,7 @@ const navItems: NavItem[] = [
   },
   { 
     title: 'Family Tree', 
-    url: routes.tree(), 
+    url: '/family/tree', 
     icon: GitBranch,
     section: 'family'
   },
