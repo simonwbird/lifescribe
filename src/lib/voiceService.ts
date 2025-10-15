@@ -11,6 +11,7 @@ interface ReviewData {
   privacy: 'family' | 'private'
   tags: string[]
   isDraft?: boolean
+  propertyId?: string
 }
 
 export async function uploadVoiceRecording(audioBlob: Blob, familyId: string, userId: string): Promise<string> {
@@ -79,7 +80,8 @@ export async function createStoryFromVoice(audioBlob: Blob, reviewData: ReviewDa
         occurred_on: occurredOn,
         occurred_precision: occurredPrecision,
         is_approx: isApprox,
-        tags: reviewData.tags
+        tags: reviewData.tags,
+        happened_at_property_id: reviewData.propertyId || null
       })
       .select()
       .single()
