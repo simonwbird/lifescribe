@@ -28,6 +28,7 @@ export interface ComposerState {
   transcript: string
   tags: string[]
   peopleTags: PersonTag[]
+  petIds: string[]  // Added for pet tagging
   linkedPlaces: string[]
   promptId: string | null
   contentBlocks: ContentBlock[]
@@ -56,6 +57,7 @@ export function useComposerState(initialMode: ComposerMode = 'text') {
           privacy: parsed.privacy ?? 'private',
           tags: parsed.tags ?? [],
           peopleTags: parsed.peopleTags ?? [],
+          petIds: parsed.petIds ?? [],
           linkedPlaces: parsed.linkedPlaces ?? [],
           transcript: parsed.transcript ?? '',
           // Can't store Blobs/Files in localStorage, so reset them
@@ -153,6 +155,7 @@ function getDefaultState(mode: ComposerMode): ComposerState {
     transcript: '',
     tags: [],
     peopleTags: [],
+    petIds: [],
     linkedPlaces: [],
     promptId: null,
     contentBlocks: []

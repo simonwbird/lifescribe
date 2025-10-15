@@ -26,8 +26,9 @@ export function parseTabParam(input?: string | URLSearchParams) {
   const circle = sp.get('circle') ?? undefined
   const album = sp.get('album') ?? undefined
   const source = sp.get('source') ?? undefined
+  const petId = sp.get('petId') ?? undefined
 
-  return { tab, promptId, personId, children, circle, album, source }
+  return { tab, promptId, personId, children, circle, album, source, petId }
 }
 
 /**

@@ -28,6 +28,7 @@ interface UniversalComposerProps {
     circle?: string
     album?: string
     source?: string
+    petId?: string  // Added for preselecting pets
   }
 }
 
@@ -504,6 +505,24 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
         }
       }
 
+      // Create pet-story links
+      if (state.petIds.length > 0) {
+        const petLinks = state.petIds.map(petId => ({
+          pet_id: petId,
+          story_id: story.id,
+          family_id: familyId,
+          created_by: user.id
+        }))
+
+        const { error: petLinksError } = await supabase
+          .from('story_pet_links')
+          .insert(petLinks)
+
+        if (petLinksError) {
+          console.error('Failed to create pet links:', petLinksError)
+        }
+      }
+
       // Mark prompt as completed if applicable
       if (state.promptId) {
         await supabase
@@ -687,11 +706,14 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
                     placeText={state.placeText}
                     privacy={state.privacy}
                     peopleTags={state.peopleTags}
+                    petIds={state.petIds}
                     currentUserId={currentUserId}
+                    preselectedPetId={prefillData?.petId || searchParams.get('petId') || undefined}
                     onDateChange={(value) => updateState({ dateValue: value })}
                     onPlaceChange={(place) => updateState({ placeText: place })}
                     onPrivacyChange={(privacy) => updateState({ privacy })}
                     onPeopleTagsChange={(tags) => updateState({ peopleTags: tags })}
+                    onPetIdsChange={(petIds) => updateState({ petIds })}
                   />
                 </CardContent>
               </Card>

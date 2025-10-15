@@ -4,7 +4,9 @@ import { AppLayout } from '@/components/layouts/AppLayout'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/design-system/EmptyState'
 import { PetCard } from '@/components/pets/PetCard'
+import { PetStoryCard } from '@/components/pets/PetStoryCard'
 import { usePets } from '@/hooks/usePets'
+import { useRecentPetStories } from '@/hooks/usePetStories'
 import { supabase } from '@/integrations/supabase/client'
 import { 
   PawPrint, 
@@ -23,6 +25,7 @@ export default function Pets() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const { data: pets = [], isLoading } = usePets(familyId)
+  const { data: recentStories = [], isLoading: isLoadingStories } = useRecentPetStories(familyId, 5)
 
   useEffect(() => {
     async function loadUser() {
@@ -220,7 +223,7 @@ export default function Pets() {
             </section>
           )}
 
-          {/* Recent Pet Stories - Placeholder for future implementation */}
+          {/* Recent Pet Stories */}
           {hasPets && (
             <section>
               <div className="flex justify-between items-center mb-6">
@@ -232,15 +235,33 @@ export default function Pets() {
                 </Button>
               </div>
               
-              <EmptyState
-                title="No pet stories yet"
-                description="Tag a pet in your first story to see it here."
-                action={{
-                  label: 'Start a Memory',
-                  onClick: () => window.location.href = '/compose?type=story&petId=select',
-                  variant: 'outline'
-                }}
-              />
+              {isLoadingStories ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-card rounded-2xl p-4">
+                      <Skeleton className="h-6 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-full mb-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : recentStories.length > 0 ? (
+                <div className="space-y-4">
+                  {recentStories.map((story) => (
+                    <PetStoryCard key={story.id} story={story} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No pet stories yet"
+                  description="Tag a pet in your first story to see it here."
+                  action={{
+                    label: 'Start a Memory',
+                    onClick: () => window.location.href = '/compose?type=story&petId=select',
+                    variant: 'outline'
+                  }}
+                />
+              )}
             </section>
           )}
         </div>

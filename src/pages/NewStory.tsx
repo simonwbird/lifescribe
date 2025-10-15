@@ -119,6 +119,7 @@ export default function NewStory() {
           circle: composerParams.circle,
           album: composerParams.album,
           source: composerParams.source,
+          petId: composerParams.petId,
         }}
       />
     </div>

@@ -1,5 +1,6 @@
 import { DatePrecisionPicker, DatePrecisionValue } from '@/components/DatePrecisionPicker'
 import { PeopleTagger, PersonTag } from './PeopleTagger'
+import { PetSelector } from './PetSelector'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Input } from '@/components/ui/input'
@@ -11,11 +12,14 @@ interface ContextPanelProps {
   placeText: string
   privacy: StoryPrivacy
   peopleTags: PersonTag[]
+  petIds: string[]
   currentUserId?: string
+  preselectedPetId?: string
   onDateChange: (value: DatePrecisionValue) => void
   onPlaceChange: (place: string) => void
   onPrivacyChange: (privacy: StoryPrivacy) => void
   onPeopleTagsChange: (tags: PersonTag[]) => void
+  onPetIdsChange: (petIds: string[]) => void
 }
 
 export function ContextPanel({ 
@@ -24,11 +28,14 @@ export function ContextPanel({
   placeText,
   privacy,
   peopleTags,
+  petIds,
   currentUserId,
+  preselectedPetId,
   onDateChange,
   onPlaceChange,
   onPrivacyChange,
-  onPeopleTagsChange 
+  onPeopleTagsChange,
+  onPetIdsChange
 }: ContextPanelProps) {
   return (
     <div className="space-y-6">
@@ -96,14 +103,20 @@ export function ContextPanel({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">
-          People
-        </label>
         <PeopleTagger
           familyId={familyId}
           tags={peopleTags}
           onChange={onPeopleTagsChange}
           currentUserId={currentUserId}
+        />
+      </div>
+
+      <div>
+        <PetSelector
+          familyId={familyId}
+          selectedPetIds={petIds}
+          onChange={onPetIdsChange}
+          preselectedPetId={preselectedPetId}
         />
       </div>
 
