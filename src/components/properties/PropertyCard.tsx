@@ -50,7 +50,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       <div className="p-4 space-y-3">
         <div>
           <h3 className="font-serif text-h5 text-foreground mb-1">
-            {property.title}
+            {property.display_title || property.name || property.title || 'Untitled Property'}
           </h3>
           {displayAddress && (
             <p className="text-body-sm text-muted-foreground flex items-center gap-1">

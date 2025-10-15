@@ -9,7 +9,9 @@ export interface Property {
   created_by: string
   
   // Identity
-  title: string
+  display_title?: string
+  name?: string
+  title?: string // Computed field for backwards compatibility
   address_line1?: string
   address_line2?: string
   city?: string
