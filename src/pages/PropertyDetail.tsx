@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { AppLayout } from '@/components/layouts/AppLayout'
+import { routes } from '@/lib/routes'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -218,13 +219,13 @@ export default function PropertyDetail() {
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link to={`/compose?type=story&propertyId=${property.id}`}>
+                    <Link to={routes.storyNew({ propertyId: property.id })}>
                       <PenLine className="w-4 h-4 mr-2" />
                       Add Story
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">
-                    <Link to={`/compose/photos?propertyId=${property.id}`}>
+                    <Link to={routes.storyNew({ tab: 'photo', propertyId: property.id })}>
                       <Camera className="w-4 h-4 mr-2" />
                       Add Photo
                     </Link>

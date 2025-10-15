@@ -93,6 +93,7 @@ export const routes = {
     album: string
     source: string
     petId: string
+    propertyId: string
   }>) => {
     const p = new URLSearchParams()
     if (opts?.tab) p.set('tab', opts.tab)
@@ -103,6 +104,7 @@ export const routes = {
     if (opts?.album) p.set('album', opts.album)
     if (opts?.source) p.set('source', opts.source)
     if (opts?.petId) p.set('petId', opts.petId)
+    if (opts?.propertyId) p.set('propertyId', opts.propertyId)
     const q = p.toString()
     return q ? `/stories/new?${q}` : `/stories/new`
   },
