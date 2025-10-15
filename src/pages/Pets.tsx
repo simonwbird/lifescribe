@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/design-system/EmptyState'
 import { PetCard } from '@/components/pets/PetCard'
 import { PetStoryCard } from '@/components/pets/PetStoryCard'
+import { UpcomingRemindersWidget } from '@/components/pets/UpcomingRemindersWidget'
 import { usePets } from '@/hooks/usePets'
 import { useRecentPetStories } from '@/hooks/usePetStories'
 import { supabase } from '@/integrations/supabase/client'
@@ -222,6 +223,9 @@ export default function Pets() {
               </div>
             </section>
           )}
+
+          {/* Upcoming Reminders Widget */}
+          <UpcomingRemindersWidget familyId={familyId} />
 
           {/* Recent Pet Stories */}
           {hasPets && (
