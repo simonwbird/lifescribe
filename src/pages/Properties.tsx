@@ -16,11 +16,20 @@ import {
   MapPin
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useProperties } from '@/hooks/useProperties'
+import { usePropertyReminders } from '@/hooks/usePropertyReminders'
+import { usePropertyStories } from '@/hooks/usePropertyStories'
+import { PropertyCard } from '@/components/properties/PropertyCard'
+import { UpcomingUpkeepWidget } from '@/components/properties/UpcomingUpkeepWidget'
+import { PropertyStoryCard } from '@/components/properties/PropertyStoryCard'
 
 export default function Properties() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  const { data: properties = [], isLoading: propertiesLoading } = useProperties(familyId)
+  const { data: upcomingReminders = [] } = usePropertyReminders(familyId)
+  const { data: recentStories = [] } = usePropertyStories(familyId)
 
   useEffect(() => {
     async function loadUser() {
@@ -39,7 +48,6 @@ export default function Properties() {
       if (members) {
         setFamilyId(members.family_id)
       }
-      setIsLoading(false)
     }
 
     loadUser()
@@ -127,7 +135,7 @@ export default function Properties() {
               My Properties
             </h2>
 
-            {isLoading ? (
+            {propertiesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="bg-card rounded-2xl overflow-hidden">
@@ -143,6 +151,12 @@ export default function Properties() {
                   </div>
                 ))}
               </div>
+            ) : properties.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))}
+              </div>
             ) : (
               <EmptyState
                 icon={<Home className="w-6 h-6" />}
@@ -156,6 +170,43 @@ export default function Properties() {
               />
             )}
           </section>
+
+          {/* Recent Stories & Upcoming Upkeep */}
+          {properties.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+              {/* Recent Property Stories */}
+              <section>
+                <h2 className="font-serif text-h3 text-foreground mb-6">
+                  Recent Property Stories
+                </h2>
+                {recentStories.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentStories.map((item: any) => (
+                      <PropertyStoryCard
+                        key={item.story_id}
+                        story={item.story}
+                        property={item.property}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={<PenLine className="w-6 h-6" />}
+                    title="No property stories yet"
+                    description="Tag a property in your first story to see it here."
+                  />
+                )}
+              </section>
+
+              {/* Upcoming Upkeep */}
+              <section>
+                <h2 className="font-serif text-h3 text-foreground mb-6">
+                  Upcoming Upkeep
+                </h2>
+                <UpcomingUpkeepWidget reminders={upcomingReminders} />
+              </section>
+            </div>
+          )}
 
           {/* Quick Add Row */}
           <section className="mb-12">
