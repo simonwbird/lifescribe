@@ -25,6 +25,7 @@ import type { Property } from '@/lib/propertyTypes'
 import { PROPERTY_STATUSES } from '@/lib/propertyTypes'
 import { PropertyUpkeepTab } from '@/components/properties/PropertyUpkeepTab'
 import { PropertyDocumentsTab } from '@/components/properties/PropertyDocumentsTab'
+import { PropertyPhotos } from '@/components/properties/PropertyPhotos'
 
 export default function PropertyDetail() {
   const { id } = useParams()
@@ -225,9 +226,9 @@ export default function PropertyDetail() {
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">
-                    <Link to={routes.storyNew({ tab: 'photo', propertyId: property.id })}>
+                    <Link to={`#gallery`} onClick={() => document.querySelector('[value="gallery"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}>
                       <Camera className="w-4 h-4 mr-2" />
-                      Add Photo
+                      Upload Photos
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">
@@ -274,23 +275,11 @@ export default function PropertyDetail() {
                 </TabsContent>
 
                 <TabsContent value="gallery" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Photo Gallery</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-body-sm text-muted-foreground text-center py-8">
-                        Photos of this property will appear here.
-                        <br />
-                        <Link 
-                          to={`/compose/photos?propertyId=${property.id}`}
-                          className="text-primary hover:underline mt-2 inline-block"
-                        >
-                          Upload photos
-                        </Link>
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <PropertyPhotos 
+                    propertyId={property.id}
+                    familyId={property.family_id}
+                    coverId={property.cover_media_id}
+                  />
                 </TabsContent>
 
                 <TabsContent value="profile" className="mt-6">
