@@ -5539,6 +5539,70 @@ export type Database = {
           },
         ]
       }
+      pet_milestones: {
+        Row: {
+          auto_generated: boolean
+          created_at: string
+          created_by: string | null
+          date: string
+          family_id: string
+          id: string
+          milestone_type: string | null
+          notes: string | null
+          pet_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_generated?: boolean
+          created_at?: string
+          created_by?: string | null
+          date: string
+          family_id: string
+          id?: string
+          milestone_type?: string | null
+          notes?: string | null
+          pet_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_generated?: boolean
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          family_id?: string
+          id?: string
+          milestone_type?: string | null
+          notes?: string | null
+          pet_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_milestones_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_milestones_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "pet_milestones_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pet_person_links: {
         Row: {
           created_at: string | null

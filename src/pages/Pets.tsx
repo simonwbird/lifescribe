@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/design-system/EmptyState'
 import { PetCard } from '@/components/pets/PetCard'
 import { PetStoryCard } from '@/components/pets/PetStoryCard'
 import { UpcomingRemindersWidget } from '@/components/pets/UpcomingRemindersWidget'
+import { UpcomingMilestonesCarousel } from '@/components/pets/UpcomingMilestonesCarousel'
 import { usePets } from '@/hooks/usePets'
 import { useRecentPetStories } from '@/hooks/usePetStories'
 import { supabase } from '@/integrations/supabase/client'
@@ -224,8 +225,13 @@ export default function Pets() {
             </section>
           )}
 
-          {/* Upcoming Reminders Widget */}
-          <UpcomingRemindersWidget familyId={familyId} />
+          {/* Upcoming Widgets */}
+          {familyId && (
+            <div className="mb-12 space-y-6">
+              <UpcomingRemindersWidget familyId={familyId} />
+              <UpcomingMilestonesCarousel familyId={familyId} />
+            </div>
+          )}
 
           {/* Recent Pet Stories */}
           {hasPets && (
