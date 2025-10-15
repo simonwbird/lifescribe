@@ -5664,7 +5664,29 @@ export type Database = {
           title?: string
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pet_reminders_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_reminders_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_roles"
+            referencedColumns: ["family_id"]
+          },
+          {
+            foreignKeyName: "pet_reminders_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pet_vaccines: {
         Row: {
