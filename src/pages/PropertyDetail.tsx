@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast'
 import type { Property } from '@/lib/propertyTypes'
 import { PROPERTY_STATUSES } from '@/lib/propertyTypes'
 import { PropertyUpkeepTab } from '@/components/properties/PropertyUpkeepTab'
+import { PropertyDocumentsTab } from '@/components/properties/PropertyDocumentsTab'
 
 export default function PropertyDetail() {
   const { id } = useParams()
@@ -376,16 +377,7 @@ export default function PropertyDetail() {
                 </TabsContent>
 
                 <TabsContent value="documents" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Documents</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-body-sm text-muted-foreground text-center py-8">
-                        Deeds, surveys, warranties and other documents will appear here.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <PropertyDocumentsTab propertyId={property.id} familyId={property.family_id} />
                 </TabsContent>
               </Tabs>
             </div>

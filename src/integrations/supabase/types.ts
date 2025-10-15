@@ -6874,6 +6874,54 @@ export type Database = {
         }
         Relationships: []
       }
+      property_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doc_type: string | null
+          expires_at: string | null
+          family_id: string
+          file_id: string | null
+          file_path: string | null
+          id: string
+          issued_at: string | null
+          notes: string | null
+          property_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string | null
+          expires_at?: string | null
+          family_id: string
+          file_id?: string | null
+          file_path?: string | null
+          id?: string
+          issued_at?: string | null
+          notes?: string | null
+          property_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string | null
+          expires_at?: string | null
+          family_id?: string
+          file_id?: string | null
+          file_path?: string | null
+          id?: string
+          issued_at?: string | null
+          notes?: string | null
+          property_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       property_events: {
         Row: {
           created_at: string

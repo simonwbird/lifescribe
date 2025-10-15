@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useProperties } from '@/hooks/useProperties'
 import { usePropertyReminders } from '@/hooks/usePropertyReminders'
 import { usePropertyStories } from '@/hooks/usePropertyStories'
+import { useExpiringDocuments } from '@/hooks/useExpiringDocuments'
 import { PropertyCard } from '@/components/properties/PropertyCard'
 import { UpcomingUpkeepWidget } from '@/components/properties/UpcomingUpkeepWidget'
 import { PropertyStoryCard } from '@/components/properties/PropertyStoryCard'
@@ -30,6 +31,7 @@ export default function Properties() {
   const { data: properties = [], isLoading: propertiesLoading } = useProperties(familyId)
   const { data: upcomingReminders = [] } = usePropertyReminders(familyId)
   const { data: recentStories = [] } = usePropertyStories(familyId)
+  const { data: expiringDocuments = [] } = useExpiringDocuments(familyId || '')
 
   useEffect(() => {
     async function loadUser() {
@@ -203,7 +205,10 @@ export default function Properties() {
                 <h2 className="font-serif text-h3 text-foreground mb-6">
                   Upcoming Upkeep
                 </h2>
-                <UpcomingUpkeepWidget reminders={upcomingReminders} />
+                <UpcomingUpkeepWidget 
+                  reminders={upcomingReminders} 
+                  expiringDocuments={expiringDocuments}
+                />
               </section>
             </div>
           )}
