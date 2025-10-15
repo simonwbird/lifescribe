@@ -81,7 +81,9 @@ export default function PetDetail() {
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="gallery">Gallery</TabsTrigger>
                 <TabsTrigger value="care">Care & Health</TabsTrigger>
-                <TabsTrigger value="reminders">Reminders</TabsTrigger>
+                {pet.status !== 'rainbow' && (
+                  <TabsTrigger value="reminders">Reminders</TabsTrigger>
+                )}
                 <TabsTrigger value="favorites">Favorites</TabsTrigger>
               </TabsList>
 
@@ -97,9 +99,11 @@ export default function PetDetail() {
                 <PetCareHealth pet={pet} />
               </TabsContent>
 
-              <TabsContent value="reminders" className="mt-6">
-                <PetReminders petId={pet.id} petName={pet.name} />
-              </TabsContent>
+              {pet.status !== 'rainbow' && (
+                <TabsContent value="reminders" className="mt-6">
+                  <PetReminders petId={pet.id} petName={pet.name} />
+                </TabsContent>
+              )}
 
               <TabsContent value="favorites" className="mt-6">
                 <PetFavorites pet={pet} />

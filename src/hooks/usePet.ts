@@ -73,6 +73,8 @@ function mapPetRow(row: any): Pet {
     status: row.status,
     tags: row.tags || [],
     reminders: row.reminders || undefined,
+    memoryMessage: row.memory_message || undefined,
+    statusChangedAt: row.status_changed_at || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }

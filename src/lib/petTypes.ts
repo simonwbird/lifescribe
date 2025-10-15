@@ -43,7 +43,7 @@ export type PetSpecies =
   | 'other'
 
 export type PetSex = 'male' | 'female' | 'unknown'
-export type PetStatus = 'current' | 'past'
+export type PetStatus = 'current' | 'past' | 'rainbow' | 'archived'
 export type ReminderStatus = 'upcoming' | 'overdue' | 'done'
 
 export interface ContactRef {
@@ -156,6 +156,8 @@ export interface Pet {
   status: PetStatus
   tags: string[]
   reminders?: Reminder[]
+  memoryMessage?: string // tribute message for rainbow bridge pets
+  statusChangedAt?: string
   
   createdAt: string
   updatedAt: string

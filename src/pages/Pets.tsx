@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/design-system/EmptyState'
 import { PetCard } from '@/components/pets/PetCard'
 import { PetStoryCard } from '@/components/pets/PetStoryCard'
+import { RememberedFriendsSection } from '@/components/pets/RememberedFriendsSection'
 import { UpcomingRemindersWidget } from '@/components/pets/UpcomingRemindersWidget'
 import { UpcomingMilestonesCarousel } from '@/components/pets/UpcomingMilestonesCarousel'
-import { usePets } from '@/hooks/usePets'
+import { usePets, useRainbowPets } from '@/hooks/usePets'
 import { useRecentPetStories } from '@/hooks/usePetStories'
 import { supabase } from '@/integrations/supabase/client'
 import { 
@@ -27,6 +28,7 @@ export default function Pets() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const { data: pets = [], isLoading } = usePets(familyId)
+  const { data: rainbowPets = [], isLoading: isLoadingRainbow } = useRainbowPets(familyId)
   const { data: recentStories = [], isLoading: isLoadingStories } = useRecentPetStories(familyId, 5)
 
   useEffect(() => {
@@ -232,6 +234,9 @@ export default function Pets() {
               <UpcomingMilestonesCarousel familyId={familyId} />
             </div>
           )}
+
+          {/* Remembered Friends Section */}
+          {!isLoadingRainbow && <RememberedFriendsSection pets={rainbowPets} />}
 
           {/* Recent Pet Stories */}
           {hasPets && (

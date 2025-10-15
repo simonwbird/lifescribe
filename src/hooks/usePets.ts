@@ -73,6 +73,8 @@ function mapPetRow(row: any): Pet {
     status: row.status as PetStatus,
     tags: row.tags || [],
     reminders: row.reminders || undefined,
+    memoryMessage: row.memory_message || undefined,
+    statusChangedAt: row.status_changed_at || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -90,6 +92,28 @@ export function usePets(familyId: string | null) {
         .eq('family_id', familyId)
         .eq('status', 'current')
         .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return (data || []).map(mapPetRow)
+    },
+    enabled: !!familyId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+// Fetch rainbow bridge pets (passed away)
+export function useRainbowPets(familyId: string | null) {
+  return useQuery({
+    queryKey: ['rainbow-pets', familyId],
+    queryFn: async (): Promise<Pet[]> => {
+      if (!familyId) return []
+
+      const { data, error } = await supabase
+        .from('pets')
+        .select('*')
+        .eq('family_id', familyId)
+        .eq('status', 'rainbow')
+        .order('passed_at', { ascending: false })
 
       if (error) throw error
       return (data || []).map(mapPetRow)

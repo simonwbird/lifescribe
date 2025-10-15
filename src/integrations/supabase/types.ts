@@ -5760,6 +5760,7 @@ export type Database = {
           license_number: string | null
           markings: string | null
           medications: string | null
+          memory_message: string | null
           microchip_date: string | null
           microchip_number: string | null
           microchip_provider: string | null
@@ -5774,6 +5775,7 @@ export type Database = {
           sex: string | null
           species: string
           status: string
+          status_changed_at: string | null
           tags: string[] | null
           temperament: string | null
           updated_at: string
@@ -5813,6 +5815,7 @@ export type Database = {
           license_number?: string | null
           markings?: string | null
           medications?: string | null
+          memory_message?: string | null
           microchip_date?: string | null
           microchip_number?: string | null
           microchip_provider?: string | null
@@ -5827,6 +5830,7 @@ export type Database = {
           sex?: string | null
           species: string
           status?: string
+          status_changed_at?: string | null
           tags?: string[] | null
           temperament?: string | null
           updated_at?: string
@@ -5866,6 +5870,7 @@ export type Database = {
           license_number?: string | null
           markings?: string | null
           medications?: string | null
+          memory_message?: string | null
           microchip_date?: string | null
           microchip_number?: string | null
           microchip_provider?: string | null
@@ -5880,6 +5885,7 @@ export type Database = {
           sex?: string | null
           species?: string
           status?: string
+          status_changed_at?: string | null
           tags?: string[] | null
           temperament?: string | null
           updated_at?: string
