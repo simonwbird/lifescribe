@@ -6,7 +6,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ArrowLeft, Link as LinkIcon, Calendar, MapPin, Lock, Globe, Share2 } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  Link as LinkIcon, 
+  Calendar, 
+  MapPin, 
+  Lock, 
+  Globe, 
+  Share2,
+  Edit3,
+  Trash2,
+  EyeOff,
+  MoreVertical
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Story, Profile } from '@/lib/types'
 import { AttachToEntityModal } from '@/components/entity/AttachToEntityModal'
@@ -16,11 +28,30 @@ import { PersonChips } from '@/components/story-view/PersonChips'
 import { formatForUser } from '@/utils/date'
 import ReactionBar from '@/components/ReactionBar'
 import { StoryPageSEO } from '@/components/seo/StoryPageSEO'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useToast } from '@/hooks/use-toast'
 
 export default function StoryDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { toast } = useToast()
   const [story, setStory] = useState<(Story & { profiles: Profile }) | null>(null)
   const [assets, setAssets] = useState<any[]>([])
   const [peopleTags, setPeopleTags] = useState<any[]>([])
@@ -29,6 +60,9 @@ export default function StoryDetail() {
   const [attachModalOpen, setAttachModalOpen] = useState(false)
   const [processingState, setProcessingState] = useState<string>('ready')
   const [familyName, setFamilyName] = useState<string>('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Compute OG image from story assets
   const ogImage = useMemo(() => {
@@ -48,6 +82,14 @@ export default function StoryDetail() {
     
     return null
   }, [assets])
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) setCurrentUserId(user.id)
+    }
+    loadCurrentUser()
+  }, [])
 
   useEffect(() => {
     const getStory = async () => {
@@ -159,6 +201,72 @@ export default function StoryDetail() {
     navigate(`/feed?person=${personId}&personName=${encodeURIComponent(personName)}`)
   }
 
+  const handleEdit = () => {
+    navigate(`/stories/${id}/edit`)
+  }
+
+  const handleDelete = async () => {
+    if (!id) return
+    
+    setIsDeleting(true)
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      toast({
+        title: 'Story deleted',
+        description: 'Your story has been deleted successfully.'
+      })
+      
+      navigate('/feed')
+    } catch (error) {
+      console.error('Error deleting story:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete story. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+    }
+  }
+
+  const handleToggleVisibility = async () => {
+    if (!id || !story) return
+    
+    const newStatus = (story as any).status === 'hidden' ? 'published' : 'hidden'
+    
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .update({ status: newStatus })
+        .eq('id', id)
+
+      if (error) throw error
+
+      setStory({ ...story, status: newStatus } as any)
+      
+      toast({
+        title: newStatus === 'hidden' ? 'Story hidden' : 'Story visible',
+        description: newStatus === 'hidden' 
+          ? 'Your story is now hidden from others.' 
+          : 'Your story is now visible to family members.'
+      })
+    } catch (error) {
+      console.error('Error updating story visibility:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update story visibility.',
+        variant: 'destructive'
+      })
+    }
+  }
+
   const getPrivacyIcon = (privacy?: string) => {
     switch (privacy) {
       case 'public':
@@ -180,6 +288,8 @@ export default function StoryDetail() {
         return 'Family only'
     }
   }
+
+  const isAuthor = currentUserId === story?.profile_id
 
   if (loading) {
     return (
@@ -219,19 +329,49 @@ export default function StoryDetail() {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
             <Button variant="ghost" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
             
-            <Button 
-              variant="outline" 
-              onClick={() => setAttachModalOpen(true)}
-            >
-              <LinkIcon className="h-4 w-4 mr-2" />
-              Add to Person
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setAttachModalOpen(true)}
+              >
+                <LinkIcon className="h-4 w-4 mr-2" />
+                Add to Person
+              </Button>
+
+              {isAuthor && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleEdit}>
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit Story
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleToggleVisibility}>
+                      <EyeOff className="h-4 w-4 mr-2" />
+                      {(story as any).status === 'hidden' ? 'Show Story' : 'Hide Story'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Story
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
           
           {processingState === 'processing' && (
@@ -378,6 +518,21 @@ export default function StoryDetail() {
         </div>
       </div>
 
+      <StoryPageSEO 
+        story={{
+          id: story.id,
+          title: story.title,
+          content: story.content || '',
+          created_at: story.created_at,
+          profiles: {
+            full_name: story.profiles.full_name || ''
+          },
+          privacy: (story as any).privacy || 'private'
+        }}
+        ogImage={ogImage || undefined}
+        familyName={familyName}
+      />
+
       {story && (
         <AttachToEntityModal
           open={attachModalOpen}
@@ -387,6 +542,28 @@ export default function StoryDetail() {
           familyId={story.family_id}
         />
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Story</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this story? This action cannot be undone.
+              All comments, reactions, and media associated with this story will also be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Story'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
