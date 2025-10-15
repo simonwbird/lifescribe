@@ -32,6 +32,7 @@ export default function PropertyDetail() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const [property, setProperty] = useState<Property | null>(null)
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [addressCopied, setAddressCopied] = useState(false)
   const [activeTab, setActiveTab] = useState('timeline')
@@ -59,7 +60,30 @@ export default function PropertyDetail() {
           return
         }
 
-        setProperty(data as unknown as Property)
+        const propertyData = data as unknown as Property
+        setProperty(propertyData)
+
+        // Fetch cover image if cover_media_id is set
+        if (propertyData.cover_media_id) {
+          const { data: mediaData } = await supabase
+            .from('media' as any)
+            .select('file_path')
+            .eq('id', propertyData.cover_media_id)
+            .single()
+
+          if (mediaData) {
+            const filePath = (mediaData as any).file_path
+            if (filePath) {
+              const { data: signedUrl } = await supabase.storage
+                .from('media')
+                .createSignedUrl(filePath, 3600)
+              
+              if (signedUrl) {
+                setCoverImageUrl(signedUrl.signedUrl)
+              }
+            }
+          }
+        }
       } catch (error) {
         console.error('Error loading property:', error)
         toast({
@@ -158,9 +182,9 @@ export default function PropertyDetail() {
           <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-6">
             {/* Cover Image */}
             <div className="aspect-[21/9] bg-muted relative">
-              {property.cover_url ? (
+              {coverImageUrl ? (
                 <img 
-                  src={property.cover_url} 
+                  src={coverImageUrl} 
                   alt={property.title}
                   className="w-full h-full object-cover"
                 />
@@ -278,6 +302,34 @@ export default function PropertyDetail() {
                     propertyId={property.id}
                     familyId={property.family_id}
                     coverId={property.cover_media_id}
+                    onCoverChange={(newCoverId) => {
+                      setProperty(prev => prev ? { ...prev, cover_media_id: newCoverId } : null)
+                      // Refresh cover image
+                      if (newCoverId) {
+                        supabase
+                          .from('media' as any)
+                          .select('file_path')
+                          .eq('id', newCoverId)
+                          .single()
+                          .then(({ data: mediaData }) => {
+                            if (mediaData) {
+                              const filePath = (mediaData as any).file_path
+                              if (filePath) {
+                                supabase.storage
+                                  .from('media')
+                                  .createSignedUrl(filePath, 3600)
+                                  .then(({ data: signedUrl }) => {
+                                    if (signedUrl) {
+                                      setCoverImageUrl(signedUrl.signedUrl)
+                                    }
+                                  })
+                              }
+                            }
+                          })
+                      } else {
+                        setCoverImageUrl(null)
+                      }
+                    }}
                   />
                 </TabsContent>
 
