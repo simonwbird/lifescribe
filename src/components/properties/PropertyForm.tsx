@@ -54,21 +54,26 @@ export function PropertyForm({ property, onSuccess, onCancel }: PropertyFormProp
 
       if (!memberData) throw new Error('No family membership found')
 
+      // Build address_json object from individual fields
+      const addressJson: Record<string, string> = {}
+      if (addressLine1.trim()) addressJson.line1 = addressLine1.trim()
+      if (addressLine2.trim()) addressJson.line2 = addressLine2.trim()
+      if (city.trim()) addressJson.city = city.trim()
+      if (stateProvince.trim()) addressJson.region = stateProvince.trim()
+      if (postalCode.trim()) addressJson.postcode = postalCode.trim()
+      if (country.trim()) addressJson.country = country.trim()
+
       const propertyData = {
         family_id: memberData.family_id,
         created_by: user.id,
-        title: title.trim(),
-        address_line1: addressLine1.trim() || null,
-        address_line2: addressLine2.trim() || null,
-        city: city.trim() || null,
-        state_province: stateProvince.trim() || null,
-        postal_code: postalCode.trim() || null,
-        country: country.trim() || null,
-        type: propertyType || null,
+        display_title: title.trim(),
+        name: title.trim(), // Keep for backward compatibility
+        address_json: Object.keys(addressJson).length > 0 ? addressJson : null,
+        property_types: propertyType ? [propertyType] : [],
         status,
-        purchase_date: purchaseDate || null,
-        sale_date: saleDate || null,
-        notes: notes.trim() || null,
+        first_known_date: purchaseDate || null,
+        last_known_date: saleDate || null,
+        description: notes.trim() || null,
       }
 
       if (property?.id) {
