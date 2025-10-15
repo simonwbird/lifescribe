@@ -3770,7 +3770,15 @@ export type Database = {
           media_id?: string
           property_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "media_property_links_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_vendor_status: {
         Row: {
@@ -6944,7 +6952,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "property_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_events: {
         Row: {
@@ -7109,7 +7125,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "property_reminders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_rooms: {
         Row: {
@@ -7904,7 +7928,15 @@ export type Database = {
           property_id?: string
           story_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "story_property_links_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       story_sources: {
         Row: {
