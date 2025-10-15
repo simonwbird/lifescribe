@@ -35,6 +35,7 @@ interface UniversalComposerProps {
 export function UniversalComposer({ familyId, initialTab, prefillData }: UniversalComposerProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const selectedPropertyId = searchParams.get('propertyId') || undefined
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [promptTitle, setPromptTitle] = useState<string | null>(null)
@@ -57,10 +58,11 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
       save({
         title: state.title,
         content: state.content,
-        familyId
+        familyId,
+        propertyId: selectedPropertyId || null
       })
     }
-  }, [state.title, state.content, state.photos, familyId, save])
+  }, [state.title, state.content, state.photos, familyId, save, selectedPropertyId])
 
   // Handle blur events to force immediate save
   const handleBlur = useCallback(() => {
@@ -68,10 +70,11 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
       forceSave({
         title: state.title,
         content: state.content,
-        familyId
+        familyId,
+        propertyId: selectedPropertyId || null
       })
     }
-  }, [state.title, state.content, state.photos, familyId, forceSave])
+  }, [state.title, state.content, state.photos, familyId, forceSave, selectedPropertyId])
 
   // Load existing draft if specified
   useEffect(() => {
@@ -262,6 +265,7 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
           place_text: state.placeText.trim() || null,
           privacy: state.privacy,
           prompt_id: state.promptId || null,
+          happened_at_property_id: selectedPropertyId || null,
           status: asDraft ? 'draft' : 'published'
         } as any)
         .select()
