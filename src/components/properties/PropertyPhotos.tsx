@@ -32,6 +32,7 @@ interface PropertyPhotosProps {
 
 export function PropertyPhotos({ propertyId, familyId, coverId, onCoverChange }: PropertyPhotosProps) {
   const [photos, setPhotos] = useState<PropertyPhoto[]>([])
+  const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [deletePhotoId, setDeletePhotoId] = useState<string | null>(null)
@@ -51,6 +52,19 @@ export function PropertyPhotos({ propertyId, familyId, coverId, onCoverChange }:
 
       if (error) throw error
       setPhotos(data || [])
+      
+      // Get signed URLs for all photos
+      const urlMap = new Map<string, string>()
+      for (const photo of data || []) {
+        const { data: signedUrl } = await supabase.storage
+          .from('media')
+          .createSignedUrl(photo.file_path, 3600) // 1 hour expiry
+        
+        if (signedUrl) {
+          urlMap.set(photo.id, signedUrl.signedUrl)
+        }
+      }
+      setPhotoUrls(urlMap)
     } catch (error) {
       console.error('Error fetching photos:', error)
       toast({
@@ -200,10 +214,6 @@ export function PropertyPhotos({ propertyId, familyId, coverId, onCoverChange }:
     }
   }
 
-  const getPhotoUrl = (filePath: string) => {
-    const { data } = supabase.storage.from('media').getPublicUrl(filePath)
-    return data.publicUrl
-  }
 
   if (loading) {
     return (
@@ -257,7 +267,7 @@ export function PropertyPhotos({ propertyId, familyId, coverId, onCoverChange }:
               {photos.map((photo) => (
                 <div key={photo.id} className="relative group">
                   <img
-                    src={getPhotoUrl(photo.file_path)}
+                    src={photoUrls.get(photo.id) || ''}
                     alt="Property photo"
                     className="w-full aspect-square object-cover rounded-lg"
                   />
