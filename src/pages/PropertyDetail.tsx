@@ -34,6 +34,7 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState<Property | null>(null)
   const [loading, setLoading] = useState(true)
   const [addressCopied, setAddressCopied] = useState(false)
+  const [activeTab, setActiveTab] = useState('timeline')
 
   useEffect(() => {
     if (!id) return
@@ -225,11 +226,9 @@ export default function PropertyDetail() {
                       Add Story
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to={`#gallery`} onClick={() => document.querySelector('[value="gallery"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}>
-                      <Camera className="w-4 h-4 mr-2" />
-                      Upload Photos
-                    </Link>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab('gallery')}>
+                    <Camera className="w-4 h-4 mr-2" />
+                    Upload Photos
                   </Button>
                   <Button asChild variant="outline" size="sm">
                     <Link to={`/properties/${property.id}/edit`}>
@@ -245,7 +244,7 @@ export default function PropertyDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tabs Section */}
             <div className="lg:col-span-2">
-              <Tabs defaultValue="timeline" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="timeline">Timeline</TabsTrigger>
                   <TabsTrigger value="gallery">Gallery</TabsTrigger>
