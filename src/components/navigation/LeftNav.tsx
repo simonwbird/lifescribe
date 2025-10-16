@@ -228,10 +228,8 @@ export function LeftNav() {
           )}
         </div>
         
-        {/* Navigation Sections */}
-        <div className={cn(open && "pl-3")}>
-          {/* Personal Section */}
-          <SidebarGroup>
+        {/* Personal Section */}
+        <SidebarGroup className={cn(open && "pl-3")}>
           {open && <SidebarGroupLabel>Personal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
@@ -265,7 +263,7 @@ export function LeftNav() {
         </SidebarGroup>
 
         {/* Family Section */}
-        <SidebarGroup>
+        <SidebarGroup className={cn(open && "pl-3")}>
           {open && <SidebarGroupLabel>Family</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
@@ -299,7 +297,7 @@ export function LeftNav() {
         </SidebarGroup>
 
         {/* Vault Section */}
-        <SidebarGroup>
+        <SidebarGroup className={cn(open && "pl-3")}>
           {open && <SidebarGroupLabel>SafeBox</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
@@ -326,7 +324,6 @@ export function LeftNav() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        </div>
       </SidebarContent>
     </Sidebar>
   )
