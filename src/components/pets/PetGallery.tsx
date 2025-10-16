@@ -2,12 +2,22 @@ import { Pet } from '@/lib/petTypes'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 interface PetGalleryProps {
   pet: Pet
 }
 
+interface MediaWithUrl {
+  id: string
+  file_path: string
+  file_name: string | null
+  signedUrl: string | null
+}
+
 export function PetGallery({ pet }: PetGalleryProps) {
+  const [mediaWithUrls, setMediaWithUrls] = useState<MediaWithUrl[]>([])
+
   const { data: media, isLoading } = useQuery({
     queryKey: ['pet-media', pet.id],
     queryFn: async () => {
@@ -25,7 +35,7 @@ export function PetGallery({ pet }: PetGalleryProps) {
         .from('media')
         .select('*')
         .in('story_id', storyIds)
-        .eq('mime_type', 'image/%')
+        .like('mime_type', 'image/%')
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -34,6 +44,30 @@ export function PetGallery({ pet }: PetGalleryProps) {
     },
     enabled: !!pet.id
   })
+
+  useEffect(() => {
+    if (!media || media.length === 0) return
+
+    const fetchSignedUrls = async () => {
+      const urlPromises = media.map(async (item) => {
+        const { data } = await supabase.storage
+          .from('media')
+          .createSignedUrl(item.file_path, 3600)
+        
+        return {
+          id: item.id,
+          file_path: item.file_path,
+          file_name: item.file_name,
+          signedUrl: data?.signedUrl || null
+        }
+      })
+
+      const results = await Promise.all(urlPromises)
+      setMediaWithUrls(results)
+    }
+
+    fetchSignedUrls()
+  }, [media])
 
   if (isLoading) {
     return (
@@ -54,18 +88,28 @@ export function PetGallery({ pet }: PetGalleryProps) {
     )
   }
 
+  if (mediaWithUrls.length === 0 && !isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {media.map((item) => (
+      {mediaWithUrls.map((item) => (
         <div
           key={item.id}
           className="aspect-square rounded-lg overflow-hidden bg-muted"
         >
-          <img
-            src={item.file_path}
-            alt={item.file_name || ''}
-            className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-          />
+          {item.signedUrl && (
+            <img
+              src={item.signedUrl}
+              alt={item.file_name || ''}
+              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+            />
+          )}
         </div>
       ))}
     </div>
