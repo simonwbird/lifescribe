@@ -419,8 +419,15 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
                       />
                     </div>
                   ) : comment.content?.includes('[Voice message') ? (
-                    <div className="bg-muted/50 rounded-md p-2 text-xs text-muted-foreground italic">
-                      Voice message (audio unavailable)
+                    <div className="bg-muted/50 rounded-md p-2">
+                      <p className="text-xs text-muted-foreground italic mb-1">
+                        Voice message (audio unavailable - recorded before audio storage was implemented)
+                      </p>
+                      {comment.content && comment.content.replace(/\[Voice message[^\]]*\]/g, '').trim() && (
+                        <p className="text-sm text-foreground mt-2">
+                          {comment.content.replace(/\[Voice message[^\]]*\]/g, '').trim()}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">{comment.content}</span>
