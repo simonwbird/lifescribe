@@ -33,14 +33,21 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
   useEffect(() => {
     const promptTitle = searchParams.get('promptTitle')
     const hasRecording = searchParams.get('hasRecording')
+    const transcript = searchParams.get('transcript')
     
     if (promptTitle) {
       setTitle(promptTitle)
+    }
+
+    // Pre-fill transcript from URL parameter
+    if (transcript) {
+      setContent(decodeURIComponent(transcript))
     }
     
     if (hasRecording === 'true') {
       const audioData = sessionStorage.getItem('pendingAudioRecording')
       const audioDuration = sessionStorage.getItem('pendingAudioDuration')
+      const pendingTranscript = sessionStorage.getItem('pendingTranscript')
       
       if (audioData) {
         // Convert base64 back to blob
@@ -52,9 +59,15 @@ export default function VoiceStoryForm({ familyId }: VoiceStoryFormProps) {
             setAudioBlob(blob)
             setDuration(duration)
             
+            // Pre-fill transcript if available
+            if (pendingTranscript && !transcript) {
+              setContent(pendingTranscript)
+            }
+            
             // Clear from session storage
             sessionStorage.removeItem('pendingAudioRecording')
             sessionStorage.removeItem('pendingAudioDuration')
+            sessionStorage.removeItem('pendingTranscript')
           })
           .catch(err => {
             console.error('Error loading recording:', err)

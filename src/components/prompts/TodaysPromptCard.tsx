@@ -12,6 +12,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { useToast } from '@/hooks/use-toast'
 import { MetadataPanel } from '@/components/stories/MetadataPanel'
 import { getPersonaConfig } from '@/config/personaConfig'
+import { transcribeAudio } from '@/lib/transcriptionService'
 
 interface TodaysPromptCardProps {
   promptInstance: PromptInstance | null
@@ -23,7 +24,7 @@ interface TodaysPromptCardProps {
   persona?: string // User persona for analytics
 }
 
-type RecordingState = 'idle' | 'preflight' | 'countdown' | 'recording' | 'saving' | 'saved' | 'mic-denied'
+type RecordingState = 'idle' | 'preflight' | 'countdown' | 'recording' | 'saving' | 'transcribing' | 'saved' | 'mic-denied'
 
 const TodaysPromptCard = memo(function TodaysPromptCard({ 
   promptInstance, 
@@ -271,7 +272,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     } as any)
     
     // Give MediaRecorder time to finalize, then process audio
-    setTimeout(() => {
+    setTimeout(async () => {
       const chunks = audioChunksRef.current
       
       if (chunks.length > 0 && promptInstance) {
@@ -279,28 +280,61 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
           type: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
         })
         
-        // Store audio temporarily in sessionStorage
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          sessionStorage.setItem('pendingAudioRecording', reader.result as string)
-          sessionStorage.setItem('pendingAudioDuration', recordingDuration.toString())
+        // Transcribe the audio
+        setRecordingState('transcribing')
+        
+        try {
+          const transcription = await transcribeAudio(audioBlob, promptInstance.prompt?.body)
           
-          // Check if archivist persona should open metadata panel
-          if (personaConfig?.postRecordAction === 'openMetadataPanel') {
-            setRecordingTranscript('Sample transcript from recording...')
-            setShowMetadataPanel(true)
-            setRecordingState('idle')
+          // Store audio temporarily in sessionStorage
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            sessionStorage.setItem('pendingAudioRecording', reader.result as string)
+            sessionStorage.setItem('pendingAudioDuration', recordingDuration.toString())
+            sessionStorage.setItem('pendingTranscript', transcription.text)
             
-            track({
-              event_name: 'metadata_panel_opened',
-              properties: {
+            // Check if archivist persona should open metadata panel
+            if (personaConfig?.postRecordAction === 'openMetadataPanel') {
+              setRecordingTranscript(transcription.text)
+              setShowMetadataPanel(true)
+              setRecordingState('idle')
+              
+              track({
+                event_name: 'metadata_panel_opened',
+                properties: {
+                  prompt_id: promptInstance.id,
+                  persona,
+                  trigger: 'post_record'
+                }
+              } as any)
+            } else {
+              // Navigate to story creation with prompt info and transcript
+              const searchParams = new URLSearchParams({
+                type: 'voice',
+                promptTitle: promptInstance.prompt?.title || '',
                 prompt_id: promptInstance.id,
-                persona,
-                trigger: 'post_record'
-              }
-            } as any)
-          } else {
-            // Navigate to story creation with prompt info
+                prompt_text: promptInstance.prompt?.body || '',
+                hasRecording: 'true',
+                transcript: transcription.text
+              })
+              navigate(`/stories/new?${searchParams.toString()}`)
+            }
+          }
+          reader.readAsDataURL(audioBlob)
+        } catch (error) {
+          console.error('Transcription failed:', error)
+          toast({
+            title: 'Transcription failed',
+            description: 'We couldn\'t transcribe your recording. You can add the story manually.',
+            variant: 'destructive'
+          })
+          
+          // Still save the audio and navigate
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            sessionStorage.setItem('pendingAudioRecording', reader.result as string)
+            sessionStorage.setItem('pendingAudioDuration', recordingDuration.toString())
+            
             const searchParams = new URLSearchParams({
               type: 'voice',
               promptTitle: promptInstance.prompt?.title || '',
@@ -310,8 +344,8 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
             })
             navigate(`/stories/new?${searchParams.toString()}`)
           }
+          reader.readAsDataURL(audioBlob)
         }
-        reader.readAsDataURL(audioBlob)
       } else if (promptInstance) {
         // No audio captured, just navigate
         const searchParams = new URLSearchParams({
@@ -604,6 +638,20 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
           <CardContent className="p-6 flex items-center justify-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <p className="text-foreground">Saving your recording...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {recordingState === 'transcribing' && (
+        <Card className="border-primary/50">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <p className="text-foreground font-medium">Transcribing your recording...</p>
+            </div>
+            <p className="text-center text-sm text-muted-foreground">
+              Converting your voice to text
+            </p>
           </CardContent>
         </Card>
       )}
