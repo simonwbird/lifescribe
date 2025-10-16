@@ -39,6 +39,7 @@ export default function StoryNew() {
   const draftId = searchParams.get('draft')
   const [activeTab, setActiveTab] = useState<ComposerTab>(tabParam)
   const [familyId, setFamilyId] = useState<string>('')
+  const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId)
 
   // Use shared composer state
   const { state: composerState, updateState, switchMode, hasContent } = useComposerState(tabParam)
@@ -48,6 +49,47 @@ export default function StoryNew() {
     storyId: draftId,
     enabled: true 
   })
+
+  // Load draft content if resuming a draft
+  useEffect(() => {
+    async function loadDraft() {
+      if (!draftId) return
+      
+      try {
+        const { data: draft, error } = await supabase
+          .from('stories')
+          .select('title, content, occurred_on, is_approx, happened_at_property_id, metadata')
+          .eq('id', draftId)
+          .single()
+
+        if (error) throw error
+        
+        if (draft) {
+          // Populate composer state with draft content
+          updateState({
+            title: draft.title || '',
+            content: draft.content || '',
+            dateValue: {
+              date: draft.occurred_on ? new Date(draft.occurred_on) : null,
+              precision: draft.is_approx ? 'circa' : 'exact',
+              yearOnly: false
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error loading draft:', error)
+        toast({
+          title: 'Error loading draft',
+          description: 'Could not load the draft content',
+          variant: 'destructive'
+        })
+      } finally {
+        setIsLoadingDraft(false)
+      }
+    }
+    
+    loadDraft()
+  }, [draftId])
 
   // Track composer open on mount
   useEffect(() => {
