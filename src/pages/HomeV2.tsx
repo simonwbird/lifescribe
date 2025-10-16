@@ -11,6 +11,14 @@ import { Button } from '@/components/ui/button'
 import { Mic, Menu } from 'lucide-react'
 import ElderModeView from '@/components/elder/ElderModeView'
 import { useElderMode } from '@/hooks/useElderMode'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { SimpleInspirationBar } from '@/components/home/simple/SimpleInspirationBar'
+import { CountdownModal } from '@/components/home/simple/CountdownModal'
+import { PermissionDeniedCard } from '@/components/home/simple/PermissionDeniedCard'
+import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard'
+import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
+import { ElderPrompt } from '@/lib/prompts/getElderPrompts'
+import { checkMicrophonePermission, isOnline, getPromptTitle } from '@/lib/recorder/startFromPrompt'
 import {
   Sheet,
   SheetContent,
@@ -28,6 +36,14 @@ export default function HomeV2() {
   const [showVoiceCapture, setShowVoiceCapture] = useState(false)
   const [toolsDrawerOpen, setToolsDrawerOpen] = useState(false)
   const { isElderMode, phoneCode, isLoading: elderModeLoading } = useElderMode(userId)
+  const { track } = useAnalytics()
+  
+  // Prompt recording state
+  const [currentPrompt, setCurrentPrompt] = useState<ElderPrompt | null>(null)
+  const [showCountdown, setShowCountdown] = useState(false)
+  const [showPermissionDenied, setShowPermissionDenied] = useState(false)
+  const [showOfflineQueue, setShowOfflineQueue] = useState(false)
+  const [showVoiceModal, setShowVoiceModal] = useState(false)
 
   // Handle ?panel=tools URL parameter
   useEffect(() => {
@@ -46,6 +62,88 @@ export default function HomeV2() {
       searchParams.delete('panel')
       setSearchParams(searchParams)
     }
+  }
+
+  // Prompt recording handlers
+  const handlePromptSelected = async (prompt: ElderPrompt) => {
+    setCurrentPrompt(prompt)
+
+    // Check if online
+    if (!isOnline()) {
+      setShowOfflineQueue(true)
+      track('recorder.offline_queue', {
+        prompt_id: prompt.id,
+        prompt_kind: prompt.kind
+      })
+      return
+    }
+
+    // Check microphone permission
+    const permission = await checkMicrophonePermission()
+    if (permission === 'denied') {
+      setShowPermissionDenied(true)
+      track('recorder.permission_denied', {
+        prompt_id: prompt.id,
+        prompt_kind: prompt.kind
+      })
+      return
+    }
+
+    // Start countdown if permission granted or will be prompted
+    setShowCountdown(true)
+  }
+
+  const handleCountdownComplete = () => {
+    if (!currentPrompt) return
+    setShowCountdown(false)
+    setShowVoiceModal(true)
+  }
+
+  const handlePermissionRetry = async () => {
+    if (!currentPrompt) return
+    const permission = await checkMicrophonePermission()
+    if (permission !== 'denied') {
+      setShowPermissionDenied(false)
+      setShowCountdown(true)
+    }
+  }
+
+  const handleTypeInstead = () => {
+    if (!currentPrompt) return
+    setShowPermissionDenied(false)
+
+    // Navigate to text story creation
+    const title = getPromptTitle(currentPrompt)
+    const params = new URLSearchParams({
+      type: 'text',
+      promptTitle: title,
+      prompt_id: currentPrompt.id,
+      prompt_text: currentPrompt.text,
+      ...(currentPrompt.context?.personId && {
+        person_id: currentPrompt.context.personId
+      })
+    })
+    navigate(`/stories/new?${params.toString()}`)
+  }
+
+  const handleOfflineProceed = () => {
+    if (!currentPrompt) return
+    setShowOfflineQueue(false)
+    setShowCountdown(true)
+  }
+
+  const handleCancel = () => {
+    setShowCountdown(false)
+    setShowPermissionDenied(false)
+    setShowOfflineQueue(false)
+    setShowVoiceModal(false)
+    setCurrentPrompt(null)
+  }
+
+  const handleStoryCreated = (storyId: string) => {
+    track('voice_story_published', { storyId })
+    setShowVoiceModal(false)
+    setCurrentPrompt(null)
   }
 
   useEffect(() => {
@@ -142,6 +240,64 @@ export default function HomeV2() {
         userId={userId} 
         isElderMode={isElderMode}
         onOpenVoiceCapture={() => setShowVoiceCapture(true)}
+      />
+
+      {/* Today's Prompt Section */}
+      <div className="container max-w-[1400px] px-4 pt-6 mx-auto">
+        <div className="max-w-[1100px] mx-auto">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+              Today's prompt
+            </h2>
+            <SimpleInspirationBar
+              profileId={userId}
+              spaceId={familyId}
+              onRecordPrompt={handlePromptSelected}
+            />
+          </div>
+
+          {/* Recording Controller Modals */}
+          {currentPrompt && (
+            <CountdownModal
+              isOpen={showCountdown}
+              prompt={currentPrompt}
+              onComplete={handleCountdownComplete}
+              onCancel={handleCancel}
+            />
+          )}
+
+          {showPermissionDenied && currentPrompt && (
+            <div className="mb-6">
+              <PermissionDeniedCard
+                prompt={currentPrompt}
+                onTryAgain={handlePermissionRetry}
+                onTypeInstead={handleTypeInstead}
+                onDismiss={handleCancel}
+              />
+            </div>
+          )}
+
+          {showOfflineQueue && (
+            <div className="mb-6">
+              <OfflineQueueCard
+                onProceed={handleOfflineProceed}
+                onCancel={handleCancel}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Voice Recording Modal */}
+      <VoiceCaptureModal
+        open={showVoiceModal}
+        onClose={() => {
+          setShowVoiceModal(false)
+          setCurrentPrompt(null)
+        }}
+        onStoryCreated={handleStoryCreated}
+        prompt={currentPrompt || undefined}
+        autoStart={true}
       />
 
       {/* Two-column layout: Feed + Right Rail */}
