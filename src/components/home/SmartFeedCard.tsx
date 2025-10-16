@@ -79,13 +79,13 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
 
     const { data: recordings } = await supabase
       .from('audio_recordings')
-      .select('audio_url, duration_seconds, draft_data')
+      .select('audio_url, duration_seconds, draft_data, transcript')
       .eq('story_id', item.id)
 
-    const byCommentId = new Map<string, { url: string; duration_seconds?: number }>()
+    const byCommentId = new Map<string, { url: string; duration_seconds?: number; transcript?: string }>()
     ;(recordings || []).forEach((rec: any) => {
-      const cid = rec?.draft_data?.comment_id
-      if (cid) byCommentId.set(cid, { url: rec.audio_url, duration_seconds: rec.duration_seconds })
+      const cid = rec?.draft_data?.comment_id || rec?.draft_data?.commentId
+      if (cid) byCommentId.set(cid, { url: rec.audio_url, duration_seconds: rec.duration_seconds, transcript: rec.transcript })
     })
 
     const merged = commentsData.map((c: any) => ({
@@ -417,6 +417,11 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
                         preload="metadata"
                         aria-label="Voice comment"
                       />
+                    </div>
+                  ) : comment.voice?.transcript ? (
+                    <div className="bg-muted/50 rounded-md p-2">
+                      <p className="text-xs text-muted-foreground italic mb-1">Voice transcript</p>
+                      <p className="text-sm text-foreground mt-2 whitespace-pre-wrap">{comment.voice.transcript}</p>
                     </div>
                   ) : comment.content?.includes('[Voice message') ? (
                     <div className="bg-muted/50 rounded-md p-2">
