@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, Plus, HelpCircle, ChevronDown, Settings, LogOut, User, Users, UserCircle, FlaskConical, Shield, CreditCard } from 'lucide-react';
+import { Bell, Plus, HelpCircle, ChevronDown, Settings, LogOut, User, Users, UserCircle, FlaskConical, Shield, CreditCard, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getSignedMediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
-import { EnhancedGlobalSearch } from '@/components/search/EnhancedGlobalSearch';
+import CommandPalette from '@/components/search/CommandPalette';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { QuickAddButton } from '@/components/quick-add/QuickAddButton';
 interface UserData {
@@ -27,6 +27,7 @@ export default function LifeScribeHeader() {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Fetch user and family data
   const {
@@ -149,8 +150,16 @@ export default function LifeScribeHeader() {
           )}
 
           {/* Desktop Search next to Family Switcher */}
-          <div className="hidden md:block w-[420px]">
-            <EnhancedGlobalSearch />
+          <div className="hidden md:block flex-1 max-w-md px-2 sm:px-4">
+            <Button
+              variant="outline"
+              className="w-full justify-start text-sm text-muted-foreground"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search stories, people, events"
+            >
+              <Search className="mr-2 h-4 w-4 shrink-0" />
+              <span className="truncate">Search stories, people, events...</span>
+            </Button>
           </div>
         </div>
 
@@ -256,7 +265,17 @@ export default function LifeScribeHeader() {
 
       {/* Mobile Search Bar (shows below header on mobile) */}
       <div className="md:hidden border-t px-3 py-2 bg-background">
-        <EnhancedGlobalSearch />
+        <Button
+          variant="outline"
+          className="w-full justify-start text-sm text-muted-foreground"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search stories, people, events"
+        >
+          <Search className="mr-2 h-4 w-4 shrink-0" />
+          <span className="truncate">Search stories, people, events...</span>
+        </Button>
       </div>
+
+      <CommandPalette isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>;
 }
