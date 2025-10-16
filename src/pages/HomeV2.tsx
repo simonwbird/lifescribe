@@ -11,14 +11,11 @@ import { Button } from '@/components/ui/button'
 import { Mic, Menu } from 'lucide-react'
 import ElderModeView from '@/components/elder/ElderModeView'
 import { useElderMode } from '@/hooks/useElderMode'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import { SimpleInspirationBar } from '@/components/home/simple/SimpleInspirationBar'
-import { CountdownModal } from '@/components/home/simple/CountdownModal'
-import { PermissionDeniedCard } from '@/components/home/simple/PermissionDeniedCard'
-import { OfflineQueueCard } from '@/components/home/simple/OfflineQueueCard'
-import VoiceCaptureModal from '@/components/voice/VoiceCaptureModal'
-import { ElderPrompt } from '@/lib/prompts/getElderPrompts'
-import { checkMicrophonePermission, isOnline, getPromptTitle } from '@/lib/recorder/startFromPrompt'
+import TodaysPromptCard from '@/components/prompts/TodaysPromptCard'
+import { useTodaysPrompt } from '@/hooks/useTodaysPrompt'
+import { useToast } from '@/hooks/use-toast'
+import { useQueryClient } from '@tanstack/react-query'
+import { markCompleted } from '@/services/promptStatusService'
 import {
   Sheet,
   SheetContent,
@@ -36,14 +33,9 @@ export default function HomeV2() {
   const [showVoiceCapture, setShowVoiceCapture] = useState(false)
   const [toolsDrawerOpen, setToolsDrawerOpen] = useState(false)
   const { isElderMode, phoneCode, isLoading: elderModeLoading } = useElderMode(userId)
-  const { track } = useAnalytics()
-  
-  // Prompt recording state
-  const [currentPrompt, setCurrentPrompt] = useState<ElderPrompt | null>(null)
-  const [showCountdown, setShowCountdown] = useState(false)
-  const [showPermissionDenied, setShowPermissionDenied] = useState(false)
-  const [showOfflineQueue, setShowOfflineQueue] = useState(false)
-  const [showVoiceModal, setShowVoiceModal] = useState(false)
+  const { data: todaysPrompt, isLoading: todaysLoading, refetch } = useTodaysPrompt(familyId)
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   // Handle ?panel=tools URL parameter
   useEffect(() => {
@@ -64,86 +56,81 @@ export default function HomeV2() {
     }
   }
 
-  // Prompt recording handlers
-  const handlePromptSelected = async (prompt: ElderPrompt) => {
-    setCurrentPrompt(prompt)
-
-    // Check if online
-    if (!isOnline()) {
-      setShowOfflineQueue(true)
-      track('recorder.offline_queue', {
-        prompt_id: prompt.id,
-        prompt_kind: prompt.kind
+  // Prompt handlers
+  const handleRespondToPrompt = (instanceId: string) => {
+    if (todaysPrompt?.prompt) {
+      const searchParams = new URLSearchParams({
+        type: 'text',
+        promptTitle: todaysPrompt.prompt.title,
+        prompt_id: todaysPrompt.id,
+        family_id: familyId
       })
-      return
-    }
-
-    // Check microphone permission
-    const permission = await checkMicrophonePermission()
-    if (permission === 'denied') {
-      setShowPermissionDenied(true)
-      track('recorder.permission_denied', {
-        prompt_id: prompt.id,
-        prompt_kind: prompt.kind
-      })
-      return
-    }
-
-    // Start countdown if permission granted or will be prompted
-    setShowCountdown(true)
-  }
-
-  const handleCountdownComplete = () => {
-    if (!currentPrompt) return
-    setShowCountdown(false)
-    setShowVoiceModal(true)
-  }
-
-  const handlePermissionRetry = async () => {
-    if (!currentPrompt) return
-    const permission = await checkMicrophonePermission()
-    if (permission !== 'denied') {
-      setShowPermissionDenied(false)
-      setShowCountdown(true)
+      navigate(`/capture/story-wizard?${searchParams.toString()}`)
     }
   }
 
-  const handleTypeInstead = () => {
-    if (!currentPrompt) return
-    setShowPermissionDenied(false)
+  const handleBrowseAll = () => {
+    navigate('/prompts/hub')
+  }
 
-    // Navigate to text story creation
-    const title = getPromptTitle(currentPrompt)
-    const params = new URLSearchParams({
-      type: 'text',
-      promptTitle: title,
-      prompt_id: currentPrompt.id,
-      prompt_text: currentPrompt.text,
-      ...(currentPrompt.context?.personId && {
-        person_id: currentPrompt.context.personId
+  const handleShuffle = async () => {
+    try {
+      // If a prompt is showing, mark it completed so the next one becomes default
+      if (todaysPrompt?.id) {
+        await markCompleted(todaysPrompt.id)
+      }
+
+      // Refetch to get the latest available prompts
+      await refetch()
+      
+      // Get all open prompts for shuffling
+      const { data: openPrompts, error } = await supabase
+        .from('prompt_instances')
+        .select(`
+          id,
+          status,
+          person_ids,
+          due_at,
+          created_at,
+          updated_at,
+          prompt:prompts(
+            id,
+            title,
+            body,
+            category
+          )
+        `)
+        .eq('family_id', familyId)
+        .eq('status', 'open')
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      
+      if (openPrompts && openPrompts.length === 0) {
+        toast({
+          title: "Marked as completed",
+          description: "All prompts done for now. 🎉",
+        })
+        return
+      }
+      
+      if (openPrompts && openPrompts.length > 0) {
+        // Pick the first open (oldest) as the new default
+        const next = openPrompts[0]
+        queryClient.setQueryData(['todays-prompt', familyId], next)
+        toast({
+          title: "Marked as completed",
+          description: "Loaded your next prompt.",
+        })
+      }
+    } catch (error) {
+      console.error('Error shuffling prompt:', error)
+      toast({
+        title: "Couldn't shuffle",
+        description: "Please try again.",
+        variant: "destructive"
       })
-    })
-    navigate(`/stories/new?${params.toString()}`)
-  }
-
-  const handleOfflineProceed = () => {
-    if (!currentPrompt) return
-    setShowOfflineQueue(false)
-    setShowCountdown(true)
-  }
-
-  const handleCancel = () => {
-    setShowCountdown(false)
-    setShowPermissionDenied(false)
-    setShowOfflineQueue(false)
-    setShowVoiceModal(false)
-    setCurrentPrompt(null)
-  }
-
-  const handleStoryCreated = (storyId: string) => {
-    track('voice_story_published', { storyId })
-    setShowVoiceModal(false)
-    setCurrentPrompt(null)
+    }
   }
 
   useEffect(() => {
@@ -245,60 +232,16 @@ export default function HomeV2() {
       {/* Today's Prompt Section */}
       <div className="container max-w-[1400px] px-4 pt-6 mx-auto">
         <div className="max-w-[1100px] mx-auto">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-              Today's prompt
-            </h2>
-            <SimpleInspirationBar
-              profileId={userId}
-              spaceId={familyId}
-              onRecordPrompt={handlePromptSelected}
-            />
-          </div>
-
-          {/* Recording Controller Modals */}
-          {currentPrompt && (
-            <CountdownModal
-              isOpen={showCountdown}
-              prompt={currentPrompt}
-              onComplete={handleCountdownComplete}
-              onCancel={handleCancel}
-            />
-          )}
-
-          {showPermissionDenied && currentPrompt && (
-            <div className="mb-6">
-              <PermissionDeniedCard
-                prompt={currentPrompt}
-                onTryAgain={handlePermissionRetry}
-                onTypeInstead={handleTypeInstead}
-                onDismiss={handleCancel}
-              />
-            </div>
-          )}
-
-          {showOfflineQueue && (
-            <div className="mb-6">
-              <OfflineQueueCard
-                onProceed={handleOfflineProceed}
-                onCancel={handleCancel}
-              />
-            </div>
-          )}
+          <TodaysPromptCard 
+            promptInstance={todaysPrompt}
+            onRespond={handleRespondToPrompt}
+            onBrowseAll={handleBrowseAll}
+            onShuffle={handleShuffle}
+            loading={todaysLoading}
+            persona="general"
+          />
         </div>
       </div>
-
-      {/* Voice Recording Modal */}
-      <VoiceCaptureModal
-        open={showVoiceModal}
-        onClose={() => {
-          setShowVoiceModal(false)
-          setCurrentPrompt(null)
-        }}
-        onStoryCreated={handleStoryCreated}
-        prompt={currentPrompt || undefined}
-        autoStart={true}
-      />
 
       {/* Two-column layout: Feed + Right Rail */}
       <div className="container max-w-[1400px] px-4 py-6 mx-auto">
