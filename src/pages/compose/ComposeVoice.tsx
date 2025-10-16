@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Mic, Square, Upload } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Header from '@/components/Header'
+import VoiceStoryForm from '@/components/story-create/VoiceStoryForm'
+import { supabase } from '@/lib/supabase'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
 import type { ComposerState } from '@/hooks/useComposerState'
 
@@ -21,46 +22,38 @@ export default function ComposeVoice({
   updateState
 }: ComposeVoiceProps) {
   const navigate = useNavigate()
-  const [isRecording, setIsRecording] = useState(false)
+  const [familyId, setFamilyId] = useState<string | null>(null)
   
-  const hasAudio = composerState?.audioBlob !== null
+  useEffect(() => {
+    const getFamilyId = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: member } = await supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .single()
+        
+        if (member) {
+          setFamilyId(member.family_id)
+        }
+      }
+    }
+    getFamilyId()
+  }, [])
 
-  const content_ui = (
-    <Card>
-          <CardHeader>
-            <CardTitle>Voice Recording</CardTitle>
-            <CardDescription>
-              Press the microphone button to start recording your story
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col items-center justify-center py-12 space-y-6">
-              <Button
-                size="lg"
-                variant={isRecording ? 'destructive' : 'default'}
-                className="h-24 w-24 rounded-full"
-                onClick={() => setIsRecording(!isRecording)}
-              >
-                {isRecording ? (
-                  <Square className="h-8 w-8" />
-                ) : (
-                  <Mic className="h-8 w-8" />
-                )}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                {isRecording ? 'Recording... Click to stop' : hasAudio ? 'Audio recorded! Click to re-record' : 'Click to start recording'}
-              </p>
-            </div>
+  if (!familyId) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="text-center">Loading...</div>
+        </main>
+      </div>
+    )
+  }
 
-            <div className="border-t pt-4">
-              <Button variant="outline" className="w-full" onClick={() => {}}>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Audio File
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-  )
+  const content_ui = <VoiceStoryForm familyId={familyId} />
 
   if (!standalone) {
     return content_ui

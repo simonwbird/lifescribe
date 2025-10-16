@@ -308,16 +308,14 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                 }
               } as any)
             } else {
-              // Navigate to story creation with prompt info and transcript
+              // Navigate to voice compose page with prompt info and transcript
               const searchParams = new URLSearchParams({
-                type: 'voice',
                 promptTitle: promptInstance.prompt?.title || '',
                 prompt_id: promptInstance.id,
                 prompt_text: promptInstance.prompt?.body || '',
-                hasRecording: 'true',
-                transcript: transcription.text
+                hasRecording: 'true'
               })
-              navigate(`/stories/new?${searchParams.toString()}`)
+              navigate(`/compose/voice?${searchParams.toString()}`)
             }
           }
           reader.readAsDataURL(audioBlob)
@@ -336,25 +334,23 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
             sessionStorage.setItem('pendingAudioDuration', recordingDuration.toString())
             
             const searchParams = new URLSearchParams({
-              type: 'voice',
               promptTitle: promptInstance.prompt?.title || '',
               prompt_id: promptInstance.id,
               prompt_text: promptInstance.prompt?.body || '',
               hasRecording: 'true'
             })
-            navigate(`/stories/new?${searchParams.toString()}`)
+            navigate(`/compose/voice?${searchParams.toString()}`)
           }
           reader.readAsDataURL(audioBlob)
         }
       } else if (promptInstance) {
         // No audio captured, just navigate
         const searchParams = new URLSearchParams({
-          type: 'voice',
           promptTitle: promptInstance.prompt?.title || '',
           prompt_id: promptInstance.id,
           prompt_text: promptInstance.prompt?.body || ''
         })
-        navigate(`/stories/new?${searchParams.toString()}`)
+        navigate(`/compose/voice?${searchParams.toString()}`)
       }
     }, 500)
   }
