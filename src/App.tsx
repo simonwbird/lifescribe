@@ -223,7 +223,8 @@ function AppContent() {
       <Route path="/simple/story/new" element={<Navigate to="/stories/new" replace />} />
       <Route path="/stories/new-tabbed" element={<AuthLayoutWrapper><StoryNew /></AuthLayoutWrapper>} />
       <Route path="/stories/new" element={<AuthLayoutWrapper><NewStory /></AuthLayoutWrapper>} />
-      <Route path="/stories/drafts" element={<AuthLayoutWrapper><DraftsPage /></AuthLayoutWrapper>} />
+      <Route path="/drafts" element={<AuthLayoutWrapper><DraftsPage /></AuthLayoutWrapper>} />
+      <Route path="/stories/drafts" element={<Navigate to="/drafts" replace />} />
       <Route path="/stories/:id" element={<AuthLayoutWrapper><StoryDetail /></AuthLayoutWrapper>} />
       <Route path="/stories/:id/edit" element={<AuthLayoutWrapper><StoryEdit /></AuthLayoutWrapper>} />
       <Route path="/prompts" element={<AuthLayoutWrapper><Prompts /></AuthLayoutWrapper>} />
