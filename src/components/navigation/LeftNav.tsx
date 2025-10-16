@@ -8,7 +8,8 @@ import {
   Home as HomeIcon,
   Dog,
   GitBranch,
-  Lock
+  Lock,
+  FileText
 } from 'lucide-react'
 import { LifeScribeLogo } from '@/components/branding/LifeScribeLogo'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
@@ -26,12 +27,15 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/integrations/supabase/client'
+import { Badge } from '@/components/ui/badge'
 
 interface NavItem {
   title: string
   url: string
   icon: React.ComponentType<{ className?: string }>
   section: 'personal' | 'family' | 'vault'
+  showBadge?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -40,6 +44,13 @@ const navItems: NavItem[] = [
     url: '/me', 
     icon: User,
     section: 'personal'
+  },
+  { 
+    title: 'Resume Drafts', 
+    url: routes.drafts(), 
+    icon: FileText,
+    section: 'personal',
+    showBadge: true
   },
   { 
     title: 'People', 
@@ -97,6 +108,67 @@ export function LeftNav() {
   const navigate = useNavigate()
   const { track } = useAnalytics()
   const currentPath = location.pathname
+  const [draftCount, setDraftCount] = useState(0)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [familyId, setFamilyId] = useState<string | null>(null)
+
+  // Load user and family info
+  useEffect(() => {
+    async function loadUserInfo() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        
+        // Get user's family
+        const { data: memberData } = await supabase
+          .from('members')
+          .select('family_id')
+          .eq('profile_id', user.id)
+          .limit(1)
+          .single()
+        
+        if (memberData) {
+          setFamilyId(memberData.family_id)
+        }
+      }
+    }
+    loadUserInfo()
+  }, [])
+
+  // Load draft count
+  useEffect(() => {
+    if (!userId || !familyId) return
+
+    async function loadDraftCount() {
+      const { count } = await supabase
+        .from('stories')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', familyId)
+        .eq('profile_id', userId)
+        .eq('status', 'draft')
+
+      setDraftCount(count || 0)
+    }
+
+    loadDraftCount()
+
+    // Real-time updates
+    const channel = supabase
+      .channel('sidebar-draft-updates')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'stories',
+        filter: `family_id=eq.${familyId}`,
+      }, () => {
+        loadDraftCount()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, familyId])
 
   const isActive = (path: string) => {
     // Exact match or starts with the path (for nested routes)
@@ -205,6 +277,11 @@ export function LeftNav() {
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         {open && <span>{item.title}</span>}
+                        {open && item.showBadge && draftCount > 0 && (
+                          <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-xs">
+                            {draftCount}
+                          </Badge>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
