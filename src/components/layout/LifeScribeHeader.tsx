@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getSignedMediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { EnhancedGlobalSearch } from '@/components/search/EnhancedGlobalSearch';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
@@ -37,12 +38,14 @@ interface UserData {
   families: any[] | null;
   email: string | null;
   isSuperAdmin: boolean;
+  personAvatarUrl: string | null;
 }
 
 export default function LifeScribeHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null);
 
   // Fetch user and family data
   const { data: userData } = useQuery<UserData | null>({
@@ -51,7 +54,7 @@ export default function LifeScribeHeader() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const [profileData, memberData, profileSettings] = await Promise.all([
+      const [profileData, memberData, profileSettings, personData] = await Promise.all([
         supabase
           .from('profiles')
           .select('full_name, avatar_url')
@@ -65,6 +68,14 @@ export default function LifeScribeHeader() {
           .from('profiles')
           .select('settings')
           .eq('id', user.id)
+          .single(),
+        // Get the person record where this user is the owner
+        supabase
+          .from('person_roles')
+          .select('person_id, people(avatar_url, family_id)')
+          .eq('profile_id', user.id)
+          .eq('role', 'owner')
+          .limit(1)
           .single()
       ]);
 
@@ -77,10 +88,38 @@ export default function LifeScribeHeader() {
         profile: profileData.data,
         families: memberData.data,
         email: user.email || null,
-        isSuperAdmin: isSuperAdmin || false
+        isSuperAdmin: isSuperAdmin || false,
+        personAvatarUrl: (personData.data?.people as any)?.avatar_url || null
       };
     },
   });
+
+  // Resolve avatar URL with signed URLs like PersonPage does
+  useEffect(() => {
+    const resolveAvatar = async () => {
+      if (!userData?.personAvatarUrl) {
+        setResolvedAvatarUrl(null)
+        return
+      }
+
+      const avatarUrl = userData.personAvatarUrl
+
+      // If it's already a full URL, use it directly
+      if (avatarUrl.startsWith('http')) {
+        setResolvedAvatarUrl(avatarUrl)
+        return
+      }
+
+      // If it's a storage path, get signed URL
+      if (userData.families && userData.families.length > 0) {
+        const familyId = userData.families[0].family_id
+        const signedUrl = await getSignedMediaUrl(avatarUrl, familyId)
+        setResolvedAvatarUrl(signedUrl)
+      }
+    }
+
+    resolveAvatar()
+  }, [userData?.personAvatarUrl, userData?.families])
 
 
   // Handle scroll for sticky header effect
@@ -209,7 +248,7 @@ export default function LifeScribeHeader() {
                 aria-label="User menu"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={userData?.profile?.avatar_url} alt="" />
+                  <AvatarImage src={resolvedAvatarUrl || userData?.profile?.avatar_url || ''} alt="" />
                   <AvatarFallback>
                     {userData?.profile?.full_name?.[0] || 'U'}
                   </AvatarFallback>
