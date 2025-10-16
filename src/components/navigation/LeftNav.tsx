@@ -248,6 +248,11 @@ export function LeftNav() {
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         {open && <span>{item.title}</span>}
+                        {open && item.showBadge && draftCount > 0 && (
+                          <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-xs">
+                            {draftCount}
+                          </Badge>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
