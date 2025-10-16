@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MessageCircle, Send, Loader2 } from 'lucide-react'
+import { MessageCircle, Send, Loader2, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from '@/hooks/use-toast'
 import { useWriteProtection } from '@/hooks/useWriteProtection'
@@ -140,6 +140,28 @@ export function StoryComments({ storyId, familyId }: StoryCommentsProps) {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
   }
 
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+      
+      if (error) throw error
+      
+      await fetchComments()
+      toast({
+        title: "Comment deleted",
+      })
+    } catch (error) {
+      console.error('Error deleting comment:', error)
+      toast({
+        title: "Failed to delete comment",
+        variant: "destructive"
+      })
+    }
+  }
+
   return (
     <Card id="comments">
       <CardHeader>
@@ -198,15 +220,28 @@ export function StoryComments({ storyId, familyId }: StoryCommentsProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm">
-                      {comment.profiles?.full_name || 'Unknown User'}
-                    </p>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(comment.created_at), {
-                        addSuffix: true
-                      })}
-                    </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm">
+                        {comment.profiles?.full_name || 'Unknown User'}
+                      </p>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(comment.created_at), {
+                          addSuffix: true
+                        })}
+                      </span>
+                    </div>
+                    {currentUserId === comment.profile_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                        aria-label="Delete comment"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                   {comment.voice?.url ? (
                     <div className="bg-muted/50 rounded-md p-2">

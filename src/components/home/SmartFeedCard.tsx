@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, Share2, Bookmark, Tag, Users } from 'lucide-react'
+import { Heart, MessageCircle, Share2, Bookmark, Tag, Users, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/integrations/supabase/client'
 import { VoiceReplyButton } from './VoiceReplyButton'
@@ -128,6 +128,28 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
       description: isSaved ? undefined : "View in /saved"
     })
     // TODO: Implement actual bookmark creation/deletion
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+      
+      if (error) throw error
+      
+      await loadComments()
+      toast({
+        title: "Comment deleted",
+      })
+    } catch (error) {
+      console.error('Error deleting comment:', error)
+      toast({
+        title: "Failed to delete comment",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -370,9 +392,22 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0 space-y-1">
-                  <p className="text-xs">
-                    <span className="font-semibold">{comment.profiles?.full_name}</span>
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs">
+                      <span className="font-semibold">{comment.profiles?.full_name}</span>
+                    </p>
+                    {currentUserId === comment.profile_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        aria-label="Delete comment"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                   {comment.voice?.url ? (
                     <div className="bg-muted/50 rounded-lg p-2">
                       <audio 
