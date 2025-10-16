@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,13 +15,19 @@ interface ComposeTextProps {
   standalone?: boolean
   composerState?: ComposerState
   updateState?: (updates: Partial<ComposerState>) => void
+  onPublish?: () => Promise<void>
+  isDraft?: boolean
+  isPublishing?: boolean
 }
 
 export default function ComposeText({ 
   prefillData, 
   standalone = true,
   composerState,
-  updateState
+  updateState,
+  onPublish,
+  isDraft = false,
+  isPublishing = false
 }: ComposeTextProps) {
   const navigate = useNavigate()
   const [localTitle, setLocalTitle] = useState('')
@@ -89,9 +95,18 @@ export default function ComposeText({
               <Button variant="outline" onClick={() => navigate(-1)}>
                 Cancel
               </Button>
-              <Button onClick={() => {}}>
+              {isDraft && (
+                <Button variant="secondary" disabled>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Saved as Draft
+                </Button>
+              )}
+              <Button 
+                onClick={onPublish}
+                disabled={!title.trim() || !content.trim() || isPublishing}
+              >
                 <Save className="h-4 w-4 mr-2" />
-                Save Story
+                {isPublishing ? 'Publishing...' : 'Publish Story'}
               </Button>
             </div>
           </CardContent>

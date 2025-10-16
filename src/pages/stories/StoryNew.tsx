@@ -40,6 +40,7 @@ export default function StoryNew() {
   const [activeTab, setActiveTab] = useState<ComposerTab>(tabParam)
   const [familyId, setFamilyId] = useState<string>('')
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId)
+  const [isPublishing, setIsPublishing] = useState(false)
 
   // Use shared composer state
   const { state: composerState, updateState, switchMode, hasContent } = useComposerState(tabParam)
@@ -263,6 +264,65 @@ export default function StoryNew() {
     setSearchParams(newParams, { replace: true })
   }
 
+  const handlePublish = async () => {
+    if (!storyId || !familyId) {
+      toast({
+        title: 'Error',
+        description: 'Cannot publish without a saved draft',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    try {
+      setIsPublishing(true)
+      
+      const occurredDate = composerState.dateValue.date 
+        ? composerState.dateValue.date.toISOString().split('T')[0]
+        : null
+      
+      const isApprox = composerState.dateValue.precision === 'circa' || 
+                       composerState.dateValue.precision === 'year' ||
+                       composerState.dateValue.precision === 'month'
+
+      const { error } = await supabase
+        .from('stories')
+        .update({
+          status: 'published',
+          title: composerState.title || 'Untitled Story',
+          content: composerState.content,
+          occurred_on: occurredDate,
+          is_approx: isApprox
+        })
+        .eq('id', storyId)
+
+      if (error) throw error
+
+      toast({
+        title: 'Story published!',
+        description: 'Your story is now live and visible to your family'
+      })
+
+      track('story_publish', {
+        story_id: storyId,
+        tab: activeTab,
+        from_draft: !!draftId
+      })
+
+      // Navigate to the published story
+      navigate(`/stories/${storyId}`)
+    } catch (error) {
+      console.error('Error publishing story:', error)
+      toast({
+        title: 'Failed to publish',
+        description: 'Please try again',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsPublishing(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -318,6 +378,9 @@ export default function StoryNew() {
               prefillData={prefillData} 
               composerState={composerState}
               updateState={updateState}
+              onPublish={handlePublish}
+              isDraft={!!draftId}
+              isPublishing={isPublishing}
             />
           </TabsContent>
 
