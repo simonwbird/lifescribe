@@ -383,6 +383,10 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
                         aria-label="Voice comment"
                       />
                     </div>
+                  ) : comment.content?.includes('[Voice message') ? (
+                    <div className="bg-muted/50 rounded-md p-2 text-xs text-muted-foreground italic">
+                      Voice message (audio unavailable)
+                    </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">{comment.content}</span>
                   )}

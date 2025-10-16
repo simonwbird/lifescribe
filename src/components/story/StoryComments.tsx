@@ -221,6 +221,10 @@ export function StoryComments({ storyId, familyId }: StoryCommentsProps) {
                         <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{comment.content}</p>
                       )}
                     </div>
+                  ) : comment.content?.includes('[Voice message') ? (
+                    <div className="bg-muted/50 rounded-md p-2 text-xs text-muted-foreground italic">
+                      Voice message (audio unavailable - recorded before audio storage was implemented)
+                    </div>
                   ) : (
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {comment.content}
