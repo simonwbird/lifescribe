@@ -229,8 +229,8 @@ export function LeftNav() {
         </div>
         
         {/* Personal Section */}
-        <SidebarGroup className={cn(open && "pl-3")}>
-          {open && <SidebarGroupLabel>Personal</SidebarGroupLabel>}
+        <SidebarGroup>
+          {open && <SidebarGroupLabel className="pl-3">Personal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {personalItems.map((item) => {
@@ -263,8 +263,8 @@ export function LeftNav() {
         </SidebarGroup>
 
         {/* Family Section */}
-        <SidebarGroup className={cn(open && "pl-3")}>
-          {open && <SidebarGroupLabel>Family</SidebarGroupLabel>}
+        <SidebarGroup>
+          {open && <SidebarGroupLabel className="pl-3">Family</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {familyItems.map((item) => {
@@ -297,8 +297,8 @@ export function LeftNav() {
         </SidebarGroup>
 
         {/* Vault Section */}
-        <SidebarGroup className={cn(open && "pl-3")}>
-          {open && <SidebarGroupLabel>SafeBox</SidebarGroupLabel>}
+        <SidebarGroup>
+          {open && <SidebarGroupLabel className="pl-3">SafeBox</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {vaultItems.map((item) => {
