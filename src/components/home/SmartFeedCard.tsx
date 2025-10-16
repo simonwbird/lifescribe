@@ -70,7 +70,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
   const loadComments = async () => {
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles(full_name, avatar_url)')
+      .select('*, profiles(full_name, avatar_url), audio_recordings(audio_url, duration_seconds)')
       .eq('story_id', item.id)
       .order('created_at', { ascending: false })
       .limit(showAllComments ? 100 : 2)
@@ -345,18 +345,29 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
           <div className="space-y-2 pt-2 border-t">
             {comments.slice(0, showAllComments ? undefined : 2).map((comment) => (
               <div key={comment.id} className="flex gap-2">
-                <Avatar className="h-6 w-6">
+                <Avatar className="h-6 w-6 shrink-0">
                   <AvatarImage src={comment.profiles?.avatar_url} />
                   <AvatarFallback className="text-xs">
                     {comment.profiles?.full_name?.charAt(0) || '?'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 space-y-1">
                   <p className="text-xs">
                     <span className="font-semibold">{comment.profiles?.full_name}</span>
-                    {' '}
-                    <span className="text-muted-foreground">{comment.content}</span>
                   </p>
+                  {comment.audio_recordings && comment.audio_recordings.length > 0 ? (
+                    <div className="bg-muted/50 rounded-lg p-2">
+                      <audio 
+                        src={comment.audio_recordings[0].audio_url} 
+                        controls 
+                        className="w-full max-w-xs h-8"
+                        preload="metadata"
+                        aria-label="Voice comment"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">{comment.content}</span>
+                  )}
                 </div>
               </div>
             ))}

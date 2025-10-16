@@ -70,15 +70,48 @@ export function SmartFeed({ familyId, userId }: SmartFeedProps) {
       if (error) throw error
 
       const enhanced = await Promise.all(
-        (storiesData || []).map(async (story: any) => ({
-          ...story,
-          media_urls: [],
-          reactions_count: 0,
-          comments_count: 0,
-          user_has_liked: false,
-          people: []
+        (storiesData || []).map(async (story: any) => {
+          // Load audio recordings linked to this story
+          const { data: audioRecordings } = await supabase
+            .from('audio_recordings')
+            .select('audio_url, duration_seconds')
+            .eq('story_id', story.id)
+            .limit(5)
+          
+          const media_urls = (audioRecordings || []).map(audio => ({
+            url: audio.audio_url,
+            type: 'audio'
+          }))
+
+          // Get reaction count
+          const { count: reactionsCount } = await supabase
+            .from('reactions')
+            .select('*', { count: 'exact', head: true })
+            .eq('story_id', story.id)
+
+          // Get comments count
+          const { count: commentsCount } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('story_id', story.id)
+
+          // Check if user liked
+          const { data: userReaction } = await supabase
+            .from('reactions')
+            .select('id')
+            .eq('story_id', story.id)
+            .eq('profile_id', userId)
+            .maybeSingle()
+
+          return {
+            ...story,
+            media_urls,
+            reactions_count: reactionsCount || 0,
+            comments_count: commentsCount || 0,
+            user_has_liked: !!userReaction,
+            people: []
+          }
         }))
-      )
 
       setFeedItems(enhanced)
     } catch (error) {
