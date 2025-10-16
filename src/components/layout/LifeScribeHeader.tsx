@@ -117,7 +117,8 @@ export default function LifeScribeHeader() {
           </button>
 
           {/* Family Switcher */}
-          {userData?.families && userData.families.length > 0 && <DropdownMenu>
+          {userData?.families && userData.families.length > 0 && (
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2 max-w-[180px]" aria-label="Switch family">
                   <Users className="h-4 w-4" aria-hidden="true" />
@@ -130,22 +131,29 @@ export default function LifeScribeHeader() {
               <DropdownMenuContent align="start" className="w-56 bg-background">
                 <DropdownMenuLabel>Your Families</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {userData.families.map((member: any) => <DropdownMenuItem key={member.family_id} onClick={() => navigate(`/family/${member.family_id}`)}>
+                {userData.families.map((member: any) => (
+                  <DropdownMenuItem
+                    key={member.family_id}
+                    onClick={() => navigate(`/family/${member.family_id}`)}
+                  >
                     {member.families?.name || 'Unnamed Family'}
-                  </DropdownMenuItem>)}
+                  </DropdownMenuItem>
+                ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/families/switch')}>
                   <Users className="mr-2 h-4 w-4" aria-hidden="true" />
                   Manage Families
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>}
+            </DropdownMenu>
+          )}
+
+          {/* Desktop Search next to Family Switcher */}
+          <div className="hidden md:block w-[420px]">
+            <EnhancedGlobalSearch />
+          </div>
         </div>
 
-        {/* Center Section: Enhanced Global Search */}
-        <div className="flex-1 max-w-md mx-auto hidden md:block">
-          
-        </div>
 
         {/* Right Section: Actions & User Menu */}
         <div className="flex items-center gap-1 md:gap-2">
