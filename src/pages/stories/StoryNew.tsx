@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams, useBlocker } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -133,22 +133,18 @@ export default function StoryNew() {
     updateTabMetadata()
   }, [storyId, activeTab])
 
-  // Block navigation and show toast when leaving with unsaved content
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-    const isNavigatingAway = currentLocation.pathname !== nextLocation.pathname
-    return isNavigatingAway && hasContent() && !isSaving
-  })
-
+  // Warn before closing browser tab with unsaved content
   useEffect(() => {
-    if (blocker.state === 'blocked') {
-      toast({
-        title: 'Saved as draft',
-        description: 'Your progress has been saved',
-        duration: 2000
-      })
-      blocker.proceed()
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasContent() && !isSaving) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
     }
-  }, [blocker.state])
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasContent, isSaving])
   
   // Parse prefill params
   const prefillData: ComposerPrefillData = {
