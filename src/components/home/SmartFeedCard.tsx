@@ -178,42 +178,52 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
 
         {/* Media */}
         {item.media_urls && item.media_urls.length > 0 && (
-          <LSLink
-            to={routes.storiesShow(item.id)}
-            className="block w-full rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary hover:opacity-95 transition-opacity"
-            aria-label="View story media"
-          >
+          <div className="w-full rounded-lg overflow-hidden space-y-2">
             {item.media_urls[0].type === 'image' && (
-              <img 
-                src={item.media_urls[0].url} 
-                alt="" 
-                className="w-full max-h-[400px] object-cover"
-              />
+              <LSLink
+                to={routes.storiesShow(item.id)}
+                className="block w-full rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary hover:opacity-95 transition-opacity"
+                aria-label="View full story"
+              >
+                <img 
+                  src={item.media_urls[0].url} 
+                  alt={item.title || "Story image"} 
+                  className="w-full max-h-[400px] object-cover"
+                />
+              </LSLink>
             )}
             {item.media_urls[0].type === 'video' && (
-              <video 
-                src={item.media_urls[0].url} 
-                controls 
-                className="w-full max-h-[400px]"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div className="w-full bg-black/5 rounded-lg overflow-hidden">
+                <video 
+                  src={item.media_urls[0].url} 
+                  controls 
+                  className="w-full max-h-[400px]"
+                  preload="metadata"
+                  aria-label="Story video"
+                />
+              </div>
             )}
             {item.media_urls[0].type === 'audio' && (
-              <LSLink to={routes.storiesAudio(item.id)} className="block bg-muted/50 p-4 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors">
+              <div className="w-full bg-muted/50 p-4 rounded-lg">
                 <audio 
                   src={item.media_urls[0].url} 
                   controls 
                   className="w-full"
-                  onClick={(e) => e.stopPropagation()}
+                  preload="metadata"
+                  aria-label="Story audio"
                 />
-              </LSLink>
-            )}
-            {item.media_urls.length > 1 && (
-              <div className="text-xs text-muted-foreground text-center mt-2">
-                +{item.media_urls.length - 1} more
               </div>
             )}
-          </LSLink>
+            {item.media_urls.length > 1 && (
+              <LSLink
+                to={routes.storiesShow(item.id)}
+                className="block text-xs text-muted-foreground hover:text-foreground text-center transition-colors"
+                aria-label={`View ${item.media_urls.length - 1} more media items`}
+              >
+                +{item.media_urls.length - 1} more
+              </LSLink>
+            )}
+          </div>
         )}
 
         {/* Content snippet */}
