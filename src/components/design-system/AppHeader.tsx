@@ -86,18 +86,16 @@ export function AppHeader() {
         </LSLink>
 
         {/* Center: Search */}
-        <div className="flex-1 flex justify-center px-4">
-          <div className="w-full max-w-lg">
-            <Button
-              variant="outline"
-              className="w-full justify-start text-sm text-muted-foreground"
-              onClick={() => setShowSearch(true)}
-              aria-label="Search stories, people, events"
-            >
-              <Search className="h-4 w-4 mr-2 shrink-0" />
-              <span className="truncate">Search stories, people, events...</span>
-            </Button>
-          </div>
+        <div className="flex-1 px-2 sm:px-4">
+          <Button
+            variant="outline"
+            className="w-full max-w-lg justify-start text-sm text-muted-foreground"
+            onClick={() => setShowSearch(true)}
+            aria-label="Search stories, people, events"
+          >
+            <Search className="mr-2 h-4 w-4 shrink-0" />
+            <span className="truncate">Search stories, people, events...</span>
+          </Button>
         </div>
 
         {/* Right: Navigation + Actions */}
