@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
-import { AppLayout } from '@/components/layouts/AppLayout'
 import { TopBar } from '@/components/home/TopBar'
 import { HeroStrip } from '@/components/home/HeroStrip'
 import { SmartFeed } from '@/components/home/SmartFeed'
@@ -132,84 +131,82 @@ export default function HomeV2() {
   }
 
   return (
-    <AppLayout showHeader={false}>
-      <div className="min-h-screen bg-background">
-        {/* Sticky Header below global header */}
-        <div className="sticky top-14 md:top-16 z-40 bg-background border-b">
-          <TopBar familyId={familyId} userId={userId} />
-        </div>
-        
-        <HeroStrip 
-          familyId={familyId} 
-          userId={userId} 
-          isElderMode={isElderMode}
-          onOpenVoiceCapture={() => setShowVoiceCapture(true)}
-        />
+    <div className="min-h-screen bg-background">
+      {/* Sticky Header below global header */}
+      <div className="sticky top-14 md:top-16 z-40 bg-background border-b">
+        <TopBar familyId={familyId} userId={userId} />
+      </div>
+      
+      <HeroStrip 
+        familyId={familyId} 
+        userId={userId} 
+        isElderMode={isElderMode}
+        onOpenVoiceCapture={() => setShowVoiceCapture(true)}
+      />
 
-        {/* Two-column layout: Feed + Right Rail */}
-        <div className="container max-w-[1400px] px-4 py-6 mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
-            {/* Left: Main Feed */}
-            <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
-              {/* Voice Capture Toggle */}
-              {!showVoiceCapture && (
-                <Button 
-                  onClick={() => setShowVoiceCapture(true)}
-                  variant="outline"
-                  className="w-full gap-2 border-dashed"
-                  aria-label="Record voice note"
-                >
-                  <Mic className="h-4 w-4" />
-                  Record Voice Note
-                </Button>
-              )}
+      {/* Two-column layout: Feed + Right Rail */}
+      <div className="container max-w-[1400px] px-4 py-6 mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
+          {/* Left: Main Feed */}
+          <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
+            {/* Voice Capture Toggle */}
+            {!showVoiceCapture && (
+              <Button 
+                onClick={() => setShowVoiceCapture(true)}
+                variant="outline"
+                className="w-full gap-2 border-dashed"
+                aria-label="Record voice note"
+              >
+                <Mic className="h-4 w-4" />
+                Record Voice Note
+              </Button>
+            )}
 
-              {/* Inline Voice Capture */}
-              {showVoiceCapture && (
-                <VoiceCapture
-                  familyId={familyId}
-                  userId={userId}
-                  onPublished={() => setShowVoiceCapture(false)}
-                  onCancel={() => setShowVoiceCapture(false)}
-                />
-              )}
+            {/* Inline Voice Capture */}
+            {showVoiceCapture && (
+              <VoiceCapture
+                familyId={familyId}
+                userId={userId}
+                onPublished={() => setShowVoiceCapture(false)}
+                onCancel={() => setShowVoiceCapture(false)}
+              />
+            )}
 
-              <SmartFeed familyId={familyId} userId={userId} />
-            </main>
+            <SmartFeed familyId={familyId} userId={userId} />
+          </main>
 
-            {/* Right: Widgets Rail (Desktop only) */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-24">
-                <RightRail />
-              </div>
-            </aside>
-          </div>
-        </div>
-
-        {/* Mobile Tools Drawer */}
-        <Sheet open={toolsDrawerOpen} onOpenChange={handleToolsDrawerChange}>
-          <SheetTrigger asChild>
-            <Button
-              size="lg"
-              className="fixed bottom-6 right-6 z-50 lg:hidden shadow-lg rounded-full w-14 h-14 p-0"
-              aria-label="Open tools drawer"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent 
-            side="right" 
-            className="w-full sm:w-[400px] overflow-y-auto"
-          >
-            <SheetHeader>
-              <SheetTitle>Tools & Widgets</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
+          {/* Right: Widgets Rail (Desktop only) */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24">
               <RightRail />
             </div>
-          </SheetContent>
-        </Sheet>
+          </aside>
+        </div>
       </div>
-    </AppLayout>
+
+      {/* Mobile Tools Drawer */}
+      <Sheet open={toolsDrawerOpen} onOpenChange={handleToolsDrawerChange}>
+        <SheetTrigger asChild>
+          <Button
+            size="lg"
+            className="fixed bottom-6 right-6 z-50 lg:hidden shadow-lg rounded-full w-14 h-14 p-0"
+            aria-label="Open tools drawer"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent 
+          side="right" 
+          className="w-full sm:w-[400px] overflow-y-auto"
+        >
+          <SheetHeader>
+            <SheetTitle>Tools & Widgets</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <RightRail />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
   )
 }

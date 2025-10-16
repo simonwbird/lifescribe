@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -138,6 +139,7 @@ import AdminLabs from './pages/admin/AdminLabs';
 import AdminDebugRoles from './pages/admin/AdminDebugRoles';
 import ProfileDebug from './pages/ProfileDebug';
 import LifeScribeHeader from './components/layout/LifeScribeHeader';
+import { AppLayout } from './components/layouts/AppLayout';
 
 const queryClient = new QueryClient();
 
@@ -146,12 +148,27 @@ function AppContent() {
   useMobileOptimizations()
   const location = useLocation();
   
-  // Routes that should not show the header
+  // Routes that should not show the header OR sidebar
+  const noLayoutRoutes = [
+    '/login', '/landing', '/auth/login', '/auth/signup', 
+    '/auth/verify', '/auth/reset', '/privacy', '/terms',
+    '/join/', '/events/', '/invite/'
+  ];
+  const shouldShowLayout = !noLayoutRoutes.some(route => location.pathname.startsWith(route));
+  
   const noHeaderRoutes = [
     '/login', '/landing', '/auth/login', '/auth/signup', 
     '/auth/verify', '/auth/reset', '/privacy', '/terms'
   ];
   const shouldShowHeader = !noHeaderRoutes.some(route => location.pathname.startsWith(route));
+  
+  
+  // Wrapper for authenticated routes with AppLayout
+  const AuthLayoutWrapper = ({ children }: { children: ReactNode }) => (
+    <AuthGate>
+      <AppLayout showHeader={false}>{children}</AppLayout>
+    </AuthGate>
+  );
   
   return (
     <FocusManager>
@@ -163,7 +180,7 @@ function AppContent() {
       {shouldShowHeader && <LifeScribeHeader />}
       
       <Routes>
-      {/* Public routes */}
+      {/* Public routes - NO SIDEBAR */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/landing" element={<Landing />} />
@@ -179,7 +196,7 @@ function AppContent() {
       <Route path="/p/:slug" element={<PersonPageBySlug />} />
       <Route path="/sitemap.xml" element={<SitemapPage />} />
       
-      {/* Auth routes */}
+      {/* Auth routes - NO SIDEBAR */}
           <Route path="/auth/login" element={<LoginPageEnhanced />} />
           <Route path="/admin/test-bootstrap" element={<TestAdminBootstrap />} />
       <Route path="/auth/signup" element={<SignupPage />} />
@@ -188,88 +205,90 @@ function AppContent() {
       <Route path="/auth/reset/confirm" element={<ResetConfirmPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       
-      {/* Onboarding (auth required) */}
+      {/* Onboarding (auth required, NO SIDEBAR) */}
       <Route path="/onboarding" element={<AuthGate><OnboardingWizard /></AuthGate>} />
-       <Route path="/home" element={<AuthGate><Home /></AuthGate>} />
-       <Route path="/home-v2" element={<AuthGate><HomeV2 /></AuthGate>} />
-        <Route path="/prompts/wow" element={<AuthGate><PromptsWow /></AuthGate>} />
+      
+       {/* ALL ROUTES BELOW HAVE PERSISTENT SIDEBAR */}
+       <Route path="/home" element={<AuthLayoutWrapper><Home /></AuthLayoutWrapper>} />
+       <Route path="/home-v2" element={<AuthLayoutWrapper><HomeV2 /></AuthLayoutWrapper>} />
+        <Route path="/prompts/wow" element={<AuthLayoutWrapper><PromptsWow /></AuthLayoutWrapper>} />
         
         {/* Me redirect to person page */}
-        <Route path="/me" element={<AuthGate><MeRedirect /></AuthGate>} />
+        <Route path="/me" element={<AuthLayoutWrapper><MeRedirect /></AuthLayoutWrapper>} />
         
         {/* Redirect /feed to /home */}
       <Route path="/feed" element={<Navigate to="/home" replace />} />
       
       {/* Story routes with legacy redirect */}
       <Route path="/simple/story/new" element={<Navigate to="/stories/new" replace />} />
-      <Route path="/stories/new-tabbed" element={<AuthGate><StoryNew /></AuthGate>} />
-      <Route path="/stories/new" element={<AuthGate><NewStory /></AuthGate>} />
-      <Route path="/stories/drafts" element={<AuthGate><DraftsPage /></AuthGate>} />
-      <Route path="/stories/:id" element={<AuthGate><StoryDetail /></AuthGate>} />
-      <Route path="/stories/:id/edit" element={<AuthGate><StoryEdit /></AuthGate>} />
-      <Route path="/prompts" element={<AuthGate><Prompts /></AuthGate>} />
-      <Route path="/prompts/simple" element={<AuthGate><PromptsSimple /></AuthGate>} />
-      <Route path="/prompts/hub" element={<AuthGate><PromptHub /></AuthGate>} />
-      <Route path="/prompts/browse" element={<AuthGate><PromptsBrowse /></AuthGate>} />
-      <Route path="/sharing" element={<AuthGate><SharingPermissions /></AuthGate>} />
-      <Route path="/family/tree" element={<AuthGate><FamilyTree /></AuthGate>} />
-      <Route path="/family-tree/explorer" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthGate>} />
-      <Route path="/family-tree/fan" element={<AuthGate><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthGate>} />
-      <Route path="/people" element={<AuthGate><People /></AuthGate>} />
-      <Route path="/people/:id" element={<AuthGate><PersonPage /></AuthGate>} />
-      <Route path="/people/:personId/moderation" element={<AuthGate><ModerationQueue /></AuthGate>} />
-      <Route path="/people/:id/legacy" element={<AuthGate><PersonProfile /></AuthGate>} />
-      <Route path="/people/:id/timeline" element={<AuthGate><PersonTimeline /></AuthGate>} />
-      <Route path="/analytics" element={<AuthGate><AnalyticsPage /></AuthGate>} />
-      <Route path="/analytics/stories" element={<AuthGate><StoryAnalytics /></AuthGate>} />
-       <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
-       <Route path="/profile/debug" element={<AuthGate><ProfileDebug /></AuthGate>} />
-       <Route path="/settings" element={<AuthGate><Settings /></AuthGate>} />
-       <Route path="/help" element={<AuthGate><Help /></AuthGate>} />
-       <Route path="/inbox" element={<AuthGate><Inbox /></AuthGate>} />
-       <Route path="/compose/voice" element={<AuthGate><ComposeVoice /></AuthGate>} />
-       <Route path="/compose/text" element={<AuthGate><ComposeText /></AuthGate>} />
-       <Route path="/compose/photos" element={<AuthGate><ComposePhotos /></AuthGate>} />
-       <Route path="/compose/scan" element={<AuthGate><ComposeScan /></AuthGate>} />
-       <Route path="/compose/video" element={<AuthGate><ComposeVideo /></AuthGate>} />
-       <Route path="/compose/mixed" element={<AuthGate><ComposeMixed /></AuthGate>} />
-       <Route path="/notes/new" element={<AuthGate><NoteNew /></AuthGate>} />
-       <Route path="/events" element={<AuthGate><Events /></AuthGate>} />
-       <Route path="/event/:eventId" element={<AuthGate><EventDetail /></AuthGate>} />
+      <Route path="/stories/new-tabbed" element={<AuthLayoutWrapper><StoryNew /></AuthLayoutWrapper>} />
+      <Route path="/stories/new" element={<AuthLayoutWrapper><NewStory /></AuthLayoutWrapper>} />
+      <Route path="/stories/drafts" element={<AuthLayoutWrapper><DraftsPage /></AuthLayoutWrapper>} />
+      <Route path="/stories/:id" element={<AuthLayoutWrapper><StoryDetail /></AuthLayoutWrapper>} />
+      <Route path="/stories/:id/edit" element={<AuthLayoutWrapper><StoryEdit /></AuthLayoutWrapper>} />
+      <Route path="/prompts" element={<AuthLayoutWrapper><Prompts /></AuthLayoutWrapper>} />
+      <Route path="/prompts/simple" element={<AuthLayoutWrapper><PromptsSimple /></AuthLayoutWrapper>} />
+      <Route path="/prompts/hub" element={<AuthLayoutWrapper><PromptHub /></AuthLayoutWrapper>} />
+      <Route path="/prompts/browse" element={<AuthLayoutWrapper><PromptsBrowse /></AuthLayoutWrapper>} />
+      <Route path="/sharing" element={<AuthLayoutWrapper><SharingPermissions /></AuthLayoutWrapper>} />
+      <Route path="/family/tree" element={<AuthLayoutWrapper><FamilyTree /></AuthLayoutWrapper>} />
+      <Route path="/family-tree/explorer" element={<AuthLayoutWrapper><LabsGuard feature="alternateTreeViews"><FamilyTreeExplorer /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/family-tree/fan" element={<AuthLayoutWrapper><LabsGuard feature="alternateTreeViews"><FamilyTreeFan /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/people" element={<AuthLayoutWrapper><People /></AuthLayoutWrapper>} />
+      <Route path="/people/:id" element={<AuthLayoutWrapper><PersonPage /></AuthLayoutWrapper>} />
+      <Route path="/people/:personId/moderation" element={<AuthLayoutWrapper><ModerationQueue /></AuthLayoutWrapper>} />
+      <Route path="/people/:id/legacy" element={<AuthLayoutWrapper><PersonProfile /></AuthLayoutWrapper>} />
+      <Route path="/people/:id/timeline" element={<AuthLayoutWrapper><PersonTimeline /></AuthLayoutWrapper>} />
+      <Route path="/analytics" element={<AuthLayoutWrapper><AnalyticsPage /></AuthLayoutWrapper>} />
+      <Route path="/analytics/stories" element={<AuthLayoutWrapper><StoryAnalytics /></AuthLayoutWrapper>} />
+       <Route path="/profile" element={<AuthLayoutWrapper><Profile /></AuthLayoutWrapper>} />
+       <Route path="/profile/debug" element={<AuthLayoutWrapper><ProfileDebug /></AuthLayoutWrapper>} />
+       <Route path="/settings" element={<AuthLayoutWrapper><Settings /></AuthLayoutWrapper>} />
+       <Route path="/help" element={<AuthLayoutWrapper><Help /></AuthLayoutWrapper>} />
+       <Route path="/inbox" element={<AuthLayoutWrapper><Inbox /></AuthLayoutWrapper>} />
+       <Route path="/compose/voice" element={<AuthLayoutWrapper><ComposeVoice /></AuthLayoutWrapper>} />
+       <Route path="/compose/text" element={<AuthLayoutWrapper><ComposeText /></AuthLayoutWrapper>} />
+       <Route path="/compose/photos" element={<AuthLayoutWrapper><ComposePhotos /></AuthLayoutWrapper>} />
+       <Route path="/compose/scan" element={<AuthLayoutWrapper><ComposeScan /></AuthLayoutWrapper>} />
+       <Route path="/compose/video" element={<AuthLayoutWrapper><ComposeVideo /></AuthLayoutWrapper>} />
+       <Route path="/compose/mixed" element={<AuthLayoutWrapper><ComposeMixed /></AuthLayoutWrapper>} />
+       <Route path="/notes/new" element={<AuthLayoutWrapper><NoteNew /></AuthLayoutWrapper>} />
+       <Route path="/events" element={<AuthLayoutWrapper><Events /></AuthLayoutWrapper>} />
+       <Route path="/event/:eventId" element={<AuthLayoutWrapper><EventDetail /></AuthLayoutWrapper>} />
        <Route path="/event/:eventId/upload" element={<EventUploadPage />} />
-       <Route path="/print" element={<AuthGate><PrintComposer /></AuthGate>} />
-       <Route path="/print/event/:eventId" element={<AuthGate><PrintComposer /></AuthGate>} />
-       <Route path="/admin/duplicates" element={<AuthGate><DuplicatesPage /></AuthGate>} />
-       <Route path="/safebox" element={<AuthGate><SafeBox /></AuthGate>} />
-       <Route path="/tribute/:id" element={<AuthGate><TributeDetail /></AuthGate>} />
-       <Route path="/labs" element={<AuthGate><Labs /></AuthGate>} />
-       <Route path="/labs/spaces" element={<AuthGate><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthGate>} />
-       <Route path="/portfolio" element={<AuthGate><Portfolio /></AuthGate>} />
-       <Route path="/vault" element={<AuthGate><Vault /></AuthGate>} />
+       <Route path="/print" element={<AuthLayoutWrapper><PrintComposer /></AuthLayoutWrapper>} />
+       <Route path="/print/event/:eventId" element={<AuthLayoutWrapper><PrintComposer /></AuthLayoutWrapper>} />
+       <Route path="/admin/duplicates" element={<AuthLayoutWrapper><DuplicatesPage /></AuthLayoutWrapper>} />
+       <Route path="/safebox" element={<AuthLayoutWrapper><SafeBox /></AuthLayoutWrapper>} />
+       <Route path="/tribute/:id" element={<AuthLayoutWrapper><TributeDetail /></AuthLayoutWrapper>} />
+       <Route path="/labs" element={<AuthLayoutWrapper><Labs /></AuthLayoutWrapper>} />
+       <Route path="/labs/spaces" element={<AuthLayoutWrapper><LabsGuard feature="multiSpaces"><LabsSpaces /></LabsGuard></AuthLayoutWrapper>} />
+       <Route path="/portfolio" element={<AuthLayoutWrapper><Portfolio /></AuthLayoutWrapper>} />
+       <Route path="/vault" element={<AuthLayoutWrapper><Vault /></AuthLayoutWrapper>} />
        <Route path="/help" element={<Help />} />
-      <Route path="/collections" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
-      <Route path="/collections/:tab" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
+      <Route path="/collections" element={<AuthLayoutWrapper><LabsGuard feature="collections"><Collections /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/collections/:tab" element={<AuthLayoutWrapper><LabsGuard feature="collections"><Collections /></LabsGuard></AuthLayoutWrapper>} />
       {/* Backward compatibility */}
-      <Route path="/archive" element={<AuthGate><LabsGuard feature="collections"><Collections /></LabsGuard></AuthGate>} />
-      <Route path="/recipes/new" element={<AuthGate><LabsGuard feature="collections"><RecipeWizard /></LabsGuard></AuthGate>} />
-      <Route path="/recipes/:id" element={<AuthGate><LabsGuard feature="collections"><RecipeDetail /></LabsGuard></AuthGate>} />
-      <Route path="/recipes/:id/edit" element={<AuthGate><LabsGuard feature="collections"><RecipeEdit /></LabsGuard></AuthGate>} />
-      <Route path="/recipes/:id/cook" element={<AuthGate><LabsGuard feature="collections"><CookMode /></LabsGuard></AuthGate>} />
-      <Route path="/objects/new" element={<AuthGate><LabsGuard feature="collections"><ObjectsNew /></LabsGuard></AuthGate>} />
-      <Route path="/things/:id" element={<AuthGate><LabsGuard feature="collections"><ThingDetail /></LabsGuard></AuthGate>} />
-      <Route path="/things/:id/edit" element={<AuthGate><LabsGuard feature="collections"><ThingEdit /></LabsGuard></AuthGate>} />
-      <Route path="/properties" element={<AuthGate><LabsGuard feature="collections"><Properties /></LabsGuard></AuthGate>} />
-      <Route path="/properties/new" element={<AuthGate><LabsGuard feature="collections"><PropertyNew /></LabsGuard></AuthGate>} />
-      <Route path="/properties/:id/edit" element={<AuthGate><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/PropertyEdit')} /></LabsGuard></AuthGate>} />
-      <Route path="/properties/:id" element={<AuthGate><LabsGuard feature="collections"><PropertyDetail /></LabsGuard></AuthGate>} />
-      <Route path="/pets" element={<AuthGate><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/Pets')} /></LabsGuard></AuthGate>} />
-      <Route path="/pets/new" element={<AuthGate><LabsGuard feature="collections"><PetNew /></LabsGuard></AuthGate>} />
-      <Route path="/pets/:id" element={<AuthGate><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/PetDetail')} /></LabsGuard></AuthGate>} />
-       <Route path="/pets/:id/edit" element={<AuthGate><LabsGuard feature="collections"><PetEdit /></LabsGuard></AuthGate>} />
-       <Route path="/capture" element={<AuthGate><Capture /></AuthGate>} />
-       <Route path="/media" element={<AuthGate><Media /></AuthGate>} />
-       <Route path="/media/albums" element={<AuthGate><Media /></AuthGate>} />
-        <Route path="/search" element={<AuthGate><SearchPage /></AuthGate>} />
+      <Route path="/archive" element={<AuthLayoutWrapper><LabsGuard feature="collections"><Collections /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/recipes/new" element={<AuthLayoutWrapper><LabsGuard feature="collections"><RecipeWizard /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/recipes/:id" element={<AuthLayoutWrapper><LabsGuard feature="collections"><RecipeDetail /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/recipes/:id/edit" element={<AuthLayoutWrapper><LabsGuard feature="collections"><RecipeEdit /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/recipes/:id/cook" element={<AuthLayoutWrapper><LabsGuard feature="collections"><CookMode /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/objects/new" element={<AuthLayoutWrapper><LabsGuard feature="collections"><ObjectsNew /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/things/:id" element={<AuthLayoutWrapper><LabsGuard feature="collections"><ThingDetail /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/things/:id/edit" element={<AuthLayoutWrapper><LabsGuard feature="collections"><ThingEdit /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/properties" element={<AuthLayoutWrapper><LabsGuard feature="collections"><Properties /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/properties/new" element={<AuthLayoutWrapper><LabsGuard feature="collections"><PropertyNew /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/properties/:id/edit" element={<AuthLayoutWrapper><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/PropertyEdit')} /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/properties/:id" element={<AuthLayoutWrapper><LabsGuard feature="collections"><PropertyDetail /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/pets" element={<AuthLayoutWrapper><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/Pets')} /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/pets/new" element={<AuthLayoutWrapper><LabsGuard feature="collections"><PetNew /></LabsGuard></AuthLayoutWrapper>} />
+      <Route path="/pets/:id" element={<AuthLayoutWrapper><LabsGuard feature="collections"><LazyRoute factory={() => import('./pages/PetDetail')} /></LabsGuard></AuthLayoutWrapper>} />
+       <Route path="/pets/:id/edit" element={<AuthLayoutWrapper><LabsGuard feature="collections"><PetEdit /></LabsGuard></AuthLayoutWrapper>} />
+       <Route path="/capture" element={<AuthLayoutWrapper><Capture /></AuthLayoutWrapper>} />
+       <Route path="/media" element={<AuthLayoutWrapper><Media /></AuthLayoutWrapper>} />
+       <Route path="/media/albums" element={<AuthLayoutWrapper><Media /></AuthLayoutWrapper>} />
+        <Route path="/search" element={<AuthLayoutWrapper><SearchPage /></AuthLayoutWrapper>} />
        <Route path="/digest/pause" element={<LazyRoute factory={() => import('./pages/DigestPause')} />} />
        <Route path="/invite/:token" element={<InviteRedeem />} />
       
