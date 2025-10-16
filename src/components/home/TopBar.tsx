@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Search, Plus, User, UserCircle, Settings as SettingsIcon, Users, LogOut, CreditCard, FlaskConical, Shield } from 'lucide-react'
+import { Bell, Plus, User, UserCircle, Settings as SettingsIcon, Users, LogOut, CreditCard, FlaskConical, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { routes } from '@/lib/routes'
@@ -17,7 +17,6 @@ import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/integrations/supabase/client'
 import { getSignedMediaUrl } from '@/lib/media'
 import { useNavigate } from 'react-router-dom'
-import CommandPalette from '@/components/search/CommandPalette'
 
 interface TopBarProps {
   familyId: string
@@ -30,7 +29,6 @@ export function TopBar({ familyId, userId }: TopBarProps) {
   const [profile, setProfile] = useState<any>(null)
   const [families, setFamilies] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string>('')
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null)
@@ -241,18 +239,6 @@ export function TopBar({ familyId, userId }: TopBarProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Global Search/Command */}
-          <div className="flex-1 px-2 sm:px-4">
-            <Button
-              variant="outline"
-              className="w-full max-w-lg justify-start text-sm text-muted-foreground"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search stories, people, events"
-            >
-              <Search className="mr-2 h-4 w-4 shrink-0" />
-              <span className="truncate">Search stories, people, events...</span>
-            </Button>
-          </div>
 
           {/* Notifications */}
           <Button
@@ -318,12 +304,6 @@ export function TopBar({ familyId, userId }: TopBarProps) {
           </DropdownMenu>
         </div>
       </header>
-
-      {/* Search Command Palette */}
-      <CommandPalette 
-        isOpen={searchOpen} 
-        onClose={() => setSearchOpen(false)} 
-      />
     </>
   )
 }
