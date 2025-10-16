@@ -11,13 +11,15 @@ import { useWriteProtection } from '@/hooks/useWriteProtection'
 
 interface Comment {
   id: string
-  content: string
+  content: string | null
   created_at: string
   profile_id: string
   profiles: {
     full_name: string
     avatar_url: string | null
   }
+  // Optional voice data resolved client-side
+  voice?: { url: string; duration_seconds?: number } | null
 }
 
 interface StoryCommentsProps {
@@ -63,7 +65,29 @@ export function StoryComments({ storyId, familyId }: StoryCommentsProps) {
         .order('created_at', { ascending: true })
 
       if (error) throw error
-      setComments(data || [])
+
+      const commentsData: Comment[] = (data || [])
+
+      // Fetch voice recordings linked via draft_data.comment_id
+      const { data: recordings } = await supabase
+        .from('audio_recordings')
+        .select('audio_url, duration_seconds, draft_data')
+        .eq('story_id', storyId)
+
+      const byCommentId = new Map<string, { url: string; duration_seconds?: number }>()
+      ;(recordings || []).forEach((rec: any) => {
+        const cid = rec?.draft_data?.comment_id
+        if (cid) {
+          byCommentId.set(cid, { url: rec.audio_url, duration_seconds: rec.duration_seconds })
+        }
+      })
+
+      const merged = commentsData.map((c) => ({
+        ...c,
+        voice: byCommentId.get(c.id) || null,
+      }))
+
+      setComments(merged)
     } catch (error) {
       console.error('Error fetching comments:', error)
       toast({
@@ -184,9 +208,24 @@ export function StoryComments({ storyId, familyId }: StoryCommentsProps) {
                       })}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {comment.content}
-                  </p>
+                  {comment.voice?.url ? (
+                    <div className="bg-muted/50 rounded-md p-2">
+                      <audio
+                        src={comment.voice.url}
+                        controls
+                        className="w-full max-w-md h-8"
+                        preload="metadata"
+                        aria-label="Voice message"
+                      />
+                      {comment.content && (
+                        <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{comment.content}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {comment.content}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

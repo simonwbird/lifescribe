@@ -70,12 +70,30 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
   const loadComments = async () => {
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles(full_name, avatar_url), audio_recordings(audio_url, duration_seconds)')
+      .select('*, profiles(full_name, avatar_url)')
       .eq('story_id', item.id)
       .order('created_at', { ascending: false })
       .limit(showAllComments ? 100 : 2)
+
+    const commentsData = data || []
+
+    const { data: recordings } = await supabase
+      .from('audio_recordings')
+      .select('audio_url, duration_seconds, draft_data')
+      .eq('story_id', item.id)
+
+    const byCommentId = new Map<string, { url: string; duration_seconds?: number }>()
+    ;(recordings || []).forEach((rec: any) => {
+      const cid = rec?.draft_data?.comment_id
+      if (cid) byCommentId.set(cid, { url: rec.audio_url, duration_seconds: rec.duration_seconds })
+    })
+
+    const merged = commentsData.map((c: any) => ({
+      ...c,
+      voice: byCommentId.get(c.id) || null,
+    }))
     
-    setComments(data || [])
+    setComments(merged)
   }
 
   const handleLike = async () => {
@@ -355,10 +373,10 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
                   <p className="text-xs">
                     <span className="font-semibold">{comment.profiles?.full_name}</span>
                   </p>
-                  {comment.audio_recordings && comment.audio_recordings.length > 0 ? (
+                  {comment.voice?.url ? (
                     <div className="bg-muted/50 rounded-lg p-2">
                       <audio 
-                        src={comment.audio_recordings[0].audio_url} 
+                        src={comment.voice.url} 
                         controls 
                         className="w-full max-w-xs h-8"
                         preload="metadata"

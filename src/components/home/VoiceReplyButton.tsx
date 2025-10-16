@@ -98,19 +98,8 @@ export function VoiceReplyButton({ storyId, familyId, onReplySent }: VoiceReplyB
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Upload to storage
-      const fileName = `${storyId}-${Date.now()}.webm`
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(`voice-replies/${fileName}`, blob, {
-          contentType: 'audio/webm',
-          upsert: false
-        })
-
-      if (uploadError) throw uploadError
-
-      // Create comment with audio reference
-      const { error: commentError } = await supabase
+      // First create the comment to get its id
+      const { data: insertedComment, error: commentInsertError } = await supabase
         .from('comments')
         .insert({
           story_id: storyId,
@@ -118,8 +107,45 @@ export function VoiceReplyButton({ storyId, familyId, onReplySent }: VoiceReplyB
           profile_id: user.id,
           content: `[Voice message - ${(recordingTime / 1000).toFixed(1)}s]`
         })
+        .select('id')
+        .single()
 
-      if (commentError) throw commentError
+      if (commentInsertError) throw commentInsertError
+
+      // Upload to storage
+      const fileName = `${storyId}-${Date.now()}.webm`
+      const storagePath = `voice-replies/${fileName}`
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(storagePath, blob, {
+          contentType: 'audio/webm',
+          upsert: false
+        })
+
+      if (uploadError) throw uploadError
+
+      // Resolve a public URL for playback
+      const { data: pub } = supabase.storage
+        .from('media')
+        .getPublicUrl(storagePath)
+
+      const publicUrl = pub?.publicUrl
+
+      // Create an audio_recordings row linked to this comment via draft_data
+      if (publicUrl) {
+        await supabase
+          .from('audio_recordings')
+          .insert({
+            story_id: storyId,
+            family_id: familyId,
+            created_by: user.id,
+            audio_url: publicUrl,
+            duration_seconds: Math.round(recordingTime / 1000),
+            is_draft: false,
+            status: 'complete',
+            draft_data: { comment_id: insertedComment.id }
+          })
+      }
 
       toast({
         title: "Voice reply sent! 🎤",
