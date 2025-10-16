@@ -65,7 +65,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
 
   useEffect(() => {
     loadComments()
-  }, [item.id])
+  }, [item.id, showAllComments])
 
   const loadComments = async () => {
     const { data } = await supabase
