@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Search, Plus, User } from 'lucide-react'
+import { Bell, Search, Plus, User, UserCircle, Settings as SettingsIcon, Users, LogOut, CreditCard, FlaskConical, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { routes } from '@/lib/routes'
@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/integrations/supabase/client'
@@ -29,11 +30,15 @@ export function TopBar({ familyId, userId }: TopBarProps) {
   const [families, setFamilies] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
     loadProfile()
     loadFamilies()
     loadNotifications()
+    loadUserEmail()
+    checkSuperAdmin()
   }, [userId, familyId])
 
   async function loadProfile() {
@@ -43,6 +48,23 @@ export function TopBar({ familyId, userId }: TopBarProps) {
       .eq('id', userId)
       .single()
     if (data) setProfile(data)
+  }
+
+  async function loadUserEmail() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.email) setUserEmail(user.email)
+  }
+
+  async function checkSuperAdmin() {
+    const { data } = await supabase
+      .from('profiles')
+      .select('settings')
+      .eq('id', userId)
+      .single()
+    
+    if (data?.settings && typeof data.settings === 'object' && 'role' in data.settings) {
+      setIsSuperAdmin((data.settings as any).role === 'super_admin')
+    }
   }
 
   async function loadFamilies() {
@@ -58,6 +80,11 @@ export function TopBar({ familyId, userId }: TopBarProps) {
   async function loadNotifications() {
     // Placeholder - would query notifications table
     setUnreadCount(0)
+  }
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    navigate('/login')
   }
 
   return (
@@ -84,29 +111,79 @@ export function TopBar({ familyId, userId }: TopBarProps) {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Switch Family</DropdownMenuLabel>
+            <DropdownMenuContent align="start" className="w-64 bg-popover z-50">
+              {/* User Info Header */}
+              <div className="px-2 py-3">
+                <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>
+                <p className="text-xs text-muted-foreground">{userEmail}</p>
+              </div>
+              
               <DropdownMenuSeparator />
+              
+              {/* My Profile */}
+              <DropdownMenuItem onClick={() => navigate('/me')} className="cursor-pointer">
+                <UserCircle className="mr-2 h-4 w-4" />
+                My profile
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Your Family Section */}
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                YOUR FAMILY
+              </DropdownMenuLabel>
+              
               {families.map((family: any) => (
                 <DropdownMenuItem
                   key={family.id}
                   onClick={() => {
-                    // Switch family context
-                    window.location.href = `/home?family=${family.id}`
+                    window.location.href = `/home-v2?family=${family.id}`
                   }}
-                  className={family.id === familyId ? 'bg-muted' : ''}
+                  className="cursor-pointer"
                 >
+                  <Users className="mr-2 h-4 w-4" />
                   {family.name}
                   {family.id === familyId && (
-                    <Badge variant="secondary" className="ml-auto">
-                      Active
-                    </Badge>
+                    <span className="ml-auto h-2 w-2 rounded-full bg-green-500" />
                   )}
                 </DropdownMenuItem>
               ))}
+              
+              {/* Labs */}
+              <DropdownMenuItem onClick={() => navigate('/labs')} className="cursor-pointer">
+                <FlaskConical className="mr-2 h-4 w-4" />
+                <span>Labs</span>
+                <span className="ml-auto text-xs text-muted-foreground">(experimental)</span>
+              </DropdownMenuItem>
+              
+              {/* Super Admin - Only show if user is super admin */}
+              {isSuperAdmin && (
+                <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                  <Shield className="mr-2 h-4 w-4 text-destructive" />
+                  <span className="text-destructive">Super Admin</span>
+                </DropdownMenuItem>
+              )}
+              
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate(routes.settings())}>
+              
+              {/* Settings */}
+              <DropdownMenuItem onClick={() => navigate(routes.settings())} className="cursor-pointer">
+                <SettingsIcon className="mr-2 h-4 w-4" />
                 Settings
+              </DropdownMenuItem>
+              
+              {/* Billing */}
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=billing')} className="cursor-pointer">
+                <CreditCard className="mr-2 h-4 w-4" />
+                Billing
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Sign Out */}
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
