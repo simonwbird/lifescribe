@@ -54,7 +54,7 @@ export default function LifeScribeHeader() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const [profileData, memberData, profileSettings, personData] = await Promise.all([
+      const [profileData, memberData, profileSettings, familyData, personLink] = await Promise.all([
         supabase
           .from('profiles')
           .select('full_name, avatar_url')
@@ -69,15 +69,34 @@ export default function LifeScribeHeader() {
           .select('settings')
           .eq('id', user.id)
           .single(),
-        // Get the person record where this user is the owner
+        // Get first family ID
         supabase
-          .from('person_roles')
-          .select('person_id, people(avatar_url, family_id)')
+          .from('members')
+          .select('family_id')
           .eq('profile_id', user.id)
-          .eq('role', 'owner')
           .limit(1)
-          .single()
+          .single(),
+        // Get the person record linked to this user
+        supabase
+          .from('person_user_links')
+          .select('person_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle()
       ]);
+
+      let personAvatarUrl = null;
+      if (personLink.data?.person_id && familyData.data?.family_id) {
+        // Get person's avatar
+        const { data: personData } = await supabase
+          .from('people')
+          .select('avatar_url')
+          .eq('id', personLink.data.person_id)
+          .eq('family_id', familyData.data.family_id)
+          .single();
+        
+        personAvatarUrl = personData?.avatar_url || null;
+      }
 
       const isSuperAdmin = profileSettings.data?.settings && 
         typeof profileSettings.data.settings === 'object' && 
@@ -89,7 +108,7 @@ export default function LifeScribeHeader() {
         families: memberData.data,
         email: user.email || null,
         isSuperAdmin: isSuperAdmin || false,
-        personAvatarUrl: (personData.data?.people as any)?.avatar_url || null
+        personAvatarUrl: personAvatarUrl
       };
     },
   });
