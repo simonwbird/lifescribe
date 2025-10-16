@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/integrations/supabase/client'
+import { getSignedMediaUrl } from '@/lib/media'
 import { useNavigate } from 'react-router-dom'
 import CommandPalette from '@/components/search/CommandPalette'
 
@@ -32,6 +33,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string>('')
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
     loadProfile()
@@ -39,6 +41,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
     loadNotifications()
     loadUserEmail()
     checkSuperAdmin()
+    loadPersonAvatar()
   }, [userId, familyId])
 
   async function loadProfile() {
@@ -48,6 +51,43 @@ export function TopBar({ familyId, userId }: TopBarProps) {
       .eq('id', userId)
       .single()
     if (data) setProfile(data)
+  }
+
+  async function loadPersonAvatar() {
+    try {
+      // Get the person record linked to this user
+      const { data: personLink } = await supabase
+        .from('person_user_links')
+        .select('person_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle()
+
+      if (personLink?.person_id && familyId) {
+        // Get person's avatar
+        const { data: personData } = await supabase
+          .from('people')
+          .select('avatar_url')
+          .eq('id', personLink.person_id)
+          .eq('family_id', familyId)
+          .single()
+
+        if (personData?.avatar_url) {
+          const avatarUrl = personData.avatar_url
+
+          // If it's already a full URL, use it directly
+          if (avatarUrl.startsWith('http')) {
+            setResolvedAvatarUrl(avatarUrl)
+          } else {
+            // If it's a storage path, get signed URL
+            const signedUrl = await getSignedMediaUrl(avatarUrl, familyId)
+            setResolvedAvatarUrl(signedUrl)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading person avatar:', error)
+    }
   }
 
   async function loadUserEmail() {
@@ -104,7 +144,7 @@ export function TopBar({ familyId, userId }: TopBarProps) {
                 aria-label="Switch family or view settings"
               >
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                  <AvatarImage src={resolvedAvatarUrl || profile?.avatar_url || ''} alt={profile?.full_name} />
                   <AvatarFallback>
                     {profile?.full_name?.charAt(0) || <User className="h-4 w-4" />}
                   </AvatarFallback>
