@@ -8,7 +8,11 @@ import {
   Settings,
   LogOut,
   User,
-  Users
+  Users,
+  UserCircle,
+  FlaskConical,
+  Shield,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +35,8 @@ import { QuickAddButton } from '@/components/quick-add/QuickAddButton';
 interface UserData {
   profile: { full_name: string; avatar_url: string } | null;
   families: any[] | null;
+  email: string | null;
+  isSuperAdmin: boolean;
 }
 
 export default function LifeScribeHeader() {
@@ -45,7 +51,7 @@ export default function LifeScribeHeader() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const [profileData, memberData] = await Promise.all([
+      const [profileData, memberData, profileSettings] = await Promise.all([
         supabase
           .from('profiles')
           .select('full_name, avatar_url')
@@ -54,12 +60,24 @@ export default function LifeScribeHeader() {
         supabase
           .from('members')
           .select('family_id, families(name)')
-          .eq('profile_id', user.id)
+          .eq('profile_id', user.id),
+        supabase
+          .from('profiles')
+          .select('settings')
+          .eq('id', user.id)
+          .single()
       ]);
+
+      const isSuperAdmin = profileSettings.data?.settings && 
+        typeof profileSettings.data.settings === 'object' && 
+        'role' in profileSettings.data.settings &&
+        (profileSettings.data.settings as any).role === 'super_admin';
 
       return {
         profile: profileData.data,
         families: memberData.data,
+        email: user.email || null,
+        isSuperAdmin: isSuperAdmin || false
       };
     },
   });
@@ -198,34 +216,84 @@ export default function LifeScribeHeader() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-background">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {userData?.profile?.full_name || 'User'}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    Manage your account
-                  </p>
-                </div>
-              </DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-64 bg-popover z-50">
+              {/* User Info Header */}
+              <div className="px-2 py-3">
+                <p className="text-sm font-medium">
+                  {userData?.profile?.full_name || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {userData?.email || ''}
+                </p>
+              </div>
+              
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/me')}>
-                <User className="mr-2 h-4 w-4" aria-hidden="true" />
-                Profile
+              
+              {/* My Profile */}
+              <DropdownMenuItem onClick={() => navigate('/me')} className="cursor-pointer">
+                <UserCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+                My profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Your Family Section */}
+              {userData?.families && userData.families.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                    YOUR FAMILY
+                  </DropdownMenuLabel>
+                  
+                  {userData.families.map((member: any) => (
+                    <DropdownMenuItem
+                      key={member.family_id}
+                      onClick={() => navigate(`/home-v2?family=${member.family_id}`)}
+                      className="cursor-pointer"
+                    >
+                      <Users className="mr-2 h-4 w-4" aria-hidden="true" />
+                      {member.families?.name || 'Unnamed Family'}
+                      {/* Green dot indicator for active family could go here */}
+                      <span className="ml-auto h-2 w-2 rounded-full bg-green-500" />
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              
+              {/* Labs */}
+              <DropdownMenuItem onClick={() => navigate('/labs')} className="cursor-pointer">
+                <FlaskConical className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>Labs</span>
+                <span className="ml-auto text-xs text-muted-foreground">(experimental)</span>
+              </DropdownMenuItem>
+              
+              {/* Super Admin - Only show if user is super admin */}
+              {userData?.isSuperAdmin && (
+                <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                  <Shield className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
+                  <span className="text-destructive">Super Admin</span>
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator />
+              
+              {/* Settings */}
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/families/switch')}>
-                <Users className="mr-2 h-4 w-4" aria-hidden="true" />
-                Switch Family
+              
+              {/* Billing */}
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=billing')} className="cursor-pointer">
+                <CreditCard className="mr-2 h-4 w-4" aria-hidden="true" />
+                Billing
               </DropdownMenuItem>
+              
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              
+              {/* Sign Out */}
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-                Sign Out
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
