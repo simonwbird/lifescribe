@@ -85,7 +85,7 @@ export function AppHeader() {
           <span className="hidden sm:inline text-lg font-serif font-bold">LifeScribe</span>
         </LSLink>
 
-        {/* Center: Search */}
+        {/* Global Search/Command */}
         <div className="flex-1 px-2 sm:px-4">
           <Button
             variant="outline"
