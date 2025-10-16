@@ -228,8 +228,10 @@ export function LeftNav() {
           )}
         </div>
         
-        {/* Personal Section */}
-        <SidebarGroup>
+        {/* Navigation Sections */}
+        <div className={cn(open && "pl-3")}>
+          {/* Personal Section */}
+          <SidebarGroup>
           {open && <SidebarGroupLabel>Personal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
@@ -324,6 +326,7 @@ export function LeftNav() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        </div>
       </SidebarContent>
     </Sidebar>
   )
