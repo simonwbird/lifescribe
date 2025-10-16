@@ -75,15 +75,7 @@ export default function HomeV2() {
 
   const handleShuffle = async () => {
     try {
-      // If a prompt is showing, mark it completed so the next one becomes default
-      if (todaysPrompt?.id) {
-        await markCompleted(todaysPrompt.id)
-      }
-
-      // Refetch to get the latest available prompts
-      await refetch()
-      
-      // Get all open prompts for shuffling
+      // Get all open prompts for shuffling (excluding current one)
       const { data: openPrompts, error } = await supabase
         .from('prompt_instances')
         .select(`
@@ -102,27 +94,26 @@ export default function HomeV2() {
         `)
         .eq('family_id', familyId)
         .eq('status', 'open')
+        .neq('id', todaysPrompt?.id || '')
         .order('created_at', { ascending: true })
 
       if (error) throw error
       
-      if (openPrompts && openPrompts.length === 0) {
+      if (!openPrompts || openPrompts.length === 0) {
         toast({
-          title: "Marked as completed",
-          description: "All prompts done for now. 🎉",
+          title: "No more prompts",
+          description: "This is the only available prompt right now.",
         })
         return
       }
       
-      if (openPrompts && openPrompts.length > 0) {
-        // Pick the first open (oldest) as the new default
-        const next = openPrompts[0]
-        queryClient.setQueryData(['todays-prompt', familyId], next)
-        toast({
-          title: "Marked as completed",
-          description: "Loaded your next prompt.",
-        })
-      }
+      // Pick the first open (oldest) as the new prompt
+      const next = openPrompts[0]
+      queryClient.setQueryData(['todays-prompt', familyId], next)
+      toast({
+        title: "Shuffled",
+        description: "Showing a different prompt.",
+      })
     } catch (error) {
       console.error('Error shuffling prompt:', error)
       toast({
