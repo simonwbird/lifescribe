@@ -111,7 +111,14 @@ export default function DraftsPage() {
       
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Story Drafts</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold">Story Drafts</h1>
+            {drafts.length > 0 && (
+              <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-medium">
+                {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
+              </span>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Resume your unfinished stories
           </p>
