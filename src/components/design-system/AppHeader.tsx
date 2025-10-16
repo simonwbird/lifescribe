@@ -87,17 +87,15 @@ export function AppHeader() {
 
         {/* Center: Search */}
         <div className="flex-1 flex justify-center px-4">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-lg">
             <Button
               variant="outline"
-              className="w-full justify-start text-muted-foreground hover:text-foreground"
+              className="w-full justify-start text-sm text-muted-foreground"
               onClick={() => setShowSearch(true)}
+              aria-label="Search stories, people, events"
             >
-              <Search className="h-4 w-4 mr-2" />
-              <span>Search or type a command...</span>
-              <kbd className="pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                <span className="text-xs">⌘K</span>
-              </kbd>
+              <Search className="h-4 w-4 mr-2 shrink-0" />
+              <span className="truncate">Search stories, people, events...</span>
             </Button>
           </div>
         </div>
