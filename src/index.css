@@ -739,6 +739,18 @@ img, video {
   50% { opacity: .5; }
 }
 
+/* Gentle pulsing halo animation for Start Recording button */
+@keyframes gentle-pulse {
+  0%, 100% { 
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.15;
+    transform: scale(1.05);
+  }
+}
+
 /* Enhanced accessibility focus states */
 button:focus-visible,
 input:focus-visible,

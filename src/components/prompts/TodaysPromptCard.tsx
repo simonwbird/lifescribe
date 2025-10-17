@@ -692,15 +692,24 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
           {/* Main CTAs - only show when idle */}
           {recordingState === 'idle' && (
             <>
-              {/* Main CTA - Large, high-contrast button */}
-              <Button 
-                onClick={handleStartRecording}
-                className="w-full h-16 text-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
-                size="lg"
-              >
-                <Mic className="h-6 w-6 mr-3" />
-                Start Recording
-              </Button>
+              {/* Main CTA - Large, high-contrast button with pulsing halo */}
+              <div className="relative group">
+                {/* Pulsing halo - pauses on hover */}
+                <div 
+                  className="absolute -inset-1 bg-primary/15 rounded-2xl blur-lg group-hover:animate-none"
+                  style={{
+                    animation: 'gentle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }}
+                />
+                <Button 
+                  onClick={handleStartRecording}
+                  className="relative w-full h-16 text-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
+                  size="lg"
+                >
+                  <Mic className="h-6 w-6 mr-3" />
+                  Start Recording
+                </Button>
+              </div>
 
               {/* Secondary action */}
               <div className="flex justify-center">
