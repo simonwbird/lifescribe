@@ -16,11 +16,10 @@ export function AppLayout({ children, showSidebar = true, showHeader = true }: A
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full justify-center">
-        <div className="flex w-full max-w-[1400px]">
-          <LeftNav />
-          
-          <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-h-screen w-full">
+        <LeftNav />
+        
+        <div className="flex-1 flex flex-col min-w-0">
           {showHeader && (
             <header 
               role="banner"
@@ -36,7 +35,6 @@ export function AppLayout({ children, showSidebar = true, showHeader = true }: A
           <div className="flex-1">
             {children}
           </div>
-        </div>
         </div>
       </div>
     </SidebarProvider>
