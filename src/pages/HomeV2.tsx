@@ -198,32 +198,20 @@ export default function HomeV2() {
         <TopBar familyId={familyId} userId={userId} />
       </div>
       
-      {/* Today's Prompt Section */}
+      {/* TIER 1: Hero Section - Full width of main, no right rail */}
       <div className="w-full pt-6 border-b pb-6">
-        <div className="px-4 sm:px-6 xl:px-6">
-          <div className="xl:grid xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:gap-x-8 xl:max-w-[1600px]">
-            {/* Spacer for left sidebar on xl */}
-            <div className="hidden xl:block" />
-            
-            {/* Prompt content */}
-            <div className="max-w-4xl">
-              <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
-            </div>
-            
-            {/* Spacer for right rail on xl */}
-            <div className="hidden xl:block" />
+        <div className="px-4 sm:px-6 lg:pl-8 lg:pr-8">
+          <div className="max-w-3xl">
+            <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
           </div>
         </div>
       </div>
 
-      {/* Main 3-column grid: Sidebar + Feed + Right Rail */}
-      <div className="px-4 sm:px-6 xl:px-6 py-6">
-        <div className="xl:grid xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:gap-x-8 xl:max-w-[1600px]">
-          {/* Spacer for left sidebar on xl (sidebar is in AppLayout) */}
-          <div className="hidden xl:block" />
-          
-          {/* Main Feed */}
-          <main role="main" aria-label="Story feed" className="space-y-4 min-w-0 max-w-4xl">
+      {/* TIER 2: Content Body - Inner grid with feed + right rail */}
+      <div className="px-4 sm:px-6 lg:pl-8 lg:pr-8 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-x-8">
+          {/* Left: Main Feed */}
+          <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
             {/* Voice Capture Toggle */}
             {!showVoiceCapture}
 
@@ -233,7 +221,7 @@ export default function HomeV2() {
             <SmartFeed familyId={familyId} userId={userId} />
           </main>
 
-          {/* Right Rail (Desktop only - xl and up) */}
+          {/* Right Rail (xl and up only) */}
           <aside 
             className="hidden xl:block border-l border-neutral-200/60 dark:border-neutral-800 pl-6"
             aria-label="Context"

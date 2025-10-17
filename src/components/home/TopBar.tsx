@@ -123,14 +123,8 @@ export function TopBar({
     navigate('/login');
   }
   return <header role="banner" className="w-full border-b bg-background" aria-label="LifeScribe navigation bar">
-      <div className="px-4 sm:px-6 xl:px-6">
-        <div className="xl:grid xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:gap-x-8 xl:max-w-[1600px]">
-          <div className="hidden xl:block" />
-          <div className="max-w-4xl">
-            {/* TopBar content would go here if there was any */}
-          </div>
-          <div className="hidden xl:block" />
-        </div>
+      <div className="px-4 sm:px-6 lg:pl-8 lg:pr-8">
+        {/* TopBar content would go here if there was any */}
       </div>
     </header>;
 }
