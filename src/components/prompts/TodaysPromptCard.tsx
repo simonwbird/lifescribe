@@ -511,36 +511,46 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                 </h1>
               </div>
               
-              {/* Right Zone: Controls Bar */}
-              <div className="flex items-center gap-3 justify-end bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-3 py-1.5 shadow-sm">
-                <ListenButton
-                  text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
-                  promptId={promptInstance.id}
-                  size="sm"
-                  showLabel
-                  className="h-9 px-4 text-sm font-medium"
-                  onPlayStart={handleListenStart}
-                  onPlayEnd={handleListenEnd}
-                  persona={persona}
-                />
-                <Button
-                  variant="ghost" 
-                  size="sm" 
-                  className={cn(
-                    "gap-2 h-9 px-4",
-                    "transition-all duration-150 ease-out",
-                    "hover:bg-accent"
-                  )}
-                  onClick={handleShuffle}
-                  disabled={!onShuffle || recordingState !== 'idle'}
-                  title="Get a different prompt."
-                >
-                  <Shuffle className={cn(
-                    "h-4 w-4 transition-transform duration-150 ease-out",
-                    isShuffling && "rotate-180"
-                  )} />
-                  Shuffle
-                </Button>
+              {/* Right Zone: Responsive Controls Toolbar */}
+              <div 
+                role="toolbar" 
+                aria-label="Prompt controls"
+                className="flex flex-wrap items-center gap-2 md:gap-3 justify-start md:justify-end min-w-0"
+              >
+                <div className="rounded-xl bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 p-1 md:p-1.5 flex items-center gap-2">
+                  <ListenButton
+                    text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
+                    promptId={promptInstance.id}
+                    size="sm"
+                    showLabel
+                    className="h-9 md:h-10 px-2.5 md:px-3 text-sm md:text-base font-medium rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 shadow-sm shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:hidden [&>span:first-of-type]:xs:inline [&>span:first-of-type]:sm:hidden [&>span:last-of-type]:hidden [&>span:last-of-type]:sm:inline"
+                    onPlayStart={handleListenStart}
+                    onPlayEnd={handleListenEnd}
+                    persona={persona}
+                  />
+                  <Button
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "inline-flex items-center gap-2 h-9 md:h-10 px-2.5 md:px-3",
+                      "rounded-xl border border-neutral-200 dark:border-neutral-700",
+                      "bg-neutral-50 dark:bg-neutral-900 shadow-sm shrink-0",
+                      "text-sm md:text-base font-medium",
+                      "transition-all duration-150 ease-out hover:bg-accent",
+                      "focus:outline-none focus:ring-2 focus:ring-primary/60"
+                    )}
+                    onClick={handleShuffle}
+                    disabled={!onShuffle || recordingState !== 'idle'}
+                    title="Get a different prompt"
+                    aria-label="Shuffle to get a different prompt"
+                  >
+                    <Shuffle className={cn(
+                      "h-4 w-4 transition-transform duration-150 ease-out shrink-0",
+                      isShuffling && "rotate-180"
+                    )} />
+                    <span className="hidden xs:inline">Shuffle</span>
+                  </Button>
+                </div>
               </div>
             </div>
             

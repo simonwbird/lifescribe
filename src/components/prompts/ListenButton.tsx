@@ -128,7 +128,12 @@ export function ListenButton({
               size === 'icon' ? 'h-5 w-5' : 'h-4 w-4',
               showLabel && 'mr-2'
             )} />
-            {showLabel && `Listen (${estimatedDuration}s)`}
+            {showLabel && (
+              <>
+                <span className="hidden xs:inline sm:hidden">Listen</span>
+                <span className="hidden sm:inline">{`Listen (${estimatedDuration}s)`}</span>
+              </>
+            )}
           </>
         )}
       </Button>
