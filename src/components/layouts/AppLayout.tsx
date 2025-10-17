@@ -16,14 +16,14 @@ export function AppLayout({ children, showSidebar = true, showHeader = true }: A
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full">
+      <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr] lg:gap-x-6 xl:gap-x-8">
         <LeftNav />
         
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex flex-col min-w-0 border-l border-neutral-200/60 dark:border-neutral-800">
           {showHeader && (
             <header 
               role="banner"
-              className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur px-4"
+              className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur px-4 lg:hidden"
             >
               <SidebarTrigger className="shrink-0">
                 <Menu className="h-5 w-5" />

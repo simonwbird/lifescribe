@@ -177,8 +177,8 @@ export function LeftNav() {
 
   const getNavClasses = (active: boolean) =>
     cn(
-      'transition-colors',
-      active && 'bg-accent text-accent-foreground font-medium'
+      'transition-colors hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70',
+      active && 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium'
     )
 
   // Group items by section
@@ -194,11 +194,11 @@ export function LeftNav() {
   return (
     <Sidebar
       className={cn(
-        'border-r transition-all duration-300',
+        'transition-all duration-300 lg:w-[220px] xl:w-[240px]',
         open ? 'w-52' : 'w-14'
       )}
       collapsible="icon"
-      aria-label="Main navigation"
+      aria-label="Primary"
     >
       <SidebarContent>
         {/* Logo Section */}
@@ -230,7 +230,7 @@ export function LeftNav() {
         
         {/* Personal Section */}
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="pl-3">Personal</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="pl-3 pt-2 text-neutral-700 dark:text-neutral-300 font-medium">Personal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {personalItems.map((item) => {
@@ -264,7 +264,7 @@ export function LeftNav() {
 
         {/* Family Section */}
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="pl-3">Family</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="pl-3 pt-2 text-neutral-700 dark:text-neutral-300 font-medium">Family</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {familyItems.map((item) => {
@@ -298,7 +298,7 @@ export function LeftNav() {
 
         {/* Vault Section */}
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="pl-3">SafeBox</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="pl-3 pt-2 text-neutral-700 dark:text-neutral-300 font-medium">SafeBox</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {vaultItems.map((item) => {

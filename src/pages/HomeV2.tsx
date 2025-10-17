@@ -201,32 +201,34 @@ export default function HomeV2() {
       
 
       {/* Today's Prompt Section */}
-      <div className="container max-w-[1400px] px-4 pt-6 mx-auto">
-        <div className="max-w-[1100px] mx-auto">
+      <div className="w-full pt-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
         </div>
       </div>
 
       {/* Two-column layout: Feed + Right Rail */}
-      <div className="container max-w-[1400px] px-4 py-6 mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,680px)_320px] gap-6 max-w-[1100px] mx-auto">
-          {/* Left: Main Feed */}
-          <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
-            {/* Voice Capture Toggle */}
-            {!showVoiceCapture}
+      <div className="w-full py-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
+            {/* Left: Main Feed */}
+            <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
+              {/* Voice Capture Toggle */}
+              {!showVoiceCapture}
 
-            {/* Inline Voice Capture */}
-            {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
+              {/* Inline Voice Capture */}
+              {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
 
-            <SmartFeed familyId={familyId} userId={userId} />
-          </main>
+              <SmartFeed familyId={familyId} userId={userId} />
+            </main>
 
-          {/* Right: Widgets Rail (Desktop only) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <RightRail />
-            </div>
-          </aside>
+            {/* Right: Widgets Rail (Desktop only) */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-24">
+                <RightRail />
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
 
