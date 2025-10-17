@@ -176,6 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
 
     // Load extended user data on first load or explicit sign-in
+    // Skip TOKEN_REFRESHED and other events to prevent loading flicker
     if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
       const shouldLoad = event === 'SIGNED_IN' || !hasLoadedExtended.current
       if (shouldLoad) {
@@ -187,9 +188,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
               hasLoadedExtended.current = true
             })
         }, 0)
+      } else {
+        // Already loaded, ensure loading is false
+        setLoading(false)
+      }
+    } else {
+      // For TOKEN_REFRESHED and other events, ensure loading stays false if data already loaded
+      if (hasLoadedExtended.current) {
+        setLoading(false)
       }
     }
-    // Do nothing for TOKEN_REFRESHED to avoid flicker
   }, [fetchAllUserData])
 
   // Initialize auth state: subscribe first, then read session. Guard for StrictMode double-invoke.
