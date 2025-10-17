@@ -103,7 +103,7 @@ export default function LifeScribeHeader() {
     navigate('/auth/login');
   };
   return <header className={cn('sticky top-0 z-50 w-full border-b bg-background transition-all duration-300', isScrolled ? 'shadow-sm h-14 md:h-16' : 'h-14 md:h-16')} role="banner">
-      <div className="container flex h-full items-center justify-between gap-3 px-3 md:px-6">
+      <div className="flex h-full items-center justify-between gap-3 px-3 md:px-6">
         {/* Left Section: Logo & Family Switcher */}
         <div className="flex items-center gap-3 md:gap-4">
           {/* Logo */}
