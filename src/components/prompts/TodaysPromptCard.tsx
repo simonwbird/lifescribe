@@ -518,7 +518,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
             </div>
             
             {/* Controls - Stacked on mobile, horizontal on tablet+ */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2 items-end sm:static sm:flex-row sm:gap-3 sm:justify-end mt-2 sm:mt-0">
+            <div className="absolute top-4 right-4 flex flex-col gap-2 items-center sm:static sm:flex-row sm:gap-3 sm:justify-center mt-2 sm:mt-0">
               <ListenButton
                 text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
                 promptId={promptInstance.id}
