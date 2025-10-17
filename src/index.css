@@ -717,13 +717,14 @@ body[data-mode="simple"] .simple-only {
   }
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  :root {
-    --border: 0 0% 20%;
-    --ring: 0 0% 20%;
+/* Exception: allow motion for specific elements even in reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .allow-motion {
+    animation-duration: 3s !important;
+    animation-iteration-count: infinite !important;
   }
 }
+
 
 /* Performance optimizations */
 img, video {

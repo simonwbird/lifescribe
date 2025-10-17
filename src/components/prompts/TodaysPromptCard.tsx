@@ -696,7 +696,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               <div className="relative group">
                 {/* Pulsing halo - pauses on hover */}
                 <div 
-                  className="absolute -inset-2 rounded-2xl blur-xl bg-primary/40 pointer-events-none z-0 motion-safe:animate-[gentle-pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite] group-hover:animate-none group-active:animate-none"
+                  className="absolute -inset-2 rounded-2xl blur-xl bg-primary/40 pointer-events-none z-0 animate-[gentle-pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite] allow-motion group-hover:animate-none group-active:animate-none"
                 />
                 <Button 
                   onClick={handleStartRecording}
