@@ -500,30 +500,30 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       {/* Unified Prompt Card Container */}
       <Card className="rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 shadow-sm">
         <CardContent className="p-6 space-y-6">
-          {/* Header - Two-Zone Layout */}
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center md:gap-6">
-              {/* Left Zone: Title and Subtitle */}
-              <div className="flex-1 space-y-2 min-w-0">
+          {/* Header - Two-Zone Grid Layout */}
+          <div className="space-y-3 md:space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] items-start gap-3 md:gap-4">
+              {/* Left: Titles */}
+              <div className="min-w-0 space-y-2">
                 <h2 className="text-xl text-muted-foreground">Today's prompt</h2>
-                <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight">
+                <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight text-balance break-words">
                   {promptInstance.prompt.title}
                 </h1>
               </div>
               
-              {/* Right Zone: Responsive Controls Toolbar */}
-              <div 
-                role="toolbar" 
-                aria-label="Prompt controls"
-                className="flex flex-wrap items-center gap-2 justify-start md:justify-end shrink-0"
-              >
-                <div className="rounded-xl bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 p-1 md:p-1.5 flex items-center gap-2">
+              {/* Right: Controls */}
+              <div className="justify-self-end md:sticky md:top-20">
+                <div 
+                  role="toolbar" 
+                  aria-label="Prompt controls"
+                  className="flex flex-wrap items-center gap-2 md:gap-3 shrink-0 bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-2.5 py-1.5 md:px-3 md:py-1.5 shadow-sm"
+                >
                   <ListenButton
                     text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
                     promptId={promptInstance.id}
                     size="sm"
                     showLabel
-                    className="h-9 md:h-10 px-2.5 md:px-3 text-sm md:text-base font-medium rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 shadow-sm shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:hidden [&>span:first-of-type]:xs:inline [&>span:first-of-type]:sm:hidden [&>span:last-of-type]:hidden [&>span:last-of-type]:sm:inline"
+                    className="inline-flex items-center gap-2 h-9 md:h-10 px-2.5 md:px-3 text-sm md:text-base font-medium rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:hidden [&>span:first-of-type]:xs:inline [&>span:first-of-type]:sm:hidden [&>span:last-of-type]:hidden [&>span:last-of-type]:sm:inline"
                     onPlayStart={handleListenStart}
                     onPlayEnd={handleListenEnd}
                     persona={persona}
@@ -533,8 +533,8 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                     size="sm" 
                     className={cn(
                       "inline-flex items-center gap-2 h-9 md:h-10 px-2.5 md:px-3",
-                      "rounded-xl border border-neutral-200 dark:border-neutral-700",
-                      "bg-neutral-50 dark:bg-neutral-900 shadow-sm shrink-0",
+                      "rounded-lg border border-neutral-200 dark:border-neutral-700",
+                      "bg-white dark:bg-neutral-800 shrink-0",
                       "text-sm md:text-base font-medium",
                       "transition-all duration-150 ease-out hover:bg-accent",
                       "focus:outline-none focus:ring-2 focus:ring-primary/60"
