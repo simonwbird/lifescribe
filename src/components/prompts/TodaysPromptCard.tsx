@@ -502,9 +502,9 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
         <CardContent className="p-6 space-y-6">
           {/* Header - Two-Zone Layout */}
           <div className="space-y-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center md:gap-6">
               {/* Left Zone: Title and Subtitle */}
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 min-w-0">
                 <h2 className="text-xl text-muted-foreground">Today's prompt</h2>
                 <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight">
                   {promptInstance.prompt.title}
@@ -515,7 +515,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               <div 
                 role="toolbar" 
                 aria-label="Prompt controls"
-                className="flex flex-wrap items-center gap-2 md:gap-3 justify-start md:justify-end min-w-0"
+                className="flex flex-wrap items-center gap-2 justify-start md:justify-end shrink-0"
               >
                 <div className="rounded-xl bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 p-1 md:p-1.5 flex items-center gap-2">
                   <ListenButton
