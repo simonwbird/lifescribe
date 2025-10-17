@@ -135,11 +135,17 @@ export function HeroStrip({
     }
   }];
   return <div className="w-full border-b bg-background">
-      <div className="max-w-5xl px-4 sm:px-6 lg:pl-8 lg:pr-8 py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {tiles.map(tile => (
-            <HeroTileCard key={tile.id} tile={tile} />
-          ))}
+      <div className="px-4 sm:px-6 xl:px-6 py-4">
+        <div className="xl:grid xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:gap-x-8 xl:max-w-[1600px]">
+          <div className="hidden xl:block" />
+          <div className="max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {tiles.map(tile => (
+                <HeroTileCard key={tile.id} tile={tile} />
+              ))}
+            </div>
+          </div>
+          <div className="hidden xl:block" />
         </div>
       </div>
     </div>;

@@ -198,44 +198,57 @@ export default function HomeV2() {
         <TopBar familyId={familyId} userId={userId} />
       </div>
       
-      
-
       {/* Today's Prompt Section */}
-      <div className="w-full pt-6">
-        <div className="max-w-5xl px-4 sm:px-6 lg:pl-8 lg:pr-8">
-          <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
-        </div>
-      </div>
-
-      {/* Two-column layout: Feed + Right Rail */}
-      <div className="w-full py-6">
-        <div className="max-w-5xl px-4 sm:px-6 lg:pl-8 lg:pr-8">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
-            {/* Left: Main Feed */}
-            <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
-              {/* Voice Capture Toggle */}
-              {!showVoiceCapture}
-
-              {/* Inline Voice Capture */}
-              {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
-
-              <SmartFeed familyId={familyId} userId={userId} />
-            </main>
-
-            {/* Right: Widgets Rail (Desktop only) */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-24">
-                <RightRail />
-              </div>
-            </aside>
+      <div className="w-full pt-6 border-b pb-6">
+        <div className="px-4 sm:px-6 xl:px-6">
+          <div className="xl:grid xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:gap-x-8 xl:max-w-[1600px]">
+            {/* Spacer for left sidebar on xl */}
+            <div className="hidden xl:block" />
+            
+            {/* Prompt content */}
+            <div className="max-w-4xl">
+              <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
+            </div>
+            
+            {/* Spacer for right rail on xl */}
+            <div className="hidden xl:block" />
           </div>
         </div>
       </div>
 
-      {/* Mobile Tools Drawer */}
+      {/* Main 3-column grid: Sidebar + Feed + Right Rail */}
+      <div className="px-4 sm:px-6 xl:px-6 py-6">
+        <div className="xl:grid xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:gap-x-8 xl:max-w-[1600px]">
+          {/* Spacer for left sidebar on xl (sidebar is in AppLayout) */}
+          <div className="hidden xl:block" />
+          
+          {/* Main Feed */}
+          <main role="main" aria-label="Story feed" className="space-y-4 min-w-0 max-w-4xl">
+            {/* Voice Capture Toggle */}
+            {!showVoiceCapture}
+
+            {/* Inline Voice Capture */}
+            {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
+
+            <SmartFeed familyId={familyId} userId={userId} />
+          </main>
+
+          {/* Right Rail (Desktop only - xl and up) */}
+          <aside 
+            className="hidden xl:block border-l border-neutral-200/60 dark:border-neutral-800 pl-6"
+            aria-label="Context"
+          >
+            <div className="sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-auto space-y-4">
+              <RightRail />
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {/* Mobile Tools Drawer (hidden on xl) */}
       <Sheet open={toolsDrawerOpen} onOpenChange={handleToolsDrawerChange}>
         <SheetTrigger asChild>
-          <Button size="lg" className="fixed bottom-6 right-6 z-50 lg:hidden shadow-lg rounded-full w-14 h-14 p-0" aria-label="Open tools drawer">
+          <Button size="lg" className="fixed bottom-6 right-6 z-50 xl:hidden shadow-lg rounded-full w-14 h-14 p-0" aria-label="Open tools drawer">
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
