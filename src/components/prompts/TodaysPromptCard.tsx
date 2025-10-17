@@ -500,30 +500,30 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       {/* Unified Prompt Card Container */}
       <Card className="rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 shadow-sm">
         <CardContent className="p-6 space-y-6">
-          {/* Header - Two-Zone Grid Layout */}
-          <div className="space-y-3 md:space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] items-start gap-3 md:gap-4">
+          {/* Header - Responsive Grid Layout */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
               {/* Left: Titles */}
               <div className="min-w-0 space-y-2">
-                <h2 className="text-xl text-muted-foreground">Today's prompt</h2>
-                <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight text-balance break-words">
+                <h2 className="text-xl text-muted-foreground">Today&apos;s prompt</h2>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight tracking-tight text-balance break-normal hyphens-none max-w-[22ch] sm:max-w-[28ch]">
                   {promptInstance.prompt.title}
                 </h1>
               </div>
               
               {/* Right: Controls */}
-              <div className="justify-self-end md:sticky md:top-20">
+              <div className="order-2 lg:order-none w-full lg:w-auto lg:justify-self-end lg:sticky lg:top-20">
                 <div 
                   role="toolbar" 
                   aria-label="Prompt controls"
-                  className="flex flex-wrap items-center gap-2 md:gap-3 shrink-0 bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-2.5 py-1.5 md:px-3 md:py-1.5 shadow-sm"
+                  className="flex flex-wrap items-center gap-2 justify-start lg:justify-end bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-2.5 py-1.5 lg:px-3 lg:py-1.5 shadow-sm w-full lg:w-auto"
                 >
                   <ListenButton
                     text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
                     promptId={promptInstance.id}
                     size="sm"
                     showLabel
-                    className="inline-flex items-center gap-2 h-9 md:h-10 px-2.5 md:px-3 text-sm md:text-base font-medium rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:hidden [&>span:first-of-type]:xs:inline [&>span:first-of-type]:sm:hidden [&>span:last-of-type]:hidden [&>span:last-of-type]:sm:inline"
+                    className="inline-flex items-center gap-2 h-9 lg:h-10 px-2.5 lg:px-3 text-sm lg:text-base font-medium rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:hidden [&>span:first-of-type]:sm:inline [&>span:first-of-type]:md:hidden [&>span:last-of-type]:hidden [&>span:last-of-type]:md:inline"
                     onPlayStart={handleListenStart}
                     onPlayEnd={handleListenEnd}
                     persona={persona}
@@ -532,10 +532,10 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                     variant="ghost" 
                     size="sm" 
                     className={cn(
-                      "inline-flex items-center gap-2 h-9 md:h-10 px-2.5 md:px-3",
+                      "inline-flex items-center gap-2 h-9 lg:h-10 px-2.5 lg:px-3",
                       "rounded-lg border border-neutral-200 dark:border-neutral-700",
                       "bg-white dark:bg-neutral-800 shrink-0",
-                      "text-sm md:text-base font-medium",
+                      "text-sm lg:text-base font-medium",
                       "transition-all duration-150 ease-out hover:bg-accent",
                       "focus:outline-none focus:ring-2 focus:ring-primary/60"
                     )}
@@ -548,14 +548,14 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                       "h-4 w-4 transition-transform duration-150 ease-out shrink-0",
                       isShuffling && "rotate-180"
                     )} />
-                    <span className="hidden xs:inline">Shuffle</span>
+                    <span className="hidden sm:inline">Shuffle</span>
                   </Button>
                 </div>
               </div>
             </div>
             
-            <p className="text-muted-foreground">
-              Don't aim for perfect—aim for true. 60–90 seconds is plenty.
+            <p className="text-muted-foreground mt-3">
+              Don&apos;t aim for perfect—aim for true. 60–90 seconds is plenty.
             </p>
           </div>
 
