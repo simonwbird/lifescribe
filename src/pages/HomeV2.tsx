@@ -202,14 +202,14 @@ export default function HomeV2() {
 
       {/* Today's Prompt Section */}
       <div className="w-full pt-6">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl px-4 sm:px-6 lg:pl-8 lg:pr-8">
           <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
         </div>
       </div>
 
       {/* Two-column layout: Feed + Right Rail */}
       <div className="w-full py-6">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl px-4 sm:px-6 lg:pl-8 lg:pr-8">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
             {/* Left: Main Feed */}
             <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
