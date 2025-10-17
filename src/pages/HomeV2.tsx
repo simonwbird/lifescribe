@@ -107,8 +107,9 @@ export default function HomeV2() {
         return;
       }
 
-      // Pick the first open (oldest) as the new prompt
-      const next = openPrompts[0];
+      // Pick a random prompt from available open prompts
+      const randomIndex = Math.floor(Math.random() * openPrompts.length);
+      const next = openPrompts[randomIndex];
       queryClient.setQueryData(['todays-prompt', familyId], next);
       toast({
         title: "Shuffled",
