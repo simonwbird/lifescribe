@@ -1,28 +1,21 @@
-import { Volume2, VolumeX, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { useSpeechPlayback } from '@/hooks/useSpeechPlayback'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import { useEffect, useState } from 'react'
-import { cn } from '@/lib/utils'
-
+import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useSpeechPlayback } from '@/hooks/useSpeechPlayback';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 interface ListenButtonProps {
-  text: string
-  promptId?: string
-  variant?: 'default' | 'outline' | 'ghost'
-  size?: 'default' | 'sm' | 'lg' | 'icon'
-  className?: string
-  showLabel?: boolean
-  onPlayStart?: () => void
-  onPlayEnd?: () => void
-  persona?: string
+  text: string;
+  promptId?: string;
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  className?: string;
+  showLabel?: boolean;
+  onPlayStart?: () => void;
+  onPlayEnd?: () => void;
+  persona?: string;
 }
-
 export function ListenButton({
   text,
   promptId,
@@ -34,10 +27,19 @@ export function ListenButton({
   onPlayEnd,
   persona
 }: ListenButtonProps) {
-  const { track } = useAnalytics()
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1)
-  const { isPlaying, isLoading, speak, stop, currentText } = useSpeechPlayback({
-    voice: 'Brian', // Premium ElevenLabs voice
+  const {
+    track
+  } = useAnalytics();
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
+  const {
+    isPlaying,
+    isLoading,
+    speak,
+    stop,
+    currentText
+  } = useSpeechPlayback({
+    voice: 'Brian',
+    // Premium ElevenLabs voice
     onEnd: () => {
       track({
         event_name: 'tts_play_end',
@@ -48,21 +50,19 @@ export function ListenButton({
           speed: playbackSpeed,
           persona
         }
-      } as any)
-      onPlayEnd?.()
+      } as any);
+      onPlayEnd?.();
     },
-    onError: (error) => {
-      console.error('TTS error:', error)
+    onError: error => {
+      console.error('TTS error:', error);
     }
-  })
-
-  const isThisPlaying = isPlaying && currentText === text
-
+  });
+  const isThisPlaying = isPlaying && currentText === text;
   const handleClick = async () => {
     if (isThisPlaying) {
-      stop()
+      stop();
     } else {
-      onPlayStart?.()
+      onPlayStart?.();
       track({
         event_name: 'tts_play_start',
         properties: {
@@ -72,81 +72,44 @@ export function ListenButton({
           speed: playbackSpeed,
           persona
         }
-      } as any)
-      await speak(text)
+      } as any);
+      await speak(text);
     }
-  }
-
+  };
   const handleSpeedChange = (speed: number) => {
-    setPlaybackSpeed(speed)
+    setPlaybackSpeed(speed);
     track({
       event_name: 'tts_speed_change',
       properties: {
         prompt_id: promptId,
         speed
       }
-    } as any)
-  }
+    } as any);
+  };
 
   // Estimate duration (rough calculation: ~150 words per minute at 1x)
-  const estimatedDuration = Math.ceil(text.split(' ').length / (150 * playbackSpeed) * 60)
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button
-        onClick={handleClick}
-        variant={variant}
-        size={size}
-        className={cn(
-          'transition-all',
-          isThisPlaying && 'animate-pulse',
-          className
-        )}
-        aria-label={isThisPlaying ? 'Stop reading prompt' : 'Hear this prompt'}
-        aria-pressed={isThisPlaying}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className={cn(
-              size === 'icon' ? 'h-5 w-5' : 'h-4 w-4',
-              showLabel && 'mr-2',
-              'animate-spin'
-            )} />
+  const estimatedDuration = Math.ceil(text.split(' ').length / (150 * playbackSpeed) * 60);
+  return <div className="flex items-center gap-1">
+      <Button onClick={handleClick} variant={variant} size={size} className={cn('transition-all', isThisPlaying && 'animate-pulse', className)} aria-label={isThisPlaying ? 'Stop reading prompt' : 'Hear this prompt'} aria-pressed={isThisPlaying}>
+        {isLoading ? <>
+            <Loader2 className={cn(size === 'icon' ? 'h-5 w-5' : 'h-4 w-4', showLabel && 'mr-2', 'animate-spin')} />
             {showLabel && 'Loading...'}
-          </>
-        ) : isThisPlaying ? (
-          <>
-            <VolumeX className={cn(
-              size === 'icon' ? 'h-5 w-5' : 'h-4 w-4',
-              showLabel && 'mr-2'
-            )} />
+          </> : isThisPlaying ? <>
+            <VolumeX className={cn(size === 'icon' ? 'h-5 w-5' : 'h-4 w-4', showLabel && 'mr-2')} />
             {showLabel && 'Stop'}
-          </>
-        ) : (
-          <>
-            <Volume2 className={cn(
-              size === 'icon' ? 'h-5 w-5' : 'h-4 w-4',
-              showLabel && 'mr-2'
-            )} />
-            {showLabel && (
-              <>
-                <span className="hidden xs:inline sm:hidden">Listen</span>
+          </> : <>
+            <Volume2 className={cn(size === 'icon' ? 'h-5 w-5' : 'h-4 w-4', showLabel && 'mr-2')} />
+            {showLabel && <>
+                
                 <span className="hidden sm:inline">{`Listen (${estimatedDuration}s)`}</span>
-              </>
-            )}
-          </>
-        )}
+              </>}
+          </>}
       </Button>
 
       {/* Playback speed control */}
-      {showLabel && (
-        <DropdownMenu>
+      {showLabel && <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-xs"
-            >
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
               {playbackSpeed}×
             </Button>
           </DropdownMenuTrigger>
@@ -164,8 +127,6 @@ export function ListenButton({
               1.5× Fast
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
-  )
+        </DropdownMenu>}
+    </div>;
 }
