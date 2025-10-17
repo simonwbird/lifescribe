@@ -500,63 +500,58 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
       {/* Unified Prompt Card Container */}
       <Card className="rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 shadow-sm">
         <CardContent className="p-6 space-y-6">
-          {/* Header - Responsive Grid Layout */}
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-              {/* Left: Titles */}
-              <div className="min-w-0 space-y-2">
+          {/* Header - Responsive Layout with Docked Buttons */}
+          <div className="relative w-full space-y-3">
+            <div className="pr-20 sm:pr-0 min-w-0">
+              {/* Titles */}
+              <div className="space-y-2 min-w-0 overflow-visible">
                 <h2 className="text-xl text-muted-foreground">Today&apos;s prompt</h2>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight tracking-tight text-balance break-normal hyphens-none max-w-[22ch] sm:max-w-[28ch]">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground leading-tight tracking-tight text-balance break-normal hyphens-none">
                   {promptInstance.prompt.title}
                 </h1>
               </div>
               
-              {/* Right: Controls */}
-              <div className="order-2 lg:order-none w-full lg:w-auto lg:justify-self-end lg:sticky lg:top-20">
-                <div 
-                  role="toolbar" 
-                  aria-label="Prompt controls"
-                  className="flex flex-wrap items-center gap-2 justify-start lg:justify-end bg-neutral-50/70 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-2.5 py-1.5 lg:px-3 lg:py-1.5 shadow-sm w-full lg:w-auto"
-                >
-                  <ListenButton
-                    text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
-                    promptId={promptInstance.id}
-                    size="sm"
-                    showLabel
-                    className="inline-flex items-center gap-2 h-9 lg:h-10 px-2.5 lg:px-3 text-sm lg:text-base font-medium rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:hidden [&>span:first-of-type]:sm:inline [&>span:first-of-type]:md:hidden [&>span:last-of-type]:hidden [&>span:last-of-type]:md:inline"
-                    onPlayStart={handleListenStart}
-                    onPlayEnd={handleListenEnd}
-                    persona={persona}
-                  />
-                  <Button
-                    variant="ghost" 
-                    size="sm" 
-                    className={cn(
-                      "inline-flex items-center gap-2 h-9 lg:h-10 px-2.5 lg:px-3",
-                      "rounded-lg border border-neutral-200 dark:border-neutral-700",
-                      "bg-white dark:bg-neutral-800 shrink-0",
-                      "text-sm lg:text-base font-medium",
-                      "transition-all duration-150 ease-out hover:bg-accent",
-                      "focus:outline-none focus:ring-2 focus:ring-primary/60"
-                    )}
-                    onClick={handleShuffle}
-                    disabled={!onShuffle || recordingState !== 'idle'}
-                    title="Get a different prompt"
-                    aria-label="Shuffle to get a different prompt"
-                  >
-                    <Shuffle className={cn(
-                      "h-4 w-4 transition-transform duration-150 ease-out shrink-0",
-                      isShuffling && "rotate-180"
-                    )} />
-                    <span className="hidden sm:inline">Shuffle</span>
-                  </Button>
-                </div>
-              </div>
+              {/* Description */}
+              <p className="text-muted-foreground mt-3">
+                Don&apos;t aim for perfect—aim for true. 60–90 seconds is plenty.
+              </p>
             </div>
             
-            <p className="text-muted-foreground mt-3">
-              Don&apos;t aim for perfect—aim for true. 60–90 seconds is plenty.
-            </p>
+            {/* Controls - Stacked on mobile, horizontal on tablet+ */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2 items-end sm:static sm:flex-row sm:gap-3 sm:justify-end mt-2 sm:mt-0">
+              <ListenButton
+                text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
+                promptId={promptInstance.id}
+                size="sm"
+                showLabel
+                className="inline-flex items-center gap-2 h-9 px-2.5 py-1.5 text-sm font-medium rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 shadow-sm w-[110px] sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/60 [&>span:first-of-type]:inline [&>span:last-of-type]:hidden sm:[&>span:last-of-type]:inline"
+                onPlayStart={handleListenStart}
+                onPlayEnd={handleListenEnd}
+                persona={persona}
+              />
+              <Button
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "inline-flex items-center gap-2 h-9 px-2.5 py-1.5",
+                  "rounded-lg border border-neutral-200 dark:border-neutral-700",
+                  "bg-neutral-50 dark:bg-neutral-900 shadow-sm",
+                  "text-sm font-medium w-[110px] sm:w-auto",
+                  "transition-all duration-150 ease-out hover:bg-accent",
+                  "focus:outline-none focus:ring-2 focus:ring-primary/60"
+                )}
+                onClick={handleShuffle}
+                disabled={!onShuffle || recordingState !== 'idle'}
+                title="Get a different prompt"
+                aria-label="Shuffle to get a different prompt"
+              >
+                <Shuffle className={cn(
+                  "h-4 w-4 transition-transform duration-150 ease-out shrink-0",
+                  isShuffling && "rotate-180"
+                )} />
+                <span>Shuffle</span>
+              </Button>
+            </div>
           </div>
 
           {/* Prompt Body Card */}
