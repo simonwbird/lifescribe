@@ -495,239 +495,242 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     )
   }
 
-  return (
+    return (
     <div className="space-y-6">
-      {/* Header - Two-Zone Layout */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          {/* Left Zone: Title and Subtitle */}
-          <div className="flex-1 space-y-2">
-            <h2 className="text-xl text-muted-foreground">Today's prompt</h2>
-            <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight">
-              {promptInstance.prompt.title}
-            </h1>
-          </div>
-          
-          {/* Right Zone: Controls Bar */}
-          <div className="flex items-center gap-3 justify-end bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-3 py-1.5 shadow-sm">
-            <ListenButton
-              text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
-              promptId={promptInstance.id}
-              size="sm"
-              showLabel
-              className="h-9 px-4 text-sm font-medium"
-              onPlayStart={handleListenStart}
-              onPlayEnd={handleListenEnd}
-              persona={persona}
-            />
-            <Button
-              variant="ghost" 
-              size="sm" 
-              className={cn(
-                "gap-2 h-9 px-4",
-                "transition-all duration-150 ease-out",
-                "hover:bg-accent"
-              )}
-              onClick={handleShuffle}
-              disabled={!onShuffle || recordingState !== 'idle'}
-              title="Get a different prompt."
-            >
-              <Shuffle className={cn(
-                "h-4 w-4 transition-transform duration-150 ease-out",
-                isShuffling && "rotate-180"
-              )} />
-              Shuffle
-            </Button>
-          </div>
-        </div>
-        
-        <p className="text-muted-foreground">
-          Don't aim for perfect—aim for true. 60–90 seconds is plenty.
-        </p>
-      </div>
-
-      {/* Prompt Card */}
-      <Card className="bg-muted/30">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="shrink-0">
-              <Sparkles className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">
-                Personal Prompt
-              </p>
-              <p className="text-foreground">
-                {promptInstance.prompt.body}
-              </p>
+      {/* Unified Prompt Card Container */}
+      <Card className="rounded-2xl border border-neutral-200/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 shadow-sm">
+        <CardContent className="p-6 space-y-6">
+          {/* Header - Two-Zone Layout */}
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              {/* Left Zone: Title and Subtitle */}
+              <div className="flex-1 space-y-2">
+                <h2 className="text-xl text-muted-foreground">Today's prompt</h2>
+                <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight">
+                  {promptInstance.prompt.title}
+                </h1>
+              </div>
               
-              {/* Person chips for person-specific prompts */}
-              {promptInstance.person_ids && promptInstance.person_ids.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {promptInstance.person_ids.map(personId => {
-                    const person = people.find(p => p.id === personId)
-                    return person ? (
-                      <PersonChip key={personId} name={person.full_name} />
-                    ) : null
-                  })}
-                </div>
-              )}
+              {/* Right Zone: Controls Bar */}
+              <div className="flex items-center gap-3 justify-end bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-3 py-1.5 shadow-sm">
+                <ListenButton
+                  text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
+                  promptId={promptInstance.id}
+                  size="sm"
+                  showLabel
+                  className="h-9 px-4 text-sm font-medium"
+                  onPlayStart={handleListenStart}
+                  onPlayEnd={handleListenEnd}
+                  persona={persona}
+                />
+                <Button
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn(
+                    "gap-2 h-9 px-4",
+                    "transition-all duration-150 ease-out",
+                    "hover:bg-accent"
+                  )}
+                  onClick={handleShuffle}
+                  disabled={!onShuffle || recordingState !== 'idle'}
+                  title="Get a different prompt."
+                >
+                  <Shuffle className={cn(
+                    "h-4 w-4 transition-transform duration-150 ease-out",
+                    isShuffling && "rotate-180"
+                  )} />
+                  Shuffle
+                </Button>
+              </div>
+            </div>
+            
+            <p className="text-muted-foreground">
+              Don't aim for perfect—aim for true. 60–90 seconds is plenty.
+            </p>
+          </div>
+
+          {/* Prompt Body Card */}
+          <div className="bg-muted/30 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0">
+                <Sparkles className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-medium text-foreground">
+                  Personal Prompt
+                </p>
+                <p className="text-foreground">
+                  {promptInstance.prompt.body}
+                </p>
+                
+                {/* Person chips for person-specific prompts */}
+                {promptInstance.person_ids && promptInstance.person_ids.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {promptInstance.person_ids.map(personId => {
+                      const person = people.find(p => p.id === personId)
+                      return person ? (
+                        <PersonChip key={personId} name={person.full_name} />
+                      ) : null
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Recording States */}
-      {recordingState === 'preflight' && (
-        <Card className="border-primary/50">
-          <CardContent className="p-6 flex items-center justify-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-foreground">Checking microphone...</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {recordingState === 'countdown' && (
-        <Card className="border-primary/50">
-          <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
-            <div className="text-7xl font-bold text-primary animate-pulse">
-              {countdown}
+          {/* Recording States */}
+          {recordingState === 'preflight' && (
+            <div className="border-primary/50 bg-primary/5 rounded-lg">
+              <div className="p-6 flex items-center justify-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <p className="text-foreground">Checking microphone...</p>
+              </div>
             </div>
-            <p className="text-muted-foreground">Get ready...</p>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {recordingState === 'recording' && (
-        <Card className="border-red-500/50 bg-red-50/5">
-          <CardContent className="p-6 space-y-6">
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-3xl font-mono font-semibold">
-                {formatDuration(recordingDuration)}
-              </span>
+          {recordingState === 'countdown' && (
+            <div className="border-primary/50 bg-primary/5 rounded-lg">
+              <div className="p-8 flex flex-col items-center justify-center space-y-4">
+                <div className="text-7xl font-bold text-primary animate-pulse">
+                  {countdown}
+                </div>
+                <p className="text-muted-foreground">Get ready...</p>
+              </div>
             </div>
-            
-            {/* Live waveform visualization */}
-            <div className="flex items-center justify-center gap-1 h-16">
-              {[...Array(24)].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-primary rounded-full"
-                  style={{
-                    height: `${20 + Math.random() * 80}%`,
-                    animation: `pulse ${0.5 + Math.random() * 0.5}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.05}s`
-                  }}
-                />
-              ))}
-            </div>
-            
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <Check className="h-4 w-4 text-green-600" />
-              <span className="text-success font-medium">
-                Recording… Auto-saving
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {recordingState === 'saving' && (
-        <Card className="border-primary/50">
-          <CardContent className="p-6 flex items-center justify-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-foreground">Saving your recording...</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {recordingState === 'transcribing' && (
-        <Card className="border-primary/50">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <p className="text-foreground font-medium">Transcribing your recording...</p>
+          {recordingState === 'recording' && (
+            <div className="border-red-500/50 bg-red-50/5 dark:bg-red-900/10 rounded-lg">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-3xl font-mono font-semibold">
+                    {formatDuration(recordingDuration)}
+                  </span>
+                </div>
+                
+                {/* Live waveform visualization */}
+                <div className="flex items-center justify-center gap-1 h-16">
+                  {[...Array(24)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-primary rounded-full"
+                      style={{
+                        height: `${20 + Math.random() * 80}%`,
+                        animation: `pulse ${0.5 + Math.random() * 0.5}s ease-in-out infinite`,
+                        animationDelay: `${i * 0.05}s`
+                      }}
+                    />
+                  ))}
+                </div>
+                
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span className="text-success font-medium">
+                    Recording… Auto-saving
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-center text-sm text-muted-foreground">
-              Converting your voice to text
-            </p>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {recordingState === 'mic-denied' && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Microphone Access Blocked</p>
-                <p className="text-sm text-muted-foreground">
-                  Browser blocked the mic. Try text, or enable microphone in settings.
+          {recordingState === 'saving' && (
+            <div className="border-primary/50 bg-primary/5 rounded-lg">
+              <div className="p-6 flex items-center justify-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <p className="text-foreground">Saving your recording...</p>
+              </div>
+            </div>
+          )}
+
+          {recordingState === 'transcribing' && (
+            <div className="border-primary/50 bg-primary/5 rounded-lg">
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <p className="text-foreground font-medium">Transcribing your recording...</p>
+                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Converting your voice to text
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleWriteInstead}
-                className="flex-1"
-              >
-                <PenTool className="h-4 w-4 mr-2" />
-                Write Instead
-              </Button>
-              <Button 
-                onClick={() => setRecordingState('idle')}
-                variant="outline"
-                className="flex-1"
-              >
-                Dismiss
-              </Button>
+          )}
+
+          {recordingState === 'mic-denied' && (
+            <div className="border-destructive/50 bg-destructive/5 rounded-lg">
+              <div className="p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <p className="font-medium text-foreground">Microphone Access Blocked</p>
+                    <p className="text-sm text-muted-foreground">
+                      Browser blocked the mic. Try text, or enable microphone in settings.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleWriteInstead}
+                    className="flex-1"
+                  >
+                    <PenTool className="h-4 w-4 mr-2" />
+                    Write Instead
+                  </Button>
+                  <Button 
+                    onClick={() => setRecordingState('idle')}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* Main CTAs - only show when idle */}
-      {recordingState === 'idle' && (
-        <>
-          {/* Main CTA - Large, high-contrast button */}
-          <Button 
-            onClick={handleStartRecording}
-            className="w-full h-16 text-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
-            size="lg"
-          >
-            <Mic className="h-6 w-6 mr-3" />
-            Start Recording
-          </Button>
+          {/* Main CTAs - only show when idle */}
+          {recordingState === 'idle' && (
+            <>
+              {/* Main CTA - Large, high-contrast button */}
+              <Button 
+                onClick={handleStartRecording}
+                className="w-full h-16 text-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
+                size="lg"
+              >
+                <Mic className="h-6 w-6 mr-3" />
+                Start Recording
+              </Button>
 
-          {/* Secondary action */}
-          <div className="flex justify-center">
+              {/* Secondary action */}
+              <div className="flex justify-center">
+                <Button 
+                  onClick={handleWriteInstead}
+                  variant="outline"
+                  size="lg"
+                  className="min-w-[200px]"
+                >
+                  <PenTool className="h-4 w-4 mr-2" />
+                  Write Instead
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Stop recording button */}
+          {recordingState === 'recording' && (
             <Button 
-              onClick={handleWriteInstead}
-              variant="outline"
+              onClick={handleStopRecording}
+              variant="destructive"
+              className="w-full h-16 text-xl font-semibold shadow-lg"
               size="lg"
-              className="min-w-[200px]"
             >
-              <PenTool className="h-4 w-4 mr-2" />
-              Write Instead
+              <Square className="h-6 w-6 mr-3" />
+              Finish
             </Button>
-          </div>
-        </>
-      )}
-
-      {/* Stop recording button */}
-      {recordingState === 'recording' && (
-        <Button 
-          onClick={handleStopRecording}
-          variant="destructive"
-          className="w-full h-16 text-xl font-semibold shadow-lg"
-          size="lg"
-        >
-          <Square className="h-6 w-6 mr-3" />
-          Finish
-        </Button>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
