@@ -198,36 +198,35 @@ export default function HomeV2() {
         <TopBar familyId={familyId} userId={userId} />
       </div>
       
-      {/* TIER 1: Hero Section - Full width of main, no right rail */}
-      <div className="w-full pt-6 border-b pb-6">
-        <div className="px-4 sm:px-6 lg:pl-8 lg:pr-8">
-          <div className="max-w-3xl">
-            <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
-          </div>
-        </div>
-      </div>
-
-      {/* TIER 2: Content Body - Inner grid with feed + right rail */}
-      <div className="px-4 sm:px-6 lg:pl-8 lg:pr-8 py-6">
+      {/* 3-Column Grid Layout: Sidebar + Main + Right Rail */}
+      <div className="px-4 sm:px-6 lg:px-6 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-x-8">
-          {/* Left: Main Feed */}
-          <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
-            {/* Voice Capture Toggle */}
-            {!showVoiceCapture}
+          {/* Main Content Column */}
+          <div className="space-y-6">
+            {/* Today's Prompt */}
+            <div className="max-w-3xl">
+              <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
+            </div>
 
-            {/* Inline Voice Capture */}
-            {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
+            {/* Feed Section */}
+            <main role="main" aria-label="Story feed" className="space-y-4 min-w-0">
+              {/* Voice Capture Toggle */}
+              {!showVoiceCapture}
 
-            <SmartFeed familyId={familyId} userId={userId} />
-          </main>
+              {/* Inline Voice Capture */}
+              {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
 
-          {/* Right Rail (xl and up only) */}
+              <SmartFeed familyId={familyId} userId={userId} />
+            </main>
+          </div>
+
+          {/* Right Rail (xl and up only) - starts at top */}
           <aside 
             className="hidden xl:block border-l border-neutral-200/60 dark:border-neutral-800 pl-6"
             aria-label="Context"
           >
-            <div className="sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-auto space-y-4">
-              <RightRail />
+            <div className="sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-auto">
+              <RightRail familyId={familyId} userId={userId} />
             </div>
           </aside>
         </div>
