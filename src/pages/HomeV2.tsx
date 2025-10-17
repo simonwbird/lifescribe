@@ -201,9 +201,9 @@ export default function HomeV2() {
       {/* 3-Column Grid Layout: Sidebar + Main + Right Rail */}
       <div className="py-6">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-x-8 justify-items-start rounded-2xl shadow-inner overflow-hidden">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-x-8 justify-items-start bg-neutral-50/70 dark:bg-neutral-900/30 rounded-2xl shadow-inner p-6">
             {/* Main Content Column */}
-            <div className="space-y-6 w-full bg-neutral-50/70 dark:bg-neutral-900/30 p-6 rounded-2xl xl:rounded-r-none">
+            <div className="space-y-6 w-full">
               {/* Today's Prompt - Centered with dynamic padding on wide screens */}
               <div className="max-w-3xl xl:px-[clamp(1rem,4vw,4rem)] xl:mx-auto">
                 <TodaysPromptCard promptInstance={todaysPrompt} onRespond={handleRespondToPrompt} onBrowseAll={handleBrowseAll} onShuffle={handleShuffle} loading={todaysLoading} persona="general" />
@@ -223,7 +223,7 @@ export default function HomeV2() {
 
             {/* Right Rail (xl and up only) - starts at top */}
             <aside 
-              className="hidden xl:block border-l border-neutral-200/60 dark:border-neutral-700/60 pl-6 bg-gradient-to-l from-neutral-50/80 dark:from-neutral-800/30 to-transparent p-6 rounded-r-2xl"
+              className="hidden xl:block border-l border-neutral-200/60 dark:border-neutral-800 pl-6 w-full"
               aria-label="Context"
             >
               <div className="sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-auto">
