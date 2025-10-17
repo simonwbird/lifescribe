@@ -696,7 +696,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               <div className="relative group">
                 {/* Pulsing halo - pauses on hover */}
                 <div 
-                  className="absolute -inset-1 bg-primary/15 rounded-2xl blur-lg group-hover:animate-none"
+                  className="absolute -inset-2 bg-primary/40 rounded-2xl blur-xl group-hover:animate-none"
                   style={{
                     animation: 'gentle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                   }}
