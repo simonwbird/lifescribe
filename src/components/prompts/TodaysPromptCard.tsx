@@ -497,30 +497,34 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header - Two-Zone Layout */}
       <div className="space-y-4">
-        <h2 className="text-2xl text-muted-foreground">Today's prompt</h2>
-        
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-medium text-foreground flex-1">
-            {promptInstance.prompt.title}
-          </h1>
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          {/* Left Zone: Title and Subtitle */}
+          <div className="flex-1 space-y-2">
+            <h2 className="text-xl text-muted-foreground">Today's prompt</h2>
+            <h1 className="text-3xl md:text-4xl font-semibold text-foreground leading-tight">
+              {promptInstance.prompt.title}
+            </h1>
+          </div>
+          
+          {/* Right Zone: Controls Bar */}
+          <div className="flex items-center gap-3 justify-end bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-700/60 rounded-xl px-3 py-1.5 shadow-sm">
             <ListenButton
               text={`${promptInstance.prompt.title}. ${promptInstance.prompt.body}`}
               promptId={promptInstance.id}
-              size="lg"
+              size="sm"
               showLabel
-              className="h-12 px-6 text-base font-medium min-w-[140px]"
+              className="h-9 px-4 text-sm font-medium"
               onPlayStart={handleListenStart}
               onPlayEnd={handleListenEnd}
               persona={persona}
             />
             <Button
               variant="ghost" 
-              size="lg" 
+              size="sm" 
               className={cn(
-                "gap-2 h-12 px-6",
+                "gap-2 h-9 px-4",
                 "transition-all duration-150 ease-out",
                 "hover:bg-accent"
               )}
@@ -529,7 +533,7 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
               title="Get a different prompt."
             >
               <Shuffle className={cn(
-                "h-5 w-5 transition-transform duration-150 ease-out",
+                "h-4 w-4 transition-transform duration-150 ease-out",
                 isShuffling && "rotate-180"
               )} />
               Shuffle
