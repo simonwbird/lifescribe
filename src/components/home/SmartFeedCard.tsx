@@ -20,6 +20,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface FeedItemData {
   id: string
@@ -129,6 +139,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
   const [likeCount, setLikeCount] = useState(item.reactions_count || 0)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { toast } = useToast()
   
   const { visibility, updateVisibility } = useContentVisibility({
@@ -245,12 +256,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
     toast({ title: "Story flagged", description: "Admins will review this content" })
   }
 
-  const handleDeleteStory = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this story? This cannot be undone.')) {
-      return
-    }
-    
+  const handleDeleteStory = async () => {
     try {
       const { error } = await supabase
         .from('stories')
@@ -260,6 +266,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
       if (error) throw error
       
       toast({ title: "Story deleted" })
+      setShowDeleteDialog(false)
       onUpdate?.()
     } catch (error) {
       console.error('Delete failed:', error)
@@ -267,6 +274,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
         title: "Failed to delete story", 
         variant: "destructive" 
       })
+      setShowDeleteDialog(false)
     }
   }
 
@@ -602,6 +610,26 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Story</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this story? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteStory}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

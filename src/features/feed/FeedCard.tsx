@@ -18,6 +18,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface FeedCardProps {
   story: FeedStory
@@ -35,6 +45,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
   const [likeCount, setLikeCount] = useState(0)
   const [commentCount, setCommentCount] = useState(0)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -140,12 +151,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
     toast({ title: "Story flagged", description: "Admins will review this content" })
   }
 
-  const handleDeleteStory = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this story? This cannot be undone.')) {
-      return
-    }
-    
+  const handleDeleteStory = async () => {
     try {
       const { error } = await supabase
         .from('stories')
@@ -155,6 +161,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
       if (error) throw error
       
       toast({ title: "Story deleted" })
+      setShowDeleteDialog(false)
       onUpdate?.()
     } catch (error) {
       console.error('Delete failed:', error)
@@ -162,6 +169,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
         title: "Failed to delete story", 
         variant: "destructive" 
       })
+      setShowDeleteDialog(false)
     }
   }
 
@@ -247,7 +255,10 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
               </DropdownMenuItem>
               {currentUserId === story.author_id && (
                 <DropdownMenuItem 
-                  onClick={handleDeleteStory}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowDeleteDialog(true)
+                  }}
                   className="gap-2 cursor-pointer text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -321,6 +332,26 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
           </Button>
         </div>
       </CardContent>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Story</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this story? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteStory}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }
