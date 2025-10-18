@@ -122,15 +122,41 @@ export default function StoryDetail() {
             }
           }
 
-          // Load story assets
+          // Load story assets (primary source)
           const { data: assetsData } = await supabase
             .from('story_assets' as any)
             .select('*')
             .eq('story_id', id)
             .order('position', { ascending: true })
 
-          if (assetsData) {
+          if (assetsData && assetsData.length > 0) {
             setAssets(assetsData)
+          } else {
+            // Fallback: some older stories store media in `media` table
+            const { data: mediaData } = await supabase
+              .from('media' as any)
+              .select('id, file_path, mime_type, created_at')
+              .eq('story_id', id)
+              .order('created_at', { ascending: true })
+
+            if (mediaData && mediaData.length > 0) {
+              const mapped = mediaData.map((m: any, idx: number) => ({
+                id: m.id,
+                type: m.mime_type?.startsWith('image/')
+                  ? 'image'
+                  : m.mime_type?.startsWith('video/')
+                  ? 'video'
+                  : m.mime_type?.startsWith('audio/')
+                  ? 'audio'
+                  : 'image',
+                url: `/media/${m.file_path}`,
+                thumbnail_url: null,
+                transcoded_url: null,
+                position: idx,
+                metadata: { mime_type: m.mime_type, file_path: m.file_path }
+              }))
+              setAssets(mapped)
+            }
           }
 
           // Load people tags
