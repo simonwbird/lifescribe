@@ -128,32 +128,18 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const [videoSrc, setVideoSrc] = useState<string>('')
+  const [posterSrc, setPosterSrc] = useState<string>('')
   const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
-  const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined)
-  const [posterSrc, setPosterSrc] = useState<string | undefined>(undefined)
-  const [unsupported, setUnsupported] = useState(false)
 
-useEffect(() => {
-  // Build absolute URLs when needed (handles legacy relative paths)
-  setVideoSrc(toPublicUrl(media.signedUrl || media.url))
-  setPosterSrc(toPublicUrl(media.thumbnailUrl))
-}, [media.signedUrl, media.url, media.thumbnailUrl])
-
-  // Detect browser support for the video mime type
+  // Resolve URLs on mount
   useEffect(() => {
-    if (!videoSrc) return
-    const tester = document.createElement('video')
-    const url = videoSrc.toLowerCase()
-    let mime: string | undefined
-    if (url.includes('.webm')) mime = 'video/webm'
-    else if (url.includes('.mp4')) mime = 'video/mp4'
-    else if (url.includes('.m3u8')) mime = 'application/vnd.apple.mpegurl'
-
-    if (mime && tester.canPlayType) {
-      const res = tester.canPlayType(mime)
-      setUnsupported(res === '')
-    }
-  }, [videoSrc])
+    const video = toPublicUrl(media.signedUrl || media.url)
+    const poster = toPublicUrl(media.thumbnailUrl)
+    
+    if (video) setVideoSrc(video)
+    if (poster) setPosterSrc(poster)
+  }, [media.signedUrl, media.url, media.thumbnailUrl])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -224,26 +210,20 @@ useEffect(() => {
 
   return (
     <div ref={containerRef} className="w-full bg-black/5 rounded-lg overflow-hidden">
-      {!isVisible ? (
-        <Skeleton className="w-full aspect-video" />
-      ) : unsupported ? (
-        <div className="relative">
-          {posterSrc ? (
-            <img src={posterSrc} alt="Video thumbnail" className="w-full aspect-video object-cover" />
-          ) : (
-            <div className="w-full aspect-video bg-muted" />
+      {!isVisible || !videoSrc ? (
+        <div className="w-full aspect-video relative bg-muted">
+          {posterSrc && (
+            <img 
+              src={posterSrc} 
+              alt="Video thumbnail" 
+              className="w-full h-full object-cover"
+            />
           )}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <a
-              href={videoSrc}
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 text-sm rounded-md bg-background/80 border"
-            >
-              Open video
-            </a>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">Your browser can’t play this format inline.</p>
+          {!videoSrc && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Skeleton className="w-12 h-12 rounded-full" />
+            </div>
+          )}
         </div>
       ) : (
         <video
@@ -251,9 +231,10 @@ useEffect(() => {
           controls
           playsInline
           preload="metadata"
-          poster={posterSrc}
+          poster={posterSrc || undefined}
           className="w-full max-h-[500px] rounded-lg"
           src={videoSrc}
+          onError={(e) => console.error('Video error:', videoSrc, e)}
         />
       )}
     </div>
