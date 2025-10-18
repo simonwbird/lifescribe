@@ -28,7 +28,7 @@ export function MediaStrip({ media, onPause }: MediaStripProps) {
       {/* Images Grid */}
       {images.length > 0 && (
         <div className={cn(
-          "grid gap-2 rounded-lg overflow-hidden",
+          "grid gap-1.5 rounded-lg overflow-hidden",
           images.length === 1 && "grid-cols-1",
           images.length === 2 && "grid-cols-2",
           images.length === 3 && "grid-cols-2",
@@ -41,12 +41,12 @@ export function MediaStrip({ media, onPause }: MediaStripProps) {
               className={cn(
                 "w-full object-cover rounded-md",
                 images.length === 3 && idx === 0 && "col-span-2",
-                images.length === 1 ? "max-h-[500px]" : "max-h-[300px] aspect-square"
+                images.length === 1 ? "max-h-[280px]" : "h-[140px]"
               )}
             />
           ))}
           {images.length > 4 && (
-            <div className="col-span-1 flex items-center justify-center bg-muted rounded-md aspect-square">
+            <div className="col-span-1 h-[140px] flex items-center justify-center bg-muted rounded-md">
               <span className="text-sm text-muted-foreground">+{images.length - 4} more</span>
             </div>
           )}
