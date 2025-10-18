@@ -122,6 +122,10 @@ export function SmartFeed({ familyId, userId }: SmartFeedProps) {
     }
   }
 
+  const removeStoryFromFeed = (storyId: string) => {
+    setFeedItems(prev => prev.filter(item => item.id !== storyId))
+  }
+
   return (
     <div className="space-y-4">
       {/* Filter Chips */}
@@ -157,7 +161,12 @@ export function SmartFeed({ familyId, userId }: SmartFeedProps) {
       ) : (
         <div className="space-y-4">
           {feedItems.map((item) => (
-            <SmartFeedCard key={item.id} item={item} onUpdate={loadFeed} />
+            <SmartFeedCard 
+              key={item.id} 
+              item={item} 
+              onUpdate={loadFeed}
+              onDelete={() => removeStoryFromFeed(item.id)}
+            />
           ))}
         </div>
       )}

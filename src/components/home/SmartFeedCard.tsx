@@ -128,9 +128,10 @@ function AudioPlayer({ url, duration: initialDuration }: { url: string; duration
 interface SmartFeedCardProps {
   item: FeedItemData
   onUpdate?: () => void
+  onDelete?: () => void
 }
 
-export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
+export function SmartFeedCard({ item, onUpdate, onDelete }: SmartFeedCardProps) {
   const navigate = useNavigate()
   const cardRef = useRef<HTMLDivElement>(null)
   const [showAllComments, setShowAllComments] = useState(false)
@@ -257,6 +258,11 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
   }
 
   const handleDeleteStory = async () => {
+    setShowDeleteDialog(false)
+    
+    // Optimistically remove from UI immediately
+    onDelete?.()
+    
     try {
       const { error } = await supabase
         .from('stories')
@@ -266,7 +272,6 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
       if (error) throw error
       
       toast({ title: "Story deleted" })
-      setShowDeleteDialog(false)
       onUpdate?.()
     } catch (error) {
       console.error('Delete failed:', error)
@@ -274,7 +279,8 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
         title: "Failed to delete story", 
         variant: "destructive" 
       })
-      setShowDeleteDialog(false)
+      // Refresh to restore the item if deletion failed
+      onUpdate?.()
     }
   }
 
