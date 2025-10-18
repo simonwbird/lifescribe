@@ -141,6 +141,63 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
     if (poster) setPosterSrc(poster)
   }, [media.signedUrl, media.url, media.thumbnailUrl])
 
+  // Generate a poster thumbnail from the first video frame when no thumbnail is provided
+  useEffect(() => {
+    if (!isVisible || !videoSrc || posterSrc) return
+
+    let cancelled = false
+
+    const generatePoster = async () => {
+      try {
+        const v = document.createElement('video')
+        v.crossOrigin = 'anonymous'
+        v.preload = 'metadata'
+        v.src = videoSrc
+
+        await new Promise<void>((resolve, reject) => {
+          const onLoaded = () => {
+            try {
+              // Seek a tiny bit in to avoid black frames
+              const t = 0.1
+              v.currentTime = t
+            } catch {}
+          }
+          const onSeeked = () => {
+            v.removeEventListener('seeked', onSeeked)
+            resolve()
+          }
+          const onError = () => reject(new Error('Failed to load video for poster'))
+
+          v.addEventListener('loadeddata', onLoaded, { once: true })
+          v.addEventListener('seeked', onSeeked, { once: true })
+          v.addEventListener('error', onError, { once: true })
+        })
+
+        if (cancelled) return
+
+        const canvas = document.createElement('canvas')
+        const width = v.videoWidth || 1280
+        const height = v.videoHeight || 720
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        ctx.drawImage(v, 0, 0, width, height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        if (!cancelled && dataUrl) setPosterSrc(dataUrl)
+      } catch (e) {
+        console.warn('Poster generation failed', e)
+      }
+    }
+
+    generatePoster()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isVisible, videoSrc, posterSrc])
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {

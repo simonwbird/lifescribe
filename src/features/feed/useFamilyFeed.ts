@@ -10,6 +10,7 @@ interface MediaItem {
   order: number
   signedUrl?: string
   signedAt?: number // Timestamp when URL was signed
+  thumbnailUrl?: string // Signed or public poster/thumbnail for videos/images
 }
 
 export interface FeedStory {
@@ -69,30 +70,40 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
     }
 
     const signedMedia = await Promise.all(
-      story.media.map(async (media) => {
+      story.media.map(async (media: any) => {
         // Check if URL needs re-signing (expired or close to expiring)
         const needsRefresh = forceRefresh || 
           !media.signedUrl || 
           !media.signedAt || 
           (now - media.signedAt) > TTL_THRESHOLD
 
-        if (!needsRefresh) {
-          return media
-        }
+        // Normalize potential thumbnail keys coming from the DB
+        const rawThumb: string | undefined = media.thumbnailUrl || media.thumbnail_url || media.posterUrl || media.poster_url || media.thumb_url
 
         const filePath = extractFilePath(media.url)
+        const thumbPath = rawThumb ? extractFilePath(rawThumb) : null
 
         try {
-          const signedUrl = filePath ? await getSignedMediaUrl(filePath, story.family_id) : null
-          return {
+          const [signedUrl, signedThumb] = await Promise.all([
+            filePath ? getSignedMediaUrl(filePath, story.family_id) : Promise.resolve(null),
+            thumbPath ? getSignedMediaUrl(thumbPath, story.family_id) : Promise.resolve(null)
+          ])
+
+          return needsRefresh ? {
             ...media,
+            thumbnailUrl: signedThumb || toPublicUrl(thumbPath) || rawThumb || media.thumbnailUrl,
             signedUrl: signedUrl || toPublicUrl(filePath) || media.url,
             signedAt: now
+          } : {
+            ...media,
+            // Ensure thumbnail is at least a public URL if provided
+            thumbnailUrl: media.thumbnailUrl || (rawThumb ? (toPublicUrl(thumbPath) || rawThumb) : undefined)
           }
         } catch (error) {
           console.error('Error signing media URL:', error)
           return {
             ...media,
+            thumbnailUrl: toPublicUrl(thumbPath) || rawThumb || media.thumbnailUrl,
             signedUrl: toPublicUrl(filePath) || media.url,
             signedAt: now
           }
