@@ -305,7 +305,15 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [audioSrc, setAudioSrc] = useState<string | null>(null)
+  const [duration, setDuration] = useState<number | null>(null)
   const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
+
+  // Format duration in MM:SS
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   // Construct proper audio URL
   useEffect(() => {
@@ -313,6 +321,27 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
     const full = toPublicUrl(src)
     setAudioSrc(full || null)
   }, [media.url, media.signedUrl])
+
+  // Load duration when audio metadata is available
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleLoadedMetadata = () => {
+      if (audio.duration && isFinite(audio.duration)) {
+        setDuration(audio.duration)
+      }
+    }
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    
+    // If metadata already loaded
+    if (audio.duration && isFinite(audio.duration)) {
+      setDuration(audio.duration)
+    }
+
+    return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+  }, [audioSrc])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -382,14 +411,20 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
   }, [media.id, track])
 
   return (
-    <div ref={containerRef} className="w-full bg-muted/50 p-4 rounded-lg">
+    <div ref={containerRef} className="w-full bg-muted/50 p-4 rounded-lg space-y-2">
+      {duration && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Audio Recording</span>
+          <span className="font-medium">{formatDuration(duration)}</span>
+        </div>
+      )}
       {!isVisible ? (
         <Skeleton className="w-full h-12" />
       ) : (
         <audio
           ref={audioRef}
           controls
-          preload="none"
+          preload="metadata"
           className="w-full"
           src={audioSrc || undefined}
         />
