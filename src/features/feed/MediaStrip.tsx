@@ -10,6 +10,9 @@ interface MediaItem {
   type: 'image' | 'video' | 'audio' | 'other'
   signedUrl?: string
   thumbnailUrl?: string
+  // Optional duration metadata (seconds)
+  duration?: number
+  durationSeconds?: number
 }
 
 interface MediaStripProps {
@@ -315,32 +318,42 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Construct proper audio URL
+  // Construct proper audio URL and seed duration from metadata if available
   useEffect(() => {
     const src = media.signedUrl || media.url
     const full = toPublicUrl(src)
     setAudioSrc(full || null)
+
+    // Seed from known metadata if present
+    const seed = (media as any).duration ?? (media as any).durationSeconds ?? null
+    if (seed && typeof seed === 'number' && isFinite(seed) && seed > 0) {
+      setDuration(seed)
+    }
   }, [media.url, media.signedUrl])
 
-  // Load duration when audio metadata is available
+  // Load duration when audio metadata is available (add robust listeners)
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const handleLoadedMetadata = () => {
-      if (audio.duration && isFinite(audio.duration)) {
+    const setFromEl = () => {
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
         setDuration(audio.duration)
       }
     }
 
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('loadedmetadata', setFromEl)
+    audio.addEventListener('canplay', setFromEl)
+    audio.addEventListener('durationchange', setFromEl)
     
     // If metadata already loaded
-    if (audio.duration && isFinite(audio.duration)) {
-      setDuration(audio.duration)
-    }
+    setFromEl()
 
-    return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+    return () => {
+      audio.removeEventListener('loadedmetadata', setFromEl)
+      audio.removeEventListener('canplay', setFromEl)
+      audio.removeEventListener('durationchange', setFromEl)
+    }
   }, [audioSrc])
 
   useEffect(() => {
@@ -412,12 +425,10 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
 
   return (
     <div ref={containerRef} className="w-full bg-muted/50 p-4 rounded-lg space-y-2">
-      {duration && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Audio Recording</span>
-          <span className="font-medium">{formatDuration(duration)}</span>
-        </div>
-      )}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Audio Recording</span>
+        <span className="font-medium">{duration ? formatDuration(duration) : '…'}</span>
+      </div>
       {!isVisible ? (
         <Skeleton className="w-full h-12" />
       ) : (
