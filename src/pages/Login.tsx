@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, AlertTriangle } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useFeatureFlags } from '@/hooks/useFeatureFlags'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -16,9 +17,19 @@ export default function Login() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [signupsEnabled, setSignupsEnabled] = useState<boolean | null>(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectTo = searchParams.get('redirect')
+  const { isEnabled } = useFeatureFlags()
+
+  useEffect(() => {
+    const checkSignupsEnabled = async () => {
+      const enabled = await isEnabled('signups_enabled')
+      setSignupsEnabled(enabled)
+    }
+    checkSignupsEnabled()
+  }, [isEnabled])
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -53,6 +64,13 @@ export default function Login() {
 
     try {
       if (isSignUp) {
+        // Check if signups are enabled
+        if (signupsEnabled === false) {
+          setError('New user registrations are currently closed. Please check back later.')
+          setLoading(false)
+          return
+        }
+        
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -204,6 +222,15 @@ export default function Login() {
               </Alert>
             )}
             
+            {signupsEnabled === false && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  New user registrations are currently closed. If you already have an account, you can sign in.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Loading...' : (
                 <>
@@ -219,10 +246,13 @@ export default function Login() {
               variant="link"
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-sm"
+              disabled={signupsEnabled === false && !isSignUp}
             >
               {isSignUp 
                 ? 'Already have an account? Sign in' 
-                : "Don't have an account? Sign up"
+                : signupsEnabled === false 
+                  ? 'Signups currently closed'
+                  : "Don't have an account? Sign up"
               }
             </Button>
           </div>

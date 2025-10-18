@@ -15,6 +15,8 @@ import { useAuth } from '@/contexts/AuthProvider'
 import { useAuthErrors } from '@/hooks/useAuthErrors'
 import { useToast } from '@/hooks/use-toast'
 import { signUp } from '@/services/auth'
+import { useFeatureFlags } from '@/hooks/useFeatureFlags'
+import { AlertTriangle } from 'lucide-react'
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -38,11 +40,13 @@ export default function Signup() {
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { handleError } = useAuthErrors()
   const { toast } = useToast()
+  const { isEnabled } = useFeatureFlags()
   
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [signupsEnabled, setSignupsEnabled] = useState<boolean | null>(null)
 
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
@@ -53,6 +57,15 @@ export default function Signup() {
       confirmPassword: ''
     }
   })
+
+  // Check if signups are enabled
+  useEffect(() => {
+    const checkSignupsEnabled = async () => {
+      const enabled = await isEnabled('signups_enabled')
+      setSignupsEnabled(enabled)
+    }
+    checkSignupsEnabled()
+  }, [isEnabled])
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -102,7 +115,7 @@ export default function Signup() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || signupsEnabled === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -112,6 +125,43 @@ export default function Signup() {
 
   if (isAuthenticated) {
     return null // Will redirect via useEffect
+  }
+
+  // Show maintenance message if signups are disabled
+  if (signupsEnabled === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-center mb-4">
+              <AlertTriangle className="h-12 w-12 text-warning" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">Signups Temporarily Closed</CardTitle>
+            <CardDescription className="text-center">
+              We're currently not accepting new user registrations. Please check back later.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Our platform is currently in maintenance mode. If you already have an account, you can still{' '}
+                <Link to="/auth/login" className="text-primary hover:underline font-medium">
+                  sign in
+                </Link>
+                .
+              </AlertDescription>
+            </Alert>
+            <Button
+              onClick={() => navigate('/auth/login')}
+              className="w-full"
+              variant="outline"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

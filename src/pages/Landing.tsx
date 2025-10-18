@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabase';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { BookHeart, ArrowRight, Heart, Users, TreePine, Clock, Star, ChevronRight, Home, Lock, Globe, Plus } from 'lucide-react';
 // Import family photos
 import heroFamilyStories from '@/assets/hero-family-stories.jpg';
@@ -384,13 +385,31 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [signupsEnabled, setSignupsEnabled] = useState<boolean | null>(null);
   const navigate = useNavigate();
+  const { isEnabled } = useFeatureFlags();
+
+  useEffect(() => {
+    const checkSignupsEnabled = async () => {
+      const enabled = await isEnabled('signups_enabled');
+      setSignupsEnabled(enabled);
+    };
+    checkSignupsEnabled();
+  }, [isEnabled]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
       if (isSignUp) {
+        // Check if signups are enabled
+        if (signupsEnabled === false) {
+          setError('New user registrations are currently closed. Please check back later.');
+          setLoading(false);
+          return;
+        }
+        
         const redirectUrl = `${window.location.origin}/`;
         const {
           error
