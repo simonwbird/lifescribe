@@ -27,17 +27,17 @@ export function MediaStrip({ media, onPause }: MediaStripProps) {
     <div className="space-y-3">
       {/* Images Grid */}
       {images.length > 0 && (
-        <div className="flex gap-1 rounded-lg overflow-x-auto max-w-full">
-          {images.slice(0, images.length > 4 ? 3 : 4).map((image) => (
+        <div className="grid grid-cols-4 gap-1 w-full">
+          {images.slice(0, images.length > 4 ? 3 : images.length).map((image) => (
             <LazyImage 
               key={image.id} 
               media={image}
-              className="w-16 h-16 flex-shrink-0 object-cover rounded-sm"
+              className="w-full aspect-square object-cover rounded-sm"
             />
           ))}
           {images.length > 4 && (
-            <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-muted rounded-sm">
-              <span className="text-xs font-medium text-muted-foreground">+{images.length - 3}</span>
+            <div className="w-full aspect-square flex items-center justify-center bg-muted rounded-sm">
+              <span className="text-sm font-medium text-muted-foreground">+{images.length - 3}</span>
             </div>
           )}
         </div>
