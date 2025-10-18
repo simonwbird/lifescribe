@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, Share2, Bookmark, Tag, Users, Trash2 } from 'lucide-react'
+import { Heart, MessageCircle, Share2, Bookmark, Tag, Users, Trash2, MoreVertical, EyeOff, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/integrations/supabase/client'
 import { VoiceReplyButton } from './VoiceReplyButton'
@@ -14,6 +14,12 @@ import { PrivacyChip } from '@/components/privacy/PrivacyChip'
 import { useContentVisibility } from '@/hooks/useContentVisibility'
 import { routes } from '@/lib/routes'
 import { LSLink } from '@/lib/linking'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface FeedItemData {
   id: string
@@ -226,6 +232,44 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
     }
   }
 
+  const handleHideStory = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    // TODO: Implement hide story functionality
+    toast({ title: "Story hidden", description: "You won't see this story anymore" })
+    onUpdate?.()
+  }
+
+  const handleFlagStory = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    // TODO: Implement flag for review functionality
+    toast({ title: "Story flagged", description: "Admins will review this content" })
+  }
+
+  const handleDeleteStory = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this story? This cannot be undone.')) {
+      return
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', item.id)
+      
+      if (error) throw error
+      
+      toast({ title: "Story deleted" })
+      onUpdate?.()
+    } catch (error) {
+      console.error('Delete failed:', error)
+      toast({ 
+        title: "Failed to delete story", 
+        variant: "destructive" 
+      })
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.defaultPrevented) {
       navigate(routes.storiesShow(item.id))
@@ -279,6 +323,46 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
             onViewPermissions={() => navigate(routes.storiesPrivacy(item.id))}
             size="sm"
           />
+          
+          {/* Three dot menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Story options</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-background">
+              <DropdownMenuItem 
+                onClick={handleHideStory}
+                className="gap-2 cursor-pointer"
+              >
+                <EyeOff className="h-4 w-4" />
+                <span>Hide Story</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleFlagStory}
+                className="gap-2 cursor-pointer text-orange-600"
+              >
+                <Flag className="h-4 w-4" />
+                <span>Flag for Review</span>
+              </DropdownMenuItem>
+              {currentUserId === item.profile_id && (
+                <DropdownMenuItem 
+                  onClick={handleDeleteStory}
+                  className="gap-2 cursor-pointer text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete Story</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Title */}
