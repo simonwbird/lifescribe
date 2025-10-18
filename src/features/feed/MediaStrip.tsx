@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { supabase } from '@/integrations/supabase/client'
 
 interface MediaItem {
   id: string
@@ -14,6 +15,15 @@ interface MediaItem {
 interface MediaStripProps {
   media: MediaItem[]
   onPause?: () => void
+}
+
+// Convert relative storage file paths to public URLs
+const toPublicUrl = (src?: string | null): string | undefined => {
+  if (!src) return undefined
+  if (src.startsWith('http')) return src
+  const clean = src.replace(/^\/+/, '')
+  const { data } = supabase.storage.from('media').getPublicUrl(clean)
+  return data.publicUrl
 }
 
 export function MediaStrip({ media, onPause }: MediaStripProps) {
@@ -119,6 +129,14 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
+  const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined)
+  const [posterSrc, setPosterSrc] = useState<string | undefined>(undefined)
+
+useEffect(() => {
+  // Build absolute URLs when needed (handles legacy relative paths)
+  setVideoSrc(toPublicUrl(media.signedUrl || media.url))
+  setPosterSrc(toPublicUrl(media.thumbnailUrl))
+}, [media.signedUrl, media.url, media.thumbnailUrl])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -197,9 +215,9 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
           controls
           playsInline
           preload="metadata"
-          poster={media.thumbnailUrl}
+          poster={posterSrc}
           className="w-full max-h-[500px] rounded-lg"
-          src={isVisible ? media.signedUrl || media.url : undefined}
+          src={videoSrc}
         />
       )}
     </div>
@@ -217,18 +235,9 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
 
   // Construct proper audio URL
   useEffect(() => {
-    let src = media.signedUrl || media.url
-    
-    // If it's a relative path (no protocol), construct full storage URL
-    if (src && !src.startsWith('http')) {
-      // Remove leading slash if present
-      src = src.replace(/^\//, '')
-      // Construct full Supabase storage URL
-      const storageUrl = `${window.location.origin}/storage/v1/object/public/media/${src}`
-      setAudioSrc(storageUrl)
-    } else {
-      setAudioSrc(src)
-    }
+    const src = media.signedUrl || media.url
+    const full = toPublicUrl(src)
+    setAudioSrc(full || null)
   }, [media.url, media.signedUrl])
 
   useEffect(() => {
