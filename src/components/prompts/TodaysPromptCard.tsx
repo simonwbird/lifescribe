@@ -390,12 +390,11 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     
     if (promptInstance) {
       const searchParams = new URLSearchParams({
-        type: 'video',
         promptTitle: promptInstance.prompt?.title || '',
         prompt_id: promptInstance.id,
         prompt_text: promptInstance.prompt?.body || ''
       })
-      navigate(`/stories/new?${searchParams.toString()}`)
+      navigate(`/compose/video?${searchParams.toString()}`)
     }
     
     setRecordingState('idle')
