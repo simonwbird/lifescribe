@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface MediaItem {
   id: string
@@ -110,9 +111,11 @@ function LazyImage({ media, className }: { media: MediaItem; className?: string 
 
 // Lazy Video Component
 function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void }) {
+  const { track } = useAnalytics()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -144,6 +147,43 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
     }
   }, [onPause])
 
+  // Track video playback analytics
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handlePlay = () => {
+      track('media_play', { media_id: media.id, media_type: 'video' })
+    }
+
+    const handleTimeUpdate = () => {
+      if (!video.duration) return
+      const progress = (video.currentTime / video.duration) * 100
+
+      if (progress >= 25 && !quartileTracked.current.q25) {
+        quartileTracked.current.q25 = true
+        track('video_quartile', { media_id: media.id, quartile: 25 })
+      } else if (progress >= 50 && !quartileTracked.current.q50) {
+        quartileTracked.current.q50 = true
+        track('video_quartile', { media_id: media.id, quartile: 50 })
+      } else if (progress >= 75 && !quartileTracked.current.q75) {
+        quartileTracked.current.q75 = true
+        track('video_quartile', { media_id: media.id, quartile: 75 })
+      } else if (progress >= 100 && !quartileTracked.current.q100) {
+        quartileTracked.current.q100 = true
+        track('video_quartile', { media_id: media.id, quartile: 100 })
+      }
+    }
+
+    video.addEventListener('play', handlePlay)
+    video.addEventListener('timeupdate', handleTimeUpdate)
+
+    return () => {
+      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('timeupdate', handleTimeUpdate)
+    }
+  }, [media.id, track])
+
   return (
     <div ref={containerRef} className="w-full bg-black/5 rounded-lg overflow-hidden">
       {!isVisible ? (
@@ -165,9 +205,11 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
 
 // Lazy Audio Component
 function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void }) {
+  const { track } = useAnalytics()
   const audioRef = useRef<HTMLAudioElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -198,6 +240,43 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
       }
     }
   }, [onPause])
+
+  // Track audio playback analytics
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handlePlay = () => {
+      track('media_play', { media_id: media.id, media_type: 'audio' })
+    }
+
+    const handleTimeUpdate = () => {
+      if (!audio.duration) return
+      const progress = (audio.currentTime / audio.duration) * 100
+
+      if (progress >= 25 && !quartileTracked.current.q25) {
+        quartileTracked.current.q25 = true
+        track('audio_quartile', { media_id: media.id, quartile: 25 })
+      } else if (progress >= 50 && !quartileTracked.current.q50) {
+        quartileTracked.current.q50 = true
+        track('audio_quartile', { media_id: media.id, quartile: 50 })
+      } else if (progress >= 75 && !quartileTracked.current.q75) {
+        quartileTracked.current.q75 = true
+        track('audio_quartile', { media_id: media.id, quartile: 75 })
+      } else if (progress >= 100 && !quartileTracked.current.q100) {
+        quartileTracked.current.q100 = true
+        track('audio_quartile', { media_id: media.id, quartile: 100 })
+      }
+    }
+
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+
+    return () => {
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+    }
+  }, [media.id, track])
 
   return (
     <div ref={containerRef} className="w-full bg-muted/50 p-4 rounded-lg">

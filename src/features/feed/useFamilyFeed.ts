@@ -9,6 +9,7 @@ interface MediaItem {
   mime_type: string
   order: number
   signedUrl?: string
+  signedAt?: number // Timestamp when URL was signed
 }
 
 export interface FeedStory {
@@ -36,25 +37,40 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
   const [hasMore, setHasMore] = useState(true)
   const [cursor, setCursor] = useState<string | null>(null)
 
-  // Sign media URLs for a story
-  const signMediaUrls = async (story: FeedStory): Promise<FeedStory> => {
+  // Sign media URLs for a story with TTL tracking
+  const signMediaUrls = async (story: FeedStory, forceRefresh = false): Promise<FeedStory> => {
     if (!story.media || story.media.length === 0) {
       return story
     }
 
+    const TTL_THRESHOLD = 3000 * 1000 // Re-sign 300 seconds before expiry (3600s - 600s buffer)
+    const now = Date.now()
+
     const signedMedia = await Promise.all(
       story.media.map(async (media) => {
+        // Check if URL needs re-signing (expired or close to expiring)
+        const needsRefresh = forceRefresh || 
+          !media.signedUrl || 
+          !media.signedAt || 
+          (now - media.signedAt) > TTL_THRESHOLD
+
+        if (!needsRefresh) {
+          return media
+        }
+
         try {
           const signedUrl = await getSignedMediaUrl(media.url, story.family_id)
           return {
             ...media,
-            signedUrl: signedUrl || media.url
+            signedUrl: signedUrl || media.url,
+            signedAt: now
           }
         } catch (error) {
           console.error('Error signing media URL:', error)
           return {
             ...media,
-            signedUrl: media.url // Fallback to original URL
+            signedUrl: media.url, // Fallback to original URL
+            signedAt: now
           }
         }
       })
@@ -65,6 +81,20 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
       media: signedMedia
     }
   }
+
+  // Re-sign expired URLs periodically
+  useEffect(() => {
+    if (items.length === 0) return
+
+    const interval = setInterval(async () => {
+      const updatedItems = await Promise.all(
+        items.map(story => signMediaUrls(story, false))
+      )
+      setItems(updatedItems)
+    }, 5 * 60 * 1000) // Check every 5 minutes
+
+    return () => clearInterval(interval)
+  }, [items])
 
   // Load feed page
   const loadPage = useCallback(async (isLoadMore: boolean = false) => {
@@ -96,7 +126,7 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
       })) as FeedStory[]
 
       const storiesWithSignedUrls = await Promise.all(
-        stories.map(signMediaUrls)
+        stories.map(story => signMediaUrls(story))
       )
 
       if (isLoadMore) {

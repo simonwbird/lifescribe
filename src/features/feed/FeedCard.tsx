@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { supabase } from '@/integrations/supabase/client'
 import { cn } from '@/lib/utils'
 import { MediaStrip } from './MediaStrip'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import type { FeedStory } from './useFamilyFeed'
 
 interface FeedCardProps {
@@ -18,10 +19,39 @@ interface FeedCardProps {
 
 export function FeedCard({ story, onUpdate }: FeedCardProps) {
   const navigate = useNavigate()
+  const { track } = useAnalytics()
+  const impressionTracked = useRef(false)
+  const cardRef = useRef<HTMLDivElement>(null)
   const [authorProfile, setAuthorProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null)
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [commentCount, setCommentCount] = useState(0)
+
+  // Track impression when card becomes visible
+  useEffect(() => {
+    if (impressionTracked.current || !cardRef.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !impressionTracked.current) {
+          impressionTracked.current = true
+          track('feed_impression', {
+            story_id: story.id,
+            author_id: story.author_id,
+            family_id: story.family_id,
+            visibility: story.visibility,
+            has_media: story.media && story.media.length > 0,
+            media_count: story.media?.length || 0
+          })
+        }
+      },
+      { threshold: 0.5 }
+    )
+
+    observer.observe(cardRef.current)
+
+    return () => observer.disconnect()
+  }, [story.id])
 
   useEffect(() => {
     loadAuthorProfile()
@@ -107,7 +137,8 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
 
   return (
     <Card 
-      className="w-full hover:shadow-md transition-shadow cursor-pointer"
+      ref={cardRef}
+      className="w-full hover:shadow-md transition-shadow cursor-pointer rounded-2xl"
       onClick={handleCardClick}
     >
       <CardContent className="p-4 space-y-3">
@@ -161,7 +192,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
                 handleLike()
               }}
               className={cn(
-                "gap-2 h-9",
+                "gap-2 min-h-[44px] min-w-[44px]", // Mobile tap target
                 isLiked && "text-red-500"
               )}
             >
@@ -176,7 +207,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
                 e.stopPropagation()
                 navigate(`/stories/${story.id}`)
               }}
-              className="gap-2 h-9"
+              className="gap-2 min-h-[44px] min-w-[44px]" // Mobile tap target
             >
               <MessageCircle className="h-4 w-4" />
               <span className="text-xs">{commentCount}</span>
@@ -190,7 +221,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
               e.stopPropagation()
               handleShare()
             }}
-            className="h-9 gap-2"
+            className="min-h-[44px] min-w-[44px] gap-2" // Mobile tap target
           >
             <Share2 className="h-4 w-4" />
           </Button>
