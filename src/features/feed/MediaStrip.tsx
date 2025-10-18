@@ -131,12 +131,29 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
   const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined)
   const [posterSrc, setPosterSrc] = useState<string | undefined>(undefined)
+  const [unsupported, setUnsupported] = useState(false)
 
 useEffect(() => {
   // Build absolute URLs when needed (handles legacy relative paths)
   setVideoSrc(toPublicUrl(media.signedUrl || media.url))
   setPosterSrc(toPublicUrl(media.thumbnailUrl))
 }, [media.signedUrl, media.url, media.thumbnailUrl])
+
+  // Detect browser support for the video mime type
+  useEffect(() => {
+    if (!videoSrc) return
+    const tester = document.createElement('video')
+    const url = videoSrc.toLowerCase()
+    let mime: string | undefined
+    if (url.includes('.webm')) mime = 'video/webm'
+    else if (url.includes('.mp4')) mime = 'video/mp4'
+    else if (url.includes('.m3u8')) mime = 'application/vnd.apple.mpegurl'
+
+    if (mime && tester.canPlayType) {
+      const res = tester.canPlayType(mime)
+      setUnsupported(res === '')
+    }
+  }, [videoSrc])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -209,6 +226,25 @@ useEffect(() => {
     <div ref={containerRef} className="w-full bg-black/5 rounded-lg overflow-hidden">
       {!isVisible ? (
         <Skeleton className="w-full aspect-video" />
+      ) : unsupported ? (
+        <div className="relative">
+          {posterSrc ? (
+            <img src={posterSrc} alt="Video thumbnail" className="w-full aspect-video object-cover" />
+          ) : (
+            <div className="w-full aspect-video bg-muted" />
+          )}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <a
+              href={videoSrc}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-1.5 text-sm rounded-md bg-background/80 border"
+            >
+              Open video
+            </a>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Your browser can’t play this format inline.</p>
+        </div>
       ) : (
         <video
           ref={videoRef}
