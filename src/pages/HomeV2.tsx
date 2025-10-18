@@ -5,6 +5,7 @@ import { TopBar } from '@/components/home/TopBar';
 import { HeroStrip } from '@/components/home/HeroStrip';
 import { SmartFeed } from '@/components/home/SmartFeed';
 import { VoiceCapture } from '@/components/home/VoiceCapture';
+import { FamilyFeed } from '@/features/feed/FamilyFeed';
 import RightRail from '@/components/home/RightRail';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -218,7 +219,8 @@ export default function HomeV2() {
                 {/* Inline Voice Capture */}
                 {showVoiceCapture && <VoiceCapture familyId={familyId} userId={userId} onPublished={() => setShowVoiceCapture(false)} onCancel={() => setShowVoiceCapture(false)} />}
 
-                <SmartFeed familyId={familyId} userId={userId} />
+                {/* Family Feed with Inline Media */}
+                <FamilyFeed familyId={familyId} userId={userId} />
               </main>
             </div>
 
