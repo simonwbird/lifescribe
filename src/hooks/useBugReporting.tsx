@@ -60,13 +60,7 @@ export const useBugReporting = () => {
       const role = (profile?.settings as any)?.role;
       setUserRole(role);
 
-      // For super admins and bug testers, always enable bug reporting
-      if (role === 'super_admin' || role === 'bug_tester') {
-        setIsEnabled(true);
-        return;
-      }
-
-      // For other users, check the feature flag
+      // Check the feature flag for all users
       try {
         const { data: flagResult } = await supabase.rpc('evaluate_feature_flag', {
           p_flag_key: 'bug_reporting_v1',
@@ -75,9 +69,8 @@ export const useBugReporting = () => {
         });
         setIsEnabled((flagResult as any)?.enabled || false);
       } catch (flagError) {
-        console.error('Error evaluating feature flag, defaulting to enabled for testing:', flagError);
-        // Default to enabled if there's an issue with the flag evaluation
-        setIsEnabled(true);
+        console.error('Error evaluating feature flag:', flagError);
+        setIsEnabled(false);
       }
     } catch (error) {
       console.error('Error checking bug reporting feature flag:', error);
