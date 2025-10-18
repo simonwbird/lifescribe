@@ -19,7 +19,7 @@ interface VideoPanelProps {
   onVideoReady: (blob: Blob, url: string, thumbnail: string) => void
 }
 
-type RecordState = 'idle' | 'recording' | 'preview' | 'processing'
+type RecordState = 'idle' | 'countdown' | 'recording' | 'preview' | 'processing'
 
 export function VideoPanel({
   title,
@@ -40,6 +40,7 @@ export function VideoPanel({
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(videoUrl)
   const [localThumbnail, setLocalThumbnail] = useState<string | null>(thumbnailUrl)
   const [duration, setDuration] = useState(0)
+  const [countdown, setCountdown] = useState(3)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const previewVideoRef = useRef<HTMLVideoElement>(null)
@@ -172,22 +173,39 @@ export function VideoPanel({
     }
   }
 
+  // Countdown timer
+  useEffect(() => {
+    if (state === 'countdown' && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    } else if (state === 'countdown' && countdown === 0) {
+      // Start recording when countdown reaches 0
+      actuallyStartRecording()
+    }
+  }, [state, countdown])
+
   // Ensure the stream attaches when the recording view renders
   useEffect(() => {
-    if (state === 'recording' && streamRef.current && videoRef.current) {
+    if ((state === 'recording' || state === 'countdown') && streamRef.current && videoRef.current) {
       videoRef.current.srcObject = streamRef.current
       videoRef.current.play().catch(() => {})
     }
   }, [state])
 
   const startRecording = async () => {
-    // Render the preview first so the <video> exists, then start camera
-    setState('recording')
+    // Start countdown first
+    setState('countdown')
+    setCountdown(3)
     setRecordingTime(0)
 
+    // Start camera so user sees themselves during countdown
     await startCamera()
+  }
+
+  const actuallyStartRecording = async () => {
     if (!streamRef.current) return
 
+    setState('recording')
     chunksRef.current = []
 
     const mimeType = getSupportedMimeType()
@@ -363,6 +381,36 @@ export function VideoPanel({
                 className="hidden"
               />
             </label>
+          </div>
+        )}
+
+        {state === 'countdown' && (
+          <div className="space-y-4">
+            <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover mirror"
+                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-9xl font-bold text-white animate-pulse">
+                  {countdown}
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={toggleCamera}
+                className="absolute top-4 right-4"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-center text-sm text-muted-foreground">Get ready...</p>
           </div>
         )}
 
