@@ -46,6 +46,7 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
   const [commentCount, setCommentCount] = useState(0)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [removed, setRemoved] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -152,6 +153,10 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
   }
 
   const handleDeleteStory = async () => {
+    // Optimistically hide the card
+    setRemoved(true)
+    setShowDeleteDialog(false)
+
     try {
       const { error } = await supabase
         .from('stories')
@@ -161,7 +166,6 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
       if (error) throw error
       
       toast({ title: "Story deleted" })
-      setShowDeleteDialog(false)
       onUpdate?.()
     } catch (error) {
       console.error('Delete failed:', error)
@@ -169,7 +173,8 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
         title: "Failed to delete story", 
         variant: "destructive" 
       })
-      setShowDeleteDialog(false)
+      // Revert optimistic removal on failure
+      setRemoved(false)
     }
   }
 
@@ -196,6 +201,8 @@ export function FeedCard({ story, onUpdate }: FeedCardProps) {
 
   const visibility = visibilityConfig[story.visibility as keyof typeof visibilityConfig] || visibilityConfig.family
   const VisibilityIcon = visibility.icon
+
+  if (removed) return null
 
   return (
     <Card 
