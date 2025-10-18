@@ -52,31 +52,36 @@ function AudioPlayer({ url, duration: initialDuration }: { url: string; duration
     const audio = audioRef.current
     if (!audio) return
 
-    const handleLoadedMetadata = () => {
-      if (audio.duration && isFinite(audio.duration)) {
+    const setFromEl = () => {
+      if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
         setDuration(audio.duration)
       }
     }
 
-    const handleCanPlay = () => {
-      if (audio.duration && isFinite(audio.duration) && !duration) {
-        setDuration(audio.duration)
-      }
-    }
+    // Force a load to ensure metadata request fires
+    try { audio.load?.() } catch {}
 
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.addEventListener('canplay', handleCanPlay)
-    audio.addEventListener('durationchange', handleCanPlay)
+    audio.addEventListener('loadedmetadata', setFromEl)
+    audio.addEventListener('canplay', setFromEl)
+    audio.addEventListener('durationchange', setFromEl)
+
+    // Poll as a final fallback (some browsers delay metadata)
+    let tries = 0
+    const poll = setInterval(() => {
+      setFromEl()
+      if (++tries > 20 || (audio.duration && isFinite(audio.duration) && audio.duration > 0)) {
+        clearInterval(poll)
+      }
+    }, 200)
     
     // If metadata already loaded
-    if (audio.duration && isFinite(audio.duration)) {
-      setDuration(audio.duration)
-    }
+    setFromEl()
 
     return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      audio.removeEventListener('canplay', handleCanPlay)
-      audio.removeEventListener('durationchange', handleCanPlay)
+      clearInterval(poll)
+      audio.removeEventListener('loadedmetadata', setFromEl)
+      audio.removeEventListener('canplay', setFromEl)
+      audio.removeEventListener('durationchange', setFromEl)
     }
   }, [url])
 
@@ -84,7 +89,7 @@ function AudioPlayer({ url, duration: initialDuration }: { url: string; duration
     <div className="w-full bg-muted/50 p-4 rounded-lg space-y-2">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Audio Recording</span>
-        {duration && <span className="font-medium">{formatDuration(duration)}</span>}
+        <span className="font-medium">{duration ? formatDuration(duration) : '…'}</span>
       </div>
       <audio
         ref={audioRef}
