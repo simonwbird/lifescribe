@@ -9646,6 +9646,20 @@ export type Database = {
         Args: { p_confirmed_by: string; p_merge_proposal_id: string }
         Returns: Json
       }
+      feed_for_user: {
+        Args: { p_cursor?: string; p_limit?: number; p_user: string }
+        Returns: {
+          author_id: string
+          content_type: string
+          created_at: string
+          family_id: string
+          id: string
+          media: Json
+          text: string
+          title: string
+          visibility: string
+        }[]
+      }
       find_duplicate_places: {
         Args: {
           p_family_id: string
