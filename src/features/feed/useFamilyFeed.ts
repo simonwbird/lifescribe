@@ -37,7 +37,7 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
   const [hasMore, setHasMore] = useState(true)
   const [cursor, setCursor] = useState<string | null>(null)
 
-  // Sign media URLs for a story with TTL tracking
+// Sign media URLs for a story with TTL tracking
   const signMediaUrls = async (story: FeedStory, forceRefresh = false): Promise<FeedStory> => {
     if (!story.media || story.media.length === 0) {
       return story
@@ -45,6 +45,28 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
 
     const TTL_THRESHOLD = 3000 * 1000 // Re-sign 300 seconds before expiry (3600s - 600s buffer)
     const now = Date.now()
+
+    const extractFilePath = (u: string): string | null => {
+      // If already a bare path like family/profile/file, use as-is
+      if (!u.startsWith('http')) return u.replace(/^\/+/, '')
+      try {
+        const url = new URL(u)
+        const parts = url.pathname.split('/').filter(Boolean)
+        const idx = parts.indexOf('media')
+        if (idx === -1) return null
+        const rest = parts.slice(idx + 1)
+        return rest.join('/') || null
+      } catch {
+        const marker = '/media/'
+        const pos = u.indexOf(marker)
+        return pos !== -1 ? u.substring(pos + marker.length) : null
+      }
+    }
+
+    const toPublicUrl = (path?: string | null) => {
+      if (!path) return null
+      return supabase.storage.from('media').getPublicUrl(path.replace(/^\/+/, '')).data.publicUrl
+    }
 
     const signedMedia = await Promise.all(
       story.media.map(async (media) => {
@@ -58,18 +80,20 @@ export function useFamilyFeed(familyId: string, options: UseFamilyFeedOptions = 
           return media
         }
 
+        const filePath = extractFilePath(media.url)
+
         try {
-          const signedUrl = await getSignedMediaUrl(media.url, story.family_id)
+          const signedUrl = filePath ? await getSignedMediaUrl(filePath, story.family_id) : null
           return {
             ...media,
-            signedUrl: signedUrl || media.url,
+            signedUrl: signedUrl || toPublicUrl(filePath) || media.url,
             signedAt: now
           }
         } catch (error) {
           console.error('Error signing media URL:', error)
           return {
             ...media,
-            signedUrl: media.url, // Fallback to original URL
+            signedUrl: toPublicUrl(filePath) || media.url,
             signedAt: now
           }
         }
