@@ -27,7 +27,7 @@ interface FeedItemData {
     full_name?: string
     avatar_url?: string
   }
-  media_urls?: Array<{ url: string; type: string }>
+  media_urls?: Array<{ url: string; type: string; duration?: number }>
   tags?: string[]
   people?: Array<{ id: string; name: string }>
   reactions_count?: number
@@ -36,9 +36,9 @@ interface FeedItemData {
 }
 
 // Audio Player Component
-function AudioPlayer({ url }: { url: string }) {
+function AudioPlayer({ url, duration: initialDuration }: { url: string; duration?: number }) {
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [duration, setDuration] = useState<number | null>(null)
+  const [duration, setDuration] = useState<number | null>(initialDuration || null)
 
   // Format duration in MM:SS
   const formatDuration = (seconds: number) => {
@@ -307,7 +307,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
               </div>
             )}
             {item.media_urls[0].type === 'audio' && (
-              <AudioPlayer url={item.media_urls[0].url} />
+              <AudioPlayer url={item.media_urls[0].url} duration={item.media_urls[0].duration} />
             )}
             {item.media_urls.length > 1 && (
               <LSLink

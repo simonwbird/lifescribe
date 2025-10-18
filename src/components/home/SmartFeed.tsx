@@ -80,7 +80,8 @@ export function SmartFeed({ familyId, userId }: SmartFeedProps) {
           
           const media_urls = (audioRecordings || []).map(audio => ({
             url: audio.audio_url,
-            type: 'audio'
+            type: 'audio',
+            duration: audio.duration_seconds
           }))
 
           // Get reaction count
