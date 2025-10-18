@@ -68,43 +68,56 @@ export function MediaStrip({ media, onPause }: MediaStripProps) {
 
 // Lazy Image Component
 function LazyImage({ media, className }: { media: MediaItem; className?: string }) {
-  const imgRef = useRef<HTMLImageElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true)
-          observer.disconnect()
+          observer.unobserve(entry.target)
         }
       },
-      { rootMargin: '50px' }
+      { rootMargin: '100px' }
     )
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current)
-    }
+    observer.observe(el)
 
     return () => observer.disconnect()
   }, [])
 
-  if (!isVisible) {
-    return <Skeleton className={cn("w-full", className)} />
-  }
-
   return (
-    <div className="relative">
-      {!isLoaded && <Skeleton className={cn("absolute inset-0", className)} />}
-      <img
-        ref={imgRef}
-        src={media.signedUrl || media.url}
-        alt=""
-        className={cn(className, !isLoaded && 'opacity-0')}
-        onLoad={() => setIsLoaded(true)}
-        loading="lazy"
-      />
+    <div ref={containerRef} className={cn("relative", className)}>
+      {!isVisible ? (
+        <Skeleton className="w-full h-full" />
+      ) : (
+        <>
+          {!isLoaded && (
+            media.thumbnailUrl ? (
+              <img
+                src={media.thumbnailUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover blur-md scale-105 rounded-md"
+                aria-hidden
+              />
+            ) : (
+              <Skeleton className="absolute inset-0 rounded-md" />
+            )
+          )}
+          <img
+            src={media.signedUrl || media.url}
+            alt=""
+            className={cn("w-full h-full object-cover rounded-md transition-opacity duration-300", !isLoaded && 'opacity-0')}
+            onLoad={() => setIsLoaded(true)}
+            loading="lazy"
+          />
+        </>
+      )}
     </div>
   )
 }
