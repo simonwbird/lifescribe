@@ -17,6 +17,7 @@ interface VideoPanelProps {
   onTitleChange: (value: string) => void
   onContentChange: (value: string) => void
   onVideoReady: (blob: Blob, url: string, thumbnail: string) => void
+  autoStart?: boolean
 }
 
 type RecordState = 'idle' | 'countdown' | 'recording' | 'preview' | 'processing'
@@ -29,7 +30,8 @@ export function VideoPanel({
   thumbnailUrl,
   onTitleChange,
   onContentChange,
-  onVideoReady
+  onVideoReady,
+  autoStart = false
 }: VideoPanelProps) {
   const { toast } = useToast()
   const saveStatus = useSaveStatus([title, content, videoBlob !== null], 500)
@@ -48,6 +50,7 @@ export function VideoPanel({
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<number | null>(null)
+  const hasAutoStartedRef = useRef(false)
 
   useEffect(() => {
     return () => {
@@ -62,6 +65,14 @@ export function VideoPanel({
       }
     }
   }, [])
+
+  // Auto-start recording when coming from a prompt
+  useEffect(() => {
+    if (autoStart && !hasAutoStartedRef.current && state === 'idle') {
+      hasAutoStartedRef.current = true
+      startRecording()
+    }
+  }, [autoStart])
 
   const generateThumbnail = async (videoElement: HTMLVideoElement): Promise<string> => {
     return new Promise((resolve) => {

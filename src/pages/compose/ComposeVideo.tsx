@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Video, Upload, Camera } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/Header'
+import { VideoPanel } from '@/components/composer/VideoPanel'
+import { PromptBanner } from '@/components/composer/PromptBanner'
 import type { ComposerPrefillData } from '@/pages/stories/StoryNew'
 import type { ComposerState } from '@/hooks/useComposerState'
 
@@ -22,84 +22,64 @@ export default function ComposeVideo({
   updateState
 }: ComposeVideoProps) {
   const navigate = useNavigate()
-  const [activeCamera, setActiveCamera] = useState<'front' | 'back'>('back')
+  const [searchParams] = useSearchParams()
+  const [showPromptBanner, setShowPromptBanner] = useState(true)
   
-  const hasVideo = composerState?.videoBlob !== null
+  // Get prompt info from URL
+  const promptTitle = searchParams.get('promptTitle') || ''
+  const promptId = searchParams.get('prompt_id') || prefillData?.promptId || ''
+  const promptText = searchParams.get('prompt_text') || ''
+
+  // Use composerState or local state
+  const [localTitle, setLocalTitle] = useState(promptTitle)
+  const [localContent, setLocalContent] = useState('')
+  const [localVideoBlob, setLocalVideoBlob] = useState<Blob | null>(null)
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null)
+  const [localThumbnailUrl, setLocalThumbnailUrl] = useState<string | null>(null)
+
+  const handleVideoReady = (blob: Blob, url: string, thumbnail: string) => {
+    if (updateState) {
+      updateState({ videoBlob: blob })
+    } else {
+      setLocalVideoBlob(blob)
+      setLocalVideoUrl(url)
+      setLocalThumbnailUrl(thumbnail)
+    }
+  }
 
   const content_ui = (
-    <Card>
-          <CardHeader>
-            <CardTitle>Video Recording</CardTitle>
-            <CardDescription>
-              Record a video or upload an existing one
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Tabs defaultValue="record">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="record">Record</TabsTrigger>
-                <TabsTrigger value="upload">Upload</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="record" className="space-y-4 mt-4">
-                <div className="border-2 border-dashed rounded-lg p-12 text-center space-y-4 bg-muted/20">
-                  <Video className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <div>
-                    <p className="text-lg font-medium mb-1">Camera preview</p>
-                    <p className="text-sm text-muted-foreground">
-                      {hasVideo ? 'Video recorded! Click below to re-record' : 'Click below to start recording'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    variant={activeCamera === 'back' ? 'default' : 'outline'}
-                    className="flex-1"
-                    onClick={() => setActiveCamera('back')}
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Back Camera
-                  </Button>
-                  <Button 
-                    variant={activeCamera === 'front' ? 'default' : 'outline'}
-                    className="flex-1"
-                    onClick={() => setActiveCamera('front')}
-                  >
-                    <Camera className="h-4 w-4 mr-2 scale-x-[-1]" />
-                    Front Camera
-                  </Button>
-                </div>
-
-                <Button className="w-full h-12">
-                  Start Recording
-                </Button>
-              </TabsContent>
-
-              <TabsContent value="upload" className="space-y-4 mt-4">
-                <div className="border-2 border-dashed rounded-lg p-12 text-center space-y-4">
-                  <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <div>
-                    <p className="text-lg font-medium mb-1">Upload a video</p>
-                    <p className="text-sm text-muted-foreground">
-                      Select a video file from your device
-                    </p>
-                  </div>
-                  <Button variant="outline">
-                    Browse Files
-                  </Button>
-                </div>
-
-                <div className="bg-muted rounded-lg p-4 text-sm">
-                  <p className="font-medium mb-2">Supported formats:</p>
-                  <p className="text-muted-foreground">
-                    MP4, MOV, AVI, WebM (max 500MB)
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+    <div className="space-y-4">
+      {promptTitle && showPromptBanner && (
+        <PromptBanner
+          promptTitle={promptTitle}
+          onDismiss={() => setShowPromptBanner(false)}
+        />
+      )}
+      
+      <VideoPanel
+        title={composerState?.title || localTitle}
+        content={composerState?.content || localContent}
+        videoBlob={composerState?.videoBlob || localVideoBlob}
+        videoUrl={composerState?.videoBlob ? URL.createObjectURL(composerState.videoBlob) : localVideoUrl}
+        thumbnailUrl={localThumbnailUrl}
+        onTitleChange={(value) => {
+          if (updateState) {
+            updateState({ title: value })
+          } else {
+            setLocalTitle(value)
+          }
+        }}
+        onContentChange={(value) => {
+          if (updateState) {
+            updateState({ content: value })
+          } else {
+            setLocalContent(value)
+          }
+        }}
+        onVideoReady={handleVideoReady}
+        autoStart={!!promptTitle}
+      />
+    </div>
   )
 
   if (!standalone) {
