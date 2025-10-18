@@ -46,7 +46,7 @@ export default function StoryNew() {
   const { state: composerState, updateState, switchMode, hasContent } = useComposerState(tabParam)
   
   // Autosave hook
-  const { save, storyId, isSaving } = useStoryAutosave({ 
+  const { save, storyId, isSaving, stopAutosave } = useStoryAutosave({ 
     storyId: draftId,
     enabled: true 
   })
@@ -276,6 +276,9 @@ export default function StoryNew() {
 
     try {
       setIsPublishing(true)
+      
+      // Stop autosave to prevent draft from being recreated/overwritten
+      stopAutosave()
       
       const occurredDate = composerState.dateValue.date 
         ? composerState.dateValue.date.toISOString().split('T')[0]

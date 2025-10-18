@@ -50,7 +50,7 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
   const { state, updateState, switchMode, clearState, hasContent } = useComposerState(initialMode)
 
   // Autosave hook for database drafts
-  const { save, forceSave, storyId, isSaving, lastSaved } = useStoryAutosave({ enabled: true })
+  const { save, forceSave, storyId, isSaving, lastSaved, stopAutosave } = useStoryAutosave({ enabled: true })
   
   // Autosave whenever state changes (10s debounce)
   useEffect(() => {
@@ -237,6 +237,10 @@ export function UniversalComposer({ familyId, initialTab, prefillData }: Univers
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
+
+      // Stop autosave to avoid recreating drafts after publish
+      if (!asDraft) stopAutosave()
+
 
       const occurredDate = state.dateValue.date
         ? state.dateValue.date.toISOString().split('T')[0]
