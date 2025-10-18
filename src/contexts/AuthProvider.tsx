@@ -193,10 +193,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setLoading(false)
       }
     } else {
-      // For TOKEN_REFRESHED and other events, ensure loading stays false if data already loaded
-      if (hasLoadedExtended.current) {
-        setLoading(false)
-      }
+      // For all other events (TOKEN_REFRESHED, etc), ensure loading is false
+      setLoading(false)
     }
   }, [fetchAllUserData])
 
