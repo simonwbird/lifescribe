@@ -155,9 +155,17 @@ export function useStoryAutosave({ storyId: initialStoryId, enabled = true }: Us
     }
   }, [])
 
+  const stopAutosave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = undefined
+    }
+  }
+
   return {
     save,
     forceSave,
+    stopAutosave,
     storyId,
     isSaving,
     lastSaved

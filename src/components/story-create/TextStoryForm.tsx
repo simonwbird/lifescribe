@@ -28,7 +28,7 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
   const draftId = searchParams.get('draft')
   
   // Autosave hook
-  const { save, storyId, isSaving, lastSaved } = useStoryAutosave({ storyId: draftId, enabled: true })
+  const { save, storyId, isSaving, lastSaved, stopAutosave } = useStoryAutosave({ storyId: draftId, enabled: true })
 
   // Load draft if provided
   useEffect(() => {
@@ -138,6 +138,9 @@ export default function TextStoryForm({ familyId }: TextStoryFormProps) {
         }
       }
 
+      // Stop autosave to prevent it from reverting status back to draft
+      stopAutosave()
+      
       toast({
         title: 'Story published!',
         description: 'Your story is now live.'
