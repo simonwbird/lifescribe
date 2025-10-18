@@ -1,7 +1,7 @@
 import React, { useState, memo, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, BookOpen, Shuffle, Sparkles, Mic, MessageCircle, PenTool, Loader2, Square, Check, AlertCircle } from 'lucide-react'
+import { Play, BookOpen, Shuffle, Sparkles, Mic, MessageCircle, PenTool, Loader2, Square, Check, AlertCircle, Video } from 'lucide-react'
 import { PromptInstance } from '@/hooks/usePrompts'
 import PersonChip from './PersonChip'
 import { ResponseModal } from './ResponseModal'
@@ -378,6 +378,29 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
     setRecordingState('idle')
   }
 
+  const handleVideoInstead = () => {
+    track({
+      event_name: 'video_instead',
+      properties: {
+        prompt_id: promptInstance?.id,
+        persona,
+        from_state: recordingState
+      }
+    } as any)
+    
+    if (promptInstance) {
+      const searchParams = new URLSearchParams({
+        type: 'video',
+        promptTitle: promptInstance.prompt?.title || '',
+        prompt_id: promptInstance.id,
+        prompt_text: promptInstance.prompt?.body || ''
+      })
+      navigate(`/stories/new?${searchParams.toString()}`)
+    }
+    
+    setRecordingState('idle')
+  }
+
   const handleShuffle = () => {
     if (onShuffle) {
       setIsShuffling(true)
@@ -674,13 +697,21 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Button 
                     onClick={handleWriteInstead}
                     className="flex-1"
                   >
                     <PenTool className="h-4 w-4 mr-2" />
                     Write Instead
+                  </Button>
+                  <Button 
+                    onClick={handleVideoInstead}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    Video Instead
                   </Button>
                   <Button 
                     onClick={() => setRecordingState('idle')}
@@ -713,16 +744,25 @@ const TodaysPromptCard = memo(function TodaysPromptCard({
                 </Button>
               </div>
 
-              {/* Secondary action */}
-              <div className="flex justify-center">
+              {/* Secondary actions */}
+              <div className="flex justify-center gap-3">
                 <Button 
                   onClick={handleWriteInstead}
                   variant="outline"
                   size="lg"
-                  className="min-w-[200px]"
+                  className="min-w-[160px]"
                 >
                   <PenTool className="h-4 w-4 mr-2" />
                   Write Instead
+                </Button>
+                <Button 
+                  onClick={handleVideoInstead}
+                  variant="outline"
+                  size="lg"
+                  className="min-w-[160px]"
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  Video Instead
                 </Button>
               </div>
             </>
