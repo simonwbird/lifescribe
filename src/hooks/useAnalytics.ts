@@ -64,9 +64,14 @@ export function useAnalytics(userId?: string) {
     }
 
     try {
+      // Get current user ID if not provided
+      const { data: { user } } = await supabase.auth.getUser()
+      const effectiveUserId = userId || user?.id
+
       // Insert into analytics_events table
       await supabase.from('analytics_events').insert({
-        user_id: userId,
+        user_id: effectiveUserId,
+        family_id: properties?.family_id || null,
         event_name,
         properties: enrichedEvent.properties,
       })
