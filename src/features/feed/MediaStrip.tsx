@@ -41,12 +41,12 @@ export function MediaStrip({ media, onPause }: MediaStripProps) {
               className={cn(
                 "w-full object-cover rounded-md",
                 images.length === 3 && idx === 0 && "col-span-2",
-                images.length === 1 ? "max-h-[280px]" : "h-[140px]"
+                images.length === 1 ? "max-h-[200px]" : "h-[100px]"
               )}
             />
           ))}
           {images.length > 4 && (
-            <div className="col-span-1 h-[140px] flex items-center justify-center bg-muted rounded-md">
+            <div className="col-span-1 h-[100px] flex items-center justify-center bg-muted rounded-md">
               <span className="text-sm text-muted-foreground">+{images.length - 4} more</span>
             </div>
           )}
