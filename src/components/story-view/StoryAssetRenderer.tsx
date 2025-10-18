@@ -26,7 +26,7 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
   const [showVideo, setShowVideo] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
+  const [duration, setDuration] = useState<number>(0)
   const [volume, setVolume] = useState(1)
   const [isMuted, setIsMuted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -209,6 +209,50 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
       }
     }
   }, [asset.type, playback])
+
+  // Handle audio duration (metadata + DB seed) and ensure metadata loads
+  useEffect(() => {
+    if (asset.type !== 'audio') return
+    const a = audioRef.current
+
+    const setDur = () => {
+      if (a && a.duration && isFinite(a.duration) && a.duration > 0) {
+        setDuration(a.duration)
+      }
+    }
+
+    // Seed from metadata if available
+    const seed = asset.metadata?.duration_seconds || asset.metadata?.duration || 0
+    if (seed && seed > 0) setDuration(seed)
+
+    // Force metadata load so duration is available without playback
+    try {
+      if (a) {
+        a.preload = 'metadata'
+        a.load()
+      }
+    } catch {}
+
+    a?.addEventListener('loadedmetadata', setDur)
+    a?.addEventListener('canplay', setDur)
+    a?.addEventListener('durationchange', setDur)
+
+    // Poll as a final fallback (handles delayed metadata in some browsers)
+    let tries = 0
+    const poll = setInterval(() => {
+      setDur()
+      if (++tries > 20 || (a && a.duration && isFinite(a.duration) && a.duration > 0)) {
+        clearInterval(poll)
+      }
+    }, 200)
+
+    return () => {
+      clearInterval(poll)
+      a?.removeEventListener('loadedmetadata', setDur)
+      a?.removeEventListener('canplay', setDur)
+      a?.removeEventListener('durationchange', setDur)
+    }
+  }, [asset.type, signedSrc])
 
   const handlePlayPause = () => {
     if (asset.type === 'video') {
@@ -501,48 +545,41 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
     case 'audio':
       if (compact) {
         return (
-          <div className="bg-secondary/50 rounded-lg p-4 flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0"
-              onClick={handlePlayPause}
-            >
-              {isPlaying ? (
-                <Pause className="h-5 w-5" />
-              ) : (
-                <Play className="h-5 w-5" />
-              )}
-            </Button>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Audio Recording</span>
-              </div>
-              <audio
-                ref={audioRef}
-                src={signedSrc || asset.url}
-                className="hidden"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
+          <div className="bg-secondary/50 rounded-lg p-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <span>Audio Recording</span>
+              <span className="font-medium">{duration ? formatTime(duration) : '…'}</span>
             </div>
+            <audio
+              ref={audioRef}
+              src={signedSrc || asset.url}
+              controls
+              preload="metadata"
+              className="w-full"
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
           </div>
         )
       }
 
       return (
-        <div className="bg-secondary/50 rounded-lg p-6">
+        <div className="bg-secondary/50 rounded-lg p-6 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Audio Recording</span>
+            <span className="font-medium">{duration ? formatTime(duration) : '…'}</span>
+          </div>
           <audio
             ref={audioRef}
             src={signedSrc || asset.url}
             controls
+            preload="metadata"
             className="w-full"
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           />
           {asset.metadata?.transcript && (
-            <div className="mt-4 pt-4 border-t border-border">
+            <div className="mt-2 pt-2 border-t border-border">
               <p className="text-xs font-medium text-muted-foreground mb-2">Transcript</p>
               <p className="text-sm text-muted-foreground italic">
                 {asset.metadata.transcript}
