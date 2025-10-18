@@ -15,6 +15,7 @@ interface AdminUser {
   full_name: string | null
   email: string
   created_at: string
+  last_sign_in_at: string | null
   families: { id: string; name: string; role: string }[]
 }
 
@@ -56,6 +57,19 @@ export default function AdminPeople() {
 
       if (usersError) throw usersError
 
+      // Fetch auth metadata for all users (last sign in, etc.)
+      const { data: authMetadata, error: authError } = await supabase
+        .rpc('get_users_auth_metadata_admin')
+
+      if (authError) {
+        console.error('Failed to fetch auth metadata:', authError)
+      }
+
+      // Create a map of user_id to auth metadata for quick lookup
+      const authMap = new Map(
+        (authMetadata || []).map(auth => [auth.user_id, auth])
+      )
+
       // For each user, get their family memberships
       const enrichedUsers: AdminUser[] = []
       for (const user of usersData || []) {
@@ -70,8 +84,11 @@ export default function AdminPeople() {
           `)
           .eq('profile_id', user.id)
 
+        const authData = authMap.get(user.id)
+
         enrichedUsers.push({
           ...user,
+          last_sign_in_at: authData?.last_sign_in_at || null,
           families: (memberships || []).map(m => ({
             id: m.families.id,
             name: m.families.name,
@@ -259,6 +276,16 @@ export default function AdminPeople() {
                 <div>
                   <p className="text-xs text-muted-foreground">Joined</p>
                   <p className="text-sm">{new Date(user.created_at).toLocaleDateString()}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground">Last Login</p>
+                  <p className="text-sm">
+                    {user.last_sign_in_at 
+                      ? new Date(user.last_sign_in_at).toLocaleDateString() + ' ' + 
+                        new Date(user.last_sign_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      : 'Never'}
+                  </p>
                 </div>
 
                 <div className="pt-2 border-t">

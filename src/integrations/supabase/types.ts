@@ -9826,6 +9826,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_auth_metadata: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_user_family_ids: {
         Args: { user_id: string }
         Returns: string[]
@@ -9833,6 +9837,15 @@ export type Database = {
       get_user_person_role: {
         Args: { p_person_id: string; p_user_id: string }
         Returns: Database["public"]["Enums"]["person_role_type"]
+      }
+      get_users_auth_metadata_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email_confirmed_at: string
+          last_sign_in_at: string
+          user_id: string
+        }[]
       }
       grant_admin_after_cooling_off: {
         Args: { p_claim_id: string }
