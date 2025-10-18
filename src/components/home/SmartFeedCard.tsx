@@ -35,6 +35,59 @@ interface FeedItemData {
   user_has_liked?: boolean
 }
 
+// Audio Player Component
+function AudioPlayer({ url }: { url: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [duration, setDuration] = useState<number | null>(null)
+
+  // Format duration in MM:SS
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Load duration when audio metadata is available
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleLoadedMetadata = () => {
+      if (audio.duration && isFinite(audio.duration)) {
+        setDuration(audio.duration)
+      }
+    }
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    
+    // If metadata already loaded
+    if (audio.duration && isFinite(audio.duration)) {
+      setDuration(audio.duration)
+    }
+
+    return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+  }, [url])
+
+  return (
+    <div className="w-full bg-muted/50 p-4 rounded-lg space-y-2">
+      {duration && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Audio Recording</span>
+          <span className="font-medium">{formatDuration(duration)}</span>
+        </div>
+      )}
+      <audio
+        ref={audioRef}
+        controls
+        preload="metadata"
+        className="w-full"
+        src={url}
+        aria-label="Story audio"
+      />
+    </div>
+  )
+}
+
 interface SmartFeedCardProps {
   item: FeedItemData
   onUpdate?: () => void
@@ -244,15 +297,7 @@ export function SmartFeedCard({ item, onUpdate }: SmartFeedCardProps) {
               </div>
             )}
             {item.media_urls[0].type === 'audio' && (
-              <div className="w-full bg-muted/50 p-4 rounded-lg">
-                <audio 
-                  src={item.media_urls[0].url} 
-                  controls 
-                  className="w-full"
-                  preload="metadata"
-                  aria-label="Story audio"
-                />
-              </div>
+              <AudioPlayer url={item.media_urls[0].url} />
             )}
             {item.media_urls.length > 1 && (
               <LSLink
