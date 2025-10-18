@@ -92,12 +92,18 @@ function AudioPlayer({ url, duration: initialDuration }: { url: string; duration
         <span className="font-medium">{duration ? formatDuration(duration) : '…'}</span>
       </div>
       <audio
+        key={url}
         ref={audioRef}
         controls
         preload="metadata"
+        crossOrigin="anonymous"
         className="w-full"
         src={url}
         aria-label="Story audio"
+        onLoadedMetadata={() => {
+          const a = audioRef.current
+          if (a && a.duration && isFinite(a.duration)) setDuration(a.duration)
+        }}
       />
     </div>
   )

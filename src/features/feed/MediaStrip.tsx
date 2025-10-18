@@ -433,11 +433,17 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
         <Skeleton className="w-full h-12" />
       ) : (
         <audio
+          key={audioSrc || undefined}
           ref={audioRef}
           controls
           preload="metadata"
+          crossOrigin="anonymous"
           className="w-full"
           src={audioSrc || undefined}
+          onLoadedMetadata={() => {
+            const a = audioRef.current
+            if (a && a.duration && isFinite(a.duration)) setDuration(a.duration)
+          }}
         />
       )}
     </div>

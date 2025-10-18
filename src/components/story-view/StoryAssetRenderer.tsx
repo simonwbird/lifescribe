@@ -551,11 +551,19 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
               <span className="font-medium">{duration ? formatTime(duration) : '…'}</span>
             </div>
             <audio
+              key={signedSrc || asset.url}
               ref={audioRef}
               src={signedSrc || asset.url}
               controls
               preload="metadata"
+              crossOrigin="anonymous"
               className="w-full"
+              onLoadedMetadata={() => {
+                const a = audioRef.current
+                if (a && a.duration && isFinite(a.duration) && a.duration > 0) {
+                  setDuration(a.duration)
+                }
+              }}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
@@ -570,11 +578,19 @@ export function StoryAssetRenderer({ asset, compact = false }: StoryAssetRendere
             <span className="font-medium">{duration ? formatTime(duration) : '…'}</span>
           </div>
           <audio
+            key={signedSrc || asset.url}
             ref={audioRef}
             src={signedSrc || asset.url}
             controls
             preload="metadata"
+            crossOrigin="anonymous"
             className="w-full"
+            onLoadedMetadata={() => {
+              const a = audioRef.current
+              if (a && a.duration && isFinite(a.duration) && a.duration > 0) {
+                setDuration(a.duration)
+              }
+            }}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           />
