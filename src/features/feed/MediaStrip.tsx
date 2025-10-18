@@ -289,7 +289,7 @@ function LazyVideo({ media, onPause }: { media: MediaItem; onPause?: () => void 
           playsInline
           preload="metadata"
           poster={posterSrc || undefined}
-          className="w-full max-h-[500px] rounded-lg"
+          className="w-full max-h-[200px] rounded-lg"
           src={videoSrc}
           onError={(e) => console.error('Video error:', videoSrc, e)}
         />
