@@ -58,24 +58,34 @@ function AudioPlayer({ url }: { url: string }) {
       }
     }
 
+    const handleCanPlay = () => {
+      if (audio.duration && isFinite(audio.duration) && !duration) {
+        setDuration(audio.duration)
+      }
+    }
+
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('canplay', handleCanPlay)
+    audio.addEventListener('durationchange', handleCanPlay)
     
     // If metadata already loaded
     if (audio.duration && isFinite(audio.duration)) {
       setDuration(audio.duration)
     }
 
-    return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('canplay', handleCanPlay)
+      audio.removeEventListener('durationchange', handleCanPlay)
+    }
   }, [url])
 
   return (
     <div className="w-full bg-muted/50 p-4 rounded-lg space-y-2">
-      {duration && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Audio Recording</span>
-          <span className="font-medium">{formatDuration(duration)}</span>
-        </div>
-      )}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Audio Recording</span>
+        {duration && <span className="font-medium">{formatDuration(duration)}</span>}
+      </div>
       <audio
         ref={audioRef}
         controls
