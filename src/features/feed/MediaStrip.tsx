@@ -212,7 +212,24 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
   const audioRef = useRef<HTMLAudioElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const [audioSrc, setAudioSrc] = useState<string | null>(null)
   const quartileTracked = useRef({ q25: false, q50: false, q75: false, q100: false })
+
+  // Construct proper audio URL
+  useEffect(() => {
+    let src = media.signedUrl || media.url
+    
+    // If it's a relative path (no protocol), construct full storage URL
+    if (src && !src.startsWith('http')) {
+      // Remove leading slash if present
+      src = src.replace(/^\//, '')
+      // Construct full Supabase storage URL
+      const storageUrl = `${window.location.origin}/storage/v1/object/public/media/${src}`
+      setAudioSrc(storageUrl)
+    } else {
+      setAudioSrc(src)
+    }
+  }, [media.url, media.signedUrl])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -291,7 +308,7 @@ function LazyAudio({ media, onPause }: { media: MediaItem; onPause?: () => void 
           controls
           preload="none"
           className="w-full"
-          src={isVisible ? media.signedUrl || media.url : undefined}
+          src={audioSrc || undefined}
         />
       )}
     </div>
